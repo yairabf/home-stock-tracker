@@ -1,0 +1,194 @@
+# Home Stock Tracker - Project Overview
+
+> A NestJS backend service that tracks household grocery and inventory state, and estimates stock levels without requiring exact manual counts, so an AI agent (Hermes) can manage groceries and stock through natural WhatsApp conversation.
+
+## Problem
+
+Maintaining an exact home inventory manually is too much work; family members shouldn't have to report every item consumed or every quantity remaining. This service instead maintains a grocery list, stores household inventory signals and events, learns purchasing and consumption patterns over time, and estimates whether commonly used products are likely available, running low, or out - favoring useful estimates over false precision. It exposes a clean API/tool layer that Hermes calls from WhatsApp conversations; the inventory service owns household state, business logic, persistence, predictions, and product understanding, while Hermes owns intent interpretation and the communication channel.
+
+## Users
+
+- **Household members (initial: 2 adults, 3 children)** - want a shared grocery list and proactive low-stock reminders without opening a dedicated app or maintaining exact counts; interact entirely through natural language via WhatsApp/Hermes.
+- **Hermes (the AI agent)** - the sole client of the service's REST/MCP surface; calls tools to add/remove grocery items, record purchases and stock signals, and fetch low-stock predictions.
+
+This is a private single-household tool, not a multi-tenant SaaS product. Multiple households, per-member profiles, and shared family access are explicitly future scope, not MVP.
+
+## Features
+
+The MVP feature set, in build order. Item 12 (MCP tool interface) is the headline integration point - it's what makes the service usable by Hermes at all.
+
+1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API.
+2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
+3. **Inventory event tracking** - record structured household stock signals such as restocked, low, out, and still available.
+4. **Purchase and restock flow** - record purchased items, including completing all or part of the current grocery list.
+5. **Household profile** - store household composition and prediction preferences used when estimating consumption.
+6. **Inventory state estimation** - derive likely product availability from inventory events, purchases, and elapsed time.
+7. **Consumption pattern learning** - calculate product-specific purchase and need intervals from household history.
+8. **LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient.
+9. **Hybrid low-stock prediction** - combine household history, product characteristics, deterministic signals, and LLM reasoning into confidence-scored stock predictions.
+10. **Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve.
+11. **Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations.
+12. **MCP tool interface** (headline) - expose the inventory service's core grocery, stock, purchase, and prediction capabilities as agent-callable tools.
+13. **Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools.
+14. **Hermes grocery conversations** - support natural WhatsApp flows such as "add milk", "what do we need?", and "I bought everything except toilet paper".
+15. **Proactive stock checks** - let Hermes periodically request low-stock predictions and send useful recommendations through WhatsApp.
+16. **Service authentication** - protect REST and MCP access with private service-to-service authentication.
+17. **Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures.
+18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment.
+
+Post-MVP: expiration tracking, storage locations, product-specific automation policies, an advanced/Python prediction engine, background job infrastructure (Redis/BullMQ), receipt/barcode ingestion, Home Assistant integration, and a management dashboard.
+
+**Explicit MVP exclusions:** no web UI, no mobile app, no exact real-time inventory requirement, no barcode scanner, no receipt OCR, no supermarket integration, no automatic online purchasing, no computer vision, no Home Assistant integration, no expiration-date tracking (unless trivial), no advanced ML training pipeline, no dedicated Python prediction microservice, no multi-tenant architecture, no Redis unless a concrete need appears, and no automatic grocery-list mutation from predictions alone (predictions recommend; they don't silently modify the list).
+
+## Data model
+
+> Lock shapes that later features depend on, and say so. Field types are inferred from usage; exact DB types are decided when the Prisma schema is written.
+
+### Household
+
+- `id` (string, UUID) - primary key.
+- `adultsCount` (number) - used in consumption-rate estimation.
+- `childrenCount` (number) - used in consumption-rate estimation.
+- `childAgeGroups` (string[] or JSON, optional) - only if later needed for prediction.
+- `predictionPreferences` (JSON, optional) - household-level tuning.
+- `suggestionConfidenceThreshold` (number) - minimum confidence before a suggestion is surfaced.
+- `productPolicies` (JSON, optional) - future per-product overrides.
+
+Single-row table for the MVP household; schema should not assume single-row forever (multi-household is post-MVP, not excluded from the shape).
+
+### Product
+
+- `id` (string, UUID) - primary key.
+- `canonicalName` (string) - e.g. "milk".
+- `aliases` (string[]) - normalized alternate names Hermes/users might say.
+- `category` (string).
+- `typicalUnit` (string, optional) - e.g. "liter", "unit".
+- `productType` (enum: `fast_consumable` | `pantry_staple` | `household_consumable` | `discrete_consumable`).
+- `isPerishable` (boolean).
+- `predictionStrategy` (string/enum, optional) - which estimation approach applies.
+- `predictionEnabled` (boolean).
+- `config` (JSON, optional) - product-specific overrides.
+
+### GroceryListItem
+
+- `id` (string, UUID) - primary key.
+- `productId` (FK -> Product).
+- `requestedQuantity` (number, optional).
+- `unit` (string, optional).
+- `dateAdded` (datetime).
+- `status` (enum: e.g. `pending` | `purchased` | `removed`).
+- `note` (string, optional).
+- `source` (enum: `hermes_whatsapp` | `api`).
+- `relatedInventoryEventId` (FK -> InventoryEvent, optional) - links to the event created when the item is resolved (purchased/removed).
+
+### InventoryEvent
+
+The append-only source of truth. All meaningful state changes are stored as events rather than only mutating a current quantity; derived statistics should be reproducible from stored events where practical.
+
+- `id` (string, UUID) - primary key.
+- `productId` (FK -> Product).
+- `eventType` (enum: `GROCERY_ADDED` | `GROCERY_REMOVED` | `PURCHASED` | `RESTOCKED` | `STOCK_LOW` | `STOCK_OUT` | `STOCK_CONFIRMED` | `STOCK_CORRECTED` | `PREDICTION_ACCEPTED` | `PREDICTION_REJECTED` | `INFERRED_LOW_STOCK`).
+- `quantity` (number, optional).
+- `unit` (string, optional).
+- `timestamp` (datetime).
+- `source` (string) - e.g. Hermes/WhatsApp/API.
+- `confidence` (number, optional) - set when the event is inferred rather than reported.
+- `metadata` (JSON, optional).
+
+### ProductStatistics (derived)
+
+Reproducible from `InventoryEvent` history; may be materialized for performance rather than fully denormalized state.
+
+- `productId` (FK -> Product).
+- `avgPurchaseIntervalDays` (number, optional).
+- `avgNeedIntervalDays` (number, optional).
+- `typicalPurchaseQuantity` (number, optional).
+- `predictionAccuracy` (number, optional).
+- `lastPurchaseAt` (datetime, optional).
+- `lastLowStockSignalAt` (datetime, optional).
+- `lastStockConfirmationAt` (datetime, optional).
+- `estimatedConsumptionIntervalDays` (number, optional).
+- `observationCount` (number).
+
+### Prediction
+
+- `id` (string, UUID) - primary key.
+- `productId` (FK -> Product).
+- `predictedState` (enum: `likely_available` | `probably_low` | `probably_out` | `uncertain`).
+- `confidenceScore` (number).
+- `predictedAt` (datetime).
+- `recommendedAction` (string, optional).
+- `deterministicSignals` (JSON) - the historical/heuristic inputs used.
+- `llmResult` (JSON, optional) - present only when LLM reasoning contributed.
+- `reason` (string) - human-readable explanation surfaced to the user.
+- `modelProviderVersion` (string, optional).
+- `feedbackStatus` (enum: `pending` | `accepted` | `rejected`, optional) - set via Prediction feedback (feature 10).
+
+### LlmInferenceLog
+
+Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conversation content - Hermes extracts structured intent before calling the backend.
+
+- `id` (string, UUID) - primary key.
+- `predictionId` (FK -> Prediction, optional).
+- `modelProvider` (string).
+- `promptVersion` (string, optional).
+- `structuredResponse` (JSON).
+- `confidence` (number, optional).
+- `timestamp` (datetime).
+
+## Tech stack
+
+- **Node.js + TypeScript + NestJS** - primary backend framework; chosen because the project is an application service (domain logic, APIs, integrations, scheduling, tool exposure), not a data-science workload.
+- **PostgreSQL** - source of truth for products, grocery list, household config, inventory events, prediction history, and derived statistics.
+- **Prisma** (preferred ORM; TypeORM only if a NestJS-specific constraint forces it) - schema and migrations.
+- **REST API via NestJS controllers** - JSON contracts, OpenAPI/Swagger docs, versioned routes (e.g. `/api/v1/grocery/items`, `/api/v1/inventory/events`, `/api/v1/inventory`, `/api/v1/predictions/low-stock`).
+- **MCP tools** (service-exposed or via a thin adapter) - `grocery_add`, `grocery_remove`, `grocery_list`, `record_purchase`, `record_stock_signal`, `get_inventory`, `get_product`, `get_low_stock_predictions`. Hermes learns tool usage via a dedicated skill; business rules stay in the service, not in Hermes.
+- **LLM integration behind an abstraction** (`LlmService`, `PredictionEngine`, `ProductClassifier`) - not tightly coupled to one provider; used for product classification/normalization, cold-start estimation, and household-context reasoning. LLM output is structured and DTO/schema-validated; the LLM never writes to the database directly - all state changes go through domain services.
+- **Hybrid prediction architecture** - historical events + time-since-signal + household profile + product metadata + deterministic heuristics + optional LLM inference, behind a `PredictionEngine` interface so a future Python service could replace/augment it without touching the rest of the app.
+- **Jest + NestJS testing utilities** - integration tests against PostgreSQL, API contract tests, prediction-engine unit tests, MCP/tool integration tests. Critical business flows require automated coverage.
+- **Docker + Docker Compose** - packaging and local development; environment-based configuration; DB migrations run as part of deployment.
+- **Redis/BullMQ** - explicitly deferred; only introduced if async/distributed prediction workloads later require it (post-MVP, feature 23).
+
+## Monetization
+
+Not in v1. This is a private household tool with no monetization-related complexity in the MVP architecture. If the project later becomes a product, possible directions include a household subscription, a limited free tier, paid AI-powered prediction, family plans, or premium integrations - advertising is explicitly disfavored given the sensitivity of household consumption data. None of this should shape the MVP design.
+
+## UI/UX
+
+There is no dedicated UI in the MVP. The experience is entirely conversational:
+
+```text
+WhatsApp -> Hermes -> Inventory Service (REST/MCP) -> PostgreSQL
+```
+
+Hermes translates natural requests ("add milk and eggs", "what do we need?", "I bought everything except toilet paper", "we're almost out of cereal") into calls against the service's API/MCP surface, and translates responses back into concise, natural replies rather than exposing raw tool/operation results.
+
+Notification behavior by confidence:
+
+- **High confidence** - proactively suggest.
+- **Medium confidence** - mention only when relevant or during a scheduled check.
+- **Low confidence** - stay silent; the system favors silence over weak predictions.
+
+The service itself must stay presentation-agnostic - it must not depend on WhatsApp or Hermes-specific formatting, so a future web dashboard, Home Assistant surface, or mobile app could consume the same API.
+
+## Deployment
+
+- **App type** - NestJS backend service (Node.js/TypeScript), no frontend build, REST API + MCP endpoint/adapter, optional internal scheduled jobs.
+- **Target host** - private backend reachable by Hermes: a private VPS, the same infrastructure as Hermes, a separate Docker host, or a container platform (Railway, Render, Fly.io). Self-hosted Docker is preferred if Hermes already runs on privately controlled infrastructure. > TODO: exact host not yet chosen.
+- **Build** - `npm ci && npm run build` (pnpm equivalent: `pnpm install --frozen-lockfile && pnpm build`).
+- **Start** - `npm run start:prod`, serving from `dist/`.
+- **Database** - PostgreSQL required; run `npx prisma migrate deploy` during deployment; backups should be enabled.
+- **Environment variables** - `NODE_ENV`, `PORT`, `DATABASE_URL`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `MCP_ENABLED`, `API_AUTH_TOKEN`, `LOG_LEVEL`. Potential future: `REDIS_URL`, `PREDICTION_CRON`, `PREDICTION_MIN_CONFIDENCE`, `PREDICTION_LLM_ENABLED`. > TODO: exact LLM provider and its provider-specific env var names are not yet chosen.
+- **Authentication** - simple service-to-service bearer token (`Authorization: Bearer <service-token>`); Hermes/MCP is the sole trusted client. No user signup, OAuth, sessions, or multi-user auth in the MVP.
+- **Health checks** - `GET /health` (process liveness); optionally `GET /ready` (DB connectivity, required config, critical dependencies). Health checks must not invoke an LLM.
+- **Scheduled jobs** - a periodic low-stock prediction scan, run via the NestJS scheduler, external cron, or Hermes cron calling the prediction tool. Preferred split: the inventory service computes predictions; Hermes decides when/where to send WhatsApp notifications, keeping message delivery outside the inventory service.
+- **Workers/queues** - none required initially; Redis + BullMQ + a NestJS worker are deferred to post-MVP (feature 23) if prediction jobs become expensive or asynchronous.
+- **Networking/domain** - prefer private networking between Hermes and the service; no public domain required initially (e.g. `http://home-inventory:3000` or an internal DNS name). If a public/MCP-reachable endpoint is needed, require HTTPS, authentication, restricted access, and request size/rate limits.
+
+## Open questions
+
+> Resolve these in the plans if they matter, then re-run `/overview`.
+
+- **LLM provider not yet chosen.** `project-plan.md` §5/§8 intentionally defers the exact provider, model, and provider-specific env var names ("Exact provider-specific names can be added when the LLM provider is selected"). This blocks a fully concrete `LlmService` spec until decided.
+- **Deployment host not yet chosen.** §8 lists several acceptable options (private VPS, shared Hermes infra, separate Docker host, or a platform like Railway/Render/Fly.io) without picking one.
+- **Build-plan item 18 ("Deployment readiness") overlaps with `/release`.** The Blueprint workflow normally treats containerization/production verification as an optional `/release` step rather than a numbered feature. Kept as item 18 per your approval; when you reach it, decide whether to spec it with `/feature` or handle it through `/release` instead.
