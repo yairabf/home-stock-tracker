@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProductType {
+  fast_consumable
+  pantry_staple
+  household_consumable
+  discrete_consumable
+}
+
+enum GroceryItemStatus {
+  pending
+  purchased
+  removed
+}
+
+enum GroceryItemSource {
+  hermes_whatsapp
+  api
+}
+
+model Product {
+  id                 String        @id @default(uuid())
+  canonicalName      String
+  aliases            String[]      @default([])
+  category           String?
+  typicalUnit        String?
+  productType        ProductType?
+  isPerishable       Boolean       @default(false)
+  predictionStrategy String?
+  predictionEnabled  Boolean       @default(true)
+  config             Json?
+
+  groceryListItems GroceryListItem[]
+}
+
+model GroceryListItem {
+  id                String            @id @default(uuid())
+  productId         String
+  product           Product           @relation(fields: [productId], references: [id])
+  requestedQuantity Float?
+  unit              String?
+  dateAdded         DateTime          @default(now())
+  status            GroceryItemStatus @default(pending)
+  note              String?
+  source            GroceryItemSource @default(api)
+}

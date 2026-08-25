@@ -110,9 +110,9 @@ of the switch; the skills and `ai-interaction.md` only point back here.
 - Run them via the project's test command (see Commands in `AGENTS.md`), not a
   hardcoded tool name.
 
-Stack binding (swap for yours): a TypeScript app uses Vitest, `vi.mock()` for
-external dependencies (Prisma, Clerk, etc.), and `vi.useFakeTimers()` for
-time-dependent logic; a Python app would use pytest; a Go app `go test`.
+Stack binding: this project uses Jest (via the Nest CLI scaffold, `ts-jest`
+transform), `jest.mock()` for external dependencies (Prisma, LLM providers,
+etc.), and `jest.useFakeTimers()` for time-dependent logic.
 
 ## Browser Verification
 

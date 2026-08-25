@@ -7,7 +7,7 @@
 
 ## MVP
 
-- [ ] 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API
+- [x] 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API
 - [ ] 2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases
 - [ ] 3. **Inventory event tracking** - record structured household stock signals such as restocked, low, out, and still available
 - [ ] 4. **Purchase and restock flow** - record purchased items, including completing all or part of the current grocery list
