@@ -1,12 +1,8 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ProductService } from '../product/product.service';
 import { AddGroceryItemDto } from './dto/add-grocery-item.dto';
 import { GroceryItemResponseDto } from './dto/grocery-item-response.dto';
-import { normalizeProductName } from './product-name.util';
 import {
   GroceryItemSource,
   GroceryItemStatus,
@@ -14,20 +10,15 @@ import {
 
 @Injectable()
 export class GroceryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly productService: ProductService,
+  ) {}
 
   async addItem(dto: AddGroceryItemDto): Promise<GroceryItemResponseDto> {
-    const canonicalName = normalizeProductName(dto.productName);
-    if (!canonicalName) {
-      throw new BadRequestException('productName must not be blank');
-    }
-
-    let product = await this.prisma.product.findFirst({
-      where: { canonicalName },
-    });
-    if (!product) {
-      product = await this.prisma.product.create({ data: { canonicalName } });
-    }
+    const product = await this.productService.findOrCreateByExactOrAliasMatch(
+      dto.productName,
+    );
 
     const item = await this.prisma.groceryListItem.create({
       data: {
