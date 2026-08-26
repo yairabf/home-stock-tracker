@@ -43,6 +43,7 @@ model Product {
   config             Json?
 
   groceryListItems GroceryListItem[]
+  inventoryEvents  InventoryEvent[]
 }
 
 model GroceryListItem {
@@ -55,4 +56,34 @@ model GroceryListItem {
   status            GroceryItemStatus @default(pending)
   note              String?
   source            GroceryItemSource @default(api)
+}
+
+enum InventoryEventType {
+  GROCERY_ADDED
+  GROCERY_REMOVED
+  PURCHASED
+  RESTOCKED
+  STOCK_LOW
+  STOCK_OUT
+  STOCK_CONFIRMED
+  STOCK_CORRECTED
+  PREDICTION_ACCEPTED
+  PREDICTION_REJECTED
+  INFERRED_LOW_STOCK
+}
+
+model InventoryEvent {
+  id        String             @id @default(uuid())
+  productId String
+  product   Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  eventType InventoryEventType
+  quantity  Float?
+  unit      String?
+  timestamp DateTime           @default(now())
+  source    String
+  confidence Float?
+  metadata  Json?
+
+  @@index([productId])
+  @@index([eventType])
 }

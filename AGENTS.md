@@ -122,6 +122,7 @@ checks do not make the Blueprint unusable.
 - Lint: `npm run lint`
 - Format: `npm run format`
 - Test: `npm run test`
+- Test watch: `npm run test:watch`
 - End-to-end test: `npm run test:e2e`
 - Verify: Not configured yet. Run `/ci` when you want to define one.
 
