@@ -45,6 +45,7 @@ model Product {
   groceryListItems GroceryListItem[]
   inventoryEvents  InventoryEvent[]
   predictions      Prediction[]
+  statistics       ProductStatistics?
 }
 
 model GroceryListItem {
@@ -137,4 +138,22 @@ model Prediction {
 
   @@index([productId])
   @@index([predictedAt])
+}
+
+model ProductStatistics {
+  id                             String    @id @default(uuid())
+  productId                      String    @unique
+  product                        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  avgPurchaseIntervalDays        Float?
+  avgNeedIntervalDays            Float?
+  typicalPurchaseQuantity        Float?
+  estimatedConsumptionIntervalDays Float?
+  predictionAccuracy             Float?
+  lastPurchaseAt                 DateTime?
+  lastLowStockSignalAt           DateTime?
+  lastStockConfirmationAt        DateTime?
+  observationCount               Int       @default(0)
+  updatedAt                      DateTime  @updatedAt
+
+  @@index([productId])
 }

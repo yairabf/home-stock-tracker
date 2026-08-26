@@ -9,6 +9,9 @@ export interface DeterministicSignals {
   productType: ProductType | null;
   eventCount: number;
   coldStart: boolean;
+  hasLearnedStatistics: boolean;
+  avgPurchaseIntervalDays: number | null;
+  avgNeedIntervalDays: number | null;
 }
 
 export interface EstimationResult {

@@ -16,7 +16,7 @@
   - [x] 4c. **Partial grocery-list completion** - complete selected items while leaving omitted items pending, with clear handling for unknown or already-resolved items
 - [x] 5. **Household profile** - store household composition and prediction preferences used when estimating consumption
 - [x] 6. **Inventory state estimation** - derive likely product availability from inventory events, purchases, and elapsed time
-- [ ] 7. **Consumption pattern learning** - calculate product-specific purchase and need intervals from household history
+- [x] 7. **Consumption pattern learning** - calculate product-specific purchase and need intervals from household history ✓ 2026-08-26
 - [ ] 8. **LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient
 - [ ] 9. **Hybrid low-stock prediction** - combine household history, product characteristics, deterministic signals, and LLM reasoning into confidence-scored stock predictions
 - [ ] 10. **Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve

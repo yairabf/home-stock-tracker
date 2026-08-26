@@ -5,6 +5,7 @@ import { HouseholdService } from '../household/household.service';
 import { EstimationResult } from './types/estimation-result';
 import { ProductEventHistory } from './types/product-event-history';
 import { PredictedState, ProductType, InventoryEventType } from '../generated/prisma/enums';
+import { MS_PER_DAY } from '../common/constants';
 
 const RELEVANT_EVENT_TYPES: InventoryEventType[] = [
   InventoryEventType.PURCHASED,
@@ -15,7 +16,7 @@ const RELEVANT_EVENT_TYPES: InventoryEventType[] = [
   InventoryEventType.STOCK_CORRECTED,
 ];
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 
 const PRODUCT_TYPE_THRESHOLDS: Record<ProductType, number> = {
   [ProductType.fast_consumable]: 7,
@@ -36,6 +37,28 @@ export class EstimationService {
     private readonly householdService: HouseholdService,
   ) {}
 
+  /**
+   * Fetch learned statistics for a product, if available.
+   */
+  private async fetchProductStatistics(
+    productId: string,
+  ): Promise<{
+    avgPurchaseIntervalDays: number | null;
+    avgNeedIntervalDays: number | null;
+    observationCount: number;
+  } | null> {
+    const stats = await this.prisma.productStatistics.findUnique({
+      where: { productId },
+      select: {
+        avgPurchaseIntervalDays: true,
+        avgNeedIntervalDays: true,
+        observationCount: true,
+      },
+    });
+
+    return stats;
+  }
+
   async estimateProductState(productId: string): Promise<EstimationResult> {
     const product = await this.productService.findOne(productId);
 
@@ -45,6 +68,7 @@ export class EstimationService {
       result = this.buildDisabledResult(productId, product.productType);
     } else {
       const eventHistory = await this.fetchProductEventHistory(productId);
+      const learnedStats = await this.fetchProductStatistics(productId);
 
       const directResult = this.applyDirectSignalPrecedence(eventHistory);
       if (directResult) {
@@ -53,6 +77,8 @@ export class EstimationService {
           eventHistory,
           product.productType,
           coldStart,
+          learnedStats !== null,
+          learnedStats,
         );
         result = this.buildResult(
           productId,
@@ -62,11 +88,12 @@ export class EstimationService {
           eventHistory,
           product.productType,
           coldStart,
+          learnedStats,
         );
       } else {
         const coldStart = this.isColdStart(eventHistory);
         if (coldStart) {
-          const confidence = this.calculateConfidence(eventHistory, product.productType, true);
+          const confidence = this.calculateConfidence(eventHistory, product.productType, true, learnedStats !== null, learnedStats);
           result = this.buildResult(
             productId,
             PredictedState.uncertain,
@@ -75,17 +102,21 @@ export class EstimationService {
             eventHistory,
             product.productType,
             true,
+            learnedStats,
           );
         } else {
           const timeDecayResult = this.applyTimeDecayHeuristics(
             eventHistory,
             product.productType,
+            learnedStats,
           );
 
           const confidence = this.calculateConfidence(
             eventHistory,
             product.productType,
             false,
+            learnedStats !== null,
+            learnedStats,
           );
 
           result = this.buildResult(
@@ -96,6 +127,7 @@ export class EstimationService {
             eventHistory,
             product.productType,
             false,
+            learnedStats,
           );
         }
       }
@@ -223,10 +255,15 @@ export class EstimationService {
   private applyTimeDecayHeuristics(
     history: ProductEventHistory,
     productType: ProductType | null,
+    learnedStats: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null } | null,
   ): { state: PredictedState; reason: string } {
-    const thresholdDays = productType
-      ? PRODUCT_TYPE_THRESHOLDS[productType] ?? FALLBACK_THRESHOLD_DAYS
-      : FALLBACK_THRESHOLD_DAYS;
+    // Use learned interval if available, otherwise fall back to product-type thresholds
+    const hasLearnedInterval = learnedStats !== null && learnedStats.avgPurchaseIntervalDays !== null;
+    const thresholdDays = hasLearnedInterval
+      ? learnedStats.avgPurchaseIntervalDays!
+      : productType
+        ? PRODUCT_TYPE_THRESHOLDS[productType] ?? FALLBACK_THRESHOLD_DAYS
+        : FALLBACK_THRESHOLD_DAYS;
 
     const lastPurchase = history.lastPurchaseAt ?? history.lastRestockAt;
     const daysSincePurchase = lastPurchase
@@ -240,23 +277,66 @@ export class EstimationService {
       };
     }
 
-    if (daysSincePurchase <= thresholdDays) {
+    // Apply learned interval with buffer (80% of avg = likely_available, 120%+ = probably_low)
+    if (hasLearnedInterval) {
+      // Use ±20% buffer for learned intervals
+      const lowerBound = thresholdDays * 0.8;
+      const upperBound = thresholdDays * 1.2;
+
+      if (daysSincePurchase <= lowerBound) {
+        return {
+          state: PredictedState.likely_available,
+          reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; within learned ${thresholdDays.toFixed(1)}-day interval (±20% buffer)`,
+        };
+      }
+
+      if (daysSincePurchase >= upperBound) {
+        return {
+          state: PredictedState.probably_low,
+          reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; exceeds learned ${thresholdDays.toFixed(1)}-day interval (±20% buffer)`,
+        };
+      }
+
+      // In between bounds - uncertain zone
       return {
-        state: PredictedState.likely_available,
-        reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; within ${thresholdDays}-day threshold for ${productType ?? 'unknown'} product type`,
+        state: PredictedState.uncertain,
+        reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; near learned ${thresholdDays.toFixed(1)}-day interval (within 80-120% range)`,
+      };
+    } else {
+      // Use exact threshold for product-type defaults (backward compatible)
+      if (daysSincePurchase <= thresholdDays) {
+        return {
+          state: PredictedState.likely_available,
+          reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; within ${thresholdDays}-day threshold for ${productType ?? 'unknown'} product type`,
+        };
+      }
+
+      return {
+        state: PredictedState.probably_low,
+        reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; exceeds ${thresholdDays}-day threshold for ${productType ?? 'unknown'} product type`,
       };
     }
-
-    return {
-      state: PredictedState.probably_low,
-      reason: `Last purchase ${daysSincePurchase.toFixed(1)} days ago; exceeds ${thresholdDays}-day threshold for ${productType ?? 'unknown'} product type`,
-    };
   }
 
+  /**
+   * Calculate confidence score based on signal quality and data availability.
+   *
+   * Confidence scoring formula:
+   * - Base: 0.5
+   * - +0.2 if productType is known
+   * - +0.1 per extra event beyond 2 (capped at +0.2)
+   * - +0.1 if last signal is within 7 days
+   * - -0.2 if cold-start (insufficient history)
+   * - +0.1 if learned statistics available
+   * - +0.1 if learned statistics derived from 5+ events (observationCount)
+   * - Final score clamped to [0.0, 1.0]
+   */
   private calculateConfidence(
     history: ProductEventHistory,
     productType: ProductType | null,
     coldStart: boolean,
+    hasLearnedStatistics: boolean,
+    learnedStats?: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null; observationCount: number } | null,
   ): number {
     let confidence = 0.5;
 
@@ -279,6 +359,15 @@ export class EstimationService {
 
     if (coldStart) confidence -= 0.2;
 
+    // Boost confidence when learned statistics are available
+    if (hasLearnedStatistics) {
+      confidence += 0.1;
+      // Additional boost if derived from 5+ events (stored in ProductStatistics.observationCount)
+      if (learnedStats && learnedStats.observationCount >= 5) {
+        confidence += 0.1;
+      }
+    }
+
     return Math.max(0.0, Math.min(1.0, confidence));
   }
 
@@ -290,6 +379,7 @@ export class EstimationService {
     history: ProductEventHistory,
     productType: ProductType | null,
     coldStart: boolean,
+    learnedStats: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null } | null,
   ): EstimationResult {
     const now = Date.now();
     return {
@@ -310,6 +400,9 @@ export class EstimationService {
         productType,
         eventCount: history.eventCount,
         coldStart,
+        hasLearnedStatistics: learnedStats !== null,
+        avgPurchaseIntervalDays: learnedStats?.avgPurchaseIntervalDays ?? null,
+        avgNeedIntervalDays: learnedStats?.avgNeedIntervalDays ?? null,
       },
     };
   }
@@ -331,6 +424,9 @@ export class EstimationService {
             productType: result.deterministicSignals.productType,
             eventCount: result.deterministicSignals.eventCount,
             coldStart: result.deterministicSignals.coldStart,
+            hasLearnedStatistics: result.deterministicSignals.hasLearnedStatistics,
+            avgPurchaseIntervalDays: result.deterministicSignals.avgPurchaseIntervalDays,
+            avgNeedIntervalDays: result.deterministicSignals.avgNeedIntervalDays,
           },
         },
       });
@@ -360,6 +456,9 @@ export class EstimationService {
         productType,
         eventCount: 0,
         coldStart: true,
+        hasLearnedStatistics: false,
+        avgPurchaseIntervalDays: null,
+        avgNeedIntervalDays: null,
       },
     };
   }
