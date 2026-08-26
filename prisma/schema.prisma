@@ -44,6 +44,7 @@ model Product {
 
   groceryListItems GroceryListItem[]
   inventoryEvents  InventoryEvent[]
+  predictions      Prediction[]
 }
 
 model GroceryListItem {
@@ -77,6 +78,19 @@ enum InventoryEventType {
   INFERRED_LOW_STOCK
 }
 
+enum PredictedState {
+  likely_available
+  probably_low
+  probably_out
+  uncertain
+}
+
+enum FeedbackStatus {
+  pending
+  accepted
+  rejected
+}
+
 model InventoryEvent {
   id        String             @id @default(uuid())
   productId String
@@ -105,4 +119,22 @@ model Household {
   productPolicies             Json?
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
+}
+
+model Prediction {
+  id                  String         @id @default(uuid())
+  productId           String
+  product             Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  predictedState      PredictedState
+  confidenceScore     Float
+  predictedAt         DateTime       @default(now())
+  recommendedAction   String?
+  deterministicSignals Json
+  llmResult           Json?
+  reason              String
+  modelProviderVersion String?
+  feedbackStatus      FeedbackStatus @default(pending)
+
+  @@index([productId])
+  @@index([predictedAt])
 }

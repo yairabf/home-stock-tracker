@@ -6,9 +6,10 @@ import { GroceryModule } from './grocery/grocery.module';
 import { ProductModule } from './product/product.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { HouseholdModule } from './household/household.module';
+import { EstimationModule } from './estimation/estimation.module';
 
 @Module({
-  imports: [PrismaModule, GroceryModule, ProductModule, InventoryModule, HouseholdModule],
+  imports: [PrismaModule, GroceryModule, ProductModule, InventoryModule, HouseholdModule, EstimationModule],
   controllers: [AppController],
   providers: [AppService],
 })

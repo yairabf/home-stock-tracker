@@ -1,5 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { InventoryService } from './inventory.service';
+import { EstimationService } from '../estimation/estimation.service';
+import { EstimationResponseDto } from './dto/estimation-response.dto';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
@@ -12,7 +23,10 @@ import { CompletePartialPurchaseResponseDto } from './dto/complete-partial-purch
 
 @Controller('inventory')
 export class InventoryController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    private readonly estimationService: EstimationService,
+  ) {}
 
   @Post('events')
   recordEvent(
@@ -49,5 +63,13 @@ export class InventoryController {
     @Body() dto: CompletePartialPurchaseDto,
   ): Promise<CompletePartialPurchaseResponseDto> {
     return this.inventoryService.completePartialPurchase(dto);
+  }
+
+  @Get('estimate/:productId')
+  async estimateInventory(
+    @Param('productId') productId: string,
+  ): Promise<EstimationResponseDto> {
+    const result = await this.estimationService.estimateProductState(productId);
+    return EstimationResponseDto.fromEstimationResult(result);
   }
 }
