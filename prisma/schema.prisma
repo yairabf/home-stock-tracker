@@ -56,6 +56,11 @@ model GroceryListItem {
   status            GroceryItemStatus @default(pending)
   note              String?
   source            GroceryItemSource @default(api)
+
+  relatedInventoryEventId String?
+  relatedInventoryEvent   InventoryEvent? @relation(fields: [relatedInventoryEventId], references: [id])
+
+  @@index([status])
 }
 
 enum InventoryEventType {
@@ -83,6 +88,8 @@ model InventoryEvent {
   source    String
   confidence Float?
   metadata  Json?
+
+  groceryListItems GroceryListItem[]
 
   @@index([productId])
   @@index([eventType])

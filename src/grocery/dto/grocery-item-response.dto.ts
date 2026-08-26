@@ -14,6 +14,7 @@ export class GroceryItemResponseDto {
   status: GroceryItemStatus;
   note: string | null;
   source: GroceryItemSource;
+  relatedInventoryEventId: string | null;
 
   static fromEntity(
     item: GroceryListItemModel,
@@ -29,6 +30,7 @@ export class GroceryItemResponseDto {
     dto.status = item.status;
     dto.note = item.note;
     dto.source = item.source;
+    dto.relatedInventoryEventId = item.relatedInventoryEventId;
     return dto;
   }
 }

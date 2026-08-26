@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
 import { InventoryEventResponseDto } from './dto/inventory-event-response.dto';
 import { InventoryEventListResponseDto } from './dto/inventory-event-list-response.dto';
+import { CompletePurchaseDto } from './dto/complete-purchase.dto';
+import { CompletePurchaseResponseDto } from './dto/complete-purchase-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -29,5 +31,13 @@ export class InventoryController {
     @Query() query: ListInventoryEventsDto,
   ): Promise<InventoryEventListResponseDto> {
     return this.inventoryService.listEvents(query);
+  }
+
+  @Post('purchases/complete')
+  @HttpCode(HttpStatus.CREATED)
+  completePurchase(
+    @Body() dto: CompletePurchaseDto,
+  ): Promise<CompletePurchaseResponseDto> {
+    return this.inventoryService.completePurchase(dto);
   }
 }

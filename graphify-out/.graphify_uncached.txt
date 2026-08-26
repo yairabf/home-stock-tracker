@@ -1,0 +1,3 @@
+/Users/yairabramovitch/Documents/workspace/home-stock-tracker/blueprint/build-plan.md
+/Users/yairabramovitch/Documents/workspace/home-stock-tracker/blueprint/context/current-feature.md
+/Users/yairabramovitch/Documents/workspace/home-stock-tracker/blueprint/history/features/04a-record-purchases-and-restocks.md

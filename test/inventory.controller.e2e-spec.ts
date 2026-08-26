@@ -36,6 +36,7 @@ describe('InventoryController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.groceryListItem.deleteMany({ where: { productId } });
     await prisma.inventoryEvent.deleteMany({ where: { productId } });
     await prisma.product.delete({ where: { id: productId } });
     await app.close();
@@ -198,6 +199,216 @@ describe('InventoryController (e2e)', () => {
       total: 0,
       limit: 20,
       offset: 0,
+    });
+  });
+
+  describe('POST /api/v1/inventory/purchases/complete', () => {
+    let groceryItemId1: string;
+    let groceryItemId2: string;
+
+    beforeEach(async () => {
+      // Clean up any existing grocery items for this product
+      await prisma.groceryListItem.deleteMany({ where: { productId } });
+
+      // Create fixture grocery items
+      const item1 = await prisma.groceryListItem.create({
+        data: {
+          productId,
+          requestedQuantity: 2,
+          unit: 'liter',
+          source: 'hermes_whatsapp',
+        },
+      });
+      const item2 = await prisma.groceryListItem.create({
+        data: {
+          productId,
+          requestedQuantity: 4,
+          unit: 'liter',
+          source: 'api',
+        },
+      });
+      groceryItemId1 = item1.id;
+      groceryItemId2 = item2.id;
+    });
+
+    afterEach(async () => {
+      await prisma.groceryListItem.deleteMany({ where: { productId } });
+    });
+
+    it('completes grocery items and returns event + updated items', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          quantity: 6,
+          unit: 'liter',
+          source: 'hermes_whatsapp',
+          confidence: 1,
+          groceryItemIds: [groceryItemId1, groceryItemId2],
+        })
+        .expect(201);
+
+      expect(response.body.event).toMatchObject({
+        productId,
+        eventType: 'PURCHASED',
+        quantity: 6,
+        unit: 'liter',
+        source: 'hermes_whatsapp',
+        confidence: 1,
+      });
+      expect(response.body.event.id).toBeDefined();
+      expect(response.body.event.timestamp).toBeDefined();
+
+      expect(response.body.groceryItems).toHaveLength(2);
+      expect(response.body.groceryItems[0]).toMatchObject({
+        productId,
+        status: 'purchased',
+        relatedInventoryEventId: response.body.event.id,
+      });
+      expect(response.body.groceryItems[1]).toMatchObject({
+        productId,
+        status: 'purchased',
+        relatedInventoryEventId: response.body.event.id,
+      });
+    });
+
+    it('returns 400 for invalid groceryItemIds', async () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: ['not-a-uuid'],
+        })
+        .expect(400);
+    });
+
+    it('returns 400 for empty groceryItemIds', async () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: [],
+        })
+        .expect(400);
+    });
+
+    it('returns 400 when grocery item not found', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: ['00000000-0000-4000-8000-000000000000'],
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('invalid');
+    });
+
+    it('returns 400 when grocery item belongs to different product', async () => {
+      // Create a different product
+      const otherProductResponse = await request(app.getHttpServer())
+        .post('/api/v1/products')
+        .send({ canonicalName: `other product ${Date.now()}` })
+        .expect(201);
+      const otherProductId = otherProductResponse.body.id;
+
+      // Create a grocery item for the other product
+      const otherItem = await prisma.groceryListItem.create({
+        data: {
+          productId: otherProductId,
+          source: 'api',
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: [otherItem.id],
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('invalid');
+
+      // Cleanup
+      await prisma.groceryListItem.delete({ where: { id: otherItem.id } });
+      await prisma.product.delete({ where: { id: otherProductId } });
+    });
+
+    it('returns 404 for unknown productId', async () => {
+      return request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId: '00000000-0000-4000-8000-000000000000',
+          source: 'api',
+          groceryItemIds: [groceryItemId1],
+        })
+        .expect(404);
+    });
+
+    it('returns 400 when grocery item already has relatedInventoryEventId', async () => {
+      // Create an inventory event first
+      const event = await prisma.inventoryEvent.create({
+        data: {
+          productId,
+          eventType: 'PURCHASED',
+          source: 'api',
+        },
+      });
+
+      // Link a grocery item to it
+      const linkedItem = await prisma.groceryListItem.create({
+        data: {
+          productId,
+          source: 'api',
+          status: 'pending',
+          relatedInventoryEventId: event.id,
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: [linkedItem.id],
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('invalid');
+
+      // Cleanup
+      await prisma.groceryListItem.delete({ where: { id: linkedItem.id } });
+      await prisma.inventoryEvent.delete({ where: { id: event.id } });
+    });
+
+    it('returns 400 when grocery item status is not pending', async () => {
+      // Create a grocery item with purchased status
+      const purchasedItem = await prisma.groceryListItem.create({
+        data: {
+          productId,
+          source: 'api',
+          status: 'purchased',
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/inventory/purchases/complete')
+        .send({
+          productId,
+          source: 'api',
+          groceryItemIds: [purchasedItem.id],
+        })
+        .expect(400);
+
+      expect(response.body.message).toContain('invalid');
+
+      // Cleanup
+      await prisma.groceryListItem.delete({ where: { id: purchasedItem.id } });
     });
   });
 });
