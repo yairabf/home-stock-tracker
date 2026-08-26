@@ -94,3 +94,15 @@ model InventoryEvent {
   @@index([productId])
   @@index([eventType])
 }
+
+model Household {
+  id                          String   @id @default(uuid())
+  adultsCount                 Int      @default(2)
+  childrenCount               Int      @default(3)
+  childAgeGroups              String[]
+  predictionPreferences       Json?
+  suggestionConfidenceThreshold Float  @default(0.7)
+  productPolicies             Json?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
