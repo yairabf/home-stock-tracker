@@ -7,6 +7,8 @@ import { InventoryEventResponseDto } from './dto/inventory-event-response.dto';
 import { InventoryEventListResponseDto } from './dto/inventory-event-list-response.dto';
 import { CompletePurchaseDto } from './dto/complete-purchase.dto';
 import { CompletePurchaseResponseDto } from './dto/complete-purchase-response.dto';
+import { CompletePartialPurchaseDto } from './dto/complete-partial-purchase.dto';
+import { CompletePartialPurchaseResponseDto } from './dto/complete-partial-purchase-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -39,5 +41,13 @@ export class InventoryController {
     @Body() dto: CompletePurchaseDto,
   ): Promise<CompletePurchaseResponseDto> {
     return this.inventoryService.completePurchase(dto);
+  }
+
+  @Post('purchases/complete-partial')
+  @HttpCode(HttpStatus.CREATED)
+  completePartialPurchase(
+    @Body() dto: CompletePartialPurchaseDto,
+  ): Promise<CompletePartialPurchaseResponseDto> {
+    return this.inventoryService.completePartialPurchase(dto);
   }
 }

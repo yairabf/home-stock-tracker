@@ -8,6 +8,7 @@ import { ProductService } from '../product/product.service';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { CompletePurchaseDto } from './dto/complete-purchase.dto';
+import { CompletePartialPurchaseDto } from './dto/complete-partial-purchase.dto';
 import { InventoryEventType, GroceryItemStatus } from '../generated/prisma/enums';
 
 const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
@@ -552,6 +553,289 @@ describe('InventoryService', () => {
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
+
+  describe('completePartialPurchase', () => {
+    const groceryItemId1 = '22222222-2222-4222-8222-222222222222';
+    const groceryItemId2 = '33333333-3333-4333-8333-333333333333';
+    const groceryItemId3 = '44444444-4444-4444-8444-444444444444';
+
+    describe('inclusive mode (completeItemIds)', () => {
+      it('completes specified items and skips invalid ones', async () => {
+        productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+        // Only groceryItemId1 exists in DB; groceryItemId2 is not found
+        prisma.groceryListItem.findMany.mockResolvedValue([
+          {
+            id: groceryItemId1,
+            productId: PRODUCT_ID,
+            status: GroceryItemStatus.pending,
+            relatedInventoryEventId: null,
+          },
+        ]);
+
+        const createdEvent = {
+          id: 'event-partial',
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.PURCHASED,
+          quantity: 6,
+          unit: 'liter',
+          timestamp: new Date('2026-08-26T12:00:00.000Z'),
+          source: 'hermes_whatsapp',
+          confidence: 1,
+          metadata: null,
+        };
+
+        const updatedItem1 = {
+          id: groceryItemId1,
+          productId: PRODUCT_ID,
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: createdEvent.id,
+          product: { canonicalName: 'milk' },
+        };
+
+        prisma.$transaction.mockImplementation(async (callback) => {
+          const tx = {
+            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
+            groceryListItem: {
+              update: jest.fn().mockResolvedValue(updatedItem1),
+            },
+          };
+          return callback(tx);
+        });
+
+        const result = await service.completePartialPurchase({
+          productId: PRODUCT_ID,
+          quantity: 6,
+          unit: 'liter',
+          source: 'hermes_whatsapp',
+          confidence: 1,
+          completeItemIds: [groceryItemId1, groceryItemId2],
+        });
+
+        expect(productService.findOne).toHaveBeenCalledWith(PRODUCT_ID);
+        expect(result.event.id).toBe(createdEvent.id);
+        expect(result.completed).toHaveLength(1);
+        expect(result.completed[0].id).toBe(groceryItemId1);
+        expect(result.skipped).toHaveLength(1);
+        expect(result.skipped[0].id).toBe(groceryItemId2);
+        expect(result.skipped[0].reason).toBe('not_found');
+      });
+
+      it('skips items belonging to different product', async () => {
+        productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+        prisma.groceryListItem.findMany.mockResolvedValue([
+          {
+            id: groceryItemId1,
+            productId: 'different-product-id',
+            status: GroceryItemStatus.pending,
+            relatedInventoryEventId: null,
+          },
+        ]);
+
+        await expect(
+          service.completePartialPurchase({
+            productId: PRODUCT_ID,
+            source: 'api',
+            completeItemIds: [groceryItemId1],
+          }),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('skips already resolved items', async () => {
+        productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+        prisma.groceryListItem.findMany.mockResolvedValue([
+          {
+            id: groceryItemId1,
+            productId: PRODUCT_ID,
+            status: GroceryItemStatus.purchased,
+            relatedInventoryEventId: null,
+          },
+        ]);
+
+        await expect(
+          service.completePartialPurchase({
+            productId: PRODUCT_ID,
+            source: 'api',
+            completeItemIds: [groceryItemId1],
+          }),
+        ).rejects.toThrow(BadRequestException);
+      });
+    });
+
+    describe('exclusive mode (omitItemIds)', () => {
+      it('completes all pending except omitted items', async () => {
+        productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+        prisma.groceryListItem.findMany
+          .mockResolvedValueOnce([
+            { id: groceryItemId1 },
+            { id: groceryItemId2 },
+            { id: groceryItemId3 },
+          ])
+          .mockResolvedValueOnce([
+            {
+              id: groceryItemId2,
+              productId: PRODUCT_ID,
+              status: GroceryItemStatus.pending,
+              relatedInventoryEventId: null,
+            },
+          ]);
+
+        const createdEvent = {
+          id: 'event-exclusive',
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.PURCHASED,
+          quantity: null,
+          unit: null,
+          timestamp: new Date('2026-08-26T12:00:00.000Z'),
+          source: 'api',
+          confidence: null,
+          metadata: null,
+        };
+
+        const updatedItem1 = {
+          id: groceryItemId1,
+          productId: PRODUCT_ID,
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: createdEvent.id,
+          product: { canonicalName: 'milk' },
+        };
+        const updatedItem3 = {
+          id: groceryItemId3,
+          productId: PRODUCT_ID,
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: createdEvent.id,
+          product: { canonicalName: 'milk' },
+        };
+
+        prisma.$transaction.mockImplementation(async (callback) => {
+          const tx = {
+            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
+            groceryListItem: {
+              update: jest
+                .fn()
+                .mockResolvedValueOnce(updatedItem1)
+                .mockResolvedValueOnce(updatedItem3),
+            },
+          };
+          return callback(tx);
+        });
+
+        const result = await service.completePartialPurchase({
+          productId: PRODUCT_ID,
+          source: 'api',
+          omitItemIds: [groceryItemId2],
+        });
+
+        expect(result.completed).toHaveLength(2);
+        expect(result.pending).toHaveLength(1);
+        expect(result.pending[0].id).toBe(groceryItemId2);
+        expect(result.pending[0].reason).toBe('explicitly_omitted');
+      });
+
+      it('handles omitItemIds referencing items not in pending list', async () => {
+        productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+        // First call: all pending items for product (only groceryItemId1)
+        // Second call: lookup items in omitItemIds (groceryItemId2 not found)
+        prisma.groceryListItem.findMany
+          .mockResolvedValueOnce([{ id: groceryItemId1 }])
+          .mockResolvedValueOnce([]);
+
+        const createdEvent = { id: 'event-1' };
+        const updatedItem = {
+          id: groceryItemId1,
+          product: { canonicalName: 'milk' },
+        };
+
+        prisma.$transaction.mockImplementation(async (callback) => {
+          const tx = {
+            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
+            groceryListItem: { update: jest.fn().mockResolvedValue(updatedItem) },
+          };
+          return callback(tx);
+        });
+
+        const result = await service.completePartialPurchase({
+          productId: PRODUCT_ID,
+          source: 'api',
+          omitItemIds: [groceryItemId2],
+        });
+
+        expect(result.completed).toHaveLength(1);
+        expect(result.skipped).toHaveLength(1);
+        expect(result.skipped[0].id).toBe(groceryItemId2);
+        expect(result.skipped[0].reason).toBe('not_found');
+      });
+    });
+
+    it('throws when all items fail validation', async () => {
+      productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+      prisma.groceryListItem.findMany.mockResolvedValue([]);
+
+      await expect(
+        service.completePartialPurchase({
+          productId: PRODUCT_ID,
+          source: 'api',
+          completeItemIds: [groceryItemId1],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('uses optimistic locking with status guard in update WHERE clause', async () => {
+      productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+      prisma.groceryListItem.findMany.mockResolvedValue([
+        {
+          id: groceryItemId1,
+          productId: PRODUCT_ID,
+          status: GroceryItemStatus.pending,
+          relatedInventoryEventId: null,
+        },
+      ]);
+
+      const mockUpdate = jest.fn().mockResolvedValue({
+        id: groceryItemId1,
+        product: { canonicalName: 'milk' },
+      });
+
+      prisma.$transaction.mockImplementation(async (callback) => {
+        const tx = {
+          inventoryEvent: { create: jest.fn().mockResolvedValue({ id: 'event-1' }) },
+          groceryListItem: { update: mockUpdate },
+        };
+        return callback(tx);
+      });
+
+      await service.completePartialPurchase({
+        productId: PRODUCT_ID,
+        source: 'api',
+        completeItemIds: [groceryItemId1],
+      });
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: groceryItemId1, status: GroceryItemStatus.pending },
+        data: {
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: 'event-1',
+        },
+        include: { product: true },
+      });
+    });
+
+    it('propagates NotFoundException when product does not exist', async () => {
+      productService.findOne.mockRejectedValue(
+        new NotFoundException(`No product with id "${PRODUCT_ID}"`),
+      );
+
+      await expect(
+        service.completePartialPurchase({
+          productId: PRODUCT_ID,
+          source: 'api',
+          completeItemIds: [groceryItemId1],
+        }),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(prisma.groceryListItem.findMany).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe('RecordPurchaseDto validation', () => {
@@ -831,5 +1115,166 @@ describe('RecordInventoryEventDto validation', () => {
     const errors = await validate(blank);
 
     expect(errors.some((error) => error.property === 'source')).toBe(true);
+  });
+});
+
+describe('CompletePartialPurchaseDto validation', () => {
+  const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
+  const ITEM_ID = '22222222-2222-4222-8222-222222222222';
+
+  it('accepts completeItemIds with all required fields', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'hermes_whatsapp',
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+    expect(dto.source).toBe('hermes_whatsapp');
+  });
+
+  it('accepts omitItemIds with all required fields', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+      omitItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('rejects when both completeItemIds and omitItemIds are provided', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+      completeItemIds: [ITEM_ID],
+      omitItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === '_xorValidation')).toBe(
+      true,
+    );
+  });
+
+  it('rejects when neither completeItemIds nor omitItemIds is provided', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === '_xorValidation')).toBe(
+      true,
+    );
+  });
+
+  it('rejects empty completeItemIds array', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+      completeItemIds: [],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'completeItemIds')).toBe(
+      true,
+    );
+  });
+
+  it('rejects empty omitItemIds array', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+      omitItemIds: [],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'omitItemIds')).toBe(true);
+  });
+
+  it('rejects non-UUID item IDs', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: 'api',
+      completeItemIds: ['not-a-uuid'],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'completeItemIds')).toBe(
+      true,
+    );
+  });
+
+  it('accepts optional fields', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      quantity: 6,
+      unit: 'liter',
+      source: 'api',
+      confidence: 0.9,
+      metadata: { note: 'test' },
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('rejects missing productId', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      source: 'api',
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'productId')).toBe(true);
+  });
+
+  it('rejects missing source', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'source')).toBe(true);
+  });
+
+  it('rejects blank source', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      source: '   ',
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'source')).toBe(true);
+  });
+
+  it('rejects negative quantity', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      quantity: -1,
+      source: 'api',
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors.some((error) => error.property === 'quantity')).toBe(true);
+  });
+
+  it('accepts zero quantity', async () => {
+    const dto = plainToInstance(CompletePartialPurchaseDto, {
+      productId: PRODUCT_ID,
+      quantity: 0,
+      source: 'api',
+      completeItemIds: [ITEM_ID],
+    });
+
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
   });
 });

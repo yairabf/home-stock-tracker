@@ -10,10 +10,10 @@
 - [x] 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API
 - [x] 2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases
 - [x] 3. **Inventory event tracking** - record structured household stock signals such as restocked, low, out, and still available
-- [ ] 4. **Purchase and restock flow** - record purchased items, including completing all or part of the current grocery list
+- [x] 4. **Purchase and restock flow** - record purchased items, including completing all or part of the current grocery list
   - [x] 4a. **Record purchases and restocks** - record purchase-oriented inventory events with product, quantity, unit, and source
   - [x] 4b. **Complete grocery items from a purchase** - resolve pending grocery items as purchased and link them to inventory events atomically
-  - [ ] 4c. **Partial grocery-list completion** - complete selected items while leaving omitted items pending, with clear handling for unknown or already-resolved items
+  - [x] 4c. **Partial grocery-list completion** - complete selected items while leaving omitted items pending, with clear handling for unknown or already-resolved items
 - [ ] 5. **Household profile** - store household composition and prediction preferences used when estimating consumption
 - [ ] 6. **Inventory state estimation** - derive likely product availability from inventory events, purchases, and elapsed time
 - [ ] 7. **Consumption pattern learning** - calculate product-specific purchase and need intervals from household history
