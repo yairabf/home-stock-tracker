@@ -41,6 +41,66 @@ describe('InventoryController (e2e)', () => {
     await app.close();
   });
 
+  it('records a purchase and returns it (POST /api/v1/inventory/purchases)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({
+        productId,
+        eventType: 'PURCHASED',
+        quantity: 2,
+        unit: 'liter',
+        source: 'hermes_whatsapp',
+      })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      productId,
+      eventType: 'PURCHASED',
+      quantity: 2,
+      unit: 'liter',
+      source: 'hermes_whatsapp',
+    });
+    expect(response.body.id).toBeDefined();
+    expect(response.body.timestamp).toBeDefined();
+  });
+
+  it('records a restock with zero quantity', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({
+        productId,
+        eventType: 'RESTOCKED',
+        quantity: 0,
+        source: 'api',
+      })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      productId,
+      eventType: 'RESTOCKED',
+      quantity: 0,
+      source: 'api',
+    });
+  });
+
+  it('rejects unsupported purchase event types', () => {
+    return request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({ productId, eventType: 'STOCK_LOW', source: 'api' })
+      .expect(400);
+  });
+
+  it('returns 404 for an unknown purchase productId', () => {
+    return request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({
+        productId: '00000000-0000-4000-8000-000000000000',
+        eventType: 'PURCHASED',
+        source: 'api',
+      })
+      .expect(404);
+  });
+
   it('records an event and returns it (POST /api/v1/inventory/events)', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/inventory/events')

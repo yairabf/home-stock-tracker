@@ -6,6 +6,7 @@ import { InventoryService } from './inventory.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
+import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { InventoryEventType } from '../generated/prisma/enums';
 
 const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
@@ -101,6 +102,100 @@ describe('InventoryService', () => {
     });
   });
 
+  describe('recordPurchase', () => {
+    it('validates the product and persists a purchase event', async () => {
+      productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+      const createdEvent = {
+        id: 'purchase-1',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.PURCHASED,
+        quantity: 2,
+        unit: 'liter',
+        timestamp: new Date('2026-08-26T10:00:00.000Z'),
+        source: 'api',
+        confidence: null,
+        metadata: null,
+      };
+      prisma.inventoryEvent.create.mockResolvedValue(createdEvent);
+
+      const dto: RecordPurchaseDto = {
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.PURCHASED,
+        quantity: 2,
+        unit: 'liter',
+        source: 'api',
+      };
+
+      await expect(service.recordPurchase(dto)).resolves.toEqual(createdEvent);
+      expect(productService.findOne).toHaveBeenCalledWith(PRODUCT_ID);
+      expect(prisma.inventoryEvent.create).toHaveBeenCalledWith({
+        data: {
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.PURCHASED,
+          quantity: 2,
+          unit: 'liter',
+          source: 'api',
+          confidence: undefined,
+          metadata: undefined,
+        },
+      });
+    });
+
+    it('records a restock with zero quantity', async () => {
+      productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
+      const createdEvent = {
+        id: 'restock-1',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.RESTOCKED,
+        quantity: 0,
+        unit: null,
+        timestamp: new Date('2026-08-26T10:00:00.000Z'),
+        source: 'api',
+        confidence: null,
+        metadata: null,
+      };
+      prisma.inventoryEvent.create.mockResolvedValue(createdEvent);
+
+      await expect(
+        service.recordPurchase({
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.RESTOCKED,
+          quantity: 0,
+          source: 'api',
+        }),
+      ).resolves.toEqual(createdEvent);
+    });
+
+    it('rejects unsupported event types before product lookup or persistence', async () => {
+      const dto = {
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.STOCK_LOW,
+        source: 'api',
+      } as unknown as RecordPurchaseDto;
+
+      await expect(service.recordPurchase(dto)).rejects.toThrow(
+        'Purchase eventType must be PURCHASED or RESTOCKED',
+      );
+      expect(productService.findOne).not.toHaveBeenCalled();
+      expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+    });
+
+    it('propagates a missing product error without persisting', async () => {
+      productService.findOne.mockRejectedValue(
+        new NotFoundException(`No product with id "${PRODUCT_ID}"`),
+      );
+
+      await expect(
+        service.recordPurchase({
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'api',
+        }),
+      ).rejects.toThrow(NotFoundException);
+      expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('listEvents', () => {
     it('applies default pagination and no filters when none are given', async () => {
       prisma.inventoryEvent.findMany.mockResolvedValue([]);
@@ -160,6 +255,51 @@ describe('InventoryService', () => {
         offset: 10,
       });
     });
+  });
+});
+
+describe('RecordPurchaseDto validation', () => {
+  it('accepts PURCHASED and RESTOCKED events, including zero quantity', async () => {
+    for (const eventType of [
+      InventoryEventType.PURCHASED,
+      InventoryEventType.RESTOCKED,
+    ]) {
+      const dto = plainToInstance(RecordPurchaseDto, {
+        productId: PRODUCT_ID,
+        eventType,
+        quantity: 0,
+        source: '  api  ',
+      });
+
+      expect(dto.source).toBe('api');
+      await expect(validate(dto)).resolves.toHaveLength(0);
+    }
+  });
+
+  it('rejects non-purchase inventory event types', async () => {
+    const dto = plainToInstance(RecordPurchaseDto, {
+      productId: PRODUCT_ID,
+      eventType: InventoryEventType.STOCK_LOW,
+      source: 'api',
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'eventType')).toBe(true);
+  });
+
+  it('rejects negative quantities and blank sources', async () => {
+    const dto = plainToInstance(RecordPurchaseDto, {
+      productId: PRODUCT_ID,
+      eventType: InventoryEventType.PURCHASED,
+      quantity: -1,
+      source: '   ',
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'quantity')).toBe(true);
+    expect(errors.some((error) => error.property === 'source')).toBe(true);
   });
 });
 

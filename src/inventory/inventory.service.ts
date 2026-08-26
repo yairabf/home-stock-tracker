@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
+import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
 import { InventoryEventResponseDto } from './dto/inventory-event-response.dto';
 import { InventoryEventListResponseDto } from './dto/inventory-event-list-response.dto';
@@ -13,6 +14,35 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
   ) {}
+
+  async recordPurchase(
+    dto: RecordPurchaseDto,
+  ): Promise<InventoryEventResponseDto> {
+    if (
+      dto.eventType !== 'PURCHASED' &&
+      dto.eventType !== 'RESTOCKED'
+    ) {
+      throw new BadRequestException(
+        'Purchase eventType must be PURCHASED or RESTOCKED',
+      );
+    }
+
+    await this.productService.findOne(dto.productId);
+
+    const event = await this.prisma.inventoryEvent.create({
+      data: {
+        productId: dto.productId,
+        eventType: dto.eventType,
+        quantity: dto.quantity,
+        unit: dto.unit,
+        source: dto.source,
+        confidence: dto.confidence,
+        metadata: dto.metadata as Prisma.InputJsonValue | undefined,
+      },
+    });
+
+    return InventoryEventResponseDto.fromEntity(event);
+  }
 
   async recordEvent(
     dto: RecordInventoryEventDto,
