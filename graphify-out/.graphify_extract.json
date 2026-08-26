@@ -2560,7 +2560,7 @@
       "line": 0
     }
   ],
-  "links": [
+  "edges": [
     {
       "source": "src/main.ts",
       "target": "@nestjs/core",
@@ -6860,9 +6860,6 @@
       "line": 15
     }
   ],
-  "directed": false,
-  "multigraph": false,
-  "graph": {
-    "name": "home-stock-tracker"
-  }
+  "input_tokens": 0,
+  "output_tokens": 0
 }
