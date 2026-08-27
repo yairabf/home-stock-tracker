@@ -1,13 +1,16 @@
 # Hermes inventory skill scenarios
 
-Use this matrix to review the skill against representative single-intent
-requests. Arguments shown as `<resolved product id>` or `<listed item id>` must
-come from the immediately preceding tool result, never from the model.
+Use this matrix to review the skill against representative grocery and inventory
+conversations. Arguments shown as `<resolved product id>` or `<listed item id>`
+must come from the immediately preceding tool result, never from the model.
 
 | Case | User request or condition | Expected action | Expected outcome |
 | --- | --- | --- | --- |
 | Add grocery item | "Add two liters of milk." | `grocery_add({ productName: "milk", requestedQuantity: 2, unit: "liters" })` | Summarize the returned pending item. |
 | Invalid grocery quantity | "Add minus two milks." | Ask for a valid positive quantity. Do not call a tool. | No mutation occurs. |
+| Add several grocery items | "Add milk and eggs." | Call `grocery_add({ productName: "milk" })`, then `grocery_add({ productName: "eggs" })`. | Summarize both confirmed additions in the user's order. |
+| Item-specific measurements | "Add two liters of milk and eggs." | Call `grocery_add({ productName: "milk", requestedQuantity: 2, unit: "liters" })`, then `grocery_add({ productName: "eggs" })`. | Do not copy milk's quantity or unit to eggs. |
+| Multi-add uncertain failure | The milk addition is confirmed, but the eggs mutation has an uncertain transport result. | Stop after the eggs result. Do not retry or attempt later additions. | Report milk as confirmed and eggs as uncertain. |
 | List groceries | "What's on the grocery list?" | `grocery_list({})` | Summarize pending items. |
 | Empty grocery list | `grocery_list` returns `{ items: [] }`. | Do not call another tool. | Say the pending grocery list is empty. |
 | Remove one grocery item | "Remove milk from the list." | `grocery_list({})`, select one exact pending `productName`, then `grocery_remove({ id: <listed item id> })`. | Summarize the removed item. |
@@ -29,7 +32,17 @@ come from the immediately preceding tool result, never from the model.
 | Empty recommendations | `get_low_stock_predictions` returns `{ recommendations: [] }`. | Do not add products or call another prediction tool. | Say there are no actionable recommendations now. |
 | Domain failure | A mutation returns a validation or not-found tool error. | Report the safe error and correct only from known facts or ask a focused question. | Do not claim success. |
 | Uncertain transport failure | A mutation call ends without a reliable result. | Report that the outcome is uncertain. Do not retry automatically. | Avoid a possible duplicate mutation. |
-| Compound purchase completion | "I bought everything except toilet paper." | Do not approximate with repeated `record_purchase`, `grocery_remove`, or other single-product calls. | Explain that this compound flow requires the grocery-conversation workflow. |
+| Complete everything | "I bought everything." | `grocery_list({})`, then `complete_grocery_purchase({ groceryItemIds: <all returned pending item ids> })`. | Summarize only the completed items returned by the mutation. |
+| Complete selected items | "I bought milk and eggs." | `grocery_list({})`; require one exact pending match for each name; call `complete_grocery_purchase` with those two IDs in user order. | Unmentioned pending items remain pending. |
+| Complete everything except one item | "I bought everything except toilet paper." | `grocery_list({})`; require one exact `productName` match for toilet paper; call `complete_grocery_purchase` once with every other pending item ID. | Toilet paper remains pending; summarize confirmed completed items. |
+| Complete everything except several items | "I bought everything except toilet paper and milk." | `grocery_list({})`; require one exact pending match for each exception; call `complete_grocery_purchase` once with all remaining IDs. | Both named exceptions remain pending. |
+| Empty list completion | "I bought everything," then `grocery_list` returns no pending items. | Do not call `complete_grocery_purchase`. | Say the pending list was already empty. |
+| Unmatched purchase name | "I bought everything except oat milk," but no pending `productName` is exactly `oat milk`. | Ask which pending item the user means. Do not mutate. | No item is guessed or completed. |
+| Duplicate pending name | "I bought everything except milk," but two pending items have `productName: "milk"`. | Ask which milk item should remain pending. Do not mutate. | No arbitrary duplicate is selected. |
+| All items omitted | Every pending item is named as an exception. | Do not call `complete_grocery_purchase`. | Explain that nothing was recorded as purchased. |
+| List changes before completion | `complete_grocery_purchase` rejects because a selected item is no longer pending. | Read `grocery_list` again, explain the changed snapshot, and ask for fresh confirmation. | Do not retry the mutation automatically. |
+| Compound domain failure | `complete_grocery_purchase` returns a validation or not-found tool error. | Report the safe error and do not claim any item was completed. | The all-or-nothing service leaves the batch uncommitted. |
+| Compound uncertain failure | `complete_grocery_purchase` ends without a reliable result. | Report that the entire outcome is uncertain. Do not retry or issue per-item mutations. | Avoid duplicate purchase events and item completion. |
 
 ## Review record
 
@@ -39,6 +52,8 @@ For each row, verify:
 - every argument name and enum value matches its schema;
 - every product UUID comes from `get_product` or trusted active context;
 - every grocery-item UUID comes from `grocery_list`;
+- `complete_grocery_purchase` receives a non-empty, unique, inclusive ID list;
+- omitted items never appear in `complete_grocery_purchase` arguments;
 - no optional quantity, unit, note, confidence, or metadata is invented;
 - no mutation runs after an ambiguous request or uncertain mutation result;
 - final wording reflects the structured result rather than claiming unobserved

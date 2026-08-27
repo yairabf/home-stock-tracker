@@ -99,6 +99,11 @@ const inventoryEventOutputSchema = z.object({
   metadata: z.json().nullable(),
 });
 
+const completeGroceryPurchaseOutputSchema = z.object({
+  events: z.array(inventoryEventOutputSchema),
+  completedItems: z.array(groceryItemOutputSchema),
+});
+
 const recommendationOutputSchema = z.object({
   recommendations: z.array(
     z.object({
@@ -144,8 +149,39 @@ export class McpServerFactory {
     this.registerGroceryTools(server);
     this.registerReadTools(server);
     this.registerInventoryWriteTools(server);
+    this.registerGroceryPurchaseCompletionTool(server);
     this.registerRecommendationTool(server);
     return server;
+  }
+
+  private registerGroceryPurchaseCompletionTool(server: McpServer): void {
+    server.registerTool(
+      'complete_grocery_purchase',
+      {
+        description:
+          'Complete selected pending grocery items from one shopping trip.',
+        inputSchema: z
+          .object({
+            groceryItemIds: z
+              .array(z.uuid())
+              .min(1)
+              .refine((ids) => new Set(ids).size === ids.length, {
+                message: 'Grocery item IDs must be unique',
+              }),
+          })
+          .strict(),
+        outputSchema: completeGroceryPurchaseOutputSchema,
+      },
+      ({ groceryItemIds }) =>
+        this.runTool(async () =>
+          this.toolResult(
+            await this.inventoryService.completeGroceryPurchase({
+              groceryItemIds,
+              source: 'hermes_mcp',
+            }),
+          ),
+        ),
+    );
   }
 
   private registerRecommendationTool(server: McpServer): void {

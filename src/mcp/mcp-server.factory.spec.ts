@@ -38,7 +38,10 @@ describe('McpServerFactory grocery tools', () => {
   >;
   let predictionEngine: jest.Mocked<PredictionEngine>;
   let inventoryService: jest.Mocked<
-    Pick<InventoryService, 'recordPurchase' | 'recordEvent'>
+    Pick<
+      InventoryService,
+      'recordPurchase' | 'recordEvent' | 'completeGroceryPurchase'
+    >
   >;
   let recommendationService: jest.Mocked<
     Pick<LowStockRecommendationService, 'getRecommendations'>
@@ -58,6 +61,7 @@ describe('McpServerFactory grocery tools', () => {
     inventoryService = {
       recordPurchase: jest.fn(),
       recordEvent: jest.fn(),
+      completeGroceryPurchase: jest.fn(),
     };
     recommendationService = { getRecommendations: jest.fn() };
     const factory = new McpServerFactory(
@@ -92,6 +96,7 @@ describe('McpServerFactory grocery tools', () => {
       'get_inventory',
       'record_purchase',
       'record_stock_signal',
+      'complete_grocery_purchase',
       'get_low_stock_predictions',
     ]);
     expect(
@@ -426,6 +431,97 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.content).toEqual([
       { type: 'text', text: `No product with id "${item.productId}"` },
     ]);
+  });
+
+  it('completes selected grocery items with MCP provenance', async () => {
+    const secondItem = {
+      ...item,
+      id: '00000000-0000-4000-8000-000000000004',
+      productId: '00000000-0000-4000-8000-000000000005',
+      productName: 'rice',
+      status: GroceryItemStatus.purchased,
+      relatedInventoryEventId: '00000000-0000-4000-8000-000000000006',
+    };
+    const completedItem = {
+      ...item,
+      status: GroceryItemStatus.purchased,
+      relatedInventoryEventId: '00000000-0000-4000-8000-000000000003',
+    };
+    const events = [
+      inventoryEvent(InventoryEventType.PURCHASED),
+      {
+        ...inventoryEvent(InventoryEventType.PURCHASED),
+        id: secondItem.relatedInventoryEventId,
+        productId: secondItem.productId,
+      },
+    ];
+    inventoryService.completeGroceryPurchase.mockResolvedValue({
+      events,
+      completedItems: [completedItem, secondItem],
+    });
+
+    const result = await client.callTool({
+      name: 'complete_grocery_purchase',
+      arguments: { groceryItemIds: [completedItem.id, secondItem.id] },
+    });
+
+    expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
+      groceryItemIds: [completedItem.id, secondItem.id],
+      source: 'hermes_mcp',
+    });
+    expect(result.structuredContent).toEqual({
+      events: events.map((event) => ({
+        ...event,
+        timestamp: event.timestamp.toISOString(),
+      })),
+      completedItems: [completedItem, secondItem].map((completed) => ({
+        ...completed,
+        dateAdded: completed.dateAdded.toISOString(),
+      })),
+    });
+    expect(result.content).toEqual([
+      { type: 'text', text: JSON.stringify(result.structuredContent) },
+    ]);
+  });
+
+  it.each([
+    {},
+    { groceryItemIds: [] },
+    { groceryItemIds: ['not-a-uuid'] },
+    { groceryItemIds: [item.id, item.id] },
+    { groceryItemIds: [item.id], productId: item.productId },
+  ])(
+    'rejects invalid completion input before service invocation',
+    async (args) => {
+      const result = await client.callTool({
+        name: 'complete_grocery_purchase',
+        arguments: args,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sanitizes unexpected grocery completion failures', async () => {
+    inventoryService.completeGroceryPurchase.mockRejectedValue(
+      new Error('database password leaked here'),
+    );
+
+    const result = await client.callTool({
+      name: 'complete_grocery_purchase',
+      arguments: { groceryItemIds: [item.id] },
+    });
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'The inventory operation could not be completed',
+        },
+      ],
+      isError: true,
+    });
   });
 
   it('returns empty and populated low-stock recommendations', async () => {

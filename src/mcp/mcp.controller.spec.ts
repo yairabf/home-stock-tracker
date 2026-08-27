@@ -39,6 +39,11 @@ describe('McpController', () => {
     listItems: jest.fn(),
   };
   const recommendationService = { getRecommendations: jest.fn() };
+  const inventoryService = {
+    recordPurchase: jest.fn(),
+    recordEvent: jest.fn(),
+    completeGroceryPurchase: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -63,7 +68,7 @@ describe('McpController', () => {
         },
         {
           provide: InventoryService,
-          useValue: { recordPurchase: jest.fn(), recordEvent: jest.fn() },
+          useValue: inventoryService,
         },
         {
           provide: LowStockRecommendationService,
@@ -115,12 +120,31 @@ describe('McpController', () => {
         'get_inventory',
         'record_purchase',
         'record_stock_signal',
+        'complete_grocery_purchase',
         'get_low_stock_predictions',
       ]);
       groceryService.listItems.mockResolvedValue([]);
       await expect(
         client.callTool({ name: 'grocery_list', arguments: {} }),
       ).resolves.toMatchObject({ structuredContent: { items: [] } });
+
+      const groceryItemId = '00000000-0000-4000-8000-000000000001';
+      inventoryService.completeGroceryPurchase.mockResolvedValue({
+        events: [],
+        completedItems: [],
+      });
+      await expect(
+        client.callTool({
+          name: 'complete_grocery_purchase',
+          arguments: { groceryItemIds: [groceryItemId] },
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: { events: [], completedItems: [] },
+      });
+      expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
+        groceryItemIds: [groceryItemId],
+        source: 'hermes_mcp',
+      });
       expect(transport.sessionId).toBeUndefined();
     } finally {
       await client.close();

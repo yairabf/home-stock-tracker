@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.0.0
+version: 1.1.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -24,9 +24,9 @@ logic in conversation.
 - Do not create product IDs, grocery-item IDs, quantities, units, or event types.
 - Do not expose raw tool payloads as the final response. Summarize the confirmed
   result concisely.
-- This skill handles one clear intent at a time. Compound purchase completion,
-  such as "I bought everything except toilet paper," requires the separate
-  grocery-conversation workflow.
+- One clear request may require several ordered tool calls. Finish prerequisite
+  reads before mutations, preserve the user's item boundaries, and stop after an
+  uncertain mutation result instead of continuing or retrying.
 
 ## Tool selection
 
@@ -39,6 +39,7 @@ logic in conversation.
 | `get_inventory` | The user asks whether one known product is probably available, low, or out. Resolve its product ID first. | The user asks for an exact physical count or for all recommendations. |
 | `record_purchase` | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock. | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase. |
 | `record_stock_signal` | The user directly reports one resolved product as low, out, confirmed available, or corrected. | The statement is only a prediction or is too vague to map to an allowed event type. |
+| `complete_grocery_purchase` | The user reports buying all or selected items from the current grocery list. Resolve the current pending item IDs with `grocery_list` first. | Any named included or excluded item has zero or multiple exact pending matches, no selected items remain, or the user only plans to shop later. |
 | `get_low_stock_predictions` | The user asks what the household needs or which products are confidently predicted low or out. | The user asks for the grocery list or one product's estimated state. |
 
 ## Resolve identifiers first
@@ -71,11 +72,58 @@ Ask a focused question before mutation when:
 - a quantity is malformed, zero, negative, or conflicts with its unit;
 - stock wording does not map clearly to an allowed event type;
 - the user describes a future plan rather than a completed purchase;
-- fulfilling the request would require an unsupported compound workflow.
+- a named included or excluded grocery item has no unique exact pending match.
 
 Omit optional fields that the user did not provide. Do not fill them with
 defaults. One explicit request may produce its prerequisite lookup followed by
 one mutation; that is still one intent.
+
+## Grocery conversation workflows
+
+### Add several items
+
+For a clear request such as "add milk and eggs," call `grocery_add` once for
+each explicitly named item. Keep any quantity, unit, or note attached only to
+the item the user attached it to. Do not copy a quantity or unit across items.
+
+Run the additions in the user's order. After each confirmed result, continue to
+the next item. If a mutation result is uncertain, stop, report which additions
+were confirmed and which later additions were not attempted, and do not retry.
+
+### Read lists and recommendations
+
+- "What's on the grocery list?" calls `grocery_list({})` and summarizes only
+  the returned pending items.
+- "What do we need?" calls `get_low_stock_predictions({})` and summarizes only
+  the returned recommendations.
+
+Do not merge these answers or turn a recommendation into a grocery-list change
+unless the user explicitly requests that mutation.
+
+### Complete a shopping trip
+
+For "I bought everything," "I bought these items," or "I bought everything
+except X":
+
+1. Call `grocery_list({})` to obtain the current pending snapshot.
+2. Identify included or excluded items only by exact `productName` matches in
+   that result. Each named item must match exactly one pending item.
+3. Ask a focused question without mutating when any name has zero or multiple
+   exact matches, or when it is unclear whether the user bought an item.
+4. Build an inclusive `groceryItemIds` array containing only items the user said
+   were purchased. For "everything except X," remove the exactly matched
+   exceptions from the pending snapshot.
+5. If the inclusive array is empty, explain that nothing was recorded and do
+   not call a mutation.
+6. Call `complete_grocery_purchase` once with the inclusive IDs. Summarize only
+   the returned completed items.
+
+Never pass omitted item IDs to `complete_grocery_purchase`. Never approximate
+this flow with `record_purchase`, `grocery_remove`, or repeated partial
+completion calls. If the service rejects a stale item because the list changed,
+read the list again and explain the change; do not repeat the mutation without
+fresh user confirmation. If the mutation transport result is uncertain, do not
+retry or claim that any item was completed.
 
 ## Event mapping
 
@@ -144,5 +192,7 @@ supplement an empty result with guesses.
 
 **"I bought everything except toilet paper."**
 
-Do not approximate this with the available single-product tools. Explain that
-the compound grocery-completion flow is not available in this skill.
+Call `grocery_list`. Match "toilet paper" to exactly one pending
+`productName`, remove that item from the pending snapshot, then call
+`complete_grocery_purchase` once with all remaining item IDs. Leave toilet paper
+pending and summarize only the confirmed completed items.

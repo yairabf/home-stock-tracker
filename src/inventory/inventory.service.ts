@@ -18,6 +18,10 @@ import {
 } from './dto/complete-partial-purchase-response.dto';
 import { GroceryItemResponseDto } from '../grocery/dto/grocery-item-response.dto';
 import { InventoryEventType, GroceryItemStatus } from '../generated/prisma/enums';
+import {
+  CompleteGroceryPurchaseInput,
+  CompleteGroceryPurchaseResult,
+} from './types/complete-grocery-purchase';
 
 @Injectable()
 export class InventoryService {
@@ -188,6 +192,97 @@ export class InventoryService {
         GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
       ),
     };
+  }
+
+  async completeGroceryPurchase(
+    input: CompleteGroceryPurchaseInput,
+  ): Promise<CompleteGroceryPurchaseResult> {
+    this.validateCompleteGroceryPurchaseInput(input);
+
+    const items = await this.prisma.groceryListItem.findMany({
+      where: { id: { in: input.groceryItemIds } },
+      include: { product: true },
+    });
+    const itemsById = new Map(items.map((item) => [item.id, item]));
+    const orderedItems = input.groceryItemIds.map((id) => itemsById.get(id));
+    const invalidItems = orderedItems.flatMap((item, index) => {
+      if (!item) {
+        return [{ id: input.groceryItemIds[index], reason: 'not_found' }];
+      }
+      if (
+        item.status !== GroceryItemStatus.pending ||
+        item.relatedInventoryEventId !== null
+      ) {
+        return [{ id: item.id, reason: 'already_resolved' }];
+      }
+      return [];
+    });
+
+    if (invalidItems.length > 0) {
+      throw new BadRequestException({
+        message: 'One or more grocery items cannot be completed',
+        errors: invalidItems,
+      });
+    }
+
+    const validItems = orderedItems.filter(
+      (item): item is NonNullable<typeof item> => item !== undefined,
+    );
+    const productIds = [...new Set(validItems.map((item) => item.productId))];
+    const result = await this.prisma.$transaction(async (tx) => {
+      const events = await Promise.all(
+        productIds.map((productId) =>
+          tx.inventoryEvent.create({
+            data: {
+              productId,
+              eventType: InventoryEventType.PURCHASED,
+              source: input.source,
+            },
+          }),
+        ),
+      );
+      const eventIdsByProduct = new Map(
+        events.map((event) => [event.productId, event.id]),
+      );
+      const completedItems = await Promise.all(
+        validItems.map((item) =>
+          tx.groceryListItem.update({
+            where: {
+              id: item.id,
+              status: GroceryItemStatus.pending,
+              relatedInventoryEventId: null,
+            },
+            data: {
+              status: GroceryItemStatus.purchased,
+              relatedInventoryEventId: eventIdsByProduct.get(item.productId),
+            },
+            include: { product: true },
+          }),
+        ),
+      );
+      return { events, completedItems };
+    });
+
+    return {
+      events: result.events.map(InventoryEventResponseDto.fromEntity),
+      completedItems: result.completedItems.map((item) =>
+        GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
+      ),
+    };
+  }
+
+  private validateCompleteGroceryPurchaseInput(
+    input: CompleteGroceryPurchaseInput,
+  ): void {
+    if (input.groceryItemIds.length === 0) {
+      throw new BadRequestException('At least one grocery item is required');
+    }
+    if (new Set(input.groceryItemIds).size !== input.groceryItemIds.length) {
+      throw new BadRequestException('Grocery item IDs must be unique');
+    }
+    if (input.source.trim().length === 0) {
+      throw new BadRequestException('Purchase source is required');
+    }
   }
 
   async completePartialPurchase(

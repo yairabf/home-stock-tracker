@@ -836,6 +836,196 @@ describe('InventoryService', () => {
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
+
+  describe('completeGroceryPurchase', () => {
+    const milkProductId = '22222222-2222-4222-8222-222222222222';
+    const riceProductId = '33333333-3333-4333-8333-333333333333';
+    const milkItemId = '44444444-4444-4444-8444-444444444444';
+    const riceItemId = '55555555-5555-4555-8555-555555555555';
+    const secondMilkItemId = '66666666-6666-4666-8666-666666666666';
+
+    const groceryItem = (
+      id: string,
+      productId: string,
+      productName: string,
+      status = GroceryItemStatus.pending,
+      relatedInventoryEventId: string | null = null,
+    ) => ({
+      id,
+      productId,
+      requestedQuantity: null,
+      unit: null,
+      dateAdded: new Date('2026-08-27T10:00:00.000Z'),
+      status,
+      note: null,
+      source: 'hermes_whatsapp',
+      relatedInventoryEventId,
+      product: { canonicalName: productName },
+    });
+
+    const purchaseEvent = (id: string, productId: string) => ({
+      id,
+      productId,
+      eventType: InventoryEventType.PURCHASED,
+      quantity: null,
+      unit: null,
+      timestamp: new Date('2026-08-27T11:00:00.000Z'),
+      source: 'hermes_mcp',
+      confidence: null,
+      metadata: null,
+    });
+
+    it('atomically completes mixed products in request order', async () => {
+      const milkItem = groceryItem(milkItemId, milkProductId, 'milk');
+      const riceItem = groceryItem(riceItemId, riceProductId, 'rice');
+      const secondMilkItem = groceryItem(
+        secondMilkItemId,
+        milkProductId,
+        'milk',
+      );
+      prisma.groceryListItem.findMany.mockResolvedValue([
+        secondMilkItem,
+        riceItem,
+        milkItem,
+      ]);
+
+      const milkEvent = purchaseEvent('milk-event', milkProductId);
+      const riceEvent = purchaseEvent('rice-event', riceProductId);
+      const createEvent = jest
+        .fn()
+        .mockResolvedValueOnce(riceEvent)
+        .mockResolvedValueOnce(milkEvent);
+      const updateItem = jest.fn().mockImplementation(({ where, data }) => {
+        const original = [riceItem, milkItem, secondMilkItem].find(
+          (item) => item.id === where.id,
+        );
+        return Promise.resolve({ ...original, ...data });
+      });
+      prisma.$transaction.mockImplementation((callback) =>
+        callback({
+          inventoryEvent: { create: createEvent },
+          groceryListItem: { update: updateItem },
+        }),
+      );
+
+      const result = await service.completeGroceryPurchase({
+        groceryItemIds: [riceItemId, milkItemId, secondMilkItemId],
+        source: 'hermes_mcp',
+      });
+
+      expect(createEvent).toHaveBeenNthCalledWith(1, {
+        data: {
+          productId: riceProductId,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'hermes_mcp',
+        },
+      });
+      expect(createEvent).toHaveBeenNthCalledWith(2, {
+        data: {
+          productId: milkProductId,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'hermes_mcp',
+        },
+      });
+      expect(result.events.map((event) => event.id)).toEqual([
+        'rice-event',
+        'milk-event',
+      ]);
+      expect(result.completedItems.map((item) => item.id)).toEqual([
+        riceItemId,
+        milkItemId,
+        secondMilkItemId,
+      ]);
+      expect(updateItem.mock.calls.map((call) => call[0].data)).toEqual([
+        {
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: 'rice-event',
+        },
+        {
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: 'milk-event',
+        },
+        {
+          status: GroceryItemStatus.purchased,
+          relatedInventoryEventId: 'milk-event',
+        },
+      ]);
+    });
+
+    it.each([
+      { groceryItemIds: [], source: 'hermes_mcp' },
+      {
+        groceryItemIds: [milkItemId, milkItemId],
+        source: 'hermes_mcp',
+      },
+      { groceryItemIds: [milkItemId], source: '   ' },
+    ])('rejects invalid input before reading or writing', async (input) => {
+      await expect(service.completeGroceryPurchase(input)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.groceryListItem.findMany).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['an unknown item', [], milkItemId],
+      [
+        'an already resolved item',
+        [
+          groceryItem(
+            milkItemId,
+            milkProductId,
+            'milk',
+            GroceryItemStatus.purchased,
+            'old-event',
+          ),
+        ],
+        milkItemId,
+      ],
+    ])('rejects %s before starting a transaction', async (_case, items, id) => {
+      prisma.groceryListItem.findMany.mockResolvedValue(items);
+
+      await expect(
+        service.completeGroceryPurchase({
+          groceryItemIds: [id],
+          source: 'hermes_mcp',
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('propagates a guarded update failure so the transaction can roll back', async () => {
+      const milkItem = groceryItem(milkItemId, milkProductId, 'milk');
+      prisma.groceryListItem.findMany.mockResolvedValue([milkItem]);
+      const concurrentChange = new Error('record no longer exists');
+      const createEvent = jest
+        .fn()
+        .mockResolvedValue(purchaseEvent('milk-event', milkProductId));
+      const updateItem = jest.fn().mockRejectedValue(concurrentChange);
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          inventoryEvent: { create: createEvent },
+          groceryListItem: { update: updateItem },
+        }),
+      );
+
+      await expect(
+        service.completeGroceryPurchase({
+          groceryItemIds: [milkItemId],
+          source: 'hermes_mcp',
+        }),
+      ).rejects.toBe(concurrentChange);
+      expect(updateItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            id: milkItemId,
+            status: GroceryItemStatus.pending,
+            relatedInventoryEventId: null,
+          },
+        }),
+      );
+    });
+  });
 });
 
 describe('RecordPurchaseDto validation', () => {
