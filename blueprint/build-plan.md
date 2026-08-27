@@ -27,7 +27,7 @@
 - [x] 15. **Proactive stock checks** - let Hermes periodically request low-stock predictions and send useful recommendations through WhatsApp ✓ 2026-08-28
 - [x] 16. **Service authentication** - protect REST and MCP access with private service-to-service authentication ✓ 2026-08-28
 - [x] 17. **Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures ✓ 2026-08-28
-- [ ] 18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment
+- [x] 18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment ✓ 2026-08-28
 
 ## Post-MVP
 

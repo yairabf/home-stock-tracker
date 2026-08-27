@@ -4,56 +4,17 @@
   "graph": {},
   "nodes": [
     {
-      "id": "src_llm_types_structured_generation_llmrefusal",
-      "label": "LlmRefusal",
+      "id": "src_llm_types_structured_generation_llmgenerationresult",
+      "label": "LlmGenerationResult",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 0,
       "community_name": "product.service.ts",
       "file_type": "code",
-      "norm_label": "llmrefusal",
+      "norm_label": "llmgenerationresult",
       "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_llm_types_structured_generation_llmresultmetadata",
-      "label": "LlmResultMetadata",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "llmresultmetadata",
-      "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_llm_types_structured_generation_llmsuccess",
-      "label": "LlmSuccess",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "llmsuccess",
-      "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_llm_types_structured_generation_llmunavailable",
-      "label": "LlmUnavailable",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "llmunavailable",
-      "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L26"
+      "source_location": "L32"
     },
     {
       "id": "src_product_product_classification_log_service_productclassificationlogservice",
@@ -212,95 +173,17 @@
       "source_location": "L9"
     },
     {
-      "id": "src_estimation_estimation_service_householdpredictioncontext",
-      "label": "HouseholdPredictionContext",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "householdpredictioncontext",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L56"
-    },
-    {
-      "id": "src_estimation_estimation_service_hybridreasoningresult",
-      "label": "HybridReasoningResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "hybridreasoningresult",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L69"
-    },
-    {
-      "id": "src_estimation_estimation_service_learnedstatistics",
-      "label": "LearnedStatistics",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "learnedstatistics",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L49"
-    },
-    {
-      "id": "src_estimation_estimation_service_productpredictioncontext",
-      "label": "ProductPredictionContext",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "productpredictioncontext",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L63"
-    },
-    {
       "id": "src_estimation_types_estimation_result_deterministicsignals",
       "label": "DeterministicSignals",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "deterministicsignals",
       "source_file": "src/estimation/types/estimation-result.ts",
       "source_location": "L4"
-    },
-    {
-      "id": "src_estimation_types_estimation_result_estimationresult",
-      "label": "EstimationResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "estimationresult",
-      "source_file": "src/estimation/types/estimation-result.ts",
-      "source_location": "L29"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_predictionreasoninginput",
-      "label": "PredictionReasoningInput",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "predictionreasoninginput",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L61"
     },
     {
       "id": "src_estimation_types_prediction_reasoning_predictionreasoningresult",
@@ -309,7 +192,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "predictionreasoningresult",
       "source_file": "src/estimation/types/prediction-reasoning.ts",
@@ -322,7 +205,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "deterministicpredictioncandidate",
       "source_file": "src/estimation/types/prediction-result.ts",
@@ -335,7 +218,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "llmpredictionattempt",
       "source_file": "src/estimation/types/prediction-result.ts",
@@ -348,24 +231,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "predictionresult",
       "source_file": "src/estimation/types/prediction-result.ts",
       "source_location": "L20"
-    },
-    {
-      "id": "src_estimation_types_product_event_history_productevent",
-      "label": "ProductEvent",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "productevent",
-      "source_file": "src/estimation/types/product-event-history.ts",
-      "source_location": "L3"
     },
     {
       "id": "src_inventory_dto_complete_partial_purchase_dto_completepartialpurchasedto",
@@ -615,6 +485,58 @@
       "source_location": "L1"
     },
     {
+      "id": "src_estimation_estimation_service_householdpredictioncontext",
+      "label": "HouseholdPredictionContext",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "householdpredictioncontext",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L56"
+    },
+    {
+      "id": "src_estimation_estimation_service_learnedstatistics",
+      "label": "LearnedStatistics",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "learnedstatistics",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L49"
+    },
+    {
+      "id": "src_estimation_estimation_service_productpredictioncontext",
+      "label": "ProductPredictionContext",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "productpredictioncontext",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L63"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_predictionreasoner",
+      "label": "PredictionReasoner",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "predictionreasoner",
+      "source_file": "src/estimation/prediction-reasoner.service.ts",
+      "source_location": "L14"
+    },
+    {
       "id": "src_prisma_prisma_service_prismaservice",
       "label": "PrismaService",
       "_callable": true,
@@ -686,37 +608,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": "openaillmprovider",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_llm_types_structured_generation_llmgenerationresult",
-      "label": "LlmGenerationResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 220,
-      "community_name": "LlmGenerationResult",
-      "file_type": "code",
-      "norm_label": "llmgenerationresult",
-      "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_mcp_mcp_controller_mcpcontroller",
-      "label": "McpController",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "mcpcontroller",
-      "source_file": "src/mcp/mcp.controller.ts",
-      "source_location": "L7"
+      "source_location": "L13"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory",
@@ -729,7 +625,7 @@
       "file_type": "code",
       "norm_label": "mcpserverfactory",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L133"
+      "source_location": "L134"
     },
     {
       "id": "src_statistics_dto_statistics_response_dto_statisticsresponsedto",
@@ -758,17 +654,17 @@
       "source_location": "L4"
     },
     {
-      "id": "src_observability_observability_module_observabilitymodule",
-      "label": "ObservabilityModule",
+      "id": "src_grocery_dto_grocery_item_response_dto_groceryitemresponsedto",
+      "label": "GroceryItemResponseDto",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 235,
-      "community_name": "observability.module.ts",
+      "community_name": "GroceryItemResponseDto",
       "file_type": "code",
-      "norm_label": "observabilitymodule",
-      "source_file": "src/observability/observability.module.ts",
-      "source_location": "L9"
+      "norm_label": "groceryitemresponsedto",
+      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
+      "source_location": "L7"
     },
     {
       "id": "src_health_dto_health_response_dto_healthresponsedto",
@@ -810,19 +706,6 @@
       "source_location": "L8"
     },
     {
-      "id": "src_health_health_controller_spec_protectedcontroller",
-      "label": "ProtectedController",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "health.controller.ts",
-      "file_type": "code",
-      "norm_label": "protectedcontroller",
-      "source_file": "src/health/health.controller.spec.ts",
-      "source_location": "L17"
-    },
-    {
       "id": "src_health_health_module_healthmodule",
       "label": "HealthModule",
       "_callable": true,
@@ -859,7 +742,189 @@
       "file_type": "code",
       "norm_label": "testrestcontroller",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L21"
+      "source_location": "L22"
+    },
+    {
+      "id": "src_grocery_grocery_controller_grocerycontroller",
+      "label": "GroceryController",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "code",
+      "norm_label": "grocerycontroller",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_estimation_types_product_event_history_productevent",
+      "label": "ProductEvent",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
+      "file_type": "code",
+      "norm_label": "productevent",
+      "source_file": "src/estimation/types/product-event-history.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "src_estimation_types_product_event_history_producteventhistory",
+      "label": "ProductEventHistory",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
+      "file_type": "code",
+      "norm_label": "producteventhistory",
+      "source_file": "src/estimation/types/product-event-history.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_grocery_dto_list_grocery_items_dto_listgroceryitemsdto",
+      "label": "ListGroceryItemsDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "listgroceryitemsdto",
+      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_predictionreasoninginput",
+      "label": "PredictionReasoningInput",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "predictionreasoninginput",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L61"
+    },
+    {
+      "id": "src_mcp_mcp_controller_mcpcontroller",
+      "label": "McpController",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "mcpcontroller",
+      "source_file": "src/mcp/mcp.controller.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger",
+      "label": "OperationalLogger",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": "operationallogger",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L71"
+    },
+    {
+      "id": "src_estimation_estimation_service_hybridreasoningresult",
+      "label": "HybridReasoningResult",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 294,
+      "community_name": ".predictProduct",
+      "file_type": "code",
+      "norm_label": "hybridreasoningresult",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L69"
+    },
+    {
+      "id": "src_estimation_types_estimation_result_estimationresult",
+      "label": "EstimationResult",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 294,
+      "community_name": ".predictProduct",
+      "file_type": "code",
+      "norm_label": "estimationresult",
+      "source_file": "src/estimation/types/estimation-result.ts",
+      "source_location": "L29"
+    },
+    {
+      "id": "src_llm_types_structured_generation_llmrefusal",
+      "label": "LlmRefusal",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 295,
+      "community_name": "structured-generation.ts",
+      "file_type": "code",
+      "norm_label": "llmrefusal",
+      "source_file": "src/llm/types/structured-generation.ts",
+      "source_location": "L22"
+    },
+    {
+      "id": "src_llm_types_structured_generation_llmresultmetadata",
+      "label": "LlmResultMetadata",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 295,
+      "community_name": "structured-generation.ts",
+      "file_type": "code",
+      "norm_label": "llmresultmetadata",
+      "source_file": "src/llm/types/structured-generation.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_llm_types_structured_generation_llmsuccess",
+      "label": "LlmSuccess",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 295,
+      "community_name": "structured-generation.ts",
+      "file_type": "code",
+      "norm_label": "llmsuccess",
+      "source_file": "src/llm/types/structured-generation.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_llm_types_structured_generation_llmunavailable",
+      "label": "LlmUnavailable",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 295,
+      "community_name": "structured-generation.ts",
+      "file_type": "code",
+      "norm_label": "llmunavailable",
+      "source_file": "src/llm/types/structured-generation.ts",
+      "source_location": "L26"
+    },
+    {
+      "id": "src_health_health_controller_spec_protectedcontroller",
+      "label": "ProtectedController",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 296,
+      "community_name": "ProtectedController",
+      "file_type": "code",
+      "norm_label": "protectedcontroller",
+      "source_file": "src/health/health.controller.spec.ts",
+      "source_location": "L17"
     },
     {
       "id": "src_estimation_estimation_service_estimationservice",
@@ -873,19 +938,6 @@
       "norm_label": "estimationservice",
       "source_file": "src/estimation/estimation.service.ts",
       "source_location": "L75"
-    },
-    {
-      "id": "src_estimation_types_product_event_history_producteventhistory",
-      "label": "ProductEventHistory",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
-      "file_type": "code",
-      "norm_label": "producteventhistory",
-      "source_file": "src/estimation/types/product-event-history.ts",
-      "source_location": "L11"
     },
     {
       "id": "src_inventory_dto_list_inventory_events_dto_listinventoryeventsdto",
@@ -938,45 +990,6 @@
       "norm_label": "inventorycontroller",
       "source_file": "src/inventory/inventory.controller.ts",
       "source_location": "L35"
-    },
-    {
-      "id": "src_grocery_dto_grocery_item_response_dto_groceryitemresponsedto",
-      "label": "GroceryItemResponseDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "groceryitemresponsedto",
-      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_grocery_dto_list_grocery_items_dto_listgroceryitemsdto",
-      "label": "ListGroceryItemsDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "listgroceryitemsdto",
-      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_grocery_grocery_controller_grocerycontroller",
-      "label": "GroceryController",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "grocerycontroller",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L16"
     },
     {
       "id": "src_grocery_grocery_service_groceryservice",
@@ -1070,26 +1083,13 @@
       "source_location": "L21"
     },
     {
-      "id": "src_llm_llm_module_llmmodule",
-      "label": "LlmModule",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "LlmProvider",
-      "file_type": "code",
-      "norm_label": "llmmodule",
-      "source_file": "src/llm/llm.module.ts",
-      "source_location": "L42"
-    },
-    {
       "id": "src_llm_llm_provider_llmprovider",
       "label": "LlmProvider",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llmprovider",
       "source_file": "src/llm/llm-provider.ts",
@@ -1102,7 +1102,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llmproviderregistry",
       "source_file": "src/llm/llm-provider.registry.ts",
@@ -1115,7 +1115,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "structuredgenerationrequest",
       "source_file": "src/llm/types/structured-generation.ts",
@@ -1200,6 +1200,19 @@
       "source_location": "L20"
     },
     {
+      "id": "src_llm_llm_module_llmmodule",
+      "label": "LlmModule",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "llmmodule",
+      "source_file": "src/llm/llm.module.ts",
+      "source_location": "L44"
+    },
+    {
       "id": "src_mcp_mcp_module_mcpmodule",
       "label": "McpModule",
       "_callable": true,
@@ -1210,7 +1223,20 @@
       "file_type": "code",
       "norm_label": "mcpmodule",
       "source_file": "src/mcp/mcp.module.ts",
-      "source_location": "L22"
+      "source_location": "L24"
+    },
+    {
+      "id": "src_observability_observability_module_observabilitymodule",
+      "label": "ObservabilityModule",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "observabilitymodule",
+      "source_file": "src/observability/observability.module.ts",
+      "source_location": "L9"
     },
     {
       "id": "src_prisma_prisma_module_prismamodule",
@@ -1276,19 +1302,6 @@
       "norm_label": "statisticscontroller",
       "source_file": "src/statistics/statistics.controller.ts",
       "source_location": "L15"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_predictionreasoner",
-      "label": "PredictionReasoner",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "predictionreasoner",
-      "source_file": "src/estimation/prediction-reasoner.service.ts",
-      "source_location": "L14"
     },
     {
       "id": "src_observability_operational_logger_service_integrationerrortype",
@@ -1369,19 +1382,6 @@
       "source_location": "L51"
     },
     {
-      "id": "src_observability_operational_logger_service_operationallogger",
-      "label": "OperationalLogger",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "operationallogger",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L71"
-    },
-    {
       "id": "src_observability_operational_logger_service_operationaloutcome",
       "label": "OperationalOutcome",
       "_callable": true,
@@ -1440,7 +1440,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "predictionengine",
       "source_file": "src/estimation/prediction-engine.ts",
@@ -1453,7 +1453,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "lowstockrecommendationservice",
       "source_file": "src/inventory/low-stock-recommendation.service.ts",
@@ -1486,6 +1486,66 @@
       "source_location": "L3"
     },
     {
+      "id": "src_product_product_classification_log_service_productclassificationlogservice_record",
+      "label": ".record()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": ".record()",
+      "source_file": "src/product/product-classification-log.service.ts",
+      "source_location": "L18"
+    },
+    {
+      "id": "src_product_product_classifier_service_productclassifier_classify",
+      "label": ".classify()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": ".classify()",
+      "source_file": "src/product/product-classifier.service.ts",
+      "source_location": "L22"
+    },
+    {
+      "id": "src_product_product_name_util_normalizealiases",
+      "label": "normalizeAliases()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": "normalizealiases()",
+      "source_file": "src/product/product-name.util.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_product_product_name_util_normalizeproductname",
+      "label": "normalizeProductName()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": "normalizeproductname()",
+      "source_file": "src/product/product-name.util.ts",
+      "source_location": "L2"
+    },
+    {
+      "id": "src_product_product_service_productservice_classifysafely",
+      "label": ".classifySafely()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": ".classifysafely()",
+      "source_file": "src/product/product.service.ts",
+      "source_location": "L155"
+    },
+    {
       "id": "src_product_product_service_productservice_constructor",
       "label": ".constructor()",
       "_callable": true,
@@ -1496,6 +1556,18 @@
       "norm_label": ".constructor()",
       "source_file": "src/product/product.service.ts",
       "source_location": "L22"
+    },
+    {
+      "id": "src_product_product_service_productservice_recordclassificationsafely",
+      "label": ".recordClassificationSafely()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": ".recordclassificationsafely()",
+      "source_file": "src/product/product.service.ts",
+      "source_location": "L165"
     },
     {
       "id": "src_product_product_service_spec_product",
@@ -1515,23 +1587,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": ".applyhybridreasoning()",
       "source_file": "src/estimation/estimation.service.ts",
       "source_location": "L224"
-    },
-    {
-      "id": "src_estimation_estimation_service_estimationservice_builddisabledresult",
-      "label": ".buildDisabledResult()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": ".builddisabledresult()",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L656"
     },
     {
       "id": "src_estimation_estimation_service_estimationservice_finalizecandidate",
@@ -1539,7 +1599,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": ".finalizecandidate()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -1551,7 +1611,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": ".predictproduct()",
       "source_file": "src/estimation/prediction-engine.ts",
@@ -1563,47 +1623,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": ".reason()",
       "source_file": "src/estimation/prediction-reasoner.service.ts",
       "source_location": "L19"
-    },
-    {
-      "id": "src_product_product_classifier_service_productclassifier_classify",
-      "label": ".classify()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": ".classify()",
-      "source_file": "src/product/product-classifier.service.ts",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_product_product_name_util_normalizealiases",
-      "label": "normalizeAliases()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": "normalizealiases()",
-      "source_file": "src/product/product-name.util.ts",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_product_product_name_util_normalizeproductname",
-      "label": "normalizeProductName()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": "normalizeproductname()",
-      "source_file": "src/product/product-name.util.ts",
-      "source_location": "L2"
     },
     {
       "id": "src_product_product_service_productservice_addalias",
@@ -1628,18 +1652,6 @@
       "norm_label": ".addaliaswithintransaction()",
       "source_file": "src/product/product.service.ts",
       "source_location": "L189"
-    },
-    {
-      "id": "src_product_product_service_productservice_classifysafely",
-      "label": ".classifySafely()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": ".classifysafely()",
-      "source_file": "src/product/product.service.ts",
-      "source_location": "L155"
     },
     {
       "id": "src_product_product_service_productservice_create",
@@ -2218,6 +2230,54 @@
       "source_location": "L182"
     },
     {
+      "id": "src_estimation_estimation_service_estimationservice_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L78"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_predictionreasoner_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/estimation/prediction-reasoner.service.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_health_health_service_healthservice_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 216,
+      "community_name": "PrismaService",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/health/health.service.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_inventory_inventory_service_inventoryservice_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 216,
+      "community_name": "PrismaService",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/inventory/inventory.service.ts",
+      "source_location": "L32"
+    },
+    {
       "id": "src_prisma_prisma_service_prismaservice_constructor",
       "label": ".constructor()",
       "_callable": true,
@@ -2290,18 +2350,6 @@
       "source_location": "L97"
     },
     {
-      "id": "src_grocery_dto_grocery_item_response_dto_groceryitemresponsedto_fromentity",
-      "label": ".fromEntity()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "InventoryService",
-      "file_type": "code",
-      "norm_label": ".fromentity()",
-      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
-      "source_location": "L19"
-    },
-    {
       "id": "src_inventory_dto_inventory_event_response_dto_inventoryeventresponsedto_fromentity",
       "label": ".fromEntity()",
       "_callable": true,
@@ -2350,16 +2398,28 @@
       "source_location": "L126"
     },
     {
-      "id": "src_inventory_inventory_service_inventoryservice_listevents",
-      "label": ".listEvents()",
+      "id": "src_inventory_inventory_service_inventoryservice_recordevent",
+      "label": ".recordEvent()",
       "_callable": true,
       "_origin": "ast",
       "community": 22,
       "community_name": "InventoryService",
       "file_type": "code",
-      "norm_label": ".listevents()",
+      "norm_label": ".recordevent()",
       "source_file": "src/inventory/inventory.service.ts",
-      "source_location": "L98"
+      "source_location": "L71"
+    },
+    {
+      "id": "src_inventory_inventory_service_inventoryservice_recordpurchase",
+      "label": ".recordPurchase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "InventoryService",
+      "file_type": "code",
+      "norm_label": ".recordpurchase()",
+      "source_file": "src/inventory/inventory.service.ts",
+      "source_location": "L38"
     },
     {
       "id": "src_inventory_inventory_service_inventoryservice_validatecompletegrocerypurchaseinput",
@@ -2372,6 +2432,18 @@
       "norm_label": ".validatecompletegrocerypurchaseinput()",
       "source_file": "src/inventory/inventory.service.ts",
       "source_location": "L306"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_inventoryaction",
+      "label": ".inventoryAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "InventoryService",
+      "file_type": "code",
+      "norm_label": ".inventoryaction()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L74"
     },
     {
       "id": "src_product_product_service_productservice_findone",
@@ -2391,11 +2463,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L15"
+      "source_location": "L16"
     },
     {
       "id": "src_llm_openai_openai_llm_provider_openaillmprovider_generatestructured",
@@ -2403,11 +2475,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": ".generatestructured()",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L20"
+      "source_location": "L22"
+    },
+    {
+      "id": "src_llm_openai_openai_llm_provider_openaillmprovider_logfailure",
+      "label": ".logFailure()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 220,
+      "community_name": "openai-llm.provider.spec.ts",
+      "file_type": "code",
+      "norm_label": ".logfailure()",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L79"
     },
     {
       "id": "src_llm_openai_openai_llm_provider_openaillmprovider_unavailable",
@@ -2415,59 +2499,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": ".unavailable()",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L66"
-    },
-    {
-      "id": "src_product_product_classification_log_service_productclassificationlogservice_record",
-      "label": ".record()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 220,
-      "community_name": "LlmGenerationResult",
-      "file_type": "code",
-      "norm_label": ".record()",
-      "source_file": "src/product/product-classification-log.service.ts",
-      "source_location": "L18"
-    },
-    {
-      "id": "src_product_product_service_productservice_recordclassificationsafely",
-      "label": ".recordClassificationSafely()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 220,
-      "community_name": "LlmGenerationResult",
-      "file_type": "code",
-      "norm_label": ".recordclassificationsafely()",
-      "source_file": "src/product/product.service.ts",
-      "source_location": "L165"
-    },
-    {
-      "id": "src_mcp_mcp_controller_mcpcontroller_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/mcp/mcp.controller.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_mcp_mcp_controller_mcpcontroller_handle",
-      "label": ".handle()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": ".handle()",
-      "source_file": "src/mcp/mcp.controller.ts",
-      "source_location": "L11"
+      "source_location": "L71"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_create",
@@ -2479,7 +2515,7 @@
       "file_type": "code",
       "norm_label": ".create()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L143"
+      "source_location": "L145"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_registergrocerypurchasecompletiontool",
@@ -2491,7 +2527,7 @@
       "file_type": "code",
       "norm_label": ".registergrocerypurchasecompletiontool()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L157"
+      "source_location": "L159"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_registergrocerytools",
@@ -2503,7 +2539,7 @@
       "file_type": "code",
       "norm_label": ".registergrocerytools()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L306"
+      "source_location": "L308"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_registerinventorywritetools",
@@ -2515,7 +2551,7 @@
       "file_type": "code",
       "norm_label": ".registerinventorywritetools()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L207"
+      "source_location": "L209"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
@@ -2527,7 +2563,7 @@
       "file_type": "code",
       "norm_label": ".registerreadtools()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L263"
+      "source_location": "L265"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_registerrecommendationtool",
@@ -2539,7 +2575,7 @@
       "file_type": "code",
       "norm_label": ".registerrecommendationtool()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L187"
+      "source_location": "L189"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_runtool",
@@ -2551,7 +2587,7 @@
       "file_type": "code",
       "norm_label": ".runtool()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L378"
+      "source_location": "L380"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_safeerrormessage",
@@ -2563,7 +2599,7 @@
       "file_type": "code",
       "norm_label": ".safeerrormessage()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L388"
+      "source_location": "L397"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_toolerror",
@@ -2575,7 +2611,7 @@
       "file_type": "code",
       "norm_label": ".toolerror()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L404"
+      "source_location": "L413"
     },
     {
       "id": "src_mcp_mcp_server_factory_mcpserverfactory_toolresult",
@@ -2587,7 +2623,7 @@
       "file_type": "code",
       "norm_label": ".toolresult()",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L365"
+      "source_location": "L367"
     },
     {
       "id": "src_statistics_dto_statistics_response_dto_statisticsresponsedto_fromresult",
@@ -2650,6 +2686,78 @@
       "source_location": "L12"
     },
     {
+      "id": "src_grocery_dto_grocery_item_response_dto_groceryitemresponsedto_fromentity",
+      "label": ".fromEntity()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".fromentity()",
+      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_grocery_grocery_controller_grocerycontroller_additem",
+      "label": ".addItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".additem()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_grocery_grocery_controller_grocerycontroller_removeitem",
+      "label": ".removeItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".removeitem()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "src_grocery_grocery_service_groceryservice_additem",
+      "label": ".addItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".additem()",
+      "source_file": "src/grocery/grocery.service.ts",
+      "source_location": "L18"
+    },
+    {
+      "id": "src_grocery_grocery_service_groceryservice_listitems",
+      "label": ".listItems()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".listitems()",
+      "source_file": "src/grocery/grocery.service.ts",
+      "source_location": "L36"
+    },
+    {
+      "id": "src_grocery_grocery_service_groceryservice_removeitem",
+      "label": ".removeItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": ".removeitem()",
+      "source_file": "src/grocery/grocery.service.ts",
+      "source_location": "L50"
+    },
+    {
       "id": "src_auth_public_decorator_public",
       "label": "Public()",
       "_callable": true,
@@ -2698,18 +2806,6 @@
       "source_location": "L19"
     },
     {
-      "id": "src_health_health_controller_spec_protectedcontroller_getprotected",
-      "label": ".getProtected()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "health.controller.ts",
-      "file_type": "code",
-      "norm_label": ".getprotected()",
-      "source_file": "src/health/health.controller.spec.ts",
-      "source_location": "L20"
-    },
-    {
       "id": "src_health_health_service_healthservice_checkreadiness",
       "label": ".checkReadiness()",
       "_callable": true,
@@ -2722,18 +2818,6 @@
       "source_location": "L9"
     },
     {
-      "id": "src_health_health_service_healthservice_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "health.controller.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/health/health.service.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "src_mcp_mcp_controller_spec_testrestcontroller_ping",
       "label": ".ping()",
       "_callable": true,
@@ -2743,15 +2827,27 @@
       "file_type": "code",
       "norm_label": ".ping()",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L24"
+      "source_location": "L25"
+    },
+    {
+      "id": "src_grocery_grocery_controller_grocerycontroller_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L17"
     },
     {
       "id": "src_estimation_estimation_service_estimationservice_applydirectsignalprecedence",
       "label": ".applyDirectSignalPrecedence()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".applydirectsignalprecedence()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2762,8 +2858,8 @@
       "label": ".applyTimeDecayHeuristics()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".applytimedecayheuristics()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2774,8 +2870,8 @@
       "label": ".buildCandidate()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".buildcandidate()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2786,8 +2882,8 @@
       "label": ".buildDeterministicCandidate()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".builddeterministiccandidate()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2798,32 +2894,20 @@
       "label": ".calculateConfidence()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".calculateconfidence()",
       "source_file": "src/estimation/estimation.service.ts",
       "source_location": "L484"
     },
     {
-      "id": "src_estimation_estimation_service_estimationservice_estimateproductstate",
-      "label": ".estimateProductState()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
-      "file_type": "code",
-      "norm_label": ".estimateproductstate()",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L105"
-    },
-    {
       "id": "src_estimation_estimation_service_estimationservice_fetchproducteventhistory",
       "label": ".fetchProductEventHistory()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".fetchproducteventhistory()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2834,8 +2918,8 @@
       "label": ".fetchProductStatistics()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".fetchproductstatistics()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2846,20 +2930,128 @@
       "label": ".isColdStart()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
       "file_type": "code",
       "norm_label": ".iscoldstart()",
       "source_file": "src/estimation/estimation.service.ts",
       "source_location": "L395"
     },
     {
+      "id": "src_mcp_mcp_controller_mcpcontroller_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/mcp/mcp.controller.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_mcp_mcp_controller_mcpcontroller_handle",
+      "label": ".handle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": ".handle()",
+      "source_file": "src/mcp/mcp.controller.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_mcpserverfactory_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L135"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_llmintegration",
+      "label": ".llmIntegration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": ".llmintegration()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L116"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_mcpintegration",
+      "label": ".mcpIntegration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": ".mcpintegration()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L126"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_predictionrun",
+      "label": ".predictionRun()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": ".predictionrun()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L94"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_write",
+      "label": ".write()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": ".write()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L136"
+    },
+    {
+      "id": "src_estimation_estimation_service_estimationservice_builddisabledresult",
+      "label": ".buildDisabledResult()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 294,
+      "community_name": ".predictProduct",
+      "file_type": "code",
+      "norm_label": ".builddisabledresult()",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L656"
+    },
+    {
+      "id": "src_estimation_estimation_service_estimationservice_estimateproductstate",
+      "label": ".estimateProductState()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 294,
+      "community_name": ".predictProduct",
+      "file_type": "code",
+      "norm_label": ".estimateproductstate()",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L105"
+    },
+    {
       "id": "src_estimation_estimation_service_estimationservice_predictproduct",
       "label": ".predictProduct()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 294,
+      "community_name": ".predictProduct",
       "file_type": "code",
       "norm_label": ".predictproduct()",
       "source_file": "src/estimation/estimation.service.ts",
@@ -2870,12 +3062,48 @@
       "label": ".savePrediction()",
       "_callable": true,
       "_origin": "ast",
-      "community": 3,
-      "community_name": "EstimationService",
+      "community": 294,
+      "community_name": ".predictProduct",
       "file_type": "code",
       "norm_label": ".saveprediction()",
       "source_file": "src/estimation/estimation.service.ts",
       "source_location": "L568"
+    },
+    {
+      "id": "src_observability_operational_logger_service_operationallogger_predictionpersistence",
+      "label": ".predictionPersistence()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 294,
+      "community_name": ".predictProduct",
+      "file_type": "code",
+      "norm_label": ".predictionpersistence()",
+      "source_file": "src/observability/operational-logger.service.ts",
+      "source_location": "L105"
+    },
+    {
+      "id": "src_health_health_controller_spec_protectedcontroller_getprotected",
+      "label": ".getProtected()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 296,
+      "community_name": "ProtectedController",
+      "file_type": "code",
+      "norm_label": ".getprotected()",
+      "source_file": "src/health/health.controller.spec.ts",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_grocery_grocery_controller_grocerycontroller_listitems",
+      "label": ".listItems()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 297,
+      "community_name": ".listItems",
+      "file_type": "code",
+      "norm_label": ".listitems()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L25"
     },
     {
       "id": "src_inventory_inventory_controller_inventorycontroller_listevents",
@@ -2888,6 +3116,18 @@
       "norm_label": ".listevents()",
       "source_file": "src/inventory/inventory.controller.ts",
       "source_location": "L74"
+    },
+    {
+      "id": "src_inventory_inventory_service_inventoryservice_listevents",
+      "label": ".listEvents()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "ListInventoryEventsDto",
+      "file_type": "code",
+      "norm_label": ".listevents()",
+      "source_file": "src/inventory/inventory.service.ts",
+      "source_location": "L98"
     },
     {
       "id": "src_inventory_inventory_controller_inventorycontroller_completepartialpurchase",
@@ -2950,90 +3190,6 @@
       "source_location": "L67"
     },
     {
-      "id": "src_inventory_inventory_service_inventoryservice_recordevent",
-      "label": ".recordEvent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "InventoryController",
-      "file_type": "code",
-      "norm_label": ".recordevent()",
-      "source_file": "src/inventory/inventory.service.ts",
-      "source_location": "L71"
-    },
-    {
-      "id": "src_inventory_inventory_service_inventoryservice_recordpurchase",
-      "label": ".recordPurchase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "InventoryController",
-      "file_type": "code",
-      "norm_label": ".recordpurchase()",
-      "source_file": "src/inventory/inventory.service.ts",
-      "source_location": "L38"
-    },
-    {
-      "id": "src_grocery_grocery_controller_grocerycontroller_additem",
-      "label": ".addItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".additem()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L20"
-    },
-    {
-      "id": "src_grocery_grocery_controller_grocerycontroller_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_grocery_grocery_controller_grocerycontroller_listitems",
-      "label": ".listItems()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".listitems()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L25"
-    },
-    {
-      "id": "src_grocery_grocery_controller_grocerycontroller_removeitem",
-      "label": ".removeItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".removeitem()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_grocery_grocery_service_groceryservice_additem",
-      "label": ".addItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".additem()",
-      "source_file": "src/grocery/grocery.service.ts",
-      "source_location": "L18"
-    },
-    {
       "id": "src_grocery_grocery_service_groceryservice_constructor",
       "label": ".constructor()",
       "_callable": true,
@@ -3044,30 +3200,6 @@
       "norm_label": ".constructor()",
       "source_file": "src/grocery/grocery.service.ts",
       "source_location": "L13"
-    },
-    {
-      "id": "src_grocery_grocery_service_groceryservice_listitems",
-      "label": ".listItems()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".listitems()",
-      "source_file": "src/grocery/grocery.service.ts",
-      "source_location": "L36"
-    },
-    {
-      "id": "src_grocery_grocery_service_groceryservice_removeitem",
-      "label": ".removeItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": ".removeitem()",
-      "source_file": "src/grocery/grocery.service.ts",
-      "source_location": "L50"
     },
     {
       "id": "src_household_household_service_householdservice_constructor",
@@ -3183,7 +3315,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "restoreenvironmentvariable()",
       "source_file": "src/llm/llm.module.spec.ts",
@@ -3195,7 +3327,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": ".generatestructured()",
       "source_file": "src/llm/llm-provider.ts",
@@ -3207,7 +3339,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/llm/llm-provider.registry.ts",
@@ -3219,7 +3351,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": ".select()",
       "source_file": "src/llm/llm-provider.registry.ts",
@@ -3231,7 +3363,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "fakeprovider()",
       "source_file": "src/llm/llm-provider.registry.spec.ts",
@@ -3243,7 +3375,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/product/product-classifier.service.ts",
@@ -3346,120 +3478,12 @@
       "source_location": "L18"
     },
     {
-      "id": "src_estimation_estimation_service_estimationservice_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L78"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_predictionreasoner_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/estimation/prediction-reasoner.service.ts",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_inventory_inventory_service_inventoryservice_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/inventory/inventory.service.ts",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_inventoryaction",
-      "label": ".inventoryAction()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".inventoryaction()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L74"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_llmintegration",
-      "label": ".llmIntegration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".llmintegration()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L116"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_mcpintegration",
-      "label": ".mcpIntegration()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".mcpintegration()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L126"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_predictionpersistence",
-      "label": ".predictionPersistence()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".predictionpersistence()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L105"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_predictionrun",
-      "label": ".predictionRun()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".predictionrun()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L94"
-    },
-    {
-      "id": "src_observability_operational_logger_service_operationallogger_write",
-      "label": ".write()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": ".write()",
-      "source_file": "src/observability/operational-logger.service.ts",
-      "source_location": "L136"
-    },
-    {
       "id": "src_inventory_inventory_controller_inventorycontroller_constructor",
       "label": ".constructor()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/inventory/inventory.controller.ts",
@@ -3471,7 +3495,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/inventory/low-stock-recommendation.service.ts",
@@ -3483,7 +3507,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "prediction()",
       "source_file": "src/inventory/low-stock-recommendation.service.spec.ts",
@@ -3495,23 +3519,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "createauthenticatedtransport()",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L247"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_mcpserverfactory_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134"
+      "source_location": "L252"
     },
     {
       "id": "src_mcp_mcp_server_factory_spec_inventoryevent",
@@ -3519,55 +3531,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "inventoryevent()",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L584"
-    },
-    {
-      "id": "src_llm_openai_openai_llm_provider_spec",
-      "label": "openai-llm.provider.spec.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "openai-llm.provider.spec.ts",
-      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_llm_openai_openai_llm_provider_spec_parsedresult",
-      "label": "parsedResult",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "parsedresult",
-      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
-      "source_location": "L18"
-    },
-    {
-      "id": "src_llm_openai_openai_llm_provider_spec_request",
-      "label": "request",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "request",
-      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_llm_types_structured_generation",
-      "label": "structured-generation.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "product.service.ts",
-      "file_type": "code",
-      "norm_label": "structured-generation.ts",
-      "source_file": "src/llm/types/structured-generation.ts",
-      "source_location": "L1"
+      "source_location": "L604"
     },
     {
       "id": "src_product_product_classification_log_service",
@@ -3647,14 +3615,25 @@
       "source_location": ""
     },
     {
-      "id": "src_product_product_module",
-      "label": "product.module.ts",
+      "id": "src_product_product_name_util",
+      "label": "product-name.util.ts",
       "_origin": "ast",
       "community": 0,
       "community_name": "product.service.ts",
       "file_type": "code",
-      "norm_label": "product.module.ts",
-      "source_file": "src/product/product.module.ts",
+      "norm_label": "product-name.util.ts",
+      "source_file": "src/product/product-name.util.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_product_product_name_util_spec",
+      "label": "product-name.util.spec.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "product.service.ts",
+      "file_type": "code",
+      "norm_label": "product-name.util.spec.ts",
+      "source_file": "src/product/product-name.util.spec.ts",
       "source_location": "L1"
     },
     {
@@ -7614,6 +7593,17 @@
       "source_location": "L11"
     },
     {
+      "id": "src_grocery_dto_grocery_item_response_dto",
+      "label": "grocery-item-response.dto.ts",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "inventory.service.ts",
+      "file_type": "code",
+      "norm_label": "grocery-item-response.dto.ts",
+      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_inventory_dto_complete_partial_purchase_dto",
       "label": "complete-partial-purchase.dto.ts",
       "_origin": "ast",
@@ -9917,212 +9907,25 @@
       "source_location": "L6"
     },
     {
-      "id": "src_estimation_estimation_service",
-      "label": "estimation.service.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "estimation.service.ts",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_estimation_service_product_type_thresholds",
-      "label": "PRODUCT_TYPE_THRESHOLDS",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "product_type_thresholds",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L40"
-    },
-    {
-      "id": "src_estimation_estimation_service_relevant_event_types",
-      "label": "RELEVANT_EVENT_TYPES",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "relevant_event_types",
-      "source_file": "src/estimation/estimation.service.ts",
-      "source_location": "L31"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service",
-      "label": "prediction-reasoner.service.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "prediction-reasoner.service.ts",
-      "source_file": "src/estimation/prediction-reasoner.service.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_prediction_reasoning_prompt_version",
-      "label": "PREDICTION_REASONING_PROMPT_VERSION",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "prediction_reasoning_prompt_version",
-      "source_file": "src/estimation/prediction-reasoner.service.ts",
-      "source_location": "L11"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_spec",
-      "label": "prediction-reasoner.service.spec.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "prediction-reasoner.service.spec.ts",
-      "source_file": "src/estimation/prediction-reasoner.service.spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_spec_candidate",
-      "label": "candidate",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "candidate",
-      "source_file": "src/estimation/prediction-reasoner.service.spec.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "src_estimation_types_estimation_result",
       "label": "estimation-result.ts",
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "estimation-result.ts",
       "source_file": "src/estimation/types/estimation-result.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_estimation_types_prediction_reasoning",
-      "label": "prediction-reasoning.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "prediction-reasoning.ts",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_nonblankstring",
-      "label": "nonBlankString",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "nonblankstring",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_nullabledatetime",
-      "label": "nullableDateTime",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "nullabledatetime",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_nullablenonnegativenumber",
-      "label": "nullableNonNegativeNumber",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "nullablenonnegativenumber",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_predictionreasoninginputschema",
-      "label": "predictionReasoningInputSchema",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "predictionreasoninginputschema",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_predictionreasoningresultschema",
-      "label": "predictionReasoningResultSchema",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "predictionreasoningresultschema",
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L52"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_spec",
-      "label": "prediction-reasoning.spec.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "prediction-reasoning.spec.ts",
-      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_spec_validinput",
-      "label": "validInput",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "validinput",
-      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_estimation_types_prediction_reasoning_spec_validresult",
-      "label": "validResult",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "validresult",
-      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
-      "source_location": "L40"
-    },
-    {
       "id": "src_estimation_types_prediction_result",
       "label": "prediction-result.ts",
       "_origin": "ast",
       "community": 135,
-      "community_name": "estimation.service.ts",
+      "community_name": "prediction-result.ts",
       "file_type": "code",
       "norm_label": "prediction-result.ts",
       "source_file": "src/estimation/types/prediction-result.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_types_product_event_history",
-      "label": "product-event-history.ts",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "estimation.service.ts",
-      "file_type": "code",
-      "norm_label": "product-event-history.ts",
-      "source_file": "src/estimation/types/product-event-history.ts",
       "source_location": "L1"
     },
     {
@@ -11777,28 +11580,6 @@
       "norm_label": "why it matters",
       "source_file": ".agents/skills/prisma-mongodb-upgrade/references/schema-contract-mapping.md",
       "source_location": "L9"
-    },
-    {
-      "id": "src_product_product_name_util",
-      "label": "product-name.util.ts",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": "product-name.util.ts",
-      "source_file": "src/product/product-name.util.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_product_product_name_util_spec",
-      "label": "product-name.util.spec.ts",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "ProductService",
-      "file_type": "code",
-      "norm_label": "product-name.util.spec.ts",
-      "source_file": "src/product/product-name.util.spec.ts",
-      "source_location": "L1"
     },
     {
       "id": "src_product_product_service_ts_injectable",
@@ -18013,26 +17794,114 @@
       "source_location": "L51"
     },
     {
-      "id": "package_devdependencies_dotenv",
-      "label": "dotenv",
+      "id": "src_estimation_estimation_service",
+      "label": "estimation.service.ts",
       "_origin": "ast",
       "community": 215,
-      "community_name": "dotenv",
+      "community_name": "estimation.service.ts",
       "file_type": "code",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L49"
+      "norm_label": "estimation.service.ts",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L1"
     },
     {
-      "id": "dotenv",
-      "label": "dotenv",
+      "id": "src_estimation_estimation_service_product_type_thresholds",
+      "label": "PRODUCT_TYPE_THRESHOLDS",
       "_origin": "ast",
       "community": 215,
-      "community_name": "dotenv",
-      "file_type": "concept",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L49"
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "product_type_thresholds",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "src_estimation_estimation_service_relevant_event_types",
+      "label": "RELEVANT_EVENT_TYPES",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "relevant_event_types",
+      "source_file": "src/estimation/estimation.service.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_estimation_estimation_service_spec",
+      "label": "estimation.service.spec.ts",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "estimation.service.spec.ts",
+      "source_file": "src/estimation/estimation.service.spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service",
+      "label": "prediction-reasoner.service.ts",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "prediction-reasoner.service.ts",
+      "source_file": "src/estimation/prediction-reasoner.service.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_prediction_reasoning_prompt_version",
+      "label": "PREDICTION_REASONING_PROMPT_VERSION",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "prediction_reasoning_prompt_version",
+      "source_file": "src/estimation/prediction-reasoner.service.ts",
+      "source_location": "L11"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_spec",
+      "label": "prediction-reasoner.service.spec.ts",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "prediction-reasoner.service.spec.ts",
+      "source_file": "src/estimation/prediction-reasoner.service.spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_spec_candidate",
+      "label": "candidate",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "candidate",
+      "source_file": "src/estimation/prediction-reasoner.service.spec.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_ts_inject",
+      "label": "Inject",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "inject",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_estimation_prediction_reasoner_service_ts_injectable",
+      "label": "Injectable",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "estimation.service.ts",
+      "file_type": "code",
+      "norm_label": "injectable",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "src_prisma_prisma_service_ts_injectable",
@@ -18057,6 +17926,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_inventory_inventory_controller_ts_get",
+      "label": "Get",
+      "_origin": "ast",
+      "community": 217,
+      "community_name": "EstimationResponseDto",
+      "file_type": "code",
+      "norm_label": "get",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "src_inventory_inventory_controller_ts_param",
       "label": "Param",
       "_origin": "ast",
@@ -18077,6 +17957,17 @@
       "norm_label": "devdependencies",
       "source_file": "package.json",
       "source_location": "L38"
+    },
+    {
+      "id": "package_devdependencies_dotenv",
+      "label": "dotenv",
+      "_origin": "ast",
+      "community": 218,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "dotenv",
+      "source_file": "package.json",
+      "source_location": "L49"
     },
     {
       "id": "package_devdependencies_eslint",
@@ -18101,15 +17992,15 @@
       "source_location": "L44"
     },
     {
-      "id": "package_devdependencies_typescript_eslint",
-      "label": "typescript-eslint",
+      "id": "dotenv",
+      "label": "dotenv",
       "_origin": "ast",
       "community": 218,
       "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "typescript-eslint",
+      "file_type": "concept",
+      "norm_label": "dotenv",
       "source_file": "package.json",
-      "source_location": "L64"
+      "source_location": "L49"
     },
     {
       "id": "eslint",
@@ -18132,17 +18023,6 @@
       "norm_label": "@types/express",
       "source_file": "package.json",
       "source_location": "L44"
-    },
-    {
-      "id": "typescript_eslint",
-      "label": "typescript-eslint",
-      "_origin": "ast",
-      "community": 218,
-      "community_name": "devDependencies",
-      "file_type": "concept",
-      "norm_label": "typescript-eslint",
-      "source_file": "package.json",
-      "source_location": "L64"
     },
     {
       "id": "package_devdependencies_nestjs_cli",
@@ -18178,11 +18058,44 @@
       "source_location": ""
     },
     {
+      "id": "src_llm_openai_openai_llm_provider_spec",
+      "label": "openai-llm.provider.spec.ts",
+      "_origin": "ast",
+      "community": 220,
+      "community_name": "openai-llm.provider.spec.ts",
+      "file_type": "code",
+      "norm_label": "openai-llm.provider.spec.ts",
+      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_llm_openai_openai_llm_provider_spec_parsedresult",
+      "label": "parsedResult",
+      "_origin": "ast",
+      "community": 220,
+      "community_name": "openai-llm.provider.spec.ts",
+      "file_type": "code",
+      "norm_label": "parsedresult",
+      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_llm_openai_openai_llm_provider_spec_request",
+      "label": "request",
+      "_origin": "ast",
+      "community": 220,
+      "community_name": "openai-llm.provider.spec.ts",
+      "file_type": "code",
+      "norm_label": "request",
+      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
+      "source_location": "L11"
+    },
+    {
       "id": "src_llm_openai_openai_llm_provider_ts_inject",
       "label": "Inject",
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": "inject",
       "source_file": "",
@@ -18193,64 +18106,9 @@
       "label": "Injectable",
       "_origin": "ast",
       "community": 220,
-      "community_name": "LlmGenerationResult",
+      "community_name": "openai-llm.provider.spec.ts",
       "file_type": "code",
       "norm_label": "injectable",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "all",
-      "label": "All",
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "all",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "req",
-      "label": "Req",
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "req",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "res",
-      "label": "Res",
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "res",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_mcp_mcp_controller",
-      "label": "mcp.controller.ts",
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "mcp.controller.ts",
-      "source_file": "src/mcp/mcp.controller.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_mcp_mcp_controller_ts_controller",
-      "label": "Controller",
-      "_origin": "ast",
-      "community": 221,
-      "community_name": "McpServerFactory",
-      "file_type": "code",
-      "norm_label": "controller",
       "source_file": "",
       "source_location": ""
     },
@@ -18931,35 +18789,46 @@
       "source_location": "L67"
     },
     {
-      "id": "src_observability_observability_module",
-      "label": "observability.module.ts",
+      "id": "delete",
+      "label": "Delete",
       "_origin": "ast",
       "community": 235,
-      "community_name": "observability.module.ts",
+      "community_name": "GroceryItemResponseDto",
       "file_type": "code",
-      "norm_label": "observability.module.ts",
-      "source_file": "src/observability/observability.module.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_observability_observability_module_ts_global",
-      "label": "Global",
-      "_origin": "ast",
-      "community": 235,
-      "community_name": "observability.module.ts",
-      "file_type": "code",
-      "norm_label": "global",
+      "norm_label": "delete",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "src_observability_observability_module_ts_module",
-      "label": "Module",
+      "id": "src_grocery_grocery_controller_ts_body",
+      "label": "Body",
       "_origin": "ast",
       "community": 235,
-      "community_name": "observability.module.ts",
+      "community_name": "GroceryItemResponseDto",
       "file_type": "code",
-      "norm_label": "module",
+      "norm_label": "body",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_grocery_controller_ts_param",
+      "label": "Param",
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": "param",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_grocery_controller_ts_post",
+      "label": "Post",
+      "_origin": "ast",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "code",
+      "norm_label": "post",
       "source_file": "",
       "source_location": ""
     },
@@ -20624,28 +20493,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_health_health_controller_spec_ts_controller",
-      "label": "Controller",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "health.controller.ts",
-      "file_type": "code",
-      "norm_label": "controller",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_health_health_controller_spec_ts_get",
-      "label": "Get",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "health.controller.ts",
-      "file_type": "code",
-      "norm_label": "get",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "src_health_health_controller_ts_controller",
       "label": "Controller",
       "_origin": "ast",
@@ -21584,6 +21431,94 @@
       "source_location": "L23"
     },
     {
+      "id": "src_grocery_grocery_controller_ts_controller",
+      "label": "Controller",
+      "_origin": "ast",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "code",
+      "norm_label": "controller",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_estimation_types_product_event_history",
+      "label": "product-event-history.ts",
+      "_origin": "ast",
+      "community": 288,
+      "community_name": ".buildDeterministicCandidate",
+      "file_type": "code",
+      "norm_label": "product-event-history.ts",
+      "source_file": "src/estimation/types/product-event-history.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_grocery_dto_add_grocery_item_dto",
+      "label": "add-grocery-item.dto.ts",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "add-grocery-item.dto.ts",
+      "source_file": "src/grocery/dto/add-grocery-item.dto.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_grocery_dto_list_grocery_items_dto",
+      "label": "list-grocery-items.dto.ts",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "list-grocery-items.dto.ts",
+      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_grocery_dto_list_grocery_items_dto_ts_isenum",
+      "label": "IsEnum",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "isenum",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_dto_list_grocery_items_dto_ts_isoptional",
+      "label": "IsOptional",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "isoptional",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_grocery_controller",
+      "label": "grocery.controller.ts",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "grocery.controller.ts",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_grocery_grocery_service",
+      "label": "grocery.service.ts",
+      "_origin": "ast",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "code",
+      "norm_label": "grocery.service.ts",
+      "source_file": "src/grocery/grocery.service.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "agents_skills_prisma_client_api_references_filters",
       "label": "filters.md",
       "_origin": "ast",
@@ -21834,6 +21769,369 @@
       "norm_label": "string filters",
       "source_file": ".agents/skills/prisma-client-api/references/filters.md",
       "source_location": "L47"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning",
+      "label": "prediction-reasoning.ts",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "prediction-reasoning.ts",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_nonblankstring",
+      "label": "nonBlankString",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "nonblankstring",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_nullabledatetime",
+      "label": "nullableDateTime",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "nullabledatetime",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_nullablenonnegativenumber",
+      "label": "nullableNonNegativeNumber",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "nullablenonnegativenumber",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_predictionreasoninginputschema",
+      "label": "predictionReasoningInputSchema",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "predictionreasoninginputschema",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_predictionreasoningresultschema",
+      "label": "predictionReasoningResultSchema",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "predictionreasoningresultschema",
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L52"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_spec",
+      "label": "prediction-reasoning.spec.ts",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "prediction-reasoning.spec.ts",
+      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_spec_validinput",
+      "label": "validInput",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "validinput",
+      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_estimation_types_prediction_reasoning_spec_validresult",
+      "label": "validResult",
+      "_origin": "ast",
+      "community": 290,
+      "community_name": "prediction-reasoning.ts",
+      "file_type": "code",
+      "norm_label": "validresult",
+      "source_file": "src/estimation/types/prediction-reasoning.spec.ts",
+      "source_location": "L40"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory",
+      "label": "mcp-server.factory.ts",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "mcp-server.factory.ts",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_completegrocerypurchaseoutputschema",
+      "label": "completeGroceryPurchaseOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "completegrocerypurchaseoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L103"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_estimationoutputschema",
+      "label": "estimationOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "estimationoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L62"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_eventmeasurementsschema",
+      "label": "eventMeasurementsSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "eventmeasurementsschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L125"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_groceryitemoutputschema",
+      "label": "groceryItemOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "groceryitemoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_grocerylistoutputschema",
+      "label": "groceryListOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "grocerylistoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L38"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_householdcontextschema",
+      "label": "householdContextSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "householdcontextschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L55"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_inventoryeventoutputschema",
+      "label": "inventoryEventOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "inventoryeventoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L91"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_productoutputschema",
+      "label": "productOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "productoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L42"
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_recommendationoutputschema",
+      "label": "recommendationOutputSchema",
+      "_origin": "ast",
+      "community": 291,
+      "community_name": "mcp-server.factory.ts",
+      "file_type": "code",
+      "norm_label": "recommendationoutputschema",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L108"
+    },
+    {
+      "id": "all",
+      "label": "All",
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "all",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "req",
+      "label": "Req",
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "req",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "res",
+      "label": "Res",
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "res",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_mcp_mcp_controller",
+      "label": "mcp.controller.ts",
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "mcp.controller.ts",
+      "source_file": "src/mcp/mcp.controller.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_mcp_mcp_controller_ts_controller",
+      "label": "Controller",
+      "_origin": "ast",
+      "community": 292,
+      "community_name": "McpController",
+      "file_type": "code",
+      "norm_label": "controller",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_mcp_mcp_server_factory_ts_inject",
+      "label": "Inject",
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": "inject",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_observability_operational_logger_service_ts_injectable",
+      "label": "Injectable",
+      "_origin": "ast",
+      "community": 293,
+      "community_name": "OperationalLogger",
+      "file_type": "code",
+      "norm_label": "injectable",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_llm_types_structured_generation",
+      "label": "structured-generation.ts",
+      "_origin": "ast",
+      "community": 295,
+      "community_name": "structured-generation.ts",
+      "file_type": "code",
+      "norm_label": "structured-generation.ts",
+      "source_file": "src/llm/types/structured-generation.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_health_health_controller_spec_ts_controller",
+      "label": "Controller",
+      "_origin": "ast",
+      "community": 296,
+      "community_name": "ProtectedController",
+      "file_type": "code",
+      "norm_label": "controller",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_health_health_controller_spec_ts_get",
+      "label": "Get",
+      "_origin": "ast",
+      "community": 296,
+      "community_name": "ProtectedController",
+      "file_type": "code",
+      "norm_label": "get",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_grocery_controller_ts_get",
+      "label": "Get",
+      "_origin": "ast",
+      "community": 297,
+      "community_name": ".listItems",
+      "file_type": "code",
+      "norm_label": "get",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_grocery_grocery_controller_ts_query",
+      "label": "Query",
+      "_origin": "ast",
+      "community": 297,
+      "community_name": ".listItems",
+      "file_type": "code",
+      "norm_label": "query",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "package_devdependencies_typescript_eslint",
+      "label": "typescript-eslint",
+      "_origin": "ast",
+      "community": 298,
+      "community_name": "typescript-eslint",
+      "file_type": "code",
+      "norm_label": "typescript-eslint",
+      "source_file": "package.json",
+      "source_location": "L64"
+    },
+    {
+      "id": "typescript_eslint",
+      "label": "typescript-eslint",
+      "_origin": "ast",
+      "community": 298,
+      "community_name": "typescript-eslint",
+      "file_type": "concept",
+      "norm_label": "typescript-eslint",
+      "source_file": "package.json",
+      "source_location": "L64"
     },
     {
       "id": "src_estimation_estimation_service_ts_injectable",
@@ -22172,17 +22470,6 @@
       "community_name": "ListInventoryEventsDto",
       "file_type": "code",
       "norm_label": "min",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_inventory_inventory_controller_ts_get",
-      "label": "Get",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "ListInventoryEventsDto",
-      "file_type": "code",
-      "norm_label": "get",
       "source_file": "",
       "source_location": ""
     },
@@ -27662,160 +27949,6 @@
       "source_location": "L46"
     },
     {
-      "id": "delete",
-      "label": "Delete",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "delete",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_dto_add_grocery_item_dto",
-      "label": "add-grocery-item.dto.ts",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "add-grocery-item.dto.ts",
-      "source_file": "src/grocery/dto/add-grocery-item.dto.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_grocery_dto_grocery_item_response_dto",
-      "label": "grocery-item-response.dto.ts",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "grocery-item-response.dto.ts",
-      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_grocery_dto_list_grocery_items_dto",
-      "label": "list-grocery-items.dto.ts",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "list-grocery-items.dto.ts",
-      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_grocery_dto_list_grocery_items_dto_ts_isenum",
-      "label": "IsEnum",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "isenum",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_dto_list_grocery_items_dto_ts_isoptional",
-      "label": "IsOptional",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "isoptional",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller",
-      "label": "grocery.controller.ts",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "grocery.controller.ts",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_body",
-      "label": "Body",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "body",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_controller",
-      "label": "Controller",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "controller",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_get",
-      "label": "Get",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "get",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_param",
-      "label": "Param",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "param",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_post",
-      "label": "Post",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "post",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_controller_ts_query",
-      "label": "Query",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "query",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_grocery_grocery_service",
-      "label": "grocery.service.ts",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "code",
-      "norm_label": "grocery.service.ts",
-      "source_file": "src/grocery/grocery.service.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "src_grocery_grocery_service_ts_injectable",
       "label": "Injectable",
       "_origin": "ast",
@@ -28773,7 +28906,7 @@
       "label": "llm.module.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm.module.ts",
       "source_file": "src/llm/llm.module.ts",
@@ -28784,29 +28917,18 @@
       "label": "llm.module.spec.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm.module.spec.ts",
       "source_file": "src/llm/llm.module.spec.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_llm_llm_module_ts_module",
-      "label": "Module",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "LlmProvider",
-      "file_type": "code",
-      "norm_label": "module",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "src_llm_llm_provider",
       "label": "llm-provider.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm-provider.ts",
       "source_file": "src/llm/llm-provider.ts",
@@ -28817,7 +28939,7 @@
       "label": "LLM_PROVIDER",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm_provider",
       "source_file": "src/llm/llm-provider.ts",
@@ -28828,7 +28950,7 @@
       "label": "llm-provider.registry.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm-provider.registry.ts",
       "source_file": "src/llm/llm-provider.registry.ts",
@@ -28839,7 +28961,7 @@
       "label": "llm-provider.registry.spec.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "llm-provider.registry.spec.ts",
       "source_file": "src/llm/llm-provider.registry.spec.ts",
@@ -28850,7 +28972,7 @@
       "label": "Injectable",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "injectable",
       "source_file": "",
@@ -28861,7 +28983,7 @@
       "label": "openai-llm.provider.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "openai-llm.provider.ts",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
@@ -28872,7 +28994,7 @@
       "label": "openai.tokens.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "openai.tokens.ts",
       "source_file": "src/llm/openai/openai.tokens.ts",
@@ -28883,7 +29005,7 @@
       "label": "DEFAULT_OPENAI_MODEL",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "default_openai_model",
       "source_file": "src/llm/openai/openai.tokens.ts",
@@ -28894,7 +29016,7 @@
       "label": "OPENAI_CLIENT",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "openai_client",
       "source_file": "src/llm/openai/openai.tokens.ts",
@@ -28905,7 +29027,7 @@
       "label": "OPENAI_MODEL",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "openai_model",
       "source_file": "src/llm/openai/openai.tokens.ts",
@@ -28916,7 +29038,7 @@
       "label": "product-classifier.service.spec.ts",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "product-classifier.service.spec.ts",
       "source_file": "src/product/product-classifier.service.spec.ts",
@@ -28927,7 +29049,7 @@
       "label": "Inject",
       "_origin": "ast",
       "community": 62,
-      "community_name": "LlmProvider",
+      "community_name": "llm.module.ts",
       "file_type": "code",
       "norm_label": "inject",
       "source_file": "",
@@ -29949,6 +30071,17 @@
       "source_location": ""
     },
     {
+      "id": "src_llm_llm_module_ts_module",
+      "label": "Module",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "module",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "src_mcp_mcp_module",
       "label": "mcp.module.ts",
       "_origin": "ast",
@@ -29961,6 +30094,39 @@
     },
     {
       "id": "src_mcp_mcp_module_ts_module",
+      "label": "Module",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "module",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_observability_observability_module",
+      "label": "observability.module.ts",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "observability.module.ts",
+      "source_file": "src/observability/observability.module.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_observability_observability_module_ts_global",
+      "label": "Global",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "global",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "src_observability_observability_module_ts_module",
       "label": "Module",
       "_origin": "ast",
       "community": 69,
@@ -30002,6 +30168,17 @@
       "norm_label": "module",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "src_product_product_module",
+      "label": "product.module.ts",
+      "_origin": "ast",
+      "community": 69,
+      "community_name": "app.module.ts",
+      "file_type": "code",
+      "norm_label": "product.module.ts",
+      "source_file": "src/product/product.module.ts",
+      "source_location": "L1"
     },
     {
       "id": "src_product_product_module_ts_module",
@@ -30059,39 +30236,6 @@
       "source_location": ""
     },
     {
-      "id": "src_estimation_estimation_service_spec",
-      "label": "estimation.service.spec.ts",
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "estimation.service.spec.ts",
-      "source_file": "src/estimation/estimation.service.spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_ts_inject",
-      "label": "Inject",
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "inject",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "src_estimation_prediction_reasoner_service_ts_injectable",
-      "label": "Injectable",
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "injectable",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "src_observability_operational_logger_service",
       "label": "operational-logger.service.ts",
       "_origin": "ast",
@@ -30112,17 +30256,6 @@
       "norm_label": "operational-logger.service.spec.ts",
       "source_file": "src/observability/operational-logger.service.spec.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_observability_operational_logger_service_ts_injectable",
-      "label": "Injectable",
-      "_origin": "ast",
-      "community": 71,
-      "community_name": "operational-logger.service.ts",
-      "file_type": "code",
-      "norm_label": "injectable",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "agents_skills_autopilot_skill",
@@ -31385,7 +31518,7 @@
       "label": "prediction-engine.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "prediction-engine.ts",
       "source_file": "src/estimation/prediction-engine.ts",
@@ -31396,7 +31529,7 @@
       "label": "PREDICTION_ENGINE",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "prediction_engine",
       "source_file": "src/estimation/prediction-engine.ts",
@@ -31407,7 +31540,7 @@
       "label": "inventory.controller.spec.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "inventory.controller.spec.ts",
       "source_file": "src/inventory/inventory.controller.spec.ts",
@@ -31418,7 +31551,7 @@
       "label": "Inject",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "inject",
       "source_file": "",
@@ -31429,7 +31562,7 @@
       "label": "low-stock-recommendation.service.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "low-stock-recommendation.service.ts",
       "source_file": "src/inventory/low-stock-recommendation.service.ts",
@@ -31440,7 +31573,7 @@
       "label": "low-stock-recommendation.service.spec.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "low-stock-recommendation.service.spec.ts",
       "source_file": "src/inventory/low-stock-recommendation.service.spec.ts",
@@ -31451,7 +31584,7 @@
       "label": "Inject",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "inject",
       "source_file": "",
@@ -31462,7 +31595,7 @@
       "label": "Injectable",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "injectable",
       "source_file": "",
@@ -31473,7 +31606,7 @@
       "label": "mcp.controller.spec.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "mcp.controller.spec.ts",
       "source_file": "src/mcp/mcp.controller.spec.ts",
@@ -31484,128 +31617,18 @@
       "label": "initializeRequest",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "initializerequest",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L236"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory",
-      "label": "mcp-server.factory.ts",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "mcp-server.factory.ts",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_completegrocerypurchaseoutputschema",
-      "label": "completeGroceryPurchaseOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "completegrocerypurchaseoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L102"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_estimationoutputschema",
-      "label": "estimationOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "estimationoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L61"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_eventmeasurementsschema",
-      "label": "eventMeasurementsSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "eventmeasurementsschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L124"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_groceryitemoutputschema",
-      "label": "groceryItemOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "groceryitemoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L24"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_grocerylistoutputschema",
-      "label": "groceryListOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "grocerylistoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L37"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_householdcontextschema",
-      "label": "householdContextSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "householdcontextschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L54"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_inventoryeventoutputschema",
-      "label": "inventoryEventOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "inventoryeventoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L90"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_productoutputschema",
-      "label": "productOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "productoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L41"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_recommendationoutputschema",
-      "label": "recommendationOutputSchema",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "recommendationoutputschema",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L107"
+      "source_location": "L241"
     },
     {
       "id": "src_mcp_mcp_server_factory_spec",
       "label": "mcp-server.factory.spec.ts",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "mcp-server.factory.spec.ts",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
@@ -31616,22 +31639,11 @@
       "label": "item",
       "_origin": "ast",
       "community": 8,
-      "community_name": "mcp-server.factory.ts",
+      "community_name": "mcp.controller.spec.ts",
       "file_type": "code",
       "norm_label": "item",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_mcp_mcp_server_factory_ts_inject",
-      "label": "Inject",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "mcp-server.factory.ts",
-      "file_type": "code",
-      "norm_label": "inject",
-      "source_file": "",
-      "source_location": ""
+      "source_location": "L18"
     },
     {
       "id": "blueprint_history_features_04b_complete_grocery_items_from_purchase",
@@ -34837,6 +34849,18 @@
       "type": "method"
     },
     {
+      "id": "dto:CompletePartialPurchaseDto",
+      "label": "CompletePartialPurchaseDto",
+      "_origin": "semantic",
+      "community": 14,
+      "community_name": "CompletePartialPurchaseDto",
+      "file_type": "concept",
+      "line": 12,
+      "norm_label": "completepartialpurchasedto",
+      "source_file": "src/inventory/inventory.service.ts",
+      "type": "dto"
+    },
+    {
       "id": "src/inventory/dto/complete-partial-purchase.dto.ts:CompletePartialPurchaseDto::ArrayMinSize",
       "label": "CompletePartialPurchaseDto.ArrayMinSize()",
       "_origin": "semantic",
@@ -36169,6 +36193,42 @@
       "type": "method"
     },
     {
+      "id": "dto:GroceryItemResponseDto",
+      "label": "GroceryItemResponseDto",
+      "_origin": "semantic",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "concept",
+      "line": 12,
+      "norm_label": "groceryitemresponsedto",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "dto"
+    },
+    {
+      "id": "src/grocery/dto/grocery-item-response.dto.ts:GroceryItemResponseDto::GroceryItemResponseDto",
+      "label": "GroceryItemResponseDto.GroceryItemResponseDto()",
+      "_origin": "semantic",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "concept",
+      "line": 23,
+      "norm_label": "groceryitemresponsedto.groceryitemresponsedto()",
+      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/dto/grocery-item-response.dto.ts:GroceryItemResponseDto::fromEntity",
+      "label": "GroceryItemResponseDto.fromEntity()",
+      "_origin": "semantic",
+      "community": 235,
+      "community_name": "GroceryItemResponseDto",
+      "file_type": "concept",
+      "line": 19,
+      "norm_label": "groceryitemresponsedto.fromentity()",
+      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
+      "type": "method"
+    },
+    {
       "id": "feature:Complete grocery items from a purchase",
       "label": "Complete grocery items from a purchase",
       "_origin": "semantic",
@@ -36347,6 +36407,138 @@
       "norm_label": "service",
       "source_file": "prisma/schema.prisma",
       "type": "model"
+    },
+    {
+      "id": "dto:AddGroceryItemDto",
+      "label": "AddGroceryItemDto",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 11,
+      "norm_label": "addgroceryitemdto",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "dto"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::Delete",
+      "label": "GroceryController.Delete()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 31,
+      "norm_label": "grocerycontroller.delete()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::Get",
+      "label": "GroceryController.Get()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 24,
+      "norm_label": "grocerycontroller.get()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::Post",
+      "label": "GroceryController.Post()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 19,
+      "norm_label": "grocerycontroller.post()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::Query",
+      "label": "GroceryController.Query()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 26,
+      "norm_label": "grocerycontroller.query()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::addItem",
+      "label": "GroceryController.addItem()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 20,
+      "norm_label": "grocerycontroller.additem()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::listItems",
+      "label": "GroceryController.listItems()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 25,
+      "norm_label": "grocerycontroller.listitems()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/grocery.controller.ts:GroceryController::removeItem",
+      "label": "GroceryController.removeItem()",
+      "_origin": "semantic",
+      "community": 287,
+      "community_name": "GroceryController",
+      "file_type": "concept",
+      "line": 32,
+      "norm_label": "grocerycontroller.removeitem()",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "method"
+    },
+    {
+      "id": "dto:ListGroceryItemsDto",
+      "label": "ListGroceryItemsDto",
+      "_origin": "semantic",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "concept",
+      "line": 13,
+      "norm_label": "listgroceryitemsdto",
+      "source_file": "src/grocery/grocery.controller.ts",
+      "type": "dto"
+    },
+    {
+      "id": "src/grocery/dto/list-grocery-items.dto.ts:ListGroceryItemsDto::IsEnum",
+      "label": "ListGroceryItemsDto.IsEnum()",
+      "_origin": "semantic",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "concept",
+      "line": 6,
+      "norm_label": "listgroceryitemsdto.isenum()",
+      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
+      "type": "method"
+    },
+    {
+      "id": "src/grocery/dto/list-grocery-items.dto.ts:ListGroceryItemsDto::IsOptional",
+      "label": "ListGroceryItemsDto.IsOptional()",
+      "_origin": "semantic",
+      "community": 289,
+      "community_name": "grocery.service.ts",
+      "file_type": "concept",
+      "line": 5,
+      "norm_label": "listgroceryitemsdto.isoptional()",
+      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
+      "type": "method"
     },
     {
       "id": "prisma:model:prediction",
@@ -37069,18 +37261,6 @@
       "type": "method"
     },
     {
-      "id": "dto:CompletePartialPurchaseDto",
-      "label": "CompletePartialPurchaseDto",
-      "_origin": "semantic",
-      "community": 5,
-      "community_name": "InventoryController",
-      "file_type": "concept",
-      "line": 12,
-      "norm_label": "completepartialpurchasedto",
-      "source_file": "src/inventory/inventory.service.ts",
-      "type": "dto"
-    },
-    {
       "id": "dto:CompletePartialPurchaseResponseDto",
       "label": "CompletePartialPurchaseResponseDto",
       "_origin": "semantic",
@@ -37285,42 +37465,6 @@
       "type": "method"
     },
     {
-      "id": "dto:AddGroceryItemDto",
-      "label": "AddGroceryItemDto",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 11,
-      "norm_label": "addgroceryitemdto",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "dto"
-    },
-    {
-      "id": "dto:GroceryItemResponseDto",
-      "label": "GroceryItemResponseDto",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 12,
-      "norm_label": "groceryitemresponsedto",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "dto"
-    },
-    {
-      "id": "dto:ListGroceryItemsDto",
-      "label": "ListGroceryItemsDto",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 13,
-      "norm_label": "listgroceryitemsdto",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "dto"
-    },
-    {
       "id": "prisma:model:groceryListItem",
       "label": "groceryListItem",
       "_origin": "semantic",
@@ -37331,138 +37475,6 @@
       "norm_label": "grocerylistitem",
       "source_file": "prisma/schema.prisma",
       "type": "model"
-    },
-    {
-      "id": "src/grocery/dto/grocery-item-response.dto.ts:GroceryItemResponseDto::GroceryItemResponseDto",
-      "label": "GroceryItemResponseDto.GroceryItemResponseDto()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 23,
-      "norm_label": "groceryitemresponsedto.groceryitemresponsedto()",
-      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/dto/grocery-item-response.dto.ts:GroceryItemResponseDto::fromEntity",
-      "label": "GroceryItemResponseDto.fromEntity()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 19,
-      "norm_label": "groceryitemresponsedto.fromentity()",
-      "source_file": "src/grocery/dto/grocery-item-response.dto.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/dto/list-grocery-items.dto.ts:ListGroceryItemsDto::IsEnum",
-      "label": "ListGroceryItemsDto.IsEnum()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 6,
-      "norm_label": "listgroceryitemsdto.isenum()",
-      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/dto/list-grocery-items.dto.ts:ListGroceryItemsDto::IsOptional",
-      "label": "ListGroceryItemsDto.IsOptional()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 5,
-      "norm_label": "listgroceryitemsdto.isoptional()",
-      "source_file": "src/grocery/dto/list-grocery-items.dto.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::Delete",
-      "label": "GroceryController.Delete()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 31,
-      "norm_label": "grocerycontroller.delete()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::Get",
-      "label": "GroceryController.Get()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 24,
-      "norm_label": "grocerycontroller.get()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::Post",
-      "label": "GroceryController.Post()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 19,
-      "norm_label": "grocerycontroller.post()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::Query",
-      "label": "GroceryController.Query()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 26,
-      "norm_label": "grocerycontroller.query()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::addItem",
-      "label": "GroceryController.addItem()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 20,
-      "norm_label": "grocerycontroller.additem()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::listItems",
-      "label": "GroceryController.listItems()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 25,
-      "norm_label": "grocerycontroller.listitems()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
-    },
-    {
-      "id": "src/grocery/grocery.controller.ts:GroceryController::removeItem",
-      "label": "GroceryController.removeItem()",
-      "_origin": "semantic",
-      "community": 56,
-      "community_name": "GroceryService",
-      "file_type": "concept",
-      "line": 32,
-      "norm_label": "grocerycontroller.removeitem()",
-      "source_file": "src/grocery/grocery.controller.ts",
-      "type": "method"
     },
     {
       "id": "src/grocery/grocery.service.ts:GroceryService::NotFoundException",
@@ -38980,6 +38992,18 @@
     },
     {
       "source": "src_llm_openai_openai_llm_provider_openaillmprovider_generatestructured",
+      "target": "src_llm_openai_openai_llm_provider_openaillmprovider_logfailure",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider_openaillmprovider_generatestructured",
       "target": "src_llm_openai_openai_llm_provider_openaillmprovider_unavailable",
       "relation": "calls",
       "_origin": "ast",
@@ -38987,7 +39011,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L24",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -39011,7 +39035,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -39023,7 +39047,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L150",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -39035,7 +39059,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L151",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -39047,7 +39071,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L152",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -39059,7 +39083,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L153",
+      "source_location": "L155",
       "weight": 1.0
     },
     {
@@ -39071,7 +39095,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -39083,7 +39107,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L177",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -39095,7 +39119,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L322",
+      "source_location": "L324",
       "weight": 1.0
     },
     {
@@ -39107,7 +39131,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L323",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -39119,7 +39143,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L224",
+      "source_location": "L226",
       "weight": 1.0
     },
     {
@@ -39131,36 +39155,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L225",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
       "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
       "target": "src_mcp_mcp_server_factory_mcpserverfactory_runtool",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L275",
-      "weight": 1.0
-    },
-    {
-      "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
-      "target": "src_mcp_mcp_server_factory_mcpserverfactory_toolresult",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L276",
-      "weight": 1.0
-    },
-    {
-      "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
-      "target": "src_product_dto_product_response_dto_productresponsedto_fromentity",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -39172,6 +39172,30 @@
     },
     {
       "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
+      "target": "src_mcp_mcp_server_factory_mcpserverfactory_toolresult",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L278",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
+      "target": "src_product_dto_product_response_dto_productresponsedto_fromentity",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L279",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_mcpserverfactory_registerreadtools",
       "target": "src_inventory_dto_estimation_response_dto_estimationresponsedto_fromestimationresult",
       "relation": "calls",
       "_origin": "ast",
@@ -39179,7 +39203,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L298",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -39191,7 +39215,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L197",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -39203,7 +39227,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L198",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -39215,7 +39239,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L199",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -39227,7 +39251,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L384",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -39239,7 +39263,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L384",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -41423,7 +41447,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/llm/llm.module.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -41447,7 +41471,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -41459,7 +41483,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -41519,7 +41543,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -41531,7 +41555,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -41543,7 +41567,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/mcp/mcp.module.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -41555,7 +41579,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -41567,7 +41591,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -42623,7 +42647,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -45844,6 +45868,18 @@
     },
     {
       "source": "src_llm_llm_module",
+      "target": "src_observability_observability_module_observabilitymodule",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/llm.module.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_llm_module",
       "target": "src_llm_llm_provider_llm_provider",
       "relation": "imports",
       "_origin": "ast",
@@ -46012,6 +46048,18 @@
     },
     {
       "source": "src_llm_openai_openai_llm_provider",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider",
       "target": "src_llm_llm_provider_llmprovider",
       "relation": "imports",
       "_origin": "ast",
@@ -46116,6 +46164,18 @@
       "context": "import",
       "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider_spec",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -46263,6 +46323,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_mcp_mcp_controller_spec",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp.controller.spec.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
       "source": "src_mcp_mcp_module",
       "target": "src_mcp_mcp_controller_mcpcontroller",
       "relation": "imports",
@@ -46347,6 +46419,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_mcp_mcp_module",
+      "target": "src_observability_observability_module_observabilitymodule",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp.module.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "src_mcp_mcp_server_factory",
       "target": "src_product_dto_product_response_dto_productresponsedto",
       "relation": "imports",
@@ -46404,6 +46488,18 @@
       "context": "import",
       "source_file": "src/mcp/mcp-server.factory.ts",
       "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -46500,6 +46596,18 @@
       "context": "import",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
       "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_spec",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp-server.factory.spec.ts",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -50116,6 +50224,18 @@
     },
     {
       "source": "src_llm_llm_module",
+      "target": "src_observability_observability_module",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/llm.module.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_llm_module",
       "target": "src_llm_llm_provider",
       "relation": "imports_from",
       "_origin": "ast",
@@ -50236,6 +50356,18 @@
     },
     {
       "source": "src_llm_openai_openai_llm_provider",
+      "target": "src_observability_operational_logger_service",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider",
       "target": "src_llm_llm_provider",
       "relation": "imports_from",
       "_origin": "ast",
@@ -50304,6 +50436,18 @@
       "context": "import",
       "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider_spec",
+      "target": "src_observability_operational_logger_service",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -50451,6 +50595,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_mcp_mcp_controller_spec",
+      "target": "src_observability_operational_logger_service",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp.controller.spec.ts",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
       "source": "src_mcp_mcp_module",
       "target": "src_mcp_mcp_controller",
       "relation": "imports_from",
@@ -50535,6 +50691,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_mcp_mcp_module",
+      "target": "src_observability_observability_module",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp.module.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "src_mcp_mcp_server_factory",
       "target": "src_product_dto_product_response_dto",
       "relation": "imports_from",
@@ -50592,6 +50760,18 @@
       "context": "import",
       "source_file": "src/mcp/mcp-server.factory.ts",
       "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory",
+      "target": "src_observability_operational_logger_service",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -50676,6 +50856,18 @@
       "context": "import",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
       "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_spec",
+      "target": "src_observability_operational_logger_service",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/mcp/mcp-server.factory.spec.ts",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -52695,6 +52887,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_llm_openai_openai_llm_provider_openaillmprovider_constructor",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
       "source": "src_llm_openai_openai_llm_provider_openaillmprovider_generatestructured",
       "target": "src_llm_types_structured_generation_structuredgenerationrequest",
       "relation": "references",
@@ -52703,7 +52907,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -52727,7 +52931,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -52739,7 +52943,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -52751,7 +52955,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -52763,7 +52967,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_mcpserverfactory_constructor",
+      "target": "src_observability_operational_logger_service_operationallogger",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -52775,7 +52991,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -53075,7 +53291,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L66",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -53099,7 +53315,7 @@
       "confidence_score": 1.0,
       "context": "type",
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -76542,7 +76758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/llm.module.ts",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -76608,7 +76824,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -76619,7 +76835,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -76630,7 +76846,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.spec.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -76762,7 +76978,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -76773,7 +76989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L236",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -76784,7 +77000,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L247",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -76795,7 +77011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.module.ts",
-      "source_location": "L22",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -76806,7 +77022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L102",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -76817,7 +77033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -76828,7 +77044,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -76839,7 +77055,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -76850,7 +77066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -76861,7 +77077,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -76872,7 +77088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -76883,7 +77099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -76894,7 +77110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -76905,7 +77121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -76916,7 +77132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -76927,7 +77143,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L584",
+      "source_location": "L604",
       "weight": 1.0
     },
     {
@@ -78643,7 +78859,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -78654,7 +78870,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -78665,7 +78881,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/llm/openai/openai-llm.provider.ts",
-      "source_location": "L66",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "src_llm_openai_openai_llm_provider_openaillmprovider",
+      "target": "src_llm_openai_openai_llm_provider_openaillmprovider_logfailure",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L79",
       "weight": 1.0
     },
     {
@@ -78698,7 +78925,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
@@ -78709,7 +78936,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -78720,7 +78947,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L143",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -78731,7 +78958,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L157",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -78742,7 +78969,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L187",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -78753,7 +78980,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L207",
+      "source_location": "L209",
       "weight": 1.0
     },
     {
@@ -78764,7 +78991,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L263",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -78775,7 +79002,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L306",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -78786,7 +79013,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L365",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -78797,7 +79024,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L378",
+      "source_location": "L380",
       "weight": 1.0
     },
     {
@@ -78808,7 +79035,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L388",
+      "source_location": "L397",
       "weight": 1.0
     },
     {
@@ -78819,7 +79046,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L404",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -79835,6 +80062,18 @@
       "weight": 1.0
     },
     {
+      "source": "src_llm_openai_openai_llm_provider_openaillmprovider_logfailure",
+      "target": "src_observability_operational_logger_service_operationallogger_llmintegration",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "src/llm/openai/openai-llm.provider.ts",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
       "source": "src_mcp_mcp_controller_mcpcontroller_handle",
       "target": "src_mcp_mcp_server_factory_mcpserverfactory_create",
       "relation": "calls",
@@ -79855,7 +80094,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L178",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -79867,7 +80106,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L324",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -79879,7 +80118,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L341",
+      "source_location": "L343",
       "weight": 1.0
     },
     {
@@ -79891,7 +80130,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L359",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -79903,7 +80142,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -79915,7 +80154,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L254",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -79927,7 +80166,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L279",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -79939,7 +80178,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L280",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -79951,7 +80190,19 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/mcp/mcp-server.factory.ts",
-      "source_location": "L200",
+      "source_location": "L202",
+      "weight": 1.0
+    },
+    {
+      "source": "src_mcp_mcp_server_factory_mcpserverfactory_runtool",
+      "target": "src_observability_operational_logger_service_operationallogger_mcpintegration",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "source_location": "L387",
       "weight": 1.0
     },
     {

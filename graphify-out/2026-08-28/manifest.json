@@ -402,21 +402,21 @@
     "semantic_hash": ""
   },
   "src/llm/llm.module.ts": {
-    "mtime": 1787864978.6226473,
-    "seen": 1787865372.090353,
-    "ast_hash": "ceb9e2de008784bb53bd20da352f967e",
+    "mtime": 1787868024.2802699,
+    "seen": 1787868154.140689,
+    "ast_hash": "0e87797c63d7434b376f9ad81566b274",
     "semantic_hash": ""
   },
   "src/llm/openai/openai-llm.provider.spec.ts": {
-    "mtime": 1787864978.623103,
-    "seen": 1787865372.090355,
-    "ast_hash": "43d30b67aa7531fc35fc8e115a1127ed",
+    "mtime": 1787868128.0539684,
+    "seen": 1787868154.140691,
+    "ast_hash": "638865e1bb4fe800e38665aec4dd5e0c",
     "semantic_hash": ""
   },
   "src/llm/openai/openai-llm.provider.ts": {
-    "mtime": 1787864978.6237266,
-    "seen": 1787865372.0903559,
-    "ast_hash": "0788ecc4bce46cd4c94030ce9f11324c",
+    "mtime": 1787868024.2798343,
+    "seen": 1787868154.140693,
+    "ast_hash": "46218f2408e6b853d32dc7203d9f47fc",
     "semantic_hash": ""
   },
   "src/llm/openai/openai.tokens.ts": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1787867742.0718741,
-    "seen": 1787867887.091946,
-    "ast_hash": "2bde35b890034f5bdfeeb8a2aff8abf7",
+    "mtime": 1787867971.721641,
+    "seen": 1787868154.1578188,
+    "ast_hash": "9d9492f04ca212486a768cc8a7c0af2c",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1698,15 +1698,15 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1787866610.852193,
-    "seen": 1787866691.002819,
-    "ast_hash": "1d3a7fda19ea2f84d3f5b5f233ca84ee",
+    "mtime": 1787868040.6615448,
+    "seen": 1787868154.141035,
+    "ast_hash": "2253bfe1eab3817b7b6908cdeddea112",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1787866610.8528998,
-    "seen": 1787866691.00282,
-    "ast_hash": "48173e02b3f4b5edfa62ab9fda9eabe3",
+    "mtime": 1787868062.3000748,
+    "seen": 1787868154.141037,
+    "ast_hash": "a70c9583ca124d2a1ff7bca780a97893",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.ts": {
@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp.module.ts": {
-    "mtime": 1787864978.6279051,
-    "seen": 1787865372.090368,
-    "ast_hash": "9f9bdf5faa698f4921053805a5d7f3f4",
+    "mtime": 1787868062.2995546,
+    "seen": 1787868154.1411269,
+    "ast_hash": "ea86a5b94deed19caa48e4bf17017e0f",
     "semantic_hash": ""
   },
   ".claude/CLAUDE.md": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1787866610.8515182,
-    "seen": 1787866691.002817,
-    "ast_hash": "7671ed2ec892f13e6eef0317de5e2336",
+    "mtime": 1787868040.7164826,
+    "seen": 1787868154.141032,
+    "ast_hash": "c4f7d49706a4f7fe50038025518545eb",
     "semantic_hash": ""
   },
   "blueprint/history/features/12-mcp-tool-interface.md": {
