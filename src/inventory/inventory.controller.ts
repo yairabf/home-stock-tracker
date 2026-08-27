@@ -7,9 +7,13 @@ import {
   Param,
   Post,
   Query,
+  Inject,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
-import { EstimationService } from '../estimation/estimation.service';
+import {
+  PREDICTION_ENGINE,
+  type PredictionEngine,
+} from '../estimation/prediction-engine';
 import { EstimationResponseDto } from './dto/estimation-response.dto';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
@@ -25,7 +29,8 @@ import { CompletePartialPurchaseResponseDto } from './dto/complete-partial-purch
 export class InventoryController {
   constructor(
     private readonly inventoryService: InventoryService,
-    private readonly estimationService: EstimationService,
+    @Inject(PREDICTION_ENGINE)
+    private readonly predictionEngine: PredictionEngine,
   ) {}
 
   @Post('events')
@@ -69,7 +74,7 @@ export class InventoryController {
   async estimateInventory(
     @Param('productId') productId: string,
   ): Promise<EstimationResponseDto> {
-    const result = await this.estimationService.estimateProductState(productId);
+    const result = await this.predictionEngine.predictProduct(productId);
     return EstimationResponseDto.fromEstimationResult(result);
   }
 }

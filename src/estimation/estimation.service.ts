@@ -6,6 +6,19 @@ import { EstimationResult } from './types/estimation-result';
 import { ProductEventHistory } from './types/product-event-history';
 import { PredictedState, ProductType, InventoryEventType } from '../generated/prisma/enums';
 import { MS_PER_DAY } from '../common/constants';
+import type { PredictionEngine } from './prediction-engine';
+import type { ProductResponseDto } from '../product/dto/product-response.dto';
+import type { DeterministicPredictionCandidate } from './types/prediction-result';
+import { Prisma } from '../generated/prisma/client';
+import {
+  PREDICTION_REASONING_PROMPT_VERSION,
+  PredictionReasoner,
+} from './prediction-reasoner.service';
+
+const LLM_ELIGIBILITY_CONFIDENCE = 0.8;
+const LLM_ACCEPTANCE_CONFIDENCE = 0.65;
+const DETERMINISTIC_CONFIDENCE_WEIGHT = 0.7;
+const LLM_CONFIDENCE_WEIGHT = 0.3;
 
 const RELEVANT_EVENT_TYPES: InventoryEventType[] = [
   InventoryEventType.PURCHASED,
@@ -27,14 +40,35 @@ const PRODUCT_TYPE_THRESHOLDS: Record<ProductType, number> = {
 
 const FALLBACK_THRESHOLD_DAYS = 14;
 
+interface LearnedStatistics {
+  avgPurchaseIntervalDays: number | null;
+  avgNeedIntervalDays: number | null;
+  estimatedConsumptionIntervalDays: number | null;
+  observationCount: number;
+}
+
+interface HouseholdPredictionContext {
+  adultsCount: number;
+  childrenCount: number;
+  childAgeGroups: string[];
+  predictionPreferences: Record<string, unknown> | null;
+}
+
+interface ProductPredictionContext {
+  productType: ProductType | null;
+  isPerishable: boolean;
+  predictionStrategy: string | null;
+}
+
 @Injectable()
-export class EstimationService {
+export class EstimationService implements PredictionEngine {
   private readonly logger = new Logger(EstimationService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
     private readonly householdService: HouseholdService,
+    private readonly predictionReasoner: PredictionReasoner,
   ) {}
 
   /**
@@ -42,16 +76,13 @@ export class EstimationService {
    */
   private async fetchProductStatistics(
     productId: string,
-  ): Promise<{
-    avgPurchaseIntervalDays: number | null;
-    avgNeedIntervalDays: number | null;
-    observationCount: number;
-  } | null> {
+  ): Promise<LearnedStatistics | null> {
     const stats = await this.prisma.productStatistics.findUnique({
       where: { productId },
       select: {
         avgPurchaseIntervalDays: true,
         avgNeedIntervalDays: true,
+        estimatedConsumptionIntervalDays: true,
         observationCount: true,
       },
     });
@@ -60,83 +91,168 @@ export class EstimationService {
   }
 
   async estimateProductState(productId: string): Promise<EstimationResult> {
+    return this.predictProduct(productId);
+  }
+
+  async predictProduct(productId: string): Promise<EstimationResult> {
     const product = await this.productService.findOne(productId);
-
-    let result: EstimationResult;
-
-    if (!product.predictionEnabled) {
-      result = this.buildDisabledResult(productId, product.productType);
-    } else {
-      const eventHistory = await this.fetchProductEventHistory(productId);
-      const learnedStats = await this.fetchProductStatistics(productId);
-
-      const directResult = this.applyDirectSignalPrecedence(eventHistory);
-      if (directResult) {
-        const coldStart = this.isColdStart(eventHistory);
-        const confidence = this.calculateConfidence(
-          eventHistory,
-          product.productType,
-          coldStart,
-          learnedStats !== null,
-          learnedStats,
-        );
-        result = this.buildResult(
+    const result = product.predictionEnabled
+      ? await this.applyHybridReasoning(
           productId,
-          directResult.state,
-          confidence,
-          directResult.reason,
-          eventHistory,
-          product.productType,
-          coldStart,
-          learnedStats,
-        );
-      } else {
-        const coldStart = this.isColdStart(eventHistory);
-        if (coldStart) {
-          const confidence = this.calculateConfidence(eventHistory, product.productType, true, learnedStats !== null, learnedStats);
-          result = this.buildResult(
-            productId,
-            PredictedState.uncertain,
-            confidence,
-            'Insufficient data: fewer than 2 events or less than 7 days since first event',
-            eventHistory,
-            product.productType,
-            true,
-            learnedStats,
-          );
-        } else {
-          const timeDecayResult = this.applyTimeDecayHeuristics(
-            eventHistory,
-            product.productType,
-            learnedStats,
-          );
+          await this.buildDeterministicCandidate(product),
+        )
+      : this.buildDisabledResult(productId, product.productType);
 
-          const confidence = this.calculateConfidence(
-            eventHistory,
-            product.productType,
-            false,
-            learnedStats !== null,
-            learnedStats,
-          );
+    await this.savePrediction(result);
+    return result;
+  }
 
-          result = this.buildResult(
-            productId,
-            timeDecayResult.state,
-            confidence,
-            timeDecayResult.reason,
-            eventHistory,
-            product.productType,
-            false,
-            learnedStats,
-          );
-        }
-      }
+  private async buildDeterministicCandidate(
+    product: ProductResponseDto,
+  ): Promise<DeterministicPredictionCandidate> {
+    const [eventHistory, learnedStats, household] = await Promise.all([
+      this.fetchProductEventHistory(product.id),
+      this.fetchProductStatistics(product.id),
+        this.householdService.getOrCreate(),
+    ]);
+    const productContext: ProductPredictionContext = {
+      productType: product.productType,
+      isPerishable: product.isPerishable,
+      predictionStrategy: product.predictionStrategy,
+    };
+    const householdContext: HouseholdPredictionContext = {
+      adultsCount: household.adultsCount,
+      childrenCount: household.childrenCount,
+      childAgeGroups: household.childAgeGroups,
+      predictionPreferences: household.predictionPreferences,
+    };
+
+    const directResult = this.applyDirectSignalPrecedence(eventHistory);
+    const coldStart = this.isColdStart(eventHistory);
+    const confidence = this.calculateConfidence(
+      eventHistory,
+      product.productType,
+      coldStart,
+      learnedStats !== null,
+      learnedStats,
+    );
+
+    if (directResult) {
+      return this.buildCandidate(
+        directResult.state,
+        confidence,
+        directResult.reason,
+        eventHistory,
+        productContext,
+        coldStart,
+        learnedStats,
+        householdContext,
+        true,
+      );
     }
 
-    // Persist the prediction
-    await this.savePrediction(result);
+    if (coldStart) {
+      return this.buildCandidate(
+        PredictedState.uncertain,
+        confidence,
+        'Insufficient data: fewer than 2 events or less than 7 days since first event',
+        eventHistory,
+        productContext,
+        true,
+        learnedStats,
+        householdContext,
+        false,
+      );
+    }
 
-    return result;
+    const timeDecayResult = this.applyTimeDecayHeuristics(
+      eventHistory,
+      product.productType,
+      learnedStats,
+    );
+
+    return this.buildCandidate(
+      timeDecayResult.state,
+      confidence,
+      timeDecayResult.reason,
+      eventHistory,
+      productContext,
+      false,
+      learnedStats,
+      householdContext,
+      false,
+    );
+  }
+
+  private finalizeCandidate(
+    productId: string,
+    candidate: DeterministicPredictionCandidate,
+  ): EstimationResult {
+    return {
+      productId,
+      predictedState: candidate.predictedState,
+      confidenceScore: candidate.confidenceScore,
+      reason: candidate.reason,
+      deterministicSignals: candidate.signals,
+      recommendedAction: null,
+      llmContributed: false,
+      llmAttempt: null,
+    };
+  }
+
+  private async applyHybridReasoning(
+    productId: string,
+    candidate: DeterministicPredictionCandidate,
+  ): Promise<EstimationResult> {
+    const deterministicResult = this.finalizeCandidate(productId, candidate);
+    if (
+      candidate.predictedState !== PredictedState.uncertain &&
+      candidate.confidenceScore >= LLM_ELIGIBILITY_CONFIDENCE
+    ) {
+      return deterministicResult;
+    }
+
+    try {
+      const llmResult = await this.predictionReasoner.reason(candidate);
+      if (llmResult.status !== 'success') {
+        return deterministicResult;
+      }
+
+      const accepted = llmResult.value.confidence >= LLM_ACCEPTANCE_CONFIDENCE;
+      const llmAttempt = {
+        provider: llmResult.provider,
+        model: llmResult.model,
+        value: llmResult.value,
+        accepted,
+      };
+      if (!accepted) {
+        return { ...deterministicResult, llmAttempt };
+      }
+
+      return {
+        ...deterministicResult,
+        predictedState:
+          candidate.authoritative ||
+          candidate.predictedState !== PredictedState.uncertain
+            ? candidate.predictedState
+            : llmResult.value.predictedState,
+        confidenceScore: Math.max(
+          0,
+          Math.min(
+            1,
+            DETERMINISTIC_CONFIDENCE_WEIGHT * candidate.confidenceScore +
+              LLM_CONFIDENCE_WEIGHT * llmResult.value.confidence,
+          ),
+        ),
+        reason: llmResult.value.reason,
+        recommendedAction: llmResult.value.recommendedAction,
+        llmContributed: true,
+        llmAttempt,
+      };
+    } catch (error) {
+      this.logger.warn(`LLM prediction reasoning failed: ${String(error)}`);
+      return deterministicResult;
+    }
   }
 
   private async fetchProductEventHistory(
@@ -255,7 +371,7 @@ export class EstimationService {
   private applyTimeDecayHeuristics(
     history: ProductEventHistory,
     productType: ProductType | null,
-    learnedStats: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null } | null,
+    learnedStats: LearnedStatistics | null,
   ): { state: PredictedState; reason: string } {
     // Use learned interval if available, otherwise fall back to product-type thresholds
     const hasLearnedInterval = learnedStats !== null && learnedStats.avgPurchaseIntervalDays !== null;
@@ -336,7 +452,7 @@ export class EstimationService {
     productType: ProductType | null,
     coldStart: boolean,
     hasLearnedStatistics: boolean,
-    learnedStats?: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null; observationCount: number } | null,
+    learnedStats?: LearnedStatistics | null,
   ): number {
     let confidence = 0.5;
 
@@ -371,23 +487,24 @@ export class EstimationService {
     return Math.max(0.0, Math.min(1.0, confidence));
   }
 
-  private buildResult(
-    productId: string,
+  private buildCandidate(
     predictedState: PredictedState,
     confidenceScore: number,
     reason: string,
     history: ProductEventHistory,
-    productType: ProductType | null,
+    product: ProductPredictionContext,
     coldStart: boolean,
-    learnedStats: { avgPurchaseIntervalDays: number | null; avgNeedIntervalDays: number | null } | null,
-  ): EstimationResult {
+    learnedStats: LearnedStatistics | null,
+    householdContext: HouseholdPredictionContext,
+    authoritativeDirectSignal: boolean,
+  ): DeterministicPredictionCandidate {
     const now = Date.now();
     return {
-      productId,
       predictedState,
       confidenceScore,
       reason,
-      deterministicSignals: {
+      authoritative: authoritativeDirectSignal,
+      signals: {
         lastPurchaseAt: history.lastPurchaseAt,
         lastLowStockSignalAt: history.lastLowStockAt,
         lastStockConfirmationAt: history.lastStockConfirmationAt,
@@ -397,24 +514,40 @@ export class EstimationService {
         daysSinceLastLowSignal: history.lastLowStockAt
           ? (now - history.lastLowStockAt.getTime()) / MS_PER_DAY
           : null,
-        productType,
+        productType: product.productType,
         eventCount: history.eventCount,
         coldStart,
         hasLearnedStatistics: learnedStats !== null,
         avgPurchaseIntervalDays: learnedStats?.avgPurchaseIntervalDays ?? null,
         avgNeedIntervalDays: learnedStats?.avgNeedIntervalDays ?? null,
+        estimatedConsumptionIntervalDays:
+          learnedStats?.estimatedConsumptionIntervalDays ?? null,
+        observationCount: learnedStats?.observationCount ?? 0,
+        isPerishable: product.isPerishable,
+        predictionStrategy: product.predictionStrategy,
+        householdContext,
+        authoritativeDirectSignal,
       },
     };
   }
 
   private async savePrediction(result: EstimationResult): Promise<void> {
     try {
-      await this.prisma.prediction.create({
+      const prediction = await this.prisma.prediction.create({
         data: {
           productId: result.productId,
           predictedState: result.predictedState,
           confidenceScore: result.confidenceScore,
           reason: result.reason,
+          recommendedAction: result.recommendedAction,
+          llmResult:
+            result.llmContributed && result.llmAttempt
+              ? (result.llmAttempt.value as Prisma.InputJsonValue)
+              : undefined,
+          modelProviderVersion:
+            result.llmContributed && result.llmAttempt
+              ? `${result.llmAttempt.provider}/${result.llmAttempt.model}`
+              : null,
           deterministicSignals: {
             lastPurchaseAt: result.deterministicSignals.lastPurchaseAt?.toISOString() ?? null,
             lastLowStockSignalAt: result.deterministicSignals.lastLowStockSignalAt?.toISOString() ?? null,
@@ -427,9 +560,36 @@ export class EstimationService {
             hasLearnedStatistics: result.deterministicSignals.hasLearnedStatistics,
             avgPurchaseIntervalDays: result.deterministicSignals.avgPurchaseIntervalDays,
             avgNeedIntervalDays: result.deterministicSignals.avgNeedIntervalDays,
+            estimatedConsumptionIntervalDays:
+              result.deterministicSignals.estimatedConsumptionIntervalDays,
+            observationCount: result.deterministicSignals.observationCount,
+            isPerishable: result.deterministicSignals.isPerishable,
+            predictionStrategy: result.deterministicSignals.predictionStrategy,
+            householdContext: result.deterministicSignals.householdContext
+              ? {
+                  ...result.deterministicSignals.householdContext,
+                  predictionPreferences: result.deterministicSignals
+                    .householdContext.predictionPreferences as Prisma.InputJsonValue | null,
+                }
+              : null,
+            authoritativeDirectSignal:
+              result.deterministicSignals.authoritativeDirectSignal,
           },
         },
       });
+
+      if (result.llmAttempt) {
+        await this.prisma.llmInferenceLog.create({
+          data: {
+            predictionId: prediction.id,
+            modelProvider: result.llmAttempt.provider,
+            modelVersion: result.llmAttempt.model,
+            promptVersion: PREDICTION_REASONING_PROMPT_VERSION,
+            structuredResponse: result.llmAttempt.value,
+            confidence: result.llmAttempt.value.confidence,
+          },
+        });
+      }
     } catch (error) {
       this.logger.error(
         `Failed to save prediction for product ${result.productId}: ${error}`,
@@ -447,6 +607,9 @@ export class EstimationService {
       predictedState: PredictedState.uncertain,
       confidenceScore: 0.0,
       reason: 'Prediction is disabled for this product',
+      recommendedAction: null,
+      llmContributed: false,
+      llmAttempt: null,
       deterministicSignals: {
         lastPurchaseAt: null,
         lastLowStockSignalAt: null,
@@ -459,6 +622,12 @@ export class EstimationService {
         hasLearnedStatistics: false,
         avgPurchaseIntervalDays: null,
         avgNeedIntervalDays: null,
+        estimatedConsumptionIntervalDays: null,
+        observationCount: 0,
+        isPerishable: false,
+        predictionStrategy: null,
+        householdContext: null,
+        authoritativeDirectSignal: false,
       },
     };
   }

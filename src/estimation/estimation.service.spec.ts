@@ -5,16 +5,21 @@ import { ProductService } from '../product/product.service';
 import { HouseholdService } from '../household/household.service';
 import { PredictedState, InventoryEventType, ProductType } from '../generated/prisma/enums';
 import { NotFoundException } from '@nestjs/common';
+import { PredictionReasoner } from './prediction-reasoner.service';
 
 describe('EstimationService', () => {
   let service: EstimationService;
   let productService: jest.Mocked<ProductService>;
   let prismaService: jest.Mocked<PrismaService>;
+  let householdService: jest.Mocked<HouseholdService>;
+  let predictionReasoner: jest.Mocked<PredictionReasoner>;
 
   const mockProduct = (overrides = {}) => ({
     id: 'product-1',
     canonicalName: 'Milk',
     productType: ProductType.fast_consumable,
+    isPerishable: true,
+    predictionStrategy: null,
     predictionEnabled: true,
     ...overrides,
   });
@@ -34,7 +39,12 @@ describe('EstimationService', () => {
     };
 
     const mockHouseholdService = {
-      getOrCreate: jest.fn().mockResolvedValue({ adultsCount: 2, childrenCount: 3 }),
+      getOrCreate: jest.fn().mockResolvedValue({
+        adultsCount: 2,
+        childrenCount: 3,
+        childAgeGroups: ['under_6'],
+        predictionPreferences: { favorRecentSignals: true },
+      }),
     };
 
     const mockPrisma = {
@@ -47,6 +57,12 @@ describe('EstimationService', () => {
       productStatistics: {
         findUnique: jest.fn().mockResolvedValue(null),
       },
+      llmInferenceLog: {
+        create: jest.fn().mockResolvedValue({ id: 'log-1' }),
+      },
+    };
+    const mockPredictionReasoner = {
+      reason: jest.fn().mockResolvedValue({ status: 'unavailable' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -55,12 +71,15 @@ describe('EstimationService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ProductService, useValue: mockProductService },
         { provide: HouseholdService, useValue: mockHouseholdService },
+        { provide: PredictionReasoner, useValue: mockPredictionReasoner },
       ],
     }).compile();
 
     service = module.get<EstimationService>(EstimationService);
     productService = module.get(ProductService);
     prismaService = module.get(PrismaService);
+    householdService = module.get(HouseholdService);
+    predictionReasoner = module.get(PredictionReasoner);
   });
 
   afterEach(() => {
@@ -385,6 +404,53 @@ describe('EstimationService', () => {
   });
 
   describe('Edge cases', () => {
+    it('captures product, learned statistics, and household context', async () => {
+      productService.findOne.mockResolvedValue(
+        mockProduct({ predictionStrategy: 'hybrid-v1' }),
+      );
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 3),
+        mockEvent(InventoryEventType.PURCHASED, 12),
+      ]);
+      prismaService.productStatistics.findUnique.mockResolvedValue({
+        avgPurchaseIntervalDays: 9,
+        avgNeedIntervalDays: 8,
+        estimatedConsumptionIntervalDays: 8.5,
+        observationCount: 6,
+      });
+
+      const result = await service.estimateProductState('product-1');
+
+      expect(result.deterministicSignals).toMatchObject({
+        productType: ProductType.fast_consumable,
+        isPerishable: true,
+        predictionStrategy: 'hybrid-v1',
+        avgPurchaseIntervalDays: 9,
+        avgNeedIntervalDays: 8,
+        estimatedConsumptionIntervalDays: 8.5,
+        observationCount: 6,
+        householdContext: {
+          adultsCount: 2,
+          childrenCount: 3,
+          childAgeGroups: ['under_6'],
+          predictionPreferences: { favorRecentSignals: true },
+        },
+      });
+      expect(householdService.getOrCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it('marks explicit low-stock signals as authoritative', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_LOW, 1),
+        mockEvent(InventoryEventType.PURCHASED, 5),
+      ]);
+
+      const result = await service.estimateProductState('product-1');
+
+      expect(result.deterministicSignals.authoritativeDirectSignal).toBe(true);
+    });
+
     it('should return deterministicSignals with correct values', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
       prismaService.inventoryEvent.findMany.mockResolvedValue([
@@ -420,6 +486,197 @@ describe('EstimationService', () => {
       const result = await service.estimateProductState('product-1');
       expect(result.deterministicSignals.eventCount).toBe(2);
       expect(result.deterministicSignals.lastPurchaseAt).not.toBeNull();
+    });
+  });
+
+  describe('Hybrid reasoning', () => {
+    const successfulReasoning = (confidence: number) => ({
+      status: 'success' as const,
+      provider: 'test-provider',
+      model: 'test-model',
+      value: {
+        predictedState: PredictedState.probably_low,
+        confidence,
+        reason: 'Structured household evidence suggests low stock',
+        recommendedAction: 'Check the pantry',
+      },
+    });
+
+    it('skips LLM reasoning for a confident deterministic candidate', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 1),
+        mockEvent(InventoryEventType.PURCHASED, 10),
+        mockEvent(InventoryEventType.PURCHASED, 20),
+        mockEvent(InventoryEventType.PURCHASED, 30),
+      ]);
+
+      await service.predictProduct('product-1');
+
+      expect(predictionReasoner.reason).not.toHaveBeenCalled();
+    });
+
+    it('uses valid LLM reasoning to resolve an uncertain candidate', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.9));
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.probably_low);
+      expect(result.confidenceScore).toBeCloseTo(0.62);
+      expect(result.llmContributed).toBe(true);
+      expect(result.recommendedAction).toBe('Check the pantry');
+    });
+
+    it('does not let LLM reasoning override an authoritative direct signal', async () => {
+      productService.findOne.mockResolvedValue(mockProduct({ productType: null }));
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_OUT, 1),
+      ]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.95));
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.probably_out);
+      expect(result.llmContributed).toBe(true);
+    });
+
+    it('does not let LLM reasoning change a non-uncertain candidate', async () => {
+      productService.findOne.mockResolvedValue(mockProduct({ productType: null }));
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 20),
+        mockEvent(InventoryEventType.PURCHASED, 40),
+      ]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.9));
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.probably_low);
+    });
+
+    it.each([{ status: 'refusal' as const }, { status: 'unavailable' as const }])(
+      'keeps deterministic output for $status reasoning',
+      async (llmResult) => {
+        productService.findOne.mockResolvedValue(mockProduct());
+        prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+        predictionReasoner.reason.mockResolvedValue(llmResult);
+
+        const result = await service.predictProduct('product-1');
+
+        expect(result.predictedState).toBe(PredictedState.uncertain);
+        expect(result.llmContributed).toBe(false);
+      },
+    );
+
+    it('keeps deterministic output when the provider throws', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      predictionReasoner.reason.mockRejectedValue(new Error('provider detail'));
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.uncertain);
+      expect(result.llmContributed).toBe(false);
+    });
+
+    it('retains but does not accept low-confidence LLM output', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.64));
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.uncertain);
+      expect(result.llmContributed).toBe(false);
+      expect(result.llmAttempt?.accepted).toBe(false);
+    });
+
+    it('does not call LLM reasoning when prediction is disabled', async () => {
+      productService.findOne.mockResolvedValue(
+        mockProduct({ predictionEnabled: false }),
+      );
+
+      await service.predictProduct('product-1');
+
+      expect(predictionReasoner.reason).not.toHaveBeenCalled();
+    });
+
+    it('persists deterministic-only predictions with nullable LLM fields', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+
+      await service.predictProduct('product-1');
+
+      expect(prismaService.prediction.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          recommendedAction: null,
+          llmResult: undefined,
+          modelProviderVersion: null,
+        }),
+      });
+      expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
+    });
+
+    it('persists accepted LLM metadata and a linked inference log', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.9));
+
+      await service.predictProduct('product-1');
+
+      expect(prismaService.prediction.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          recommendedAction: 'Check the pantry',
+          llmResult: successfulReasoning(0.9).value,
+          modelProviderVersion: 'test-provider/test-model',
+        }),
+      });
+      expect(prismaService.llmInferenceLog.create).toHaveBeenCalledWith({
+        data: {
+          predictionId: 'prediction-1',
+          modelProvider: 'test-provider',
+          modelVersion: 'test-model',
+          promptVersion: 'prediction-reasoning-v1',
+          structuredResponse: successfulReasoning(0.9).value,
+          confidence: 0.9,
+        },
+      });
+    });
+
+    it('logs valid low-confidence output without storing it as contributed', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.64));
+
+      await service.predictProduct('product-1');
+
+      expect(prismaService.prediction.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          llmResult: undefined,
+          modelProviderVersion: null,
+        }),
+      });
+      expect(prismaService.llmInferenceLog.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          predictionId: 'prediction-1',
+          confidence: 0.64,
+        }),
+      });
+    });
+
+    it('does not change returned behavior when prediction persistence fails', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.prediction.create.mockRejectedValue(
+        new Error('database detail'),
+      );
+
+      const result = await service.predictProduct('product-1');
+
+      expect(result.predictedState).toBe(PredictedState.uncertain);
+      expect(result.confidenceScore).toBeCloseTo(0.5);
+      expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
     });
   });
 
