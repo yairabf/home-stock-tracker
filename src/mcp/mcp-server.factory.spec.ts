@@ -13,6 +13,7 @@ import { PredictedState } from '../generated/prisma/enums';
 import { InventoryService } from '../inventory/inventory.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -46,6 +47,7 @@ describe('McpServerFactory grocery tools', () => {
   let recommendationService: jest.Mocked<
     Pick<LowStockRecommendationService, 'getRecommendations'>
   >;
+  let operationalLogger: jest.Mocked<Pick<OperationalLogger, 'mcpIntegration'>>;
 
   beforeEach(async () => {
     groceryService = {
@@ -64,12 +66,14 @@ describe('McpServerFactory grocery tools', () => {
       completeGroceryPurchase: jest.fn(),
     };
     recommendationService = { getRecommendations: jest.fn() };
+    operationalLogger = { mcpIntegration: jest.fn() };
     const factory = new McpServerFactory(
       groceryService as GroceryService,
       productService as ProductService,
       predictionEngine,
       inventoryService as InventoryService,
       recommendationService as LowStockRecommendationService,
+      operationalLogger as OperationalLogger,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -161,6 +165,11 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.content).toEqual([
       { type: 'text', text: `Grocery list item ${item.id} not found` },
     ]);
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'grocery_remove',
+      errorType: 'domain_error',
+    });
   });
 
   it('rejects malformed input without invoking the service', async () => {
@@ -237,16 +246,19 @@ describe('McpServerFactory grocery tools', () => {
     {},
     { id: item.productId, productName: 'milk' },
     { productName: '' },
-  ])('rejects an invalid product selector before service invocation', async (args) => {
-    const result = await client.callTool({
-      name: 'get_product',
-      arguments: args,
-    });
+  ])(
+    'rejects an invalid product selector before service invocation',
+    async (args) => {
+      const result = await client.callTool({
+        name: 'get_product',
+        arguments: args,
+      });
 
-    expect(result.isError).toBe(true);
-    expect(productService.findOne).not.toHaveBeenCalled();
-    expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
-  });
+      expect(result.isError).toBe(true);
+      expect(productService.findOne).not.toHaveBeenCalled();
+      expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
+    },
+  );
 
   it('returns an unknown product name as an MCP tool error', async () => {
     productService.findByExactOrAliasName.mockRejectedValue(
@@ -522,6 +534,14 @@ describe('McpServerFactory grocery tools', () => {
       ],
       isError: true,
     });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'complete_grocery_purchase',
+      errorType: 'unexpected_error',
+    });
+    expect(
+      JSON.stringify(operationalLogger.mcpIntegration.mock.calls),
+    ).not.toContain('database password leaked here');
   });
 
   it('returns empty and populated low-stock recommendations', async () => {

@@ -10,6 +10,7 @@ import {
 } from '../generated/prisma/enums';
 import { NotFoundException } from '@nestjs/common';
 import { PredictionReasoner } from './prediction-reasoner.service';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 describe('EstimationService', () => {
   let service: EstimationService;
@@ -17,6 +18,10 @@ describe('EstimationService', () => {
   let prismaService: jest.Mocked<PrismaService>;
   let householdService: jest.Mocked<HouseholdService>;
   let predictionReasoner: jest.Mocked<PredictionReasoner>;
+  let operationalLogger: {
+    predictionRun: jest.Mock;
+    predictionPersistence: jest.Mock;
+  };
 
   const mockProduct = (overrides = {}) => ({
     id: 'product-1',
@@ -72,6 +77,10 @@ describe('EstimationService', () => {
     const mockPredictionReasoner = {
       reason: jest.fn().mockResolvedValue({ status: 'unavailable' }),
     };
+    operationalLogger = {
+      predictionRun: jest.fn(),
+      predictionPersistence: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -80,6 +89,7 @@ describe('EstimationService', () => {
         { provide: ProductService, useValue: mockProductService },
         { provide: HouseholdService, useValue: mockHouseholdService },
         { provide: PredictionReasoner, useValue: mockPredictionReasoner },
+        { provide: OperationalLogger, useValue: operationalLogger },
       ],
     }).compile();
 
@@ -559,6 +569,12 @@ describe('EstimationService', () => {
       expect(result.confidenceScore).toBeCloseTo(0.62);
       expect(result.llmContributed).toBe(true);
       expect(result.recommendedAction).toBe('Check the pantry');
+      expect(operationalLogger.predictionRun).toHaveBeenCalledWith({
+        action: 'estimate',
+        outcome: 'success',
+        productId: 'product-1',
+        predictionId: 'prediction-1',
+      });
     });
 
     it('does not let LLM reasoning override an authoritative direct signal', async () => {
@@ -605,6 +621,12 @@ describe('EstimationService', () => {
 
         expect(result.predictedState).toBe(PredictedState.uncertain);
         expect(result.llmContributed).toBe(false);
+        expect(operationalLogger.predictionRun).toHaveBeenCalledWith({
+          action: 'estimate',
+          outcome: 'fallback',
+          productId: 'product-1',
+          predictionId: 'prediction-1',
+        });
       },
     );
 
@@ -617,6 +639,15 @@ describe('EstimationService', () => {
 
       expect(result.predictedState).toBe(PredictedState.uncertain);
       expect(result.llmContributed).toBe(false);
+      expect(operationalLogger.predictionRun).toHaveBeenCalledWith({
+        action: 'estimate',
+        outcome: 'fallback',
+        productId: 'product-1',
+        predictionId: 'prediction-1',
+      });
+      expect(
+        JSON.stringify(operationalLogger.predictionRun.mock.calls),
+      ).not.toContain('provider detail');
     });
 
     it('retains but does not accept low-confidence LLM output', async () => {
@@ -656,6 +687,11 @@ describe('EstimationService', () => {
       });
       expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
       expect(result.predictionId).toBe('prediction-1');
+      expect(operationalLogger.predictionPersistence).toHaveBeenCalledWith({
+        outcome: 'success',
+        productId: 'product-1',
+        predictionId: 'prediction-1',
+      });
     });
 
     it('persists accepted LLM metadata and a linked inference log', async () => {
@@ -718,6 +754,14 @@ describe('EstimationService', () => {
       expect(result.confidenceScore).toBeCloseTo(0.5);
       expect(result.predictionId).toBeNull();
       expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
+      expect(operationalLogger.predictionPersistence).toHaveBeenCalledWith({
+        outcome: 'failure',
+        productId: 'product-1',
+        errorType: 'persistence_error',
+      });
+      expect(
+        JSON.stringify(operationalLogger.predictionPersistence.mock.calls),
+      ).not.toContain('database detail');
     });
   });
 

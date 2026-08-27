@@ -6,6 +6,7 @@ import {
   type ProductClassificationResult,
 } from '../../product/types/product-classification';
 import { OpenAiLlmProvider } from './openai-llm.provider';
+import { OperationalLogger } from '../../observability/operational-logger.service';
 
 const request: StructuredGenerationRequest<ProductClassificationResult> = {
   task: 'product-classification',
@@ -29,11 +30,17 @@ describe('OpenAiLlmProvider', () => {
   const model = 'test-model';
   let parse: jest.Mock;
   let provider: OpenAiLlmProvider;
+  let operationalLogger: jest.Mocked<Pick<OperationalLogger, 'llmIntegration'>>;
 
   beforeEach(() => {
     parse = jest.fn();
+    operationalLogger = { llmIntegration: jest.fn() };
     const client = { responses: { parse } } as unknown as OpenAI;
-    provider = new OpenAiLlmProvider(client, model);
+    provider = new OpenAiLlmProvider(
+      client,
+      model,
+      operationalLogger as OperationalLogger,
+    );
   });
 
   it('sends strict structured output through the Responses API', async () => {
@@ -45,23 +52,27 @@ describe('OpenAiLlmProvider', () => {
       model,
       value: parsedResult,
     });
-    expect(parse).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model,
-        instructions: request.instructions,
-        input: JSON.stringify(request.input),
-        text: {
-          format: expect.objectContaining({
-            type: 'json_schema',
-            strict: true,
-          }),
+    const parseCalls = parse.mock.calls as unknown[][];
+    const providerRequest = parseCalls[0][0];
+    expect(providerRequest).toMatchObject({
+      model,
+      instructions: request.instructions,
+      input: JSON.stringify(request.input),
+      text: {
+        format: {
+          type: 'json_schema',
+          strict: true,
         },
-      }),
-    );
+      },
+    });
   });
 
   it('returns unavailable when configuration has no API client', async () => {
-    provider = new OpenAiLlmProvider(null, model);
+    provider = new OpenAiLlmProvider(
+      null,
+      model,
+      operationalLogger as OperationalLogger,
+    );
 
     await expect(provider.generateStructured(request)).resolves.toEqual({
       status: 'unavailable',
@@ -69,6 +80,11 @@ describe('OpenAiLlmProvider', () => {
       model,
     });
     expect(parse).not.toHaveBeenCalled();
+    expect(operationalLogger.llmIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      provider: 'openai',
+      errorType: 'provider_error',
+    });
   });
 
   it('translates a refusal without retaining its provider text', async () => {
@@ -115,6 +131,14 @@ describe('OpenAiLlmProvider', () => {
         provider: 'openai',
         model,
       });
+      expect(operationalLogger.llmIntegration).toHaveBeenCalledWith({
+        outcome: 'failure',
+        provider: 'openai',
+        errorType: 'provider_error',
+      });
+      expect(
+        JSON.stringify(operationalLogger.llmIntegration.mock.calls),
+      ).not.toContain('provider detail');
     },
   );
 });

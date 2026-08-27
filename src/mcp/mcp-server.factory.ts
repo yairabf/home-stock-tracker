@@ -20,6 +20,7 @@ import {
   PredictedState,
   ProductType,
 } from '../generated/prisma/enums';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -138,6 +139,7 @@ export class McpServerFactory {
     private readonly predictionEngine: PredictionEngine,
     private readonly inventoryService: InventoryService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
+    private readonly operationalLogger: OperationalLogger,
   ) {}
 
   create(): McpServer {
@@ -173,7 +175,7 @@ export class McpServerFactory {
         outputSchema: completeGroceryPurchaseOutputSchema,
       },
       ({ groceryItemIds }) =>
-        this.runTool(async () =>
+        this.runTool('complete_grocery_purchase', async () =>
           this.toolResult(
             await this.inventoryService.completeGroceryPurchase({
               groceryItemIds,
@@ -194,7 +196,7 @@ export class McpServerFactory {
         outputSchema: recommendationOutputSchema,
       },
       () =>
-        this.runTool(async () =>
+        this.runTool('get_low_stock_predictions', async () =>
           this.toolResult(
             LowStockRecommendationListResponseDto.fromDomain(
               await this.lowStockRecommendationService.getRecommendations(),
@@ -221,7 +223,7 @@ export class McpServerFactory {
         outputSchema: inventoryEventOutputSchema,
       },
       (input) =>
-        this.runTool(async () =>
+        this.runTool('record_purchase', async () =>
           this.toolResult(
             await this.inventoryService.recordPurchase({
               ...input,
@@ -249,7 +251,7 @@ export class McpServerFactory {
         outputSchema: inventoryEventOutputSchema,
       },
       (input) =>
-        this.runTool(async () =>
+        this.runTool('record_stock_signal', async () =>
           this.toolResult(
             await this.inventoryService.recordEvent({
               ...input,
@@ -272,7 +274,7 @@ export class McpServerFactory {
         outputSchema: productOutputSchema,
       },
       (input) =>
-        this.runTool(async () =>
+        this.runTool('get_product', async () =>
           this.toolResult(
             ProductResponseDto.fromEntity(
               'id' in input
@@ -293,7 +295,7 @@ export class McpServerFactory {
         outputSchema: estimationOutputSchema,
       },
       ({ id }) =>
-        this.runTool(async () =>
+        this.runTool('get_inventory', async () =>
           this.toolResult(
             EstimationResponseDto.fromEstimationResult(
               await this.predictionEngine.predictProduct(id),
@@ -319,7 +321,7 @@ export class McpServerFactory {
         outputSchema: groceryItemOutputSchema,
       },
       (input) =>
-        this.runTool(async () =>
+        this.runTool('grocery_add', async () =>
           this.toolResult(
             await this.groceryService.addItem({
               ...input,
@@ -337,7 +339,7 @@ export class McpServerFactory {
         outputSchema: groceryItemOutputSchema,
       },
       ({ id }) =>
-        this.runTool(async () =>
+        this.runTool('grocery_remove', async () =>
           this.toolResult(await this.groceryService.removeItem(id)),
         ),
     );
@@ -354,7 +356,7 @@ export class McpServerFactory {
         outputSchema: groceryListOutputSchema,
       },
       ({ status }) =>
-        this.runTool(async () =>
+        this.runTool('grocery_list', async () =>
           this.toolResult({
             items: await this.groceryService.listItems(status),
           }),
@@ -376,11 +378,18 @@ export class McpServerFactory {
   }
 
   private async runTool(
+    tool: string,
     operation: () => Promise<CallToolResult>,
   ): Promise<CallToolResult> {
     try {
       return await operation();
     } catch (error) {
+      this.operationalLogger.mcpIntegration({
+        outcome: 'failure',
+        tool,
+        errorType:
+          error instanceof HttpException ? 'domain_error' : 'unexpected_error',
+      });
       return this.toolError(this.safeErrorMessage(error));
     }
   }

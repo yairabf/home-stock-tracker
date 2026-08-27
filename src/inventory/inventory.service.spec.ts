@@ -9,7 +9,11 @@ import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { CompletePurchaseDto } from './dto/complete-purchase.dto';
 import { CompletePartialPurchaseDto } from './dto/complete-partial-purchase.dto';
-import { InventoryEventType, GroceryItemStatus } from '../generated/prisma/enums';
+import {
+  InventoryEventType,
+  GroceryItemStatus,
+} from '../generated/prisma/enums';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
 
@@ -28,6 +32,7 @@ describe('InventoryService', () => {
     $transaction: jest.Mock;
   };
   let productService: { findOne: jest.Mock };
+  let operationalLogger: { inventoryAction: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -43,12 +48,14 @@ describe('InventoryService', () => {
       $transaction: jest.fn(),
     };
     productService = { findOne: jest.fn() };
+    operationalLogger = { inventoryAction: jest.fn() };
 
     const module = await Test.createTestingModule({
       providers: [
         InventoryService,
         { provide: PrismaService, useValue: prisma },
         { provide: ProductService, useValue: productService },
+        { provide: OperationalLogger, useValue: operationalLogger },
       ],
     }).compile();
 
@@ -96,6 +103,12 @@ describe('InventoryService', () => {
         },
       });
       expect(result).toEqual(createdEvent);
+      expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+        action: 'record_event',
+        outcome: 'success',
+        productId: PRODUCT_ID,
+        inventoryEventId: 'event-1',
+      });
     });
 
     it('propagates a not-found error and never persists when the product does not exist', async () => {
@@ -111,6 +124,7 @@ describe('InventoryService', () => {
 
       await expect(service.recordEvent(dto)).rejects.toThrow(NotFoundException);
       expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
   });
 
@@ -151,6 +165,12 @@ describe('InventoryService', () => {
           metadata: undefined,
         },
       });
+      expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+        action: 'record_purchase',
+        outcome: 'success',
+        productId: PRODUCT_ID,
+        inventoryEventId: 'purchase-1',
+      });
     });
 
     it('records a restock with zero quantity', async () => {
@@ -190,6 +210,7 @@ describe('InventoryService', () => {
       );
       expect(productService.findOne).not.toHaveBeenCalled();
       expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
 
     it('propagates a missing product error without persisting', async () => {
@@ -205,6 +226,7 @@ describe('InventoryService', () => {
         }),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
   });
 
@@ -350,6 +372,13 @@ describe('InventoryService', () => {
       expect(result.event.id).toBe(createdEvent.id);
       expect(result.groceryItems).toHaveLength(2);
       expect(result.groceryItems[0].status).toBe(GroceryItemStatus.purchased);
+      expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+        action: 'complete_purchase',
+        outcome: 'success',
+        productId: PRODUCT_ID,
+        inventoryEventId: 'event-complete',
+        affectedCount: 2,
+      });
     });
 
     it('deduplicates groceryItemIds before validation', async () => {
@@ -402,6 +431,7 @@ describe('InventoryService', () => {
       ).rejects.toThrow(BadRequestException);
 
       expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
 
     it('rejects when grocery item belongs to different product', async () => {
@@ -422,6 +452,7 @@ describe('InventoryService', () => {
           groceryItemIds: [groceryItemId1],
         }),
       ).rejects.toThrow(BadRequestException);
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
 
     it('rejects when grocery item status is not pending', async () => {
@@ -594,7 +625,9 @@ describe('InventoryService', () => {
 
         prisma.$transaction.mockImplementation(async (callback) => {
           const tx = {
-            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
+            inventoryEvent: {
+              create: jest.fn().mockResolvedValue(createdEvent),
+            },
             groceryListItem: {
               update: jest.fn().mockResolvedValue(updatedItem1),
             },
@@ -618,6 +651,14 @@ describe('InventoryService', () => {
         expect(result.skipped).toHaveLength(1);
         expect(result.skipped[0].id).toBe(groceryItemId2);
         expect(result.skipped[0].reason).toBe('not_found');
+        expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+          action: 'complete_partial_purchase',
+          outcome: 'success',
+          productId: PRODUCT_ID,
+          inventoryEventId: 'event-partial',
+          affectedCount: 1,
+          skippedCount: 1,
+        });
       });
 
       it('skips items belonging to different product', async () => {
@@ -708,7 +749,9 @@ describe('InventoryService', () => {
 
         prisma.$transaction.mockImplementation(async (callback) => {
           const tx = {
-            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
+            inventoryEvent: {
+              create: jest.fn().mockResolvedValue(createdEvent),
+            },
             groceryListItem: {
               update: jest
                 .fn()
@@ -747,8 +790,12 @@ describe('InventoryService', () => {
 
         prisma.$transaction.mockImplementation(async (callback) => {
           const tx = {
-            inventoryEvent: { create: jest.fn().mockResolvedValue(createdEvent) },
-            groceryListItem: { update: jest.fn().mockResolvedValue(updatedItem) },
+            inventoryEvent: {
+              create: jest.fn().mockResolvedValue(createdEvent),
+            },
+            groceryListItem: {
+              update: jest.fn().mockResolvedValue(updatedItem),
+            },
           };
           return callback(tx);
         });
@@ -777,6 +824,7 @@ describe('InventoryService', () => {
           completeItemIds: [groceryItemId1],
         }),
       ).rejects.toThrow(BadRequestException);
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
     });
 
     it('uses optimistic locking with status guard in update WHERE clause', async () => {
@@ -797,7 +845,9 @@ describe('InventoryService', () => {
 
       prisma.$transaction.mockImplementation(async (callback) => {
         const tx = {
-          inventoryEvent: { create: jest.fn().mockResolvedValue({ id: 'event-1' }) },
+          inventoryEvent: {
+            create: jest.fn().mockResolvedValue({ id: 'event-1' }),
+          },
           groceryListItem: { update: mockUpdate },
         };
         return callback(tx);
@@ -936,6 +986,11 @@ describe('InventoryService', () => {
         milkItemId,
         secondMilkItemId,
       ]);
+      expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+        action: 'complete_purchase',
+        outcome: 'success',
+        affectedCount: 3,
+      });
       expect(updateItem.mock.calls.map((call) => call[0].data)).toEqual([
         {
           status: GroceryItemStatus.purchased,
@@ -1015,6 +1070,7 @@ describe('InventoryService', () => {
           source: 'hermes_mcp',
         }),
       ).rejects.toBe(concurrentChange);
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
       expect(updateItem).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
@@ -1147,7 +1203,9 @@ describe('CompletePurchaseDto validation', () => {
 
     const errors = await validate(dto);
 
-    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(true);
+    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(
+      true,
+    );
   });
 
   it('rejects empty groceryItemIds array', async () => {
@@ -1159,7 +1217,9 @@ describe('CompletePurchaseDto validation', () => {
 
     const errors = await validate(dto);
 
-    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(true);
+    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(
+      true,
+    );
   });
 
   it('rejects non-UUID groceryItemIds', async () => {
@@ -1171,7 +1231,9 @@ describe('CompletePurchaseDto validation', () => {
 
     const errors = await validate(dto);
 
-    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(true);
+    expect(errors.some((error) => error.property === 'groceryItemIds')).toBe(
+      true,
+    );
   });
 
   it('rejects negative quantity', async () => {

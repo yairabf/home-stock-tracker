@@ -1,5 +1,6 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import type { Request } from 'express';
+import { Reflector } from '@nestjs/core';
 import { ServiceAuthConfigService } from './service-auth-config.service';
 import { ServiceAuthGuard } from './service-auth.guard';
 
@@ -9,7 +10,10 @@ describe('ServiceAuthGuard', () => {
 
   beforeEach(() => {
     process.env.API_AUTH_TOKEN = token;
-    guard = new ServiceAuthGuard(new ServiceAuthConfigService());
+    guard = new ServiceAuthGuard(
+      new ServiceAuthConfigService(),
+      new Reflector(),
+    );
   });
 
   afterEach(() => {
@@ -74,6 +78,21 @@ describe('ServiceAuthGuard', () => {
       ).toBe(true);
     },
   );
+
+  it('bypasses authentication only for explicitly public handlers', () => {
+    const getAllAndOverride = jest.fn().mockReturnValue(true);
+    const reflector = {
+      getAllAndOverride,
+    } as unknown as Reflector;
+    guard = new ServiceAuthGuard(new ServiceAuthConfigService(), reflector);
+    const context = createContext(undefined, []);
+
+    expect(guard.canActivate(context)).toBe(true);
+    expect(getAllAndOverride).toHaveBeenCalledWith('isPublicRoute', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+  });
 });
 
 function createContext(
@@ -87,5 +106,7 @@ function createContext(
 
   return {
     switchToHttp: () => ({ getRequest: () => request }),
+    getHandler: () => createContext,
+    getClass: () => ServiceAuthGuard,
   } as ExecutionContext;
 }

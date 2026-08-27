@@ -21,6 +21,7 @@ import {
   PREDICTION_REASONING_PROMPT_VERSION,
   PredictionReasoner,
 } from './prediction-reasoner.service';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 const LLM_ELIGIBILITY_CONFIDENCE = 0.8;
 const LLM_ACCEPTANCE_CONFIDENCE = 0.65;
@@ -65,6 +66,11 @@ interface ProductPredictionContext {
   predictionStrategy: string | null;
 }
 
+interface HybridReasoningResult {
+  result: EstimationResult;
+  outcome: 'success' | 'fallback';
+}
+
 @Injectable()
 export class EstimationService implements PredictionEngine {
   private readonly logger = new Logger(EstimationService.name);
@@ -74,6 +80,7 @@ export class EstimationService implements PredictionEngine {
     private readonly productService: ProductService,
     private readonly householdService: HouseholdService,
     private readonly predictionReasoner: PredictionReasoner,
+    private readonly operationalLogger: OperationalLogger,
   ) {}
 
   /**
@@ -101,15 +108,24 @@ export class EstimationService implements PredictionEngine {
 
   async predictProduct(productId: string): Promise<PredictionResult> {
     const product = await this.productService.findOne(productId);
-    const result = product.predictionEnabled
+    const prediction = product.predictionEnabled
       ? await this.applyHybridReasoning(
           productId,
           await this.buildDeterministicCandidate(product),
         )
-      : this.buildDisabledResult(productId, product.productType);
+      : {
+          result: this.buildDisabledResult(productId, product.productType),
+          outcome: 'success' as const,
+        };
 
-    const predictionId = await this.savePrediction(result);
-    return { ...result, predictionId };
+    const predictionId = await this.savePrediction(prediction.result);
+    this.operationalLogger.predictionRun({
+      action: 'estimate',
+      outcome: prediction.outcome,
+      productId,
+      predictionId: predictionId ?? undefined,
+    });
+    return { ...prediction.result, predictionId };
   }
 
   private async buildDeterministicCandidate(
@@ -208,19 +224,19 @@ export class EstimationService implements PredictionEngine {
   private async applyHybridReasoning(
     productId: string,
     candidate: DeterministicPredictionCandidate,
-  ): Promise<EstimationResult> {
+  ): Promise<HybridReasoningResult> {
     const deterministicResult = this.finalizeCandidate(productId, candidate);
     if (
       candidate.predictedState !== PredictedState.uncertain &&
       candidate.confidenceScore >= LLM_ELIGIBILITY_CONFIDENCE
     ) {
-      return deterministicResult;
+      return { result: deterministicResult, outcome: 'success' };
     }
 
     try {
       const llmResult = await this.predictionReasoner.reason(candidate);
       if (llmResult.status !== 'success') {
-        return deterministicResult;
+        return { result: deterministicResult, outcome: 'fallback' };
       }
 
       const accepted = llmResult.value.confidence >= LLM_ACCEPTANCE_CONFIDENCE;
@@ -231,32 +247,40 @@ export class EstimationService implements PredictionEngine {
         accepted,
       };
       if (!accepted) {
-        return { ...deterministicResult, llmAttempt };
+        return {
+          result: { ...deterministicResult, llmAttempt },
+          outcome: 'fallback',
+        };
       }
 
       return {
-        ...deterministicResult,
-        predictedState:
-          candidate.authoritative ||
-          candidate.predictedState !== PredictedState.uncertain
-            ? candidate.predictedState
-            : llmResult.value.predictedState,
-        confidenceScore: Math.max(
-          0,
-          Math.min(
-            1,
-            DETERMINISTIC_CONFIDENCE_WEIGHT * candidate.confidenceScore +
-              LLM_CONFIDENCE_WEIGHT * llmResult.value.confidence,
+        result: {
+          ...deterministicResult,
+          predictedState:
+            candidate.authoritative ||
+            candidate.predictedState !== PredictedState.uncertain
+              ? candidate.predictedState
+              : llmResult.value.predictedState,
+          confidenceScore: Math.max(
+            0,
+            Math.min(
+              1,
+              DETERMINISTIC_CONFIDENCE_WEIGHT * candidate.confidenceScore +
+                LLM_CONFIDENCE_WEIGHT * llmResult.value.confidence,
+            ),
           ),
-        ),
-        reason: llmResult.value.reason,
-        recommendedAction: llmResult.value.recommendedAction,
-        llmContributed: true,
-        llmAttempt,
+          reason: llmResult.value.reason,
+          recommendedAction: llmResult.value.recommendedAction,
+          llmContributed: true,
+          llmAttempt,
+        },
+        outcome: 'success',
       };
-    } catch (error) {
-      this.logger.warn(`LLM prediction reasoning failed: ${String(error)}`);
-      return deterministicResult;
+    } catch {
+      return {
+        result: deterministicResult,
+        outcome: 'fallback',
+      };
     }
   }
 
@@ -613,11 +637,18 @@ export class EstimationService implements PredictionEngine {
           },
         });
       }
+      this.operationalLogger.predictionPersistence({
+        outcome: 'success',
+        productId: result.productId,
+        predictionId: prediction.id,
+      });
       return prediction.id;
-    } catch (error) {
-      this.logger.error(
-        `Failed to save prediction for product ${result.productId}: ${error}`,
-      );
+    } catch {
+      this.operationalLogger.predictionPersistence({
+        outcome: 'failure',
+        productId: result.productId,
+        errorType: 'persistence_error',
+      });
       return null;
     }
   }

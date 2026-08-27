@@ -12,6 +12,8 @@ import { McpModule } from './mcp/mcp.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from './auth/service-auth.module';
 import { ServiceAuthGuard } from './auth/service-auth.guard';
+import { ObservabilityModule } from './observability/observability.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ServiceAuthGuard } from './auth/service-auth.guard';
     StatisticsModule,
     McpModule,
     ServiceAuthModule,
+    ObservabilityModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

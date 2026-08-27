@@ -7,6 +7,7 @@ import type {
   StructuredGenerationRequest,
 } from '../types/structured-generation';
 import { OPENAI_CLIENT, OPENAI_MODEL } from './openai.tokens';
+import { OperationalLogger } from '../../observability/operational-logger.service';
 
 @Injectable()
 export class OpenAiLlmProvider implements LlmProvider {
@@ -15,12 +16,14 @@ export class OpenAiLlmProvider implements LlmProvider {
   constructor(
     @Inject(OPENAI_CLIENT) private readonly client: OpenAI | null,
     @Inject(OPENAI_MODEL) private readonly model: string,
+    private readonly operationalLogger: OperationalLogger,
   ) {}
 
   async generateStructured<T>(
     request: StructuredGenerationRequest<T>,
   ): Promise<LlmGenerationResult<T>> {
     if (!this.client) {
+      this.logFailure();
       return this.unavailable();
     }
 
@@ -57,8 +60,10 @@ export class OpenAiLlmProvider implements LlmProvider {
         };
       }
 
+      this.logFailure();
       return this.unavailable();
     } catch {
+      this.logFailure();
       return this.unavailable();
     }
   }
@@ -69,5 +74,13 @@ export class OpenAiLlmProvider implements LlmProvider {
       provider: this.name,
       model: this.model,
     };
+  }
+
+  private logFailure(): void {
+    this.operationalLogger.llmIntegration({
+      outcome: 'failure',
+      provider: 'openai',
+      errorType: 'provider_error',
+    });
   }
 }

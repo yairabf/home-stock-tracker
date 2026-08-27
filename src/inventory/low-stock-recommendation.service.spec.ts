@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GroceryItemStatus, PredictedState } from '../generated/prisma/enums';
 import {
@@ -9,6 +8,7 @@ import type { PredictionResult } from '../estimation/types/prediction-result';
 import { HouseholdService } from '../household/household.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 const prediction = (
   productId: string,
@@ -49,6 +49,7 @@ describe('LowStockRecommendationService', () => {
   };
   let householdService: { getOrCreate: jest.Mock };
   let predictionEngine: jest.Mocked<PredictionEngine>;
+  let operationalLogger: { predictionRun: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -61,6 +62,7 @@ describe('LowStockRecommendationService', () => {
         .mockResolvedValue({ suggestionConfidenceThreshold: 0.7 }),
     };
     predictionEngine = { predictProduct: jest.fn() };
+    operationalLogger = { predictionRun: jest.fn() };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -68,6 +70,7 @@ describe('LowStockRecommendationService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: HouseholdService, useValue: householdService },
         { provide: PREDICTION_ENGINE, useValue: predictionEngine },
+        { provide: OperationalLogger, useValue: operationalLogger },
       ],
     }).compile();
 
@@ -125,15 +128,17 @@ describe('LowStockRecommendationService', () => {
         ? Promise.reject(new Error('provider unavailable'))
         : Promise.resolve(prediction(productId)),
     );
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-
     const result = await service.getRecommendations();
 
     expect(result.map(({ productId }) => productId)).toEqual(['successful']);
-    expect(Logger.prototype.error).toHaveBeenCalledWith(
-      'Failed to predict low stock for product failed',
-      expect.any(String),
-    );
+    expect(operationalLogger.predictionRun).toHaveBeenCalledWith({
+      action: 'recommend',
+      outcome: 'failure',
+      productId: 'failed',
+    });
+    expect(
+      JSON.stringify(operationalLogger.predictionRun.mock.calls),
+    ).not.toContain('provider unavailable');
   });
 
   it('returns an empty list without prediction calls when no products qualify', async () => {

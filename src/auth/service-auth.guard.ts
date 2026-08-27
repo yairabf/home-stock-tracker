@@ -5,13 +5,26 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_ROUTE } from './public.decorator';
 import { ServiceAuthConfigService } from './service-auth-config.service';
 
 @Injectable()
 export class ServiceAuthGuard implements CanActivate {
-  constructor(private readonly config: ServiceAuthConfigService) {}
+  constructor(
+    private readonly config: ServiceAuthConfigService,
+    private readonly reflector: Reflector,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(
+      IS_PUBLIC_ROUTE,
+      [context.getHandler(), context.getClass()],
+    );
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
     const credential = this.getBearerCredential(request);
 

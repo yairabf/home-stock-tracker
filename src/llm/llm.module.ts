@@ -8,8 +8,10 @@ import {
   OPENAI_CLIENT,
   OPENAI_MODEL,
 } from './openai/openai.tokens';
+import { ObservabilityModule } from '../observability/observability.module';
 
 @Module({
+  imports: [ObservabilityModule],
   providers: [
     {
       provide: OPENAI_CLIENT,

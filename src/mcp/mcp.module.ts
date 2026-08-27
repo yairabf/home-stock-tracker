@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ProductModule } from '../product/product.module';
 import { EstimationModule } from '../estimation/estimation.module';
 import { InventoryModule } from '../inventory/inventory.module';
+import { ObservabilityModule } from '../observability/observability.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { InventoryModule } from '../inventory/inventory.module';
     ProductModule,
     EstimationModule,
     InventoryModule,
+    ObservabilityModule,
   ],
   controllers: [McpController],
   providers: [McpServerFactory],

@@ -17,26 +17,28 @@ import {
   PendingItemDto,
 } from './dto/complete-partial-purchase-response.dto';
 import { GroceryItemResponseDto } from '../grocery/dto/grocery-item-response.dto';
-import { InventoryEventType, GroceryItemStatus } from '../generated/prisma/enums';
+import {
+  InventoryEventType,
+  GroceryItemStatus,
+} from '../generated/prisma/enums';
 import {
   CompleteGroceryPurchaseInput,
   CompleteGroceryPurchaseResult,
 } from './types/complete-grocery-purchase';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 @Injectable()
 export class InventoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
+    private readonly operationalLogger: OperationalLogger,
   ) {}
 
   async recordPurchase(
     dto: RecordPurchaseDto,
   ): Promise<InventoryEventResponseDto> {
-    if (
-      dto.eventType !== 'PURCHASED' &&
-      dto.eventType !== 'RESTOCKED'
-    ) {
+    if (dto.eventType !== 'PURCHASED' && dto.eventType !== 'RESTOCKED') {
       throw new BadRequestException(
         'Purchase eventType must be PURCHASED or RESTOCKED',
       );
@@ -54,6 +56,13 @@ export class InventoryService {
         confidence: dto.confidence,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
       },
+    });
+
+    this.operationalLogger.inventoryAction({
+      action: 'record_purchase',
+      outcome: 'success',
+      productId: event.productId,
+      inventoryEventId: event.id,
     });
 
     return InventoryEventResponseDto.fromEntity(event);
@@ -74,6 +83,13 @@ export class InventoryService {
         confidence: dto.confidence,
         metadata: dto.metadata as Prisma.InputJsonValue | undefined,
       },
+    });
+
+    this.operationalLogger.inventoryAction({
+      action: 'record_event',
+      outcome: 'success',
+      productId: event.productId,
+      inventoryEventId: event.id,
     });
 
     return InventoryEventResponseDto.fromEntity(event);
@@ -186,6 +202,14 @@ export class InventoryService {
       return { event, updatedItems };
     });
 
+    this.operationalLogger.inventoryAction({
+      action: 'complete_purchase',
+      outcome: 'success',
+      productId: result.event.productId,
+      inventoryEventId: result.event.id,
+      affectedCount: result.updatedItems.length,
+    });
+
     return {
       event: InventoryEventResponseDto.fromEntity(result.event),
       groceryItems: result.updatedItems.map((item) =>
@@ -263,8 +287,16 @@ export class InventoryService {
       return { events, completedItems };
     });
 
+    this.operationalLogger.inventoryAction({
+      action: 'complete_purchase',
+      outcome: 'success',
+      affectedCount: result.completedItems.length,
+    });
+
     return {
-      events: result.events.map(InventoryEventResponseDto.fromEntity),
+      events: result.events.map((event) =>
+        InventoryEventResponseDto.fromEntity(event),
+      ),
       completedItems: result.completedItems.map((item) =>
         GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
       ),
@@ -292,7 +324,9 @@ export class InventoryService {
 
     // Determine mode and target item IDs
     const isInclusiveMode = !!dto.completeItemIds;
-    const inputItemIds = isInclusiveMode ? dto.completeItemIds! : dto.omitItemIds!;
+    const inputItemIds = isInclusiveMode
+      ? dto.completeItemIds!
+      : dto.omitItemIds!;
 
     // In exclusive mode, fetch all pending items for this product first
     let pendingItemIds: string[] = [];
@@ -313,7 +347,9 @@ export class InventoryService {
     });
 
     // Build lookup for referenced items
-    const referencedById = new Map(referencedItems.map((item) => [item.id, item]));
+    const referencedById = new Map(
+      referencedItems.map((item) => [item.id, item]),
+    );
 
     // Collect validation results
     const completed: CompletedItemDto[] = [];
@@ -402,6 +438,15 @@ export class InventoryService {
       );
 
       return { event, updatedItems };
+    });
+
+    this.operationalLogger.inventoryAction({
+      action: 'complete_partial_purchase',
+      outcome: 'success',
+      productId: result.event.productId,
+      inventoryEventId: result.event.id,
+      affectedCount: result.updatedItems.length,
+      skippedCount: skipped.length,
     });
 
     // Build completed items list

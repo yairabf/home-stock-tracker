@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { GroceryItemStatus } from '../generated/prisma/enums';
 import {
   PREDICTION_ENGINE,
@@ -11,16 +11,16 @@ import {
   type LowStockRecommendation,
   type RecommendationCandidate,
 } from './types/low-stock-recommendation';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 @Injectable()
 export class LowStockRecommendationService {
-  private readonly logger = new Logger(LowStockRecommendationService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly householdService: HouseholdService,
     @Inject(PREDICTION_ENGINE)
     private readonly predictionEngine: PredictionEngine,
+    private readonly operationalLogger: OperationalLogger,
   ) {}
 
   async getRecommendations(): Promise<LowStockRecommendation[]> {
@@ -63,11 +63,12 @@ export class LowStockRecommendationService {
         productName: product.canonicalName,
         prediction: await this.predictionEngine.predictProduct(product.id),
       };
-    } catch (error) {
-      this.logger.error(
-        `Failed to predict low stock for product ${product.id}`,
-        error instanceof Error ? error.stack : undefined,
-      );
+    } catch {
+      this.operationalLogger.predictionRun({
+        action: 'recommend',
+        outcome: 'failure',
+        productId: product.id,
+      });
       return null;
     }
   }

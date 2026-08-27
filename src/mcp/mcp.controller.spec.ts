@@ -17,6 +17,7 @@ import { LowStockRecommendationService } from '../inventory/low-stock-recommenda
 import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from '../auth/service-auth.module';
 import { ServiceAuthGuard } from '../auth/service-auth.guard';
+import { OperationalLogger } from '../observability/operational-logger.service';
 
 @Controller()
 class TestRestController {
@@ -73,6 +74,10 @@ describe('McpController', () => {
         {
           provide: LowStockRecommendationService,
           useValue: recommendationService,
+        },
+        {
+          provide: OperationalLogger,
+          useValue: { mcpIntegration: jest.fn() },
         },
       ],
     }).compile();
