@@ -15,6 +15,8 @@ import {
 } from '../src/generated/prisma/enums';
 import type { HouseholdModel } from '../src/generated/prisma/models';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 describe('Low-stock recommendations (e2e)', () => {
   let app: INestApplication<App>;
@@ -30,6 +32,8 @@ describe('Low-stock recommendations (e2e)', () => {
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(PREDICTION_ENGINE)
       .useValue(predictionEngine)
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
       .compile();
 
     app = module.createNestApplication();

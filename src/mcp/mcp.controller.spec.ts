@@ -14,6 +14,9 @@ import { ProductService } from '../product/product.service';
 import { PREDICTION_ENGINE } from '../estimation/prediction-engine';
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
+import { APP_GUARD } from '@nestjs/core';
+import { ServiceAuthModule } from '../auth/service-auth.module';
+import { ServiceAuthGuard } from '../auth/service-auth.guard';
 
 @Controller()
 class TestRestController {
@@ -26,7 +29,10 @@ class TestRestController {
 describe('McpController', () => {
   let app: INestApplication;
   let baseUrl: URL;
+  let serverFactory: McpServerFactory;
   const originalEnabled = process.env.MCP_ENABLED;
+  const originalAuthToken = process.env.API_AUTH_TOKEN;
+  const authToken = 'mcp-service-token';
   const groceryService = {
     addItem: jest.fn(),
     removeItem: jest.fn(),
@@ -35,10 +41,17 @@ describe('McpController', () => {
   const recommendationService = { getRecommendations: jest.fn() };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    process.env.API_AUTH_TOKEN = authToken;
     const moduleRef = await Test.createTestingModule({
+      imports: [ServiceAuthModule],
       controllers: [TestRestController, McpController],
       providers: [
         McpServerFactory,
+        {
+          provide: APP_GUARD,
+          useExisting: ServiceAuthGuard,
+        },
         {
           provide: GroceryService,
           useValue: groceryService,
@@ -59,6 +72,7 @@ describe('McpController', () => {
       ],
     }).compile();
 
+    serverFactory = moduleRef.get(McpServerFactory);
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('api/v1', {
       exclude: [{ path: 'mcp', method: RequestMethod.ALL }],
@@ -77,15 +91,18 @@ describe('McpController', () => {
     } else {
       process.env.MCP_ENABLED = originalEnabled;
     }
+    if (originalAuthToken === undefined) {
+      delete process.env.API_AUTH_TOKEN;
+    } else {
+      process.env.API_AUTH_TOKEN = originalAuthToken;
+    }
     await app.close();
   });
 
   it('initializes an enabled stateless MCP server with grocery tools', async () => {
     process.env.MCP_ENABLED = 'true';
     const client = new Client({ name: 'mcp-test-client', version: '1.0.0' });
-    const transport = new StreamableHTTPClientTransport(
-      new URL('/mcp', baseUrl),
-    );
+    const transport = createAuthenticatedTransport(baseUrl, authToken);
 
     try {
       await client.connect(transport);
@@ -116,9 +133,7 @@ describe('McpController', () => {
       new Error('database password leaked here'),
     );
     const client = new Client({ name: 'mcp-test-client', version: '1.0.0' });
-    const transport = new StreamableHTTPClientTransport(
-      new URL('/mcp', baseUrl),
-    );
+    const transport = createAuthenticatedTransport(baseUrl, authToken);
 
     try {
       await client.connect(transport);
@@ -146,24 +161,46 @@ describe('McpController', () => {
 
     const response = await fetch(new URL('/mcp', baseUrl), {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'initialize',
-        params: {
-          protocolVersion: '2025-11-25',
-          capabilities: {},
-          clientInfo: { name: 'mcp-test-client', version: '1.0.0' },
-        },
-      }),
+      headers: {
+        authorization: `Bearer ${authToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(initializeRequest),
     });
 
     expect(response.status).toBe(404);
   });
 
+  it.each([
+    ['a missing credential', undefined],
+    ['an incorrect credential', 'Bearer wrong-token'],
+  ])('rejects MCP initialization with %s', async (_case, authorization) => {
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+    };
+    if (authorization) {
+      headers.authorization = authorization;
+    }
+    const createSpy = jest.spyOn(serverFactory, 'create');
+
+    const response = await fetch(new URL('/mcp', baseUrl), {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(initializeRequest),
+    });
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      message: 'Unauthorized',
+      statusCode: 401,
+    });
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
   it('keeps REST routes under the API prefix', async () => {
-    const prefixed = await fetch(new URL('/api/v1/ping', baseUrl));
+    const prefixed = await fetch(new URL('/api/v1/ping', baseUrl), {
+      headers: { authorization: `Bearer ${authToken}` },
+    });
     const unprefixed = await fetch(new URL('/ping', baseUrl));
 
     expect(prefixed.status).toBe(200);
@@ -171,3 +208,25 @@ describe('McpController', () => {
     expect(unprefixed.status).toBe(404);
   });
 });
+
+const initializeRequest = {
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'initialize',
+  params: {
+    protocolVersion: '2025-11-25',
+    capabilities: {},
+    clientInfo: { name: 'mcp-test-client', version: '1.0.0' },
+  },
+};
+
+function createAuthenticatedTransport(
+  baseUrl: URL,
+  authToken: string,
+): StreamableHTTPClientTransport {
+  return new StreamableHTTPClientTransport(new URL('/mcp', baseUrl), {
+    requestInit: {
+      headers: { authorization: `Bearer ${authToken}` },
+    },
+  });
+}

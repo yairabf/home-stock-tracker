@@ -10,6 +10,8 @@ import {
   PredictedState,
 } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 describe('Prediction feedback (e2e)', () => {
   let app: INestApplication<App>;
@@ -20,7 +22,10 @@ describe('Prediction feedback (e2e)', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
+      .compile();
     app = module.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(

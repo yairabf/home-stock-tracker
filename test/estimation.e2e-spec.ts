@@ -10,6 +10,8 @@ import {
   PredictedState,
   ProductType,
 } from '../src/generated/prisma/enums';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 // Runs against the dev Postgres container (same DATABASE_URL as `npm run
 // start:dev`) since the project has no dedicated test database yet.
@@ -21,7 +23,10 @@ describe('Estimation (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');

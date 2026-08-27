@@ -25,7 +25,7 @@
 - [x] 13. **Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools ✓ 2026-08-27
 - [ ] 14. **Hermes grocery conversations** - support natural WhatsApp flows such as "add milk", "what do we need?", and "I bought everything except toilet paper"
 - [ ] 15. **Proactive stock checks** - let Hermes periodically request low-stock predictions and send useful recommendations through WhatsApp
-- [ ] 16. **Service authentication** - protect REST and MCP access with private service-to-service authentication
+- [x] 16. **Service authentication** - protect REST and MCP access with private service-to-service authentication ✓ 2026-08-28
 - [ ] 17. **Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures
 - [ ] 18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment
 

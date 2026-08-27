@@ -4,6 +4,8 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma/prisma.service';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -20,6 +22,8 @@ describe('AppController (e2e)', () => {
         $connect: () => Promise.resolve(),
         $disconnect: () => Promise.resolve(),
       })
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
       .compile();
 
     app = moduleFixture.createNestApplication();

@@ -5,6 +5,8 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { InventoryEventType, ProductType } from '../src/generated/prisma/enums';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 describe('Statistics E2E Tests', () => {
   let app: INestApplication;
@@ -14,7 +16,10 @@ describe('Statistics E2E Tests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();

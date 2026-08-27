@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1787865929.1184201,
-    "seen": 1787865969.23561,
-    "ast_hash": "4f83286d4dff173bd4ec1d29aa990fa2",
+    "mtime": 1787865793.3824942,
+    "seen": 1787865846.263905,
+    "ast_hash": "da2298744849541a14b651d3147c49a7",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1704,9 +1704,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1787865929.1190503,
-    "seen": 1787865969.220524,
-    "ast_hash": "a8f671490034fa4896d6a520f95af347",
+    "mtime": 1787864978.627076,
+    "seen": 1787865372.090365,
+    "ast_hash": "134cd2f6c10d895051a3aa592aa0d67d",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.ts": {

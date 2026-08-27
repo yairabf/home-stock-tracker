@@ -9,6 +9,9 @@ import { HouseholdModule } from './household/household.module';
 import { EstimationModule } from './estimation/estimation.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { McpModule } from './mcp/mcp.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ServiceAuthModule } from './auth/service-auth.module';
+import { ServiceAuthGuard } from './auth/service-auth.guard';
 
 @Module({
   imports: [
@@ -20,8 +23,15 @@ import { McpModule } from './mcp/mcp.module';
     EstimationModule,
     StatisticsModule,
     McpModule,
+    ServiceAuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useExisting: ServiceAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

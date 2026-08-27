@@ -10,6 +10,8 @@ import {
 import { PredictedState, ProductType } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';
 import type { PredictionResult } from '../src/estimation/types/prediction-result';
+import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
+import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
 const baseResult: PredictionResult = {
   predictionId: 'prediction-1',
@@ -62,6 +64,8 @@ describe('Estimation response (e2e)', () => {
         $connect: () => Promise.resolve(),
         $disconnect: () => Promise.resolve(),
       })
+      .overrideProvider(ServiceAuthGuard)
+      .useValue(AUTH_TEST_BYPASS)
       .compile();
 
     app = moduleFixture.createNestApplication();
