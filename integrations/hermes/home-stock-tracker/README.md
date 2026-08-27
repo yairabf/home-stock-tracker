@@ -43,3 +43,100 @@ To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
 list, require one exact toilet-paper match, exclude that ID, and propose one
 `complete_grocery_purchase` call containing only the remaining IDs.
+
+## Proactive stock-check cron
+
+Hermes owns the schedule and WhatsApp delivery. The inventory service remains a
+read-only recommendation source for this workflow.
+
+### Prerequisites
+
+Before creating the recurring job:
+
+1. Install or update this skill bundle in the active Hermes profile.
+2. Confirm the authenticated Home Stock Tracker MCP connection exposes
+   `get_low_stock_predictions` and succeeds from an interactive Hermes session.
+3. Configure and test the Hermes WhatsApp home channel. The bare `whatsapp`
+   delivery target resolves through that operator-owned configuration.
+4. Confirm the Hermes gateway and cron scheduler are running with
+   `hermes cron status`. The gateway must remain available for scheduled runs.
+5. Choose the household cadence and confirm the timezone used by the Hermes
+   gateway before translating it into a schedule expression.
+6. Choose and pin a provider and model appropriate for unattended recurring
+   work. These are cost and deployment decisions, so this repository does not
+   supply defaults.
+
+Do not put the MCP bearer token, WhatsApp credentials, recipient identifiers,
+or provider credentials in this repository or in the cron prompt.
+
+### Job prompt
+
+Use this prompt without adding delivery instructions. Hermes cron delivers the
+final response to the job's configured target:
+
+```text
+Run a scheduled proactive stock check. Follow the home-stock-tracker skill's
+scheduled-check rules exactly. Call get_low_stock_predictions once. If it
+returns no recommendations, respond with exactly [SILENT]. If it returns
+recommendations, produce one concise household-facing message covering all of
+them in the returned order. Do not mutate household state. If the tool or its
+authenticated connection fails, report the failure briefly and do not retry.
+```
+
+### Create the job
+
+Replace every angle-bracketed value. Use a schedule whose meaning you have
+confirmed in the Hermes gateway's timezone:
+
+```bash
+hermes cron create "<SCHEDULE>" \
+  "Run a scheduled proactive stock check. Follow the home-stock-tracker skill's scheduled-check rules exactly. Call get_low_stock_predictions once. If it returns no recommendations, respond with exactly [SILENT]. If it returns recommendations, produce one concise household-facing message covering all of them in the returned order. Do not mutate household state. If the tool or its authenticated connection fails, report the failure briefly and do not retry." \
+  --skill home-stock-tracker \
+  --deliver whatsapp \
+  --provider "<PROVIDER>" \
+  --model "<MODEL>" \
+  --name "home-stock-low-stock-check"
+```
+
+The same job can be requested through Hermes chat after replacing the
+placeholders: "Create a recurring `<SCHEDULE>` cron job named
+`home-stock-low-stock-check`, attach the `home-stock-tracker` skill, use my
+chosen provider and model, and deliver to my WhatsApp home channel. Use the
+proactive stock-check prompt from the installed skill README." Review the
+created job with `hermes cron list`; do not assume the natural-language request
+resolved the cadence, timezone, model, or delivery target as intended.
+
+Do not edit `~/.hermes/cron/jobs.json` directly. Use the public Hermes cron
+commands so validation and scheduling metadata remain consistent.
+
+### Verify and operate
+
+Use the stable job name or the ID shown by `hermes cron list`:
+
+```bash
+hermes cron list
+hermes cron run home-stock-low-stock-check
+hermes cron runs home-stock-low-stock-check --limit 20
+hermes cron pause home-stock-low-stock-check
+hermes cron resume home-stock-low-stock-check
+```
+
+Run the job manually first against a non-production profile or test household.
+A populated result should produce one WhatsApp-ready message. A successful empty
+result should be recorded locally with `[SILENT]` and send no WhatsApp message.
+A blocked configuration or MCP failure must remain visible rather than looking
+like an empty recommendation result.
+
+Revise the schedule or prompt without recreating the job:
+
+```bash
+hermes cron edit home-stock-low-stock-check --schedule "<NEW_SCHEDULE>"
+hermes cron edit home-stock-low-stock-check --prompt "<REVISED_PROMPT>"
+```
+
+Pause the job before investigating repeated failures. Remove it only when the
+automation is no longer wanted:
+
+```bash
+hermes cron remove home-stock-low-stock-check
+```
