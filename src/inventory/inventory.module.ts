@@ -15,5 +15,6 @@ import { LowStockRecommendationService } from './low-stock-recommendation.servic
     PredictionFeedbackService,
     LowStockRecommendationService,
   ],
+  exports: [InventoryService, LowStockRecommendationService],
 })
 export class InventoryModule {}
