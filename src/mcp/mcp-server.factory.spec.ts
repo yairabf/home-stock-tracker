@@ -33,7 +33,9 @@ describe('McpServerFactory grocery tools', () => {
   >;
   let client: Client;
   let closeServer: () => Promise<void>;
-  let productService: jest.Mocked<Pick<ProductService, 'findOne'>>;
+  let productService: jest.Mocked<
+    Pick<ProductService, 'findOne' | 'findByExactOrAliasName'>
+  >;
   let predictionEngine: jest.Mocked<PredictionEngine>;
   let inventoryService: jest.Mocked<
     Pick<InventoryService, 'recordPurchase' | 'recordEvent'>
@@ -48,7 +50,10 @@ describe('McpServerFactory grocery tools', () => {
       removeItem: jest.fn(),
       listItems: jest.fn(),
     };
-    productService = { findOne: jest.fn() };
+    productService = {
+      findOne: jest.fn(),
+      findByExactOrAliasName: jest.fn(),
+    };
     predictionEngine = { predictProduct: jest.fn() };
     inventoryService = {
       recordPurchase: jest.fn(),
@@ -190,6 +195,68 @@ describe('McpServerFactory grocery tools', () => {
       canonicalName: 'milk',
       predictionEnabled: true,
     });
+  });
+
+  it('gets a product by exact name or alias with the existing response contract', async () => {
+    productService.findByExactOrAliasName.mockResolvedValue({
+      id: item.productId,
+      canonicalName: 'milk',
+      aliases: ['whole milk'],
+      category: 'dairy',
+      typicalUnit: 'liter',
+      productType: null,
+      isPerishable: true,
+      predictionStrategy: null,
+      predictionEnabled: true,
+      config: null,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-01T00:00:00.000Z'),
+    });
+
+    const result = await client.callTool({
+      name: 'get_product',
+      arguments: { productName: ' whole milk ' },
+    });
+
+    expect(productService.findByExactOrAliasName).toHaveBeenCalledWith(
+      'whole milk',
+    );
+    expect(result.structuredContent).toMatchObject({
+      id: item.productId,
+      canonicalName: 'milk',
+    });
+    expect(productService.findOne).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {},
+    { id: item.productId, productName: 'milk' },
+    { productName: '' },
+  ])('rejects an invalid product selector before service invocation', async (args) => {
+    const result = await client.callTool({
+      name: 'get_product',
+      arguments: args,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(productService.findOne).not.toHaveBeenCalled();
+    expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
+  });
+
+  it('returns an unknown product name as an MCP tool error', async () => {
+    productService.findByExactOrAliasName.mockRejectedValue(
+      new NotFoundException('No product named "oat milk"'),
+    );
+
+    const result = await client.callTool({
+      name: 'get_product',
+      arguments: { productName: 'oat milk' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual([
+      { type: 'text', text: 'No product named "oat milk"' },
+    ]);
   });
 
   it('returns a cold-start inventory estimate without inventing quantity', async () => {

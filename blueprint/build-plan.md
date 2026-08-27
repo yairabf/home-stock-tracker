@@ -22,7 +22,7 @@
 - [x] 10. **Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve ✓ 2026-08-27
 - [x] 11. **Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations ✓ 2026-08-27
 - [x] 12. **MCP tool interface** - expose the inventory service's core grocery, stock, purchase, and prediction capabilities as agent-callable tools ✓ 2026-08-27
-- [ ] 13. **Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools
+- [x] 13. **Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools ✓ 2026-08-27
 - [ ] 14. **Hermes grocery conversations** - support natural WhatsApp flows such as "add milk", "what do we need?", and "I bought everything except toilet paper"
 - [ ] 15. **Proactive stock checks** - let Hermes periodically request low-stock predictions and send useful recommendations through WhatsApp
 - [ ] 16. **Service authentication** - protect REST and MCP access with private service-to-service authentication

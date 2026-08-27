@@ -62,6 +62,16 @@ export class ProductService {
     return product;
   }
 
+  async findByExactOrAliasName(rawName: string): Promise<ProductModel> {
+    const normalizedName = this.normalizeRequiredName(rawName, 'productName');
+    const products = await this.prisma.product.findMany();
+    const product = this.findByExactOrAlias(products, normalizedName);
+    if (!product) {
+      throw new NotFoundException(`No product named "${normalizedName}"`);
+    }
+    return product;
+  }
+
   async addAlias(id: string, dto: AddProductAliasDto): Promise<ProductModel> {
     const alias = this.normalizeRequiredName(dto.alias, 'alias');
 

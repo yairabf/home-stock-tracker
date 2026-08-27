@@ -75,6 +75,49 @@ describe('ProductService LLM-assisted resolution', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['canonical name', product({ canonicalName: 'milk' }), ' Milk '],
+    [
+      'alias',
+      product({ canonicalName: 'milk', aliases: ['whole milk'] }),
+      ' WHOLE MILK ',
+    ],
+  ])('finds a product by exact normalized %s without side effects', async (
+    _label,
+    existing,
+    rawName,
+  ) => {
+    outerFindMany.mockResolvedValue([existing]);
+
+    await expect(service.findByExactOrAliasName(rawName)).resolves.toBe(
+      existing,
+    );
+    expect(productClassifier.classify).not.toHaveBeenCalled();
+    expect(classificationLog.record).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a blank product name without querying or mutating', async () => {
+    await expect(service.findByExactOrAliasName('   ')).rejects.toThrow(
+      'productName must not be blank',
+    );
+    expect(outerFindMany).not.toHaveBeenCalled();
+    expect(productClassifier.classify).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('returns a not-found error without creating an unknown product', async () => {
+    await expect(service.findByExactOrAliasName('Oat Milk')).rejects.toThrow(
+      'No product named "oat milk"',
+    );
+    expect(productClassifier.classify).not.toHaveBeenCalled();
+    expect(classificationLog.record).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
   it('creates and logs an enriched product from valid inference', async () => {
     productClassifier.classify.mockResolvedValue(successfulClassification);
 

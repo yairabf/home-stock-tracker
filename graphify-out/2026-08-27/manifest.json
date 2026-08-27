@@ -516,15 +516,15 @@
     "semantic_hash": ""
   },
   "src/product/product.service.spec.ts": {
-    "mtime": 1787823158.580948,
-    "seen": 1787848695.741696,
-    "ast_hash": "916906b87f7c34ec053450b26affd140",
+    "mtime": 1787862477.76988,
+    "seen": 1787862560.115399,
+    "ast_hash": "722657d001caedc943c59a9b2febd32d",
     "semantic_hash": ""
   },
   "src/product/product.service.ts": {
-    "mtime": 1787823158.5816836,
-    "seen": 1787848695.741697,
-    "ast_hash": "8f25b7177608a43cbdf4cc068b2a1cf1",
+    "mtime": 1787862465.6336482,
+    "seen": 1787862560.115401,
+    "ast_hash": "2efaac89c1c8f354810f8c1f3fbc5d9d",
     "semantic_hash": ""
   },
   "src/product/types/product-classification.spec.ts": {
@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "blueprint/build-plan.md": {
-    "mtime": 1787849166.6091115,
-    "seen": 1787849732.93754,
-    "ast_hash": "1ff5268c9e069b8b6184b764f8686a3a",
+    "mtime": 1787852435.6756084,
+    "seen": 1787862560.129803,
+    "ast_hash": "56698a6f4b77085a83794bab389bd076",
     "semantic_hash": ""
   },
   "blueprint/context/ai-interaction.md": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1787850174.1000717,
-    "seen": 1787850207.8900921,
-    "ast_hash": "64164c49d96bdd324f000b7b4a0a13ce",
+    "mtime": 1787862615.4122465,
+    "seen": 1787863165.425078,
+    "ast_hash": "adbb248eec30411b471afdcf97f7fa0d",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1698,21 +1698,21 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1787850174.627683,
-    "seen": 1787850207.874151,
-    "ast_hash": "370f60dc538de901c4bb997c301adcb8",
+    "mtime": 1787862465.9627101,
+    "seen": 1787862560.1142342,
+    "ast_hash": "f8556f01b6fc107105bcc102b30edae9",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1787850174.8014944,
-    "seen": 1787850207.874153,
-    "ast_hash": "23259616d4aacc6fb3acd531d5520e2d",
+    "mtime": 1787850722.7851076,
+    "seen": 1787850765.824834,
+    "ast_hash": "134cd2f6c10d895051a3aa592aa0d67d",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.ts": {
-    "mtime": 1787849565.3347301,
-    "seen": 1787849732.9244192,
-    "ast_hash": "848768cd0aa4d7d3fdf1a1caa649a425",
+    "mtime": 1787850722.7921257,
+    "seen": 1787850765.824835,
+    "ast_hash": "2b996f2d7dc61e1988f33cad01510468",
     "semantic_hash": ""
   },
   "src/mcp/mcp.module.ts": {
@@ -1794,9 +1794,27 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1787850174.9798336,
-    "seen": 1787850207.874149,
-    "ast_hash": "a6a0e941143301d75c7fa885eaffa7f6",
+    "mtime": 1787862466.1350791,
+    "seen": 1787862560.114231,
+    "ast_hash": "1b3b562f94492b949db459db12f85356",
+    "semantic_hash": ""
+  },
+  "blueprint/history/features/12-mcp-tool-interface.md": {
+    "mtime": 1787852435.4990954,
+    "seen": 1787862560.131009,
+    "ast_hash": "3e325a73e1cdba98825f577d26298735",
+    "semantic_hash": ""
+  },
+  "integrations/hermes/home-stock-tracker/README.md": {
+    "mtime": 1787862995.2567647,
+    "seen": 1787863165.4269938,
+    "ast_hash": "15c7d5b0e513590f4b6e109be0afe756",
+    "semantic_hash": ""
+  },
+  "integrations/hermes/home-stock-tracker/SKILL.md": {
+    "mtime": 1787863004.5809908,
+    "seen": 1787863165.426996,
+    "ast_hash": "e7f9721735aa6c7e761183623e50e1e2",
     "semantic_hash": ""
   }
 }

@@ -228,15 +228,22 @@ export class McpServerFactory {
     server.registerTool(
       'get_product',
       {
-        description: 'Get one canonical product by its ID.',
-        inputSchema: z.object({ id: z.uuid() }).strict(),
+        description: 'Get one canonical product by its ID or exact name/alias.',
+        inputSchema: z.union([
+          z.object({ id: z.uuid() }).strict(),
+          z.object({ productName: z.string().trim().min(1) }).strict(),
+        ]),
         outputSchema: productOutputSchema,
       },
-      ({ id }) =>
+      (input) =>
         this.runTool(async () =>
           this.toolResult(
             ProductResponseDto.fromEntity(
-              await this.productService.findOne(id),
+              'id' in input
+                ? await this.productService.findOne(input.id)
+                : await this.productService.findByExactOrAliasName(
+                    input.productName,
+                  ),
             ),
           ),
         ),
