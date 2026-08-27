@@ -20,7 +20,7 @@
 - [x] 8. **LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient
 - [x] 9. **Hybrid low-stock prediction** - combine household history, product characteristics, deterministic signals, and LLM reasoning into confidence-scored stock predictions ✓ 2026-08-27
 - [x] 10. **Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve ✓ 2026-08-27
-- [ ] 11. **Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations
+- [x] 11. **Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations ✓ 2026-08-27
 - [ ] 12. **MCP tool interface** - expose the inventory service's core grocery, stock, purchase, and prediction capabilities as agent-callable tools
 - [ ] 13. **Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools
 - [ ] 14. **Hermes grocery conversations** - support natural WhatsApp flows such as "add milk", "what do we need?", and "I bought everything except toilet paper"

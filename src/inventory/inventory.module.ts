@@ -4,10 +4,16 @@ import { InventoryService } from './inventory.service';
 import { ProductModule } from '../product/product.module';
 import { EstimationModule } from '../estimation/estimation.module';
 import { PredictionFeedbackService } from './prediction-feedback.service';
+import { HouseholdModule } from '../household/household.module';
+import { LowStockRecommendationService } from './low-stock-recommendation.service';
 
 @Module({
-  imports: [ProductModule, EstimationModule],
+  imports: [ProductModule, EstimationModule, HouseholdModule],
   controllers: [InventoryController],
-  providers: [InventoryService, PredictionFeedbackService],
+  providers: [
+    InventoryService,
+    PredictionFeedbackService,
+    LowStockRecommendationService,
+  ],
 })
 export class InventoryModule {}

@@ -28,15 +28,25 @@ import { CompletePartialPurchaseResponseDto } from './dto/complete-partial-purch
 import { PredictionFeedbackDto } from './dto/prediction-feedback.dto';
 import { PredictionFeedbackResponseDto } from './dto/prediction-feedback-response.dto';
 import { PredictionFeedbackService } from './prediction-feedback.service';
+import { LowStockRecommendationService } from './low-stock-recommendation.service';
+import { LowStockRecommendationListResponseDto } from './dto/low-stock-recommendation-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
   constructor(
     private readonly inventoryService: InventoryService,
     private readonly predictionFeedbackService: PredictionFeedbackService,
+    private readonly lowStockRecommendationService: LowStockRecommendationService,
     @Inject(PREDICTION_ENGINE)
     private readonly predictionEngine: PredictionEngine,
   ) {}
+
+  @Get('predictions/low-stock')
+  async getLowStockRecommendations(): Promise<LowStockRecommendationListResponseDto> {
+    const recommendations =
+      await this.lowStockRecommendationService.getRecommendations();
+    return LowStockRecommendationListResponseDto.fromDomain(recommendations);
+  }
 
   @Post('predictions/:predictionId/feedback')
   feedback(
