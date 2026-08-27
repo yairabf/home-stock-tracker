@@ -10,12 +10,20 @@ import { normalizeAliases, normalizeProductName } from './product-name.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { AddProductAliasDto } from './dto/add-product-alias.dto';
 import type { ProductModel } from '../generated/prisma/models';
+import type { LlmGenerationResult } from '../llm/types/structured-generation';
+import { ProductClassifier } from './product-classifier.service';
+import { ProductClassificationLogService } from './product-classification-log.service';
+import type { ProductClassificationResult } from './types/product-classification';
 
 const SERIALIZATION_RETRIES = 3;
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly productClassifier: ProductClassifier,
+    private readonly classificationLog: ProductClassificationLogService,
+  ) {}
 
   async create(dto: CreateProductDto): Promise<ProductModel> {
     const canonicalName = this.normalizeRequiredName(
@@ -80,15 +88,106 @@ export class ProductService {
     rawName: string,
   ): Promise<ProductModel> {
     const normalizedName = this.normalizeRequiredName(rawName, 'productName');
+    const products = await this.prisma.product.findMany();
+    const deterministicMatch = this.findByExactOrAlias(
+      products,
+      normalizedName,
+    );
+    if (deterministicMatch) {
+      return deterministicMatch;
+    }
+
+    const classification = await this.classifySafely(normalizedName);
+    await this.recordClassificationSafely(classification);
 
     return this.runSerializable(async (tx) => {
-      const products = await tx.product.findMany();
-      const existing = this.findByExactOrAlias(products, normalizedName);
-      if (existing) {
-        return existing;
+      const currentProducts = await tx.product.findMany();
+      const concurrentMatch = this.findByExactOrAlias(
+        currentProducts,
+        normalizedName,
+      );
+      if (concurrentMatch) {
+        return concurrentMatch;
+      }
+
+      if (classification.status === 'success') {
+        const inferredMatch = this.findByClassification(
+          currentProducts,
+          classification.value,
+        );
+        if (inferredMatch) {
+          return this.addAliasWithinTransaction(
+            tx,
+            inferredMatch,
+            normalizedName,
+          );
+        }
+
+        return tx.product.create({
+          data: {
+            canonicalName: classification.value.canonicalName,
+            aliases: normalizeAliases(
+              [...classification.value.aliases, normalizedName],
+              classification.value.canonicalName,
+            ),
+            category: classification.value.category,
+            typicalUnit: classification.value.typicalUnit,
+            productType: classification.value.productType,
+            isPerishable: classification.value.isPerishable,
+          },
+        });
       }
 
       return tx.product.create({ data: { canonicalName: normalizedName } });
+    });
+  }
+
+  private async classifySafely(
+    normalizedName: string,
+  ): Promise<LlmGenerationResult<ProductClassificationResult>> {
+    try {
+      return await this.productClassifier.classify({ rawName: normalizedName });
+    } catch {
+      return { status: 'unavailable' };
+    }
+  }
+
+  private async recordClassificationSafely(
+    result: LlmGenerationResult<ProductClassificationResult>,
+  ): Promise<void> {
+    try {
+      await this.classificationLog.record(result);
+    } catch {
+      // Classification logging is diagnostic and must not block product resolution.
+    }
+  }
+
+  private findByClassification(
+    products: ProductModel[],
+    classification: ProductClassificationResult,
+  ): ProductModel | undefined {
+    const inferredNames = [
+      classification.canonicalName,
+      ...classification.aliases,
+    ];
+    return inferredNames
+      .map((name) => normalizeProductName(name))
+      .map((name) => this.findByExactOrAlias(products, name))
+      .find((product) => product !== undefined);
+  }
+
+  private async addAliasWithinTransaction(
+    tx: Prisma.TransactionClient,
+    product: ProductModel,
+    alias: string,
+  ): Promise<ProductModel> {
+    if (this.hasNormalizedName(product, alias)) {
+      return product;
+    }
+
+    return tx.product.update({
+      where: { id: product.id },
+      data: { aliases: [...product.aliases, alias] },
     });
   }
 

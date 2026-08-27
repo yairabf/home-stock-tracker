@@ -131,13 +131,29 @@ model Prediction {
   predictedAt         DateTime       @default(now())
   recommendedAction   String?
   deterministicSignals Json
-  llmResult           Json?
-  reason              String
+  llmResult            Json?
+  reason               String
   modelProviderVersion String?
   feedbackStatus      FeedbackStatus @default(pending)
+  llmInferenceLogs    LlmInferenceLog[]
 
   @@index([productId])
   @@index([predictedAt])
+}
+
+model LlmInferenceLog {
+  id                 String      @id @default(uuid())
+  predictionId       String?
+  prediction         Prediction? @relation(fields: [predictionId], references: [id], onDelete: SetNull)
+  modelProvider      String
+  modelVersion       String
+  promptVersion      String?
+  structuredResponse Json
+  confidence         Float?
+  timestamp          DateTime    @default(now())
+
+  @@index([predictionId])
+  @@index([timestamp])
 }
 
 model ProductStatistics {

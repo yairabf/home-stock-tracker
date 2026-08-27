@@ -9,6 +9,9 @@ export class DeterministicSignalsDto {
   productType: string | null;
   eventCount: number;
   coldStart: boolean;
+  hasLearnedStatistics: boolean;
+  avgPurchaseIntervalDays: number | null;
+  avgNeedIntervalDays: number | null;
 }
 
 export class EstimationResponseDto {
@@ -32,6 +35,9 @@ export class EstimationResponseDto {
       productType: string | null;
       eventCount: number;
       coldStart: boolean;
+      hasLearnedStatistics: boolean;
+      avgPurchaseIntervalDays: number | null;
+      avgNeedIntervalDays: number | null;
     };
   }): EstimationResponseDto {
     const dto = new EstimationResponseDto();
@@ -45,10 +51,15 @@ export class EstimationResponseDto {
       lastStockConfirmationAt:
         result.deterministicSignals.lastStockConfirmationAt,
       daysSinceLastPurchase: result.deterministicSignals.daysSinceLastPurchase,
-      daysSinceLastLowSignal: result.deterministicSignals.daysSinceLastLowSignal,
+      daysSinceLastLowSignal:
+        result.deterministicSignals.daysSinceLastLowSignal,
       productType: result.deterministicSignals.productType,
       eventCount: result.deterministicSignals.eventCount,
       coldStart: result.deterministicSignals.coldStart,
+      hasLearnedStatistics: result.deterministicSignals.hasLearnedStatistics,
+      avgPurchaseIntervalDays:
+        result.deterministicSignals.avgPurchaseIntervalDays,
+      avgNeedIntervalDays: result.deterministicSignals.avgNeedIntervalDays,
     };
     return dto;
   }

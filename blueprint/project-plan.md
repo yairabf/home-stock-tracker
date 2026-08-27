@@ -331,16 +331,31 @@ Hermes should not contain business rules that belong in the inventory service.
 
 ### LLM Integration
 
-Use an LLM provider through a dedicated abstraction such as:
+Define a provider-neutral LLM interface selected through dependency injection and
+`LLM_PROVIDER`. Product classification and prediction logic must depend only on
+that interface, never on a provider SDK. Each provider integration owns its API
+request, authentication, structured-output mechanism, and error translation.
+
+Use OpenAI as the first adapter through the OpenAI Responses API with structured
+outputs. Keep the model configurable through `LLM_MODEL`; the initial default is
+`gpt-5.6-sol`. Authenticate with `OPENAI_API_KEY` and never expose provider errors
+or secrets in API responses or persisted inference payloads. Future OpenRouter or
+Anthropic adapters should be addable without changing product or prediction domain
+services.
+
+Use dedicated abstractions such as:
 
 ```text
-LlmService
+LlmProvider
 PredictionEngine
 ProductClassifier
 
 ```
 
-The service should not be tightly coupled to one LLM provider.
+`LlmProvider` is the provider integration boundary. It accepts a provider-neutral
+structured-generation request and returns a provider-neutral validated result or
+failure. A provider registry/factory binds the configured adapter at application
+startup and fails clearly for an unsupported `LLM_PROVIDER` value.
 
 LLM responsibilities may include:
 
@@ -596,7 +611,7 @@ PORT
 DATABASE_URL
 
 LLM_PROVIDER
-LLM_API_KEY
+OPENAI_API_KEY
 LLM_MODEL
 
 MCP_ENABLED
@@ -617,7 +632,9 @@ PREDICTION_LLM_ENABLED
 
 ```
 
-Exact provider-specific names can be added when the LLM provider is selected.
+`LLM_PROVIDER` is initially `openai`, and `LLM_MODEL` defaults to
+`gpt-5.6-sol`. Both remain explicit configuration so the integration can evolve
+without coupling domain services to OpenAI.
 
 Secrets must never be committed to the repository.
 

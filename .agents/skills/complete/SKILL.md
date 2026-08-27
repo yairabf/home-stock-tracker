@@ -59,8 +59,18 @@ Check whether the spec is a feature, fix, or rollback. A fix is marked
 and records the exact target feature, archive, commit, and parent.
 
 - **Feature** - archive `blueprint/context/current-feature.md` to `blueprint/history/features/NN-name.md`
-  (NN is the build-plan number), and check it off in `blueprint/build-plan.md`
-  (and its parent item once all sub-items are checked).
+  (NN is the build-plan number). Before saving it, set its status to `complete`
+  and add a `## Completion record` near the top that documents what was actually
+  delivered, not only what was planned. The record must include the completion
+  date, a concise summary of the implemented behavior, the main changed files or
+  areas and why they changed, the exact verification commands and behavioral
+  evidence that passed, and any material deviations from the original spec. Write
+  `None` when there were no deviations. Derive this record from the final diff,
+  completed build steps, and verification evidence; do not copy aspirations from
+  the spec or claim unverified work. Preserve the full completed spec below the
+  record so the archive explains both intent and outcome. Then check the feature
+  off in `blueprint/build-plan.md` (and its parent item once all sub-items are
+  checked).
 - **Fix** - archive it to `blueprint/history/fixes/name.md`. A fix isn't a build-plan item, so
   there's nothing to check off.
 - **Rollback** - archive it to
@@ -137,6 +147,9 @@ that command can read the archived feature after `current-feature.md` is reset.
 
 - The work item is the unit of history: one squashed feature, fix, or rollback
   commit on main, even if the branch carried several checkpoint commits.
+- A feature archive is the durable account of the delivered feature. It must say
+  what actually changed and how it was verified, while preserving the original
+  completed spec for context.
 - A rollback preserves the original feature archive and adds a separate rollback
   archive. Never rewrite history to make the feature look as if it never existed.
 - Don't merge unfinished or failing work. The documented `Verify` command, or

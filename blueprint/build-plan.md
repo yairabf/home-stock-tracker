@@ -17,7 +17,7 @@
 - [x] 5. **Household profile** - store household composition and prediction preferences used when estimating consumption
 - [x] 6. **Inventory state estimation** - derive likely product availability from inventory events, purchases, and elapsed time
 - [x] 7. **Consumption pattern learning** - calculate product-specific purchase and need intervals from household history ✓ 2026-08-26
-- [ ] 8. **LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient
+- [x] 8. **LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient
 - [ ] 9. **Hybrid low-stock prediction** - combine household history, product characteristics, deterministic signals, and LLM reasoning into confidence-scored stock predictions
 - [ ] 10. **Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve
 - [ ] 11. **Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations
@@ -39,4 +39,3 @@
 - [ ] 24. **Receipt and barcode ingestion** - use receipts or barcode scans as additional purchase and inventory signals
 - [ ] 25. **Home Assistant integration** - expose grocery, inventory, and low-stock state to the household automation environment
 - [ ] 26. **Management dashboard** - add a web interface for reviewing inventory state, predictions, history, and manual corrections if conversational control proves insufficient
-
