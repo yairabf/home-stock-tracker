@@ -4,11 +4,18 @@ import { ProductService } from '../product/product.service';
 import { HouseholdService } from '../household/household.service';
 import { EstimationResult } from './types/estimation-result';
 import { ProductEventHistory } from './types/product-event-history';
-import { PredictedState, ProductType, InventoryEventType } from '../generated/prisma/enums';
+import {
+  PredictedState,
+  ProductType,
+  InventoryEventType,
+} from '../generated/prisma/enums';
 import { MS_PER_DAY } from '../common/constants';
 import type { PredictionEngine } from './prediction-engine';
 import type { ProductResponseDto } from '../product/dto/product-response.dto';
-import type { DeterministicPredictionCandidate } from './types/prediction-result';
+import type {
+  DeterministicPredictionCandidate,
+  PredictionResult,
+} from './types/prediction-result';
 import { Prisma } from '../generated/prisma/client';
 import {
   PREDICTION_REASONING_PROMPT_VERSION,
@@ -28,8 +35,6 @@ const RELEVANT_EVENT_TYPES: InventoryEventType[] = [
   InventoryEventType.STOCK_CONFIRMED,
   InventoryEventType.STOCK_CORRECTED,
 ];
-
-
 
 const PRODUCT_TYPE_THRESHOLDS: Record<ProductType, number> = {
   [ProductType.fast_consumable]: 7,
@@ -90,11 +95,11 @@ export class EstimationService implements PredictionEngine {
     return stats;
   }
 
-  async estimateProductState(productId: string): Promise<EstimationResult> {
+  async estimateProductState(productId: string): Promise<PredictionResult> {
     return this.predictProduct(productId);
   }
 
-  async predictProduct(productId: string): Promise<EstimationResult> {
+  async predictProduct(productId: string): Promise<PredictionResult> {
     const product = await this.productService.findOne(productId);
     const result = product.predictionEnabled
       ? await this.applyHybridReasoning(
@@ -103,8 +108,8 @@ export class EstimationService implements PredictionEngine {
         )
       : this.buildDisabledResult(productId, product.productType);
 
-    await this.savePrediction(result);
-    return result;
+    const predictionId = await this.savePrediction(result);
+    return { ...result, predictionId };
   }
 
   private async buildDeterministicCandidate(
@@ -113,7 +118,7 @@ export class EstimationService implements PredictionEngine {
     const [eventHistory, learnedStats, household] = await Promise.all([
       this.fetchProductEventHistory(product.id),
       this.fetchProductStatistics(product.id),
-        this.householdService.getOrCreate(),
+      this.householdService.getOrCreate(),
     ]);
     const productContext: ProductPredictionContext = {
       productType: product.productType,
@@ -299,13 +304,16 @@ export class EstimationService implements PredictionEngine {
           if (!lastStockOutAt) lastStockOutAt = event.timestamp;
           break;
         case InventoryEventType.STOCK_CONFIRMED:
-          if (!lastStockConfirmationAt) lastStockConfirmationAt = event.timestamp;
+          if (!lastStockConfirmationAt)
+            lastStockConfirmationAt = event.timestamp;
           break;
       }
     }
 
     const firstEventAt =
-      validEvents.length > 0 ? validEvents[validEvents.length - 1].timestamp : null;
+      validEvents.length > 0
+        ? validEvents[validEvents.length - 1].timestamp
+        : null;
 
     return {
       productId,
@@ -374,11 +382,12 @@ export class EstimationService implements PredictionEngine {
     learnedStats: LearnedStatistics | null,
   ): { state: PredictedState; reason: string } {
     // Use learned interval if available, otherwise fall back to product-type thresholds
-    const hasLearnedInterval = learnedStats !== null && learnedStats.avgPurchaseIntervalDays !== null;
+    const hasLearnedInterval =
+      learnedStats !== null && learnedStats.avgPurchaseIntervalDays !== null;
     const thresholdDays = hasLearnedInterval
       ? learnedStats.avgPurchaseIntervalDays!
       : productType
-        ? PRODUCT_TYPE_THRESHOLDS[productType] ?? FALLBACK_THRESHOLD_DAYS
+        ? (PRODUCT_TYPE_THRESHOLDS[productType] ?? FALLBACK_THRESHOLD_DAYS)
         : FALLBACK_THRESHOLD_DAYS;
 
     const lastPurchase = history.lastPurchaseAt ?? history.lastRestockAt;
@@ -389,7 +398,8 @@ export class EstimationService implements PredictionEngine {
     if (daysSincePurchase === null) {
       return {
         state: PredictedState.uncertain,
-        reason: 'No purchase or restock events recorded; cannot estimate availability',
+        reason:
+          'No purchase or restock events recorded; cannot estimate availability',
       };
     }
 
@@ -531,7 +541,9 @@ export class EstimationService implements PredictionEngine {
     };
   }
 
-  private async savePrediction(result: EstimationResult): Promise<void> {
+  private async savePrediction(
+    result: EstimationResult,
+  ): Promise<string | null> {
     try {
       const prediction = await this.prisma.prediction.create({
         data: {
@@ -549,17 +561,27 @@ export class EstimationService implements PredictionEngine {
               ? `${result.llmAttempt.provider}/${result.llmAttempt.model}`
               : null,
           deterministicSignals: {
-            lastPurchaseAt: result.deterministicSignals.lastPurchaseAt?.toISOString() ?? null,
-            lastLowStockSignalAt: result.deterministicSignals.lastLowStockSignalAt?.toISOString() ?? null,
-            lastStockConfirmationAt: result.deterministicSignals.lastStockConfirmationAt?.toISOString() ?? null,
-            daysSinceLastPurchase: result.deterministicSignals.daysSinceLastPurchase,
-            daysSinceLastLowSignal: result.deterministicSignals.daysSinceLastLowSignal,
+            lastPurchaseAt:
+              result.deterministicSignals.lastPurchaseAt?.toISOString() ?? null,
+            lastLowStockSignalAt:
+              result.deterministicSignals.lastLowStockSignalAt?.toISOString() ??
+              null,
+            lastStockConfirmationAt:
+              result.deterministicSignals.lastStockConfirmationAt?.toISOString() ??
+              null,
+            daysSinceLastPurchase:
+              result.deterministicSignals.daysSinceLastPurchase,
+            daysSinceLastLowSignal:
+              result.deterministicSignals.daysSinceLastLowSignal,
             productType: result.deterministicSignals.productType,
             eventCount: result.deterministicSignals.eventCount,
             coldStart: result.deterministicSignals.coldStart,
-            hasLearnedStatistics: result.deterministicSignals.hasLearnedStatistics,
-            avgPurchaseIntervalDays: result.deterministicSignals.avgPurchaseIntervalDays,
-            avgNeedIntervalDays: result.deterministicSignals.avgNeedIntervalDays,
+            hasLearnedStatistics:
+              result.deterministicSignals.hasLearnedStatistics,
+            avgPurchaseIntervalDays:
+              result.deterministicSignals.avgPurchaseIntervalDays,
+            avgNeedIntervalDays:
+              result.deterministicSignals.avgNeedIntervalDays,
             estimatedConsumptionIntervalDays:
               result.deterministicSignals.estimatedConsumptionIntervalDays,
             observationCount: result.deterministicSignals.observationCount,
@@ -569,7 +591,8 @@ export class EstimationService implements PredictionEngine {
               ? {
                   ...result.deterministicSignals.householdContext,
                   predictionPreferences: result.deterministicSignals
-                    .householdContext.predictionPreferences as Prisma.InputJsonValue | null,
+                    .householdContext
+                    .predictionPreferences as Prisma.InputJsonValue | null,
                 }
               : null,
             authoritativeDirectSignal:
@@ -590,11 +613,12 @@ export class EstimationService implements PredictionEngine {
           },
         });
       }
+      return prediction.id;
     } catch (error) {
       this.logger.error(
         `Failed to save prediction for product ${result.productId}: ${error}`,
       );
-      // Don't throw - persistence failure shouldn't affect the response
+      return null;
     }
   }
 

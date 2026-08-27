@@ -27,6 +27,7 @@ export class DeterministicSignalsDto {
 }
 
 export class EstimationResponseDto {
+  predictionId: string | null;
   productId: string;
   predictedState: PredictedState;
   confidenceScore: number;
@@ -37,6 +38,7 @@ export class EstimationResponseDto {
 
   static fromEstimationResult(result: PredictionResult): EstimationResponseDto {
     const dto = new EstimationResponseDto();
+    dto.predictionId = result.predictionId;
     dto.productId = result.productId;
     dto.predictedState = result.predictedState;
     dto.confidenceScore = result.confidenceScore;

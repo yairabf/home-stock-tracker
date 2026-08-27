@@ -18,6 +18,7 @@ export interface DeterministicPredictionCandidate {
 }
 
 export interface PredictionResult {
+  predictionId: string | null;
   productId: string;
   predictedState: PredictedState;
   confidenceScore: number;

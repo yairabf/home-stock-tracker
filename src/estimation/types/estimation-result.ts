@@ -26,4 +26,4 @@ export interface DeterministicSignals {
   authoritativeDirectSignal: boolean;
 }
 
-export type EstimationResult = PredictionResult;
+export type EstimationResult = Omit<PredictionResult, 'predictionId'>;

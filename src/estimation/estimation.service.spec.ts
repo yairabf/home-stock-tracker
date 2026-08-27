@@ -3,7 +3,11 @@ import { EstimationService } from './estimation.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import { HouseholdService } from '../household/household.service';
-import { PredictedState, InventoryEventType, ProductType } from '../generated/prisma/enums';
+import {
+  PredictedState,
+  InventoryEventType,
+  ProductType,
+} from '../generated/prisma/enums';
 import { NotFoundException } from '@nestjs/common';
 import { PredictionReasoner } from './prediction-reasoner.service';
 
@@ -24,7 +28,11 @@ describe('EstimationService', () => {
     ...overrides,
   });
 
-  const mockEvent = (eventType: InventoryEventType, daysAgo: number, id = '') => ({
+  const mockEvent = (
+    eventType: InventoryEventType,
+    daysAgo: number,
+    id = '',
+  ) => ({
     id: id || `event-${eventType}-${daysAgo}`,
     eventType,
     timestamp: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
@@ -92,12 +100,18 @@ describe('EstimationService', () => {
 
   describe('estimateProductState', () => {
     it('should throw NotFoundException for unknown product', async () => {
-      productService.findOne.mockRejectedValue(new NotFoundException('Product not found'));
-      await expect(service.estimateProductState('unknown-id')).rejects.toThrow(NotFoundException);
+      productService.findOne.mockRejectedValue(
+        new NotFoundException('Product not found'),
+      );
+      await expect(service.estimateProductState('unknown-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return uncertain with confidence 0 when prediction is disabled', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ predictionEnabled: false }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ predictionEnabled: false }),
+      );
       const result = await service.estimateProductState('product-1');
       expect(result.predictedState).toBe(PredictedState.uncertain);
       expect(result.confidenceScore).toBe(0.0);
@@ -187,7 +201,9 @@ describe('EstimationService', () => {
 
   describe('Time-decay heuristics by product type', () => {
     it('fast_consumable: should be probably_low after 10 days', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.fast_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.fast_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 10),
         mockEvent(InventoryEventType.PURCHASED, 20),
@@ -197,7 +213,9 @@ describe('EstimationService', () => {
     });
 
     it('fast_consumable: should be likely_available within 7 days', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.fast_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.fast_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 5),
         mockEvent(InventoryEventType.PURCHASED, 15),
@@ -207,7 +225,9 @@ describe('EstimationService', () => {
     });
 
     it('pantry_staple: should be likely_available within 30 days', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.pantry_staple }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.pantry_staple }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 25),
         mockEvent(InventoryEventType.PURCHASED, 50),
@@ -217,7 +237,9 @@ describe('EstimationService', () => {
     });
 
     it('pantry_staple: should be probably_low after 35 days', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.pantry_staple }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.pantry_staple }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 35),
         mockEvent(InventoryEventType.PURCHASED, 60),
@@ -227,7 +249,9 @@ describe('EstimationService', () => {
     });
 
     it('household_consumable: should use 21-day threshold', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.household_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.household_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 25),
         mockEvent(InventoryEventType.PURCHASED, 50),
@@ -237,7 +261,9 @@ describe('EstimationService', () => {
     });
 
     it('discrete_consumable: should use 21-day threshold', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.discrete_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.discrete_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 15),
         mockEvent(InventoryEventType.PURCHASED, 35),
@@ -247,7 +273,9 @@ describe('EstimationService', () => {
     });
 
     it('null productType: should use 14-day fallback threshold', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: null }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: null }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 16),
         mockEvent(InventoryEventType.PURCHASED, 30),
@@ -260,7 +288,9 @@ describe('EstimationService', () => {
 
   describe('Confidence scoring', () => {
     it('should have higher confidence with known productType', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.fast_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.fast_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 3),
         mockEvent(InventoryEventType.PURCHASED, 15),
@@ -399,7 +429,9 @@ describe('EstimationService', () => {
       });
       const resultWith = await service.estimateProductState('product-1');
 
-      expect(resultWith.confidenceScore).toBeGreaterThan(resultWithout.confidenceScore);
+      expect(resultWith.confidenceScore).toBeGreaterThan(
+        resultWithout.confidenceScore,
+      );
     });
   });
 
@@ -530,7 +562,9 @@ describe('EstimationService', () => {
     });
 
     it('does not let LLM reasoning override an authoritative direct signal', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: null }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: null }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.STOCK_OUT, 1),
       ]);
@@ -543,7 +577,9 @@ describe('EstimationService', () => {
     });
 
     it('does not let LLM reasoning change a non-uncertain candidate', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: null }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: null }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 20),
         mockEvent(InventoryEventType.PURCHASED, 40),
@@ -555,7 +591,10 @@ describe('EstimationService', () => {
       expect(result.predictedState).toBe(PredictedState.probably_low);
     });
 
-    it.each([{ status: 'refusal' as const }, { status: 'unavailable' as const }])(
+    it.each([
+      { status: 'refusal' as const },
+      { status: 'unavailable' as const },
+    ])(
       'keeps deterministic output for $status reasoning',
       async (llmResult) => {
         productService.findOne.mockResolvedValue(mockProduct());
@@ -606,7 +645,7 @@ describe('EstimationService', () => {
       productService.findOne.mockResolvedValue(mockProduct());
       prismaService.inventoryEvent.findMany.mockResolvedValue([]);
 
-      await service.predictProduct('product-1');
+      const result = await service.predictProduct('product-1');
 
       expect(prismaService.prediction.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
@@ -616,6 +655,7 @@ describe('EstimationService', () => {
         }),
       });
       expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
+      expect(result.predictionId).toBe('prediction-1');
     });
 
     it('persists accepted LLM metadata and a linked inference log', async () => {
@@ -676,6 +716,7 @@ describe('EstimationService', () => {
 
       expect(result.predictedState).toBe(PredictedState.uncertain);
       expect(result.confidenceScore).toBeCloseTo(0.5);
+      expect(result.predictionId).toBeNull();
       expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
     });
   });
@@ -710,17 +751,27 @@ describe('EstimationService', () => {
     });
 
     it('should return deterministicSignals with correct values', async () => {
-      productService.findOne.mockResolvedValue(mockProduct({ productType: ProductType.fast_consumable }));
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: ProductType.fast_consumable }),
+      );
       prismaService.inventoryEvent.findMany.mockResolvedValue([
         mockEvent(InventoryEventType.PURCHASED, 5),
         mockEvent(InventoryEventType.STOCK_LOW, 3),
         mockEvent(InventoryEventType.PURCHASED, 15),
       ]);
       const result = await service.estimateProductState('product-1');
-      expect(result.deterministicSignals.productType).toBe(ProductType.fast_consumable);
+      expect(result.deterministicSignals.productType).toBe(
+        ProductType.fast_consumable,
+      );
       expect(result.deterministicSignals.eventCount).toBe(3);
-      expect(result.deterministicSignals.daysSinceLastPurchase).toBeCloseTo(5, 0);
-      expect(result.deterministicSignals.daysSinceLastLowSignal).toBeCloseTo(3, 0);
+      expect(result.deterministicSignals.daysSinceLastPurchase).toBeCloseTo(
+        5,
+        0,
+      );
+      expect(result.deterministicSignals.daysSinceLastLowSignal).toBeCloseTo(
+        3,
+        0,
+      );
     });
   });
 });

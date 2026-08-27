@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Inject,
@@ -24,14 +25,26 @@ import { CompletePurchaseDto } from './dto/complete-purchase.dto';
 import { CompletePurchaseResponseDto } from './dto/complete-purchase-response.dto';
 import { CompletePartialPurchaseDto } from './dto/complete-partial-purchase.dto';
 import { CompletePartialPurchaseResponseDto } from './dto/complete-partial-purchase-response.dto';
+import { PredictionFeedbackDto } from './dto/prediction-feedback.dto';
+import { PredictionFeedbackResponseDto } from './dto/prediction-feedback-response.dto';
+import { PredictionFeedbackService } from './prediction-feedback.service';
 
 @Controller('inventory')
 export class InventoryController {
   constructor(
     private readonly inventoryService: InventoryService,
+    private readonly predictionFeedbackService: PredictionFeedbackService,
     @Inject(PREDICTION_ENGINE)
     private readonly predictionEngine: PredictionEngine,
   ) {}
+
+  @Post('predictions/:predictionId/feedback')
+  feedback(
+    @Param('predictionId', new ParseUUIDPipe()) predictionId: string,
+    @Body() dto: PredictionFeedbackDto,
+  ): Promise<PredictionFeedbackResponseDto> {
+    return this.predictionFeedbackService.submitFeedback(predictionId, dto);
+  }
 
   @Post('events')
   recordEvent(

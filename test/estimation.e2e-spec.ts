@@ -5,7 +5,11 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { InventoryEventType, PredictedState, ProductType } from '../src/generated/prisma/enums';
+import {
+  InventoryEventType,
+  PredictedState,
+  ProductType,
+} from '../src/generated/prisma/enums';
 
 // Runs against the dev Postgres container (same DATABASE_URL as `npm run
 // start:dev`) since the project has no dedicated test database yet.
@@ -76,7 +80,7 @@ describe('Estimation (e2e)', () => {
 
     it('should persist the prediction to the database', async () => {
       // Call the endpoint
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get(`/api/v1/inventory/estimate/${productId}`)
         .expect(200);
 
@@ -87,6 +91,7 @@ describe('Estimation (e2e)', () => {
 
       expect(predictions.length).toBeGreaterThan(0);
       expect(predictions[0]).toMatchObject({
+        id: response.body.predictionId,
         productId,
         predictedState: PredictedState.uncertain,
       });

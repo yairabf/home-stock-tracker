@@ -12,6 +12,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import type { PredictionResult } from '../src/estimation/types/prediction-result';
 
 const baseResult: PredictionResult = {
+  predictionId: 'prediction-1',
   productId: 'product-1',
   predictedState: PredictedState.uncertain,
   confidenceScore: 0.5,
@@ -80,6 +81,7 @@ describe('Estimation response (e2e)', () => {
       .expect(200);
 
     expect(response.body).toMatchObject({
+      predictionId: 'prediction-1',
       productId: 'product-1',
       predictedState: PredictedState.uncertain,
       recommendedAction: null,
