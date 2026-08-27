@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "command": "adopt",
+  "status": "running",
+  "summary": "Adopting the Blueprint into the existing application",
+  "detail": "Surveying the codebase, tooling, shipped features, and workflow configuration.",
+  "boundary": "reviewed",
+  "startedAt": "2026-08-27T07:11:00Z",
+  "updatedAt": "2026-08-27T07:11:00Z",
+  "resumeCommand": "run adopt skill"
+}
