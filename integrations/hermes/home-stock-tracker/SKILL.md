@@ -60,6 +60,11 @@ against returned `productName` values. Call `grocery_remove` only when one exact
 pending item is identified. If none or more than one match, explain briefly and
 ask the user to clarify.
 
+Treat `Grocery list item <id> not found` and `Grocery list item <id> is not
+pending` from `grocery_remove` as final domain results. Refresh the list only for
+a new user decision; do not retry the removal. If the transport result is
+uncertain, stop and report that uncertainty without retrying.
+
 ## Read and mutation rules
 
 Read tools may run immediately for a clear request. A mutation may run without

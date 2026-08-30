@@ -1,7 +1,7 @@
 # Graph Report - home-stock-tracker  (2026-08-30)
 
 ## Corpus Check
-- 359 files · ~234,185 words
+- 359 files · ~234,246 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -310,7 +310,7 @@
 - @eslint/eslintrc
 - @eslint/js
 - eslint-plugin-prettier
-- @nestjs/schematics
+- eslint
 - source-map-support
 - supertest
 - ts-jest
@@ -1156,7 +1156,7 @@ Nodes (4): MS_PER_DAY, NEED_EVENT_TYPES, PURCHASE_EVENT_TYPES, ProductStatistics
 
 ### Community 214 - "devDependencies"
 Cohesion: 0.09
-Nodes (23): eslint, eslint-config-prettier, globals, jest, @nestjs/cli, @nestjs/testing, devDependencies, eslint (+15 more)
+Nodes (23): eslint-config-prettier, globals, jest, @nestjs/cli, @nestjs/schematics, @nestjs/testing, devDependencies, eslint-config-prettier (+15 more)
 
 ### Community 215 - "GroceryService"
 Cohesion: 0.13
@@ -1219,7 +1219,7 @@ Cohesion: 0.15
 Nodes (12): Acceptance criteria, Acceptance criteria, Agent discussion prompts, Expected implementation output, Fix Brief: MCP-01 — `get_product` publishes an unreliable input schema, Implementation constraints, Objective, Out of scope (+4 more)
 
 ### Community 230 - "Fix Brief: MCP-06 — No inventory-event history tool"
-Cohesion: 0.17
+Cohesion: 0.15
 Nodes (12): Acceptance criteria, Acceptance criteria, Agent discussion prompts, Expected implementation output, Fix Brief: MCP-06 — No inventory-event history tool, Implementation constraints, Objective, Out of scope (+4 more)
 
 ### Community 231 - "Fix Brief: MCP-09 — Purchase completion loses actual quantity details"
@@ -1255,7 +1255,7 @@ Cohesion: 0.17
 Nodes (11): Acceptance criteria, Agent discussion prompts, Expected implementation output, Fix Brief: SKILL-05 — No release synchronization between MCP and skills, Implementation constraints, Objective, Out of scope, Proposed direction (+3 more)
 
 ### Community 239 - "Fix Brief: SKILL-06 — The skill metadata and structure are too narrowly Hermes-shaped"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (11): Acceptance criteria, Agent discussion prompts, Expected implementation output, Fix Brief: SKILL-06 — The skill metadata and structure are too narrowly Hermes-shaped, Implementation constraints, Objective, Out of scope, Proposed direction (+3 more)
 
 ### Community 259 - "Feature: Low-stock recommendations"
@@ -1392,9 +1392,9 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `CompletePartialPurchaseDto` connect `CompletePartialPurchaseDto` to `inventory.service.ts`, `InventoryController`, `InventoryService`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `PrismaService` connect `PrismaService` to `product.service.ts`, `estimation.service.ts`, `AppService`, `app.module.ts`, `HouseholdService`, `mcp.controller.spec.ts`, `mcp-server.factory.ts`, `CreateHouseholdDto`, `inventory.service.ts`, `statistics.service.ts`, `GroceryService`, `health.controller.ts`, `grocery.service.ts`, `PredictionFeedbackDto`, `prediction-reasoner.service.ts`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `ProductService` connect `ProductService` to `product.service.ts`, `estimation.service.ts`, `ProductController`, `app.module.ts`, `HouseholdService`, `mcp.controller.spec.ts`, `mcp-server.factory.ts`, `CreateProductDto`, `inventory.service.ts`, `PrismaService`, `InventoryService`, `GroceryService`, `statistics.service.ts`, `grocery.service.ts`, `prediction-reasoner.service.ts`?**
+- **Why does `EstimationService` connect `EstimationService` to `estimation.service.ts`, `app.module.ts`, `HouseholdService`, `StatisticsService`, `mcp-server.factory.ts`, `prediction-reasoner.service.ts`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `InventoryService` connect `InventoryService` to `RecordInventoryEventDto`, `RecordPurchaseDto`, `InventoryController`, `app.module.ts`, `StatisticsService`, `mcp-server.factory.ts`, `mcp.controller.spec.ts`, `inventory.service.ts`, `CompletePartialPurchaseDto`, `CompletePurchaseDto`, `PrismaService`, `GroceryService`, `ListInventoryEventsDto`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `ProductService` (e.g. with `AddProductAliasDto` and `CreateProductDto`) actually correct?**
   _`ProductService` has 26 INFERRED edges - model-reasoned connections that need verification._

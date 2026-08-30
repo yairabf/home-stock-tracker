@@ -80,6 +80,12 @@ An add request requires `productName`. Optional values are a positive
 Product names must match a canonical name or alias. The route does not create
 unknown products.
 
+`DELETE /api/v1/grocery/items/:id` changes only a pending item to `removed`.
+An unknown ID returns `404` with `Grocery list item <id> not found`; a purchased,
+removed, or concurrently completed item returns `409` with
+`Grocery list item <id> is not pending`. These status codes and messages are the
+stable machine-readable removal contract.
+
 ### Inventory and predictions
 
 | Method | Route | Purpose |
@@ -191,7 +197,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | Tool | Kind | Purpose |
 | --- | --- | --- |
 | `grocery_add` | Write | Add one known product by name with optional quantity, unit, and note. |
-| `grocery_remove` | Write | Remove one item by grocery-item UUID. |
+| `grocery_remove` | Write | Change one pending item to removed by grocery-item UUID. |
 | `grocery_list` | Read | List pending items by default or filter by status. |
 | `get_product` | Read | Resolve an exact product name/alias or known UUID. |
 | `get_inventory` | Read | Estimate one product's stock state. |
@@ -202,6 +208,11 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 Tool responses contain structured content plus JSON text. Domain failures become
 safe MCP tool errors and unexpected errors are sanitized.
+
+`grocery_remove` returns `Grocery list item <id> not found` for an unknown ID and
+`Grocery list item <id> is not pending` when the item was purchased, removed, or
+won by another concurrent terminal transition. Both are final domain results. Do
+not retry them, and do not retry any write whose transport outcome is uncertain.
 
 ### Safe tool workflow
 

@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788101454.226146,
-    "seen": 1788101587.219015,
-    "ast_hash": "6ae7c47d7368148468223da69a574fc2",
+    "mtime": 1788101651.8334928,
+    "seen": 1788101702.53532,
+    "ast_hash": "21192ea2540617701e5d48b9d9c6470a",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1704,9 +1704,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1787868487.3099487,
-    "seen": 1787870257.412134,
-    "ast_hash": "a70c9583ca124d2a1ff7bca780a97893",
+    "mtime": 1788101667.8927279,
+    "seen": 1788101702.515998,
+    "ast_hash": "6f91acb4f376c4da4d14b0f6b5c945a8",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.ts": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788101545.6228187,
-    "seen": 1788101587.200373,
-    "ast_hash": "9829c6415c45f88d548b56fa52f9f4bb",
+    "mtime": 1788101607.4468157,
+    "seen": 1788101702.515915,
+    "ast_hash": "44391e7dc5f47b3df8e4434c064f92b3",
     "semantic_hash": ""
   },
   "blueprint/history/features/12-mcp-tool-interface.md": {

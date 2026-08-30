@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import { AddGroceryItemDto } from './dto/add-grocery-item.dto';
@@ -50,17 +54,26 @@ export class GroceryService {
   async removeItem(id: string): Promise<GroceryItemResponseDto> {
     const existing = await this.prisma.groceryListItem.findUnique({
       where: { id },
+      include: { product: true },
     });
     if (!existing) {
       throw new NotFoundException(`Grocery list item ${id} not found`);
     }
+    if (existing.status !== GroceryItemStatus.pending) {
+      throw new ConflictException(`Grocery list item ${id} is not pending`);
+    }
 
-    const item = await this.prisma.groceryListItem.update({
-      where: { id },
+    const result = await this.prisma.groceryListItem.updateMany({
+      where: { id, status: GroceryItemStatus.pending },
       data: { status: GroceryItemStatus.removed },
-      include: { product: true },
     });
+    if (result.count !== 1) {
+      throw new ConflictException(`Grocery list item ${id} is not pending`);
+    }
 
-    return GroceryItemResponseDto.fromEntity(item, item.product.canonicalName);
+    return GroceryItemResponseDto.fromEntity(
+      { ...existing, status: GroceryItemStatus.removed },
+      existing.product.canonicalName,
+    );
   }
 }
