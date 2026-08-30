@@ -1,5 +1,4 @@
 import {
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -7,7 +6,6 @@ import {
   IsString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { GroceryItemSource } from '../../generated/prisma/enums';
 
 export class AddGroceryItemDto {
   @Transform(({ value }: { value: unknown }) =>
@@ -29,8 +27,4 @@ export class AddGroceryItemDto {
   @IsOptional()
   @IsString()
   note?: string;
-
-  @IsOptional()
-  @IsEnum(GroceryItemSource)
-  source?: GroceryItemSource;
 }

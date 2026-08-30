@@ -10,7 +10,6 @@ import {
   ArrayNotEmpty,
   ArrayUnique,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class CompletePurchaseDto {
   @IsUUID()
@@ -25,13 +24,6 @@ export class CompletePurchaseDto {
   @IsString()
   @IsOptional()
   unit?: string;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString()
-  @IsNotEmpty()
-  source: string;
 
   @IsNumber()
   @IsOptional()

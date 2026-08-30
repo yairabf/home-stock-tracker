@@ -23,7 +23,7 @@ export class PredictionFeedbackService {
 
   async submitFeedback(
     predictionId: string,
-    dto: PredictionFeedbackDto,
+    dto: PredictionFeedbackDto & { source: string },
   ): Promise<PredictionFeedbackResponseDto> {
     return this.prisma.$transaction(async (tx) => {
       const prediction = await tx.prediction.findUnique({
@@ -97,7 +97,7 @@ export class PredictionFeedbackService {
   }
 
   private validateCorrection(
-    dto: PredictionFeedbackDto,
+    dto: PredictionFeedbackDto & { source: string },
     predictedState: PredictedState,
   ): void {
     if (

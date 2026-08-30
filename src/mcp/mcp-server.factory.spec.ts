@@ -119,6 +119,18 @@ describe('McpServerFactory grocery tools', () => {
       },
       type: 'object',
     });
+    for (const name of [
+      'grocery_add',
+      'record_purchase',
+      'record_stock_signal',
+      'complete_grocery_purchase',
+    ]) {
+      const schema = result.tools.find(
+        (tool) => tool.name === name,
+      )?.inputSchema;
+      expect(schema).toMatchObject({ additionalProperties: false });
+      expect(schema?.properties).not.toHaveProperty('source');
+    }
   });
 
   it('adds an item with an adapter-owned source and structured output', async () => {
@@ -137,7 +149,7 @@ describe('McpServerFactory grocery tools', () => {
       productName: 'milk',
       requestedQuantity: 2,
       unit: 'liter',
-      source: GroceryItemSource.hermes_whatsapp,
+      source: GroceryItemSource.mcp,
     });
     expect(result.structuredContent).toEqual({
       ...item,
@@ -190,6 +202,35 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.isError).toBe(true);
     expect(groceryService.addItem).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['grocery_add', { productName: 'milk', source: 'api' }],
+    [
+      'record_purchase',
+      {
+        productId: item.productId,
+        eventType: InventoryEventType.PURCHASED,
+        source: 'api',
+      },
+    ],
+    [
+      'record_stock_signal',
+      {
+        productId: item.productId,
+        eventType: InventoryEventType.STOCK_LOW,
+        source: 'api',
+      },
+    ],
+    ['complete_grocery_purchase', { groceryItemIds: [item.id], source: 'api' }],
+  ])('rejects a client-supplied source for %s', async (name, args) => {
+    const result = await client.callTool({ name, arguments: args });
+
+    expect(result.isError).toBe(true);
+    expect(groceryService.addItem).not.toHaveBeenCalled();
+    expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
+    expect(inventoryService.recordEvent).not.toHaveBeenCalled();
+    expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();
   });
 
   it('gets a product by UUID with the existing response contract', async () => {
@@ -268,7 +309,9 @@ describe('McpServerFactory grocery tools', () => {
     expect(missingSelector.content).toEqual([
       {
         type: 'text',
-        text: expect.stringContaining('Provide exactly one of id or productName'),
+        text: expect.stringContaining(
+          'Provide exactly one of id or productName',
+        ),
       },
     ]);
     expect(productService.findOne).not.toHaveBeenCalled();
@@ -401,7 +444,7 @@ describe('McpServerFactory grocery tools', () => {
       quantity: 2,
       unit: 'liter',
       metadata: { store: 'market' },
-      source: 'hermes_mcp',
+      source: 'mcp',
     });
     expect(result.structuredContent).toEqual({
       ...event,
@@ -426,7 +469,7 @@ describe('McpServerFactory grocery tools', () => {
     expect(inventoryService.recordEvent).toHaveBeenLastCalledWith({
       productId: item.productId,
       eventType,
-      source: 'hermes_mcp',
+      source: 'mcp',
     });
   });
 
@@ -505,7 +548,7 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
       groceryItemIds: [completedItem.id, secondItem.id],
-      source: 'hermes_mcp',
+      source: 'mcp',
     });
     expect(result.structuredContent).toEqual({
       events: events.map((event) => ({
@@ -635,7 +678,7 @@ function inventoryEvent(eventType: InventoryEventType) {
     quantity: 2,
     unit: 'liter',
     timestamp: new Date('2026-08-27T12:00:00.000Z'),
-    source: 'hermes_mcp',
+    source: 'mcp',
     confidence: null,
     metadata: null,
   };

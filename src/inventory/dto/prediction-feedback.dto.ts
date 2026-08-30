@@ -1,14 +1,11 @@
 import {
   IsDefined,
   IsEnum,
-  IsNotEmpty,
-  IsString,
   Validate,
   ValidatorConstraint,
   type ValidationArguments,
   type ValidatorConstraintInterface,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { PredictedState } from '../../generated/prisma/enums';
 
 export enum PredictionFeedbackOutcome {
@@ -48,11 +45,4 @@ export class PredictionFeedbackDto {
 
   @Validate(CorrectedStateMatchesOutcomeConstraint)
   correctedState?: PredictedState;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString()
-  @IsNotEmpty()
-  source: string;
 }

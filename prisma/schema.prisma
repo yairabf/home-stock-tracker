@@ -28,6 +28,7 @@ enum GroceryItemStatus {
 enum GroceryItemSource {
   hermes_whatsapp
   api
+  mcp
 }
 
 model Product {

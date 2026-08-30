@@ -11,6 +11,7 @@ import { GroceryService } from './grocery.service';
 import { AddGroceryItemDto } from './dto/add-grocery-item.dto';
 import { GroceryItemResponseDto } from './dto/grocery-item-response.dto';
 import { ListGroceryItemsDto } from './dto/list-grocery-items.dto';
+import { GroceryItemSource } from '../generated/prisma/enums';
 
 @Controller('grocery/items')
 export class GroceryController {
@@ -18,7 +19,10 @@ export class GroceryController {
 
   @Post()
   addItem(@Body() dto: AddGroceryItemDto): Promise<GroceryItemResponseDto> {
-    return this.groceryService.addItem(dto);
+    return this.groceryService.addItem({
+      ...dto,
+      source: GroceryItemSource.api,
+    });
   }
 
   @Get()

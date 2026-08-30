@@ -158,7 +158,7 @@ describe('McpController', () => {
       });
       expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
         groceryItemIds: [groceryItemId],
-        source: 'hermes_mcp',
+        source: 'mcp',
       });
       expect(transport.sessionId).toBeUndefined();
     } finally {

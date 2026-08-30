@@ -10,7 +10,6 @@ import {
   ValidateIf,
   ArrayMinSize,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class CompletePartialPurchaseDto {
   @IsUUID()
@@ -25,13 +24,6 @@ export class CompletePartialPurchaseDto {
   @IsString()
   @IsOptional()
   unit?: string;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString()
-  @IsNotEmpty()
-  source: string;
 
   @IsNumber()
   @IsOptional()
@@ -56,10 +48,11 @@ export class CompletePartialPurchaseDto {
   omitItemIds?: string[];
 
   // XOR validation: exactly one of completeItemIds or omitItemIds must be provided
-  @ValidateIf(
-    (o: CompletePartialPurchaseDto): boolean =>
-      Boolean((!o.completeItemIds && !o.omitItemIds) ||
-      (o.completeItemIds && o.omitItemIds)),
+  @ValidateIf((o: CompletePartialPurchaseDto): boolean =>
+    Boolean(
+      (!o.completeItemIds && !o.omitItemIds) ||
+      (o.completeItemIds && o.omitItemIds),
+    ),
   )
   @IsNotEmpty({
     message:

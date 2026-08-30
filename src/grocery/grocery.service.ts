@@ -19,7 +19,9 @@ export class GroceryService {
     private readonly productService: ProductService,
   ) {}
 
-  async addItem(dto: AddGroceryItemDto): Promise<GroceryItemResponseDto> {
+  async addItem(
+    dto: AddGroceryItemDto & { source: GroceryItemSource },
+  ): Promise<GroceryItemResponseDto> {
     const product = await this.productService.findOrCreateByExactOrAliasMatch(
       dto.productName,
     );
@@ -30,7 +32,7 @@ export class GroceryService {
         requestedQuantity: dto.requestedQuantity,
         unit: dto.unit,
         note: dto.note,
-        source: dto.source ?? GroceryItemSource.api,
+        source: dto.source,
       },
     });
 

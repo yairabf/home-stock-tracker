@@ -14,9 +14,7 @@ describe('PredictionFeedbackDto', () => {
     PredictionFeedbackOutcome.accepted,
     PredictionFeedbackOutcome.rejected,
   ])('accepts %s without a corrected state', async (outcome) => {
-    await expect(
-      validateBody({ outcome, source: ' api ' }),
-    ).resolves.toHaveLength(0);
+    await expect(validateBody({ outcome })).resolves.toHaveLength(0);
   });
 
   it('accepts corrected feedback with a concrete state', async () => {
@@ -24,17 +22,15 @@ describe('PredictionFeedbackDto', () => {
       validateBody({
         outcome: PredictionFeedbackOutcome.corrected,
         correctedState: PredictedState.probably_out,
-        source: 'api',
       }),
     ).resolves.toHaveLength(0);
   });
 
   it.each([
-    { outcome: 'corrected', source: 'api' },
-    { outcome: 'corrected', correctedState: 'uncertain', source: 'api' },
-    { outcome: 'accepted', correctedState: 'probably_out', source: 'api' },
-    { outcome: 'invalid', source: 'api' },
-    { outcome: 'accepted', source: '   ' },
+    { outcome: 'corrected' },
+    { outcome: 'corrected', correctedState: 'uncertain' },
+    { outcome: 'accepted', correctedState: 'probably_out' },
+    { outcome: 'invalid' },
   ])('rejects an invalid body: %j', async (body) => {
     expect(await validateBody(body)).not.toHaveLength(0);
   });

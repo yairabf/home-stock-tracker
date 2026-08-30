@@ -30,6 +30,7 @@ import { PredictionFeedbackResponseDto } from './dto/prediction-feedback-respons
 import { PredictionFeedbackService } from './prediction-feedback.service';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
 import { LowStockRecommendationListResponseDto } from './dto/low-stock-recommendation-response.dto';
+import { TransportSource } from '../common/transport-source';
 
 @Controller('inventory')
 export class InventoryController {
@@ -53,21 +54,30 @@ export class InventoryController {
     @Param('predictionId', new ParseUUIDPipe()) predictionId: string,
     @Body() dto: PredictionFeedbackDto,
   ): Promise<PredictionFeedbackResponseDto> {
-    return this.predictionFeedbackService.submitFeedback(predictionId, dto);
+    return this.predictionFeedbackService.submitFeedback(predictionId, {
+      ...dto,
+      source: TransportSource.api,
+    });
   }
 
   @Post('events')
   recordEvent(
     @Body() dto: RecordInventoryEventDto,
   ): Promise<InventoryEventResponseDto> {
-    return this.inventoryService.recordEvent(dto);
+    return this.inventoryService.recordEvent({
+      ...dto,
+      source: TransportSource.api,
+    });
   }
 
   @Post('purchases')
   recordPurchase(
     @Body() dto: RecordPurchaseDto,
   ): Promise<InventoryEventResponseDto> {
-    return this.inventoryService.recordPurchase(dto);
+    return this.inventoryService.recordPurchase({
+      ...dto,
+      source: TransportSource.api,
+    });
   }
 
   @Get('events')
@@ -82,7 +92,10 @@ export class InventoryController {
   completePurchase(
     @Body() dto: CompletePurchaseDto,
   ): Promise<CompletePurchaseResponseDto> {
-    return this.inventoryService.completePurchase(dto);
+    return this.inventoryService.completePurchase({
+      ...dto,
+      source: TransportSource.api,
+    });
   }
 
   @Post('purchases/complete-partial')
@@ -90,7 +103,10 @@ export class InventoryController {
   completePartialPurchase(
     @Body() dto: CompletePartialPurchaseDto,
   ): Promise<CompletePartialPurchaseResponseDto> {
-    return this.inventoryService.completePartialPurchase(dto);
+    return this.inventoryService.completePartialPurchase({
+      ...dto,
+      source: TransportSource.api,
+    });
   }
 
   @Get('estimate/:productId')

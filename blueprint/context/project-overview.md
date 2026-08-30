@@ -78,7 +78,8 @@ Single-row table for the MVP household; schema should not assume single-row fore
 - `dateAdded` (datetime).
 - `status` (enum: e.g. `pending` | `purchased` | `removed`).
 - `note` (string, optional).
-- `source` (enum: `hermes_whatsapp` | `api`).
+- `source` (enum: `hermes_whatsapp` | `api` | `mcp`) - server-owned transport
+  provenance; `hermes_whatsapp` is retained for historical compatibility.
 - `relatedInventoryEventId` (FK -> InventoryEvent, optional) - links to the event created when the item is resolved (purchased/removed).
 
 ### InventoryEvent
@@ -91,7 +92,8 @@ The append-only source of truth. All meaningful state changes are stored as even
 - `quantity` (number, optional).
 - `unit` (string, optional).
 - `timestamp` (datetime).
-- `source` (string) - e.g. Hermes/WhatsApp/API.
+- `source` (string) - server-owned transport provenance, currently `api` or
+  `mcp`; historical values remain unchanged.
 - `confidence` (number, optional) - set when the event is inferred rather than reported.
 - `metadata` (JSON, optional).
 

@@ -15,6 +15,7 @@ describe('InventoryController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let productId: string;
+  let productName: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,15 +28,20 @@ describe('InventoryController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
     prisma = app.get(PrismaService);
 
+    productName = `e2e inventory product ${Date.now()}`;
     const productResponse = await request(app.getHttpServer())
       .post('/api/v1/products')
-      .send({ canonicalName: `e2e inventory product ${Date.now()}` })
+      .send({ canonicalName: productName })
       .expect(201);
     productId = productResponse.body.id;
   });
@@ -47,6 +53,27 @@ describe('InventoryController (e2e)', () => {
     await app.close();
   });
 
+  it('attributes REST grocery additions to api', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/grocery/items')
+      .send({ productName })
+      .expect(201);
+
+    expect(response.body).toMatchObject({ productId, source: 'api' });
+  });
+
+  it('rejects caller-controlled REST source attribution', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/grocery/items')
+      .send({ productName, source: 'mcp' })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({ productId, eventType: 'PURCHASED', source: 'mcp' })
+      .expect(400);
+  });
+
   it('records a purchase and returns it (POST /api/v1/inventory/purchases)', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/inventory/purchases')
@@ -55,7 +82,6 @@ describe('InventoryController (e2e)', () => {
         eventType: 'PURCHASED',
         quantity: 2,
         unit: 'liter',
-        source: 'hermes_whatsapp',
       })
       .expect(201);
 
@@ -64,7 +90,7 @@ describe('InventoryController (e2e)', () => {
       eventType: 'PURCHASED',
       quantity: 2,
       unit: 'liter',
-      source: 'hermes_whatsapp',
+      source: 'api',
     });
     expect(response.body.id).toBeDefined();
     expect(response.body.timestamp).toBeDefined();
@@ -77,7 +103,6 @@ describe('InventoryController (e2e)', () => {
         productId,
         eventType: 'RESTOCKED',
         quantity: 0,
-        source: 'api',
       })
       .expect(201);
 
@@ -92,7 +117,7 @@ describe('InventoryController (e2e)', () => {
   it('rejects unsupported purchase event types', () => {
     return request(app.getHttpServer())
       .post('/api/v1/inventory/purchases')
-      .send({ productId, eventType: 'STOCK_LOW', source: 'api' })
+      .send({ productId, eventType: 'STOCK_LOW' })
       .expect(400);
   });
 
@@ -102,7 +127,6 @@ describe('InventoryController (e2e)', () => {
       .send({
         productId: '00000000-0000-4000-8000-000000000000',
         eventType: 'PURCHASED',
-        source: 'api',
       })
       .expect(404);
   });
@@ -115,7 +139,6 @@ describe('InventoryController (e2e)', () => {
         eventType: 'STOCK_LOW',
         quantity: 1,
         unit: 'liter',
-        source: 'hermes_whatsapp',
         confidence: 0.8,
         metadata: { note: 'e2e' },
       })
@@ -126,7 +149,7 @@ describe('InventoryController (e2e)', () => {
       eventType: 'STOCK_LOW',
       quantity: 1,
       unit: 'liter',
-      source: 'hermes_whatsapp',
+      source: 'api',
       confidence: 0.8,
       metadata: { note: 'e2e' },
     });
@@ -140,7 +163,6 @@ describe('InventoryController (e2e)', () => {
       .send({
         productId: '00000000-0000-4000-8000-000000000000',
         eventType: 'STOCK_LOW',
-        source: 'api',
       })
       .expect(404);
   });
@@ -148,14 +170,14 @@ describe('InventoryController (e2e)', () => {
   it('returns 400 for an invalid eventType', () => {
     return request(app.getHttpServer())
       .post('/api/v1/inventory/events')
-      .send({ productId, eventType: 'NOT_REAL', source: 'api' })
+      .send({ productId, eventType: 'NOT_REAL' })
       .expect(400);
   });
 
   it('round-trips: records then queries the event back by productId and eventType', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/inventory/events')
-      .send({ productId, eventType: 'RESTOCKED', source: 'api' })
+      .send({ productId, eventType: 'RESTOCKED' })
       .expect(201);
 
     const response = await request(app.getHttpServer())
@@ -177,11 +199,11 @@ describe('InventoryController (e2e)', () => {
   it('paginates results with limit and offset', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/inventory/events')
-      .send({ productId, eventType: 'PURCHASED', source: 'api' })
+      .send({ productId, eventType: 'PURCHASED' })
       .expect(201);
     await request(app.getHttpServer())
       .post('/api/v1/inventory/events')
-      .send({ productId, eventType: 'PURCHASED', source: 'api' })
+      .send({ productId, eventType: 'PURCHASED' })
       .expect(201);
 
     const response = await request(app.getHttpServer())
@@ -221,7 +243,6 @@ describe('InventoryController (e2e)', () => {
           productId,
           requestedQuantity: 2,
           unit: 'liter',
-          source: 'hermes_whatsapp',
         },
       });
       const item2 = await prisma.groceryListItem.create({
@@ -247,7 +268,6 @@ describe('InventoryController (e2e)', () => {
           productId,
           quantity: 6,
           unit: 'liter',
-          source: 'hermes_whatsapp',
           confidence: 1,
           groceryItemIds: [groceryItemId1, groceryItemId2],
         })
@@ -258,7 +278,7 @@ describe('InventoryController (e2e)', () => {
         eventType: 'PURCHASED',
         quantity: 6,
         unit: 'liter',
-        source: 'hermes_whatsapp',
+        source: 'api',
         confidence: 1,
       });
       expect(response.body.event.id).toBeDefined();
@@ -282,7 +302,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: ['not-a-uuid'],
         })
         .expect(400);
@@ -293,7 +312,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: [],
         })
         .expect(400);
@@ -304,7 +322,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: ['00000000-0000-4000-8000-000000000000'],
         })
         .expect(400);
@@ -324,7 +341,6 @@ describe('InventoryController (e2e)', () => {
       const otherItem = await prisma.groceryListItem.create({
         data: {
           productId: otherProductId,
-          source: 'api',
         },
       });
 
@@ -332,7 +348,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: [otherItem.id],
         })
         .expect(400);
@@ -349,7 +364,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId: '00000000-0000-4000-8000-000000000000',
-          source: 'api',
           groceryItemIds: [groceryItemId1],
         })
         .expect(404);
@@ -379,7 +393,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: [linkedItem.id],
         })
         .expect(400);
@@ -405,7 +418,6 @@ describe('InventoryController (e2e)', () => {
         .post('/api/v1/inventory/purchases/complete')
         .send({
           productId,
-          source: 'api',
           groceryItemIds: [purchasedItem.id],
         })
         .expect(400);

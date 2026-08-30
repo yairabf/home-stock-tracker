@@ -29,7 +29,11 @@ describe('Prediction feedback (e2e)', () => {
     app = module.createNestApplication();
     app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
     prisma = app.get(PrismaService);
@@ -64,7 +68,7 @@ describe('Prediction feedback (e2e)', () => {
   it('records accepted feedback and updates product accuracy', async () => {
     const response = await request(app.getHttpServer())
       .post(`/api/v1/inventory/predictions/${predictionId}/feedback`)
-      .send({ outcome: 'accepted', source: 'api' })
+      .send({ outcome: 'accepted' })
       .expect(201);
 
     expect(response.body).toMatchObject({
@@ -89,6 +93,13 @@ describe('Prediction feedback (e2e)', () => {
     expect(statistics.predictionAccuracy).toBe(1);
   });
 
+  it('rejects caller-controlled feedback source attribution', async () => {
+    await request(app.getHttpServer())
+      .post(`/api/v1/inventory/predictions/${predictionId}/feedback`)
+      .send({ outcome: 'accepted', source: 'mcp' })
+      .expect(400);
+  });
+
   it('records a correction as rejected and preserves other statistics fields', async () => {
     await prisma.productStatistics.create({
       data: { productId, observationCount: 7, avgPurchaseIntervalDays: 4 },
@@ -98,7 +109,6 @@ describe('Prediction feedback (e2e)', () => {
       .send({
         outcome: 'corrected',
         correctedState: PredictedState.probably_out,
-        source: 'hermes_whatsapp',
       })
       .expect(201)
       .expect(({ body }) => {
@@ -130,11 +140,11 @@ describe('Prediction feedback (e2e)', () => {
     const endpoint = `/api/v1/inventory/predictions/${predictionId}/feedback`;
     await request(app.getHttpServer())
       .post(endpoint)
-      .send({ outcome: 'rejected', source: 'api' })
+      .send({ outcome: 'rejected' })
       .expect(201);
     await request(app.getHttpServer())
       .post(endpoint)
-      .send({ outcome: 'accepted', source: 'api' })
+      .send({ outcome: 'accepted' })
       .expect(409);
     await expect(
       prisma.inventoryEvent.count({ where: { productId } }),
@@ -146,22 +156,15 @@ describe('Prediction feedback (e2e)', () => {
       .post(
         '/api/v1/inventory/predictions/00000000-0000-4000-8000-000000000000/feedback',
       )
-      .send({ outcome: 'accepted', source: 'api' })
+      .send({ outcome: 'accepted' })
       .expect(404);
   });
 
   it.each([
-    ['not-a-uuid', { outcome: 'accepted', source: 'api' }],
-    [null, { outcome: 'corrected', source: 'api' }],
-    [
-      null,
-      { outcome: 'accepted', correctedState: 'probably_out', source: 'api' },
-    ],
-    [
-      null,
-      { outcome: 'corrected', correctedState: 'uncertain', source: 'api' },
-    ],
-    [null, { outcome: 'accepted', source: '   ' }],
+    ['not-a-uuid', { outcome: 'accepted' }],
+    [null, { outcome: 'corrected' }],
+    [null, { outcome: 'accepted', correctedState: 'probably_out' }],
+    [null, { outcome: 'corrected', correctedState: 'uncertain' }],
   ])('rejects malformed feedback', async (id, body) => {
     await request(app.getHttpServer())
       .post(`/api/v1/inventory/predictions/${id ?? predictionId}/feedback`)

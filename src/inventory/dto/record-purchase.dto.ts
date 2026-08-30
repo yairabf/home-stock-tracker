@@ -8,7 +8,6 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { InventoryEventType } from '../../generated/prisma/enums';
 
 const PURCHASE_EVENT_TYPES = [
@@ -24,8 +23,7 @@ export class RecordPurchaseDto {
   @IsIn(PURCHASE_EVENT_TYPES)
   @IsNotEmpty()
   eventType:
-    | typeof InventoryEventType.PURCHASED
-    | typeof InventoryEventType.RESTOCKED;
+    typeof InventoryEventType.PURCHASED | typeof InventoryEventType.RESTOCKED;
 
   @IsOptional()
   @IsNumber()
@@ -35,13 +33,6 @@ export class RecordPurchaseDto {
   @IsOptional()
   @IsString()
   unit?: string;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString()
-  @IsNotEmpty()
-  source: string;
 
   @IsOptional()
   @IsNumber()

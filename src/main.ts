@@ -17,7 +17,13 @@ async function bootstrap() {
       { path: 'ready', method: RequestMethod.GET },
     ],
   });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   await app.listen(config.port);
 }
 void bootstrap();

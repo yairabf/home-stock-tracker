@@ -21,6 +21,7 @@ import {
   ProductType,
 } from '../generated/prisma/enums';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { TransportSource } from '../common/transport-source';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -189,7 +190,7 @@ export class McpServerFactory {
           this.toolResult(
             await this.inventoryService.completeGroceryPurchase({
               groceryItemIds,
-              source: 'hermes_mcp',
+              source: TransportSource.mcp,
             }),
           ),
         ),
@@ -237,7 +238,7 @@ export class McpServerFactory {
           this.toolResult(
             await this.inventoryService.recordPurchase({
               ...input,
-              source: 'hermes_mcp',
+              source: TransportSource.mcp,
             }),
           ),
         ),
@@ -265,7 +266,7 @@ export class McpServerFactory {
           this.toolResult(
             await this.inventoryService.recordEvent({
               ...input,
-              source: 'hermes_mcp',
+              source: TransportSource.mcp,
             }),
           ),
         ),
@@ -332,7 +333,7 @@ export class McpServerFactory {
           this.toolResult(
             await this.groceryService.addItem({
               ...input,
-              source: GroceryItemSource.hermes_whatsapp,
+              source: GroceryItemSource.mcp,
             }),
           ),
         ),

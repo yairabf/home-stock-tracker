@@ -72,10 +72,10 @@ threshold. Counts must be non-negative integers and
 | `DELETE` | `/api/v1/grocery/items/:id` | Remove one pending item. |
 
 An add request requires `productName`. Optional values are a positive
-`requestedQuantity`, `unit`, `note`, and `source`.
+`requestedQuantity`, `unit`, and `note`.
 
 - Status: `pending`, `purchased`, or `removed`
-- Source: `api` or `hermes_whatsapp`
+- Source is server-owned: `api` for REST requests and `mcp` for MCP tool calls.
 
 Product names must match a canonical name or alias. The route does not create
 unknown products.
@@ -111,25 +111,24 @@ STOCK_CONFIRMED, STOCK_CORRECTED, PREDICTION_ACCEPTED, PREDICTION_REJECTED,
 INFERRED_LOW_STOCK
 ```
 
-Every event requires `productId`, `eventType`, and `source`. `quantity`, `unit`,
+Every event requires `productId` and `eventType`. `quantity`, `unit`,
 `confidence`, and `metadata` are optional. Prefer the focused purchase and stock
 routes over directly creating internal prediction events.
 
 Prediction feedback shapes:
 
 ```json
-{ "outcome": "accepted", "source": "api" }
+{ "outcome": "accepted" }
 ```
 
 ```json
-{ "outcome": "rejected", "source": "api" }
+{ "outcome": "rejected" }
 ```
 
 ```json
 {
   "outcome": "corrected",
-  "correctedState": "likely_available",
-  "source": "api"
+  "correctedState": "likely_available"
 }
 ```
 
@@ -169,7 +168,7 @@ Add it to the grocery list:
 curl -sS -X POST \
   -H "Authorization: Bearer ${HOME_STOCK_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"productName":"milk","requestedQuantity":2,"unit":"liters","source":"api"}' \
+  -d '{"productName":"milk","requestedQuantity":2,"unit":"liters"}' \
   "${HOME_STOCK_URL}/api/v1/grocery/items"
 ```
 
@@ -179,7 +178,7 @@ Record low stock and request an estimate, replacing `<PRODUCT_ID>`:
 curl -sS -X POST \
   -H "Authorization: Bearer ${HOME_STOCK_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"productId":"<PRODUCT_ID>","eventType":"STOCK_LOW","source":"api"}' \
+  -d '{"productId":"<PRODUCT_ID>","eventType":"STOCK_LOW"}' \
   "${HOME_STOCK_URL}/api/v1/inventory/events"
 
 curl -sS \

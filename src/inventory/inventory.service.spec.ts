@@ -1094,10 +1094,8 @@ describe('RecordPurchaseDto validation', () => {
         productId: PRODUCT_ID,
         eventType,
         quantity: 0,
-        source: '  api  ',
       });
 
-      expect(dto.source).toBe('api');
       await expect(validate(dto)).resolves.toHaveLength(0);
     }
   });
@@ -1114,18 +1112,16 @@ describe('RecordPurchaseDto validation', () => {
     expect(errors.some((error) => error.property === 'eventType')).toBe(true);
   });
 
-  it('rejects negative quantities and blank sources', async () => {
+  it('rejects negative quantities', async () => {
     const dto = plainToInstance(RecordPurchaseDto, {
       productId: PRODUCT_ID,
       eventType: InventoryEventType.PURCHASED,
       quantity: -1,
-      source: '   ',
     });
 
     const errors = await validate(dto);
 
     expect(errors.some((error) => error.property === 'quantity')).toBe(true);
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
   });
 });
 
@@ -1135,14 +1131,12 @@ describe('CompletePurchaseDto validation', () => {
   it('validates a correct payload with required fields', async () => {
     const dto = plainToInstance(CompletePurchaseDto, {
       productId: PRODUCT_ID,
-      source: 'hermes_whatsapp',
       groceryItemIds: [groceryItemId],
     });
 
     const errors = await validate(dto);
 
     expect(errors).toHaveLength(0);
-    expect(dto.source).toBe('hermes_whatsapp');
   });
 
   it('accepts optional quantity, unit, confidence, and metadata', async () => {
@@ -1170,29 +1164,6 @@ describe('CompletePurchaseDto validation', () => {
     const errors = await validate(dto);
 
     expect(errors.some((error) => error.property === 'productId')).toBe(true);
-  });
-
-  it('rejects missing source', async () => {
-    const dto = plainToInstance(CompletePurchaseDto, {
-      productId: PRODUCT_ID,
-      groceryItemIds: [groceryItemId],
-    });
-
-    const errors = await validate(dto);
-
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
-  });
-
-  it('rejects blank source', async () => {
-    const dto = plainToInstance(CompletePurchaseDto, {
-      productId: PRODUCT_ID,
-      source: '   ',
-      groceryItemIds: [groceryItemId],
-    });
-
-    const errors = await validate(dto);
-
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
   });
 
   it('rejects missing groceryItemIds', async () => {
@@ -1350,24 +1321,6 @@ describe('RecordInventoryEventDto validation', () => {
 
     expect(errors.some((error) => error.property === 'metadata')).toBe(true);
   });
-
-  it('trims whitespace from source and rejects a whitespace-only value', async () => {
-    const trimmed = plainToInstance(RecordInventoryEventDto, {
-      productId: PRODUCT_ID,
-      eventType: InventoryEventType.STOCK_LOW,
-      source: '  api  ',
-    });
-    expect(trimmed.source).toBe('api');
-
-    const blank = plainToInstance(RecordInventoryEventDto, {
-      productId: PRODUCT_ID,
-      eventType: InventoryEventType.STOCK_LOW,
-      source: '   ',
-    });
-    const errors = await validate(blank);
-
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
-  });
 });
 
 describe('CompletePartialPurchaseDto validation', () => {
@@ -1377,13 +1330,11 @@ describe('CompletePartialPurchaseDto validation', () => {
   it('accepts completeItemIds with all required fields', async () => {
     const dto = plainToInstance(CompletePartialPurchaseDto, {
       productId: PRODUCT_ID,
-      source: 'hermes_whatsapp',
       completeItemIds: [ITEM_ID],
     });
 
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
-    expect(dto.source).toBe('hermes_whatsapp');
   });
 
   it('accepts omitItemIds with all required fields', async () => {
@@ -1483,27 +1434,6 @@ describe('CompletePartialPurchaseDto validation', () => {
 
     const errors = await validate(dto);
     expect(errors.some((error) => error.property === 'productId')).toBe(true);
-  });
-
-  it('rejects missing source', async () => {
-    const dto = plainToInstance(CompletePartialPurchaseDto, {
-      productId: PRODUCT_ID,
-      completeItemIds: [ITEM_ID],
-    });
-
-    const errors = await validate(dto);
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
-  });
-
-  it('rejects blank source', async () => {
-    const dto = plainToInstance(CompletePartialPurchaseDto, {
-      productId: PRODUCT_ID,
-      source: '   ',
-      completeItemIds: [ITEM_ID],
-    });
-
-    const errors = await validate(dto);
-    expect(errors.some((error) => error.property === 'source')).toBe(true);
   });
 
   it('rejects negative quantity', async () => {

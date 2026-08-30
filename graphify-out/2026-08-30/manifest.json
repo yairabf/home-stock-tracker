@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.ts": {
-    "mtime": 1787814009.7660232,
-    "seen": 1787870257.412064,
-    "ast_hash": "9d719aa56b0c5b973d0cf08c0d173970",
+    "mtime": 1788102879.543618,
+    "seen": 1788103245.923648,
+    "ast_hash": "42919618f8e0b883765ac686757dbf78",
     "semantic_hash": ""
   },
   "src/household/dto/create-household.dto.ts": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788101651.8334928,
-    "seen": 1788101702.53532,
-    "ast_hash": "21192ea2540617701e5d48b9d9c6470a",
+    "mtime": 1788103122.3270705,
+    "seen": 1788103245.944511,
+    "ast_hash": "da5029c33bd4bfad73c03ff89f4a0504",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1698,14 +1698,14 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788101519.9600294,
-    "seen": 1788101587.200376,
+    "mtime": 1788102307.0004408,
+    "seen": 1788103245.927289,
     "ast_hash": "5b6f9f58f07f233b499b589fadc96678",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1788101667.8927279,
-    "seen": 1788101702.515998,
+    "mtime": 1788102307.0012636,
+    "seen": 1788103245.9272902,
     "ast_hash": "6f91acb4f376c4da4d14b0f6b5c945a8",
     "semantic_hash": ""
   },
@@ -1794,8 +1794,8 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788101607.4468157,
-    "seen": 1788101702.515915,
+    "mtime": 1788102306.9995975,
+    "seen": 1788103245.927286,
     "ast_hash": "44391e7dc5f47b3df8e4434c064f92b3",
     "semantic_hash": ""
   },
@@ -1812,9 +1812,9 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1787867519.9089537,
-    "seen": 1787870257.412454,
-    "ast_hash": "45b7312aceec39cce7d5e5e2ea0ea1f4",
+    "mtime": 1788103198.6435153,
+    "seen": 1788103245.947055,
+    "ast_hash": "573dd3884ebcc485f6619700c2448146",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
@@ -2004,140 +2004,140 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/README.md": {
-    "mtime": 1788100794.441437,
-    "seen": 1788101162.950797,
+    "mtime": 1788102306.94403,
+    "seen": 1788103245.944399,
     "ast_hash": "717d316fd8076c15e9e5dd0e378a22d1",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/_source-mcp-agent-skill-development-brief.md": {
-    "mtime": 1788100794.4404643,
-    "seen": 1788101162.950799,
+    "mtime": 1788102306.9444942,
+    "seen": 1788103245.9444008,
     "ast_hash": "cb6de5d5f1bbaea056a13a5272e9c52f",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-01-get-product-publishes-an-unreliable-input-schema.md": {
-    "mtime": 1788100794.4395902,
-    "seen": 1788101162.9508,
+    "mtime": 1788102306.9448779,
+    "seen": 1788103245.944403,
     "ast_hash": "30fa454ad4dc62913c005d7bc0de98ad",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-02-grocery-add-silently-permits-duplicate-pending-items.md": {
-    "mtime": 1788100794.4387689,
-    "seen": 1788101162.9508018,
+    "mtime": 1788102306.945246,
+    "seen": 1788103245.944405,
     "ast_hash": "04f080174adc4ca492eb8eb067b78a2f",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-03-no-tool-can-update-a-pending-grocery-item.md": {
-    "mtime": 1788100794.4379141,
-    "seen": 1788101162.950803,
+    "mtime": 1788102306.9456162,
+    "seen": 1788103245.944406,
     "ast_hash": "e6d6fe5d02e9ec4c2cecaaa821fe3644",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-04-no-agent-safe-product-search-or-catalog-discovery.md": {
-    "mtime": 1788100794.4370182,
-    "seen": 1788101162.950804,
+    "mtime": 1788102306.945969,
+    "seen": 1788103245.9444082,
     "ast_hash": "a4f7ab3034c0d5b7eb8adcbff1ae71d7",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-05-no-controlled-alias-management-tool.md": {
-    "mtime": 1788100794.4360447,
-    "seen": 1788101162.950805,
+    "mtime": 1788102306.9463434,
+    "seen": 1788103245.94441,
     "ast_hash": "4a39e4d842a0f1ec53a50ca57f443afc",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-06-no-inventory-event-history-tool.md": {
-    "mtime": 1788100794.4351301,
-    "seen": 1788101162.950806,
+    "mtime": 1788102306.946811,
+    "seen": 1788103245.9444108,
     "ast_hash": "17a8a780ba2406c15ebe9e4e81462435",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-07-no-prediction-feedback-tool.md": {
-    "mtime": 1788100794.434176,
-    "seen": 1788101162.9508119,
+    "mtime": 1788102306.9472244,
+    "seen": 1788103245.944413,
     "ast_hash": "29097064938c51ab18d45a8107151e85",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-08-multi-item-additions-are-non-atomic.md": {
-    "mtime": 1788100794.4332647,
-    "seen": 1788101162.950814,
+    "mtime": 1788102306.9475827,
+    "seen": 1788103245.944414,
     "ast_hash": "9664d06d4075547661791246aad8143a",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-09-purchase-completion-loses-actual-quantity-details.md": {
-    "mtime": 1788100794.4324288,
-    "seen": 1788101162.950815,
+    "mtime": 1788102306.9479907,
+    "seen": 1788103245.944416,
     "ast_hash": "ca0b6124b115cab32e8e1fac8f688fac",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-10-no-read-only-household-context-tool.md": {
-    "mtime": 1788100794.4312565,
-    "seen": 1788101162.950816,
+    "mtime": 1788102306.948399,
+    "seen": 1788103245.944417,
     "ast_hash": "69e697cc636d69ab7e9f983dddaa2f1c",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-11-no-contract-capability-compatibility-probe.md": {
-    "mtime": 1788100794.4302673,
-    "seen": 1788101162.950817,
+    "mtime": 1788102306.9487805,
+    "seen": 1788103245.944418,
     "ast_hash": "130a7bf9f5a86e51667ec292a3ec9ecc",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-12-source-attribution-is-channel-specific-and-incorrect.md": {
-    "mtime": 1788100794.4292614,
-    "seen": 1788101162.950818,
+    "mtime": 1788102306.9491494,
+    "seen": 1788103245.94442,
     "ast_hash": "73f2822658e3b0bb4957b16026aebb29",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-x01-guard-grocery-remove-pending-state.md": {
-    "mtime": 1788100794.4282057,
-    "seen": 1788101162.950819,
+    "mtime": 1788102306.9494703,
+    "seen": 1788103245.944421,
     "ast_hash": "ac0ae7041336b645bc505891e7ad27c2",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-01-the-checked-in-skill-contradicts-actual-product-creation-behavior.md": {
-    "mtime": 1788100794.4272718,
-    "seen": 1788101162.9508202,
+    "mtime": 1788102306.9498398,
+    "seen": 1788103245.944423,
     "ast_hash": "41edc8b22b63165b9e6f12c9fe74af26",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-02-the-skill-cannot-describe-workflows-for-tools-that-do-not-exist.md": {
-    "mtime": 1788100794.4262328,
-    "seen": 1788101162.9508212,
+    "mtime": 1788102306.950236,
+    "seen": 1788103245.944424,
     "ast_hash": "3fcbdb31453602c5f8b0713c0627c362",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-03-hermes-specific-and-openclaw-specific-instructions-are-mixed.md": {
-    "mtime": 1788100794.4250364,
-    "seen": 1788101162.9508219,
+    "mtime": 1788102306.950669,
+    "seen": 1788103245.944426,
     "ast_hash": "7c9afe657cfbae0853cdae5c0678273b",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-04-installation-is-manual-and-does-not-verify-schemas.md": {
-    "mtime": 1788100794.4240994,
-    "seen": 1788101162.9508228,
+    "mtime": 1788102306.951065,
+    "seen": 1788103245.944427,
     "ast_hash": "34e8806a0d9a53ed379b0a4e62e00c2c",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-05-no-release-synchronization-between-mcp-and-skills.md": {
-    "mtime": 1788100794.4232593,
-    "seen": 1788101162.950824,
+    "mtime": 1788102306.9514966,
+    "seen": 1788103245.9444292,
     "ast_hash": "1aa8a257d183aaacefa94512e5a6367d",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md": {
-    "mtime": 1788100794.4223518,
-    "seen": 1788101162.950825,
+    "mtime": 1788102306.951878,
+    "seen": 1788103245.94443,
     "ast_hash": "6563546ea0c1ac2cb209623b440f99b2",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/skill-07-scenario-coverage-is-prose-only-and-not-executable.md": {
-    "mtime": 1788100794.4208672,
-    "seen": 1788101162.950826,
+    "mtime": 1788102306.9522538,
+    "seen": 1788103245.944432,
     "ast_hash": "fefeeb19ccb641e7f2fdd6e6af548c21",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/triage.md": {
-    "mtime": 1788101149.7368743,
-    "seen": 1788101162.9508271,
+    "mtime": 1788102306.9526403,
+    "seen": 1788103245.944434,
     "ast_hash": "ded451e2d9d2dacb6586eda351859509",
     "semantic_hash": ""
   },
@@ -2154,15 +2154,33 @@
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1787871679.2017682,
-    "seen": 1788101162.9526458,
-    "ast_hash": "75e2a079551912fda0f3edd5d5ec61eb",
+    "mtime": 1788103198.4368258,
+    "seen": 1788103245.9466891,
+    "ast_hash": "55b0c1788cc45f0bc9b82a85176a9418",
     "semantic_hash": ""
   },
   "docs/operations.md": {
     "mtime": 1787871679.2022305,
     "seen": 1788101162.9526489,
     "ast_hash": "f7762dccf1a7cc00d7dfe19f4cd4ad41",
+    "semantic_hash": ""
+  },
+  "src/grocery/grocery.service.spec.ts": {
+    "mtime": 1788102879.7454705,
+    "seen": 1788103245.9236438,
+    "ast_hash": "71588565d0bf709ff2f0831e9fd371df",
+    "semantic_hash": ""
+  },
+  "test/grocery-remove.e2e-spec.ts": {
+    "mtime": 1788103198.2082913,
+    "seen": 1788103245.929873,
+    "ast_hash": "81220b7e9a62ca90a8fcca566c093310",
+    "semantic_hash": ""
+  },
+  "blueprint/history/fixes/reliable-get-product-schema.md": {
+    "mtime": 1788102306.9530206,
+    "seen": 1788103245.9464068,
+    "ast_hash": "06e8fbe14fec8021005edfc2e4f6f295",
     "semantic_hash": ""
   }
 }

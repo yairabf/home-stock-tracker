@@ -8,7 +8,6 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { InventoryEventType } from '../../generated/prisma/enums';
 
 export class RecordInventoryEventDto {
@@ -28,13 +27,6 @@ export class RecordInventoryEventDto {
   @IsOptional()
   @IsString()
   unit?: string;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsString()
-  @IsNotEmpty()
-  source: string;
 
   @IsOptional()
   @IsNumber()

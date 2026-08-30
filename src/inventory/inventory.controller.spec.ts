@@ -7,6 +7,8 @@ import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
 import { PredictionFeedbackService } from './prediction-feedback.service';
+import { InventoryEventType } from '../generated/prisma/enums';
+import { PredictionFeedbackOutcome } from './dto/prediction-feedback.dto';
 
 describe('InventoryController low-stock recommendations', () => {
   let controller: InventoryController;
@@ -72,6 +74,71 @@ describe('InventoryController low-stock recommendations', () => {
     );
     expect(Reflect.getMetadata(PATH_METADATA, estimationHandler)).toBe(
       'estimate/:productId',
+    );
+  });
+});
+
+describe('InventoryController provenance', () => {
+  const inventoryService = {
+    recordEvent: jest.fn(),
+    recordPurchase: jest.fn(),
+    completePurchase: jest.fn(),
+    completePartialPurchase: jest.fn(),
+  };
+  const predictionFeedbackService = { submitFeedback: jest.fn() };
+  const controller = new InventoryController(
+    inventoryService as unknown as InventoryService,
+    predictionFeedbackService as unknown as PredictionFeedbackService,
+    {} as LowStockRecommendationService,
+    {} as never,
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('supplies api provenance to inventory event writes', async () => {
+    await controller.recordEvent({
+      productId: '00000000-0000-4000-8000-000000000001',
+      eventType: InventoryEventType.STOCK_LOW,
+    });
+    await controller.recordPurchase({
+      productId: '00000000-0000-4000-8000-000000000001',
+      eventType: InventoryEventType.PURCHASED,
+    });
+
+    expect(inventoryService.recordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'api' }),
+    );
+    expect(inventoryService.recordPurchase).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'api' }),
+    );
+  });
+
+  it('supplies api provenance to purchase completion writes', async () => {
+    await controller.completePurchase({
+      productId: '00000000-0000-4000-8000-000000000001',
+      groceryItemIds: ['00000000-0000-4000-8000-000000000002'],
+    });
+    await controller.completePartialPurchase({
+      productId: '00000000-0000-4000-8000-000000000001',
+      completeItemIds: ['00000000-0000-4000-8000-000000000002'],
+    });
+
+    expect(inventoryService.completePurchase).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'api' }),
+    );
+    expect(inventoryService.completePartialPurchase).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'api' }),
+    );
+  });
+
+  it('supplies api provenance to prediction feedback', async () => {
+    await controller.feedback('00000000-0000-4000-8000-000000000003', {
+      outcome: PredictionFeedbackOutcome.accepted,
+    });
+
+    expect(predictionFeedbackService.submitFeedback).toHaveBeenCalledWith(
+      '00000000-0000-4000-8000-000000000003',
+      { outcome: PredictionFeedbackOutcome.accepted, source: 'api' },
     );
   });
 });

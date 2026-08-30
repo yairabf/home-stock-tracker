@@ -36,7 +36,7 @@ export class InventoryService {
   ) {}
 
   async recordPurchase(
-    dto: RecordPurchaseDto,
+    dto: RecordPurchaseDto & { source: string },
   ): Promise<InventoryEventResponseDto> {
     if (dto.eventType !== 'PURCHASED' && dto.eventType !== 'RESTOCKED') {
       throw new BadRequestException(
@@ -69,7 +69,7 @@ export class InventoryService {
   }
 
   async recordEvent(
-    dto: RecordInventoryEventDto,
+    dto: RecordInventoryEventDto & { source: string },
   ): Promise<InventoryEventResponseDto> {
     await this.productService.findOne(dto.productId);
 
@@ -124,7 +124,7 @@ export class InventoryService {
   }
 
   async completePurchase(
-    dto: CompletePurchaseDto,
+    dto: CompletePurchaseDto & { source: string },
   ): Promise<CompletePurchaseResponseDto> {
     // Deduplicate grocery item IDs
     const uniqueIds = [...new Set(dto.groceryItemIds)];
@@ -318,7 +318,7 @@ export class InventoryService {
   }
 
   async completePartialPurchase(
-    dto: CompletePartialPurchaseDto,
+    dto: CompletePartialPurchaseDto & { source: string },
   ): Promise<CompletePartialPurchaseResponseDto> {
     await this.productService.findOne(dto.productId);
 
