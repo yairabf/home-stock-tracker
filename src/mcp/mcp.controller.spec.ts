@@ -128,6 +128,16 @@ describe('McpController', () => {
         'complete_grocery_purchase',
         'get_low_stock_predictions',
       ]);
+      expect(
+        tools.tools.find(({ name }) => name === 'get_product')?.inputSchema,
+      ).toMatchObject({
+        additionalProperties: false,
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          productName: { type: 'string', minLength: 1 },
+        },
+        type: 'object',
+      });
       groceryService.listItems.mockResolvedValue([]);
       await expect(
         client.callTool({ name: 'grocery_list', arguments: {} }),

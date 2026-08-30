@@ -122,6 +122,16 @@ const recommendationOutputSchema = z.object({
   ),
 });
 
+const productSelectorSchema = z
+  .object({
+    id: z.uuid().optional(),
+    productName: z.string().trim().min(1).optional(),
+  })
+  .strict()
+  .refine(({ id, productName }) => Boolean(id) !== Boolean(productName), {
+    message: 'Provide exactly one of id or productName',
+  });
+
 const eventMeasurementsSchema = {
   productId: z.uuid(),
   quantity: z.number().min(0).optional(),
@@ -267,20 +277,17 @@ export class McpServerFactory {
       'get_product',
       {
         description: 'Get one canonical product by its ID or exact name/alias.',
-        inputSchema: z.union([
-          z.object({ id: z.uuid() }).strict(),
-          z.object({ productName: z.string().trim().min(1) }).strict(),
-        ]),
+        inputSchema: productSelectorSchema,
         outputSchema: productOutputSchema,
       },
       (input) =>
         this.runTool('get_product', async () =>
           this.toolResult(
             ProductResponseDto.fromEntity(
-              'id' in input
+              input.id
                 ? await this.productService.findOne(input.id)
                 : await this.productService.findByExactOrAliasName(
-                    input.productName,
+                    input.productName!,
                   ),
             ),
           ),

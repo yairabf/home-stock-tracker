@@ -2036,7 +2036,7 @@
       "file_type": "code",
       "norm_label": "createauthenticatedtransport()",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L262"
+      "source_location": "L252"
     },
     {
       "id": "src_mcp_mcp_controller_spec_testrestcontroller_ping",
@@ -3584,7 +3584,7 @@
       "file_type": "code",
       "norm_label": "inventoryevent()",
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L630"
+      "source_location": "L620"
     },
     {
       "id": "src_observability_operational_logger_service_operationallogger_llmintegration",
@@ -17086,7 +17086,7 @@
       "file_type": "code",
       "norm_label": "initializerequest",
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L251"
+      "source_location": "L241"
     },
     {
       "id": "src_mcp_mcp_controller_spec_ts_controller",
@@ -18391,6 +18391,17 @@
       "source_location": "L41"
     },
     {
+      "id": "package_devdependencies_eslint",
+      "label": "eslint",
+      "_origin": "ast",
+      "community": 214,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "eslint",
+      "source_file": "package.json",
+      "source_location": "L52"
+    },
+    {
       "id": "package_devdependencies_eslint_config_prettier",
       "label": "eslint-config-prettier",
       "_origin": "ast",
@@ -18433,17 +18444,6 @@
       "norm_label": "@nestjs/cli",
       "source_file": "package.json",
       "source_location": "L44"
-    },
-    {
-      "id": "package_devdependencies_nestjs_schematics",
-      "label": "@nestjs/schematics",
-      "_origin": "ast",
-      "community": 214,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "@nestjs/schematics",
-      "source_file": "package.json",
-      "source_location": "L45"
     },
     {
       "id": "package_devdependencies_nestjs_testing",
@@ -18512,6 +18512,17 @@
       "source_location": "L65"
     },
     {
+      "id": "eslint",
+      "label": "eslint",
+      "_origin": "ast",
+      "community": 214,
+      "community_name": "devDependencies",
+      "file_type": "concept",
+      "norm_label": "eslint",
+      "source_file": "package.json",
+      "source_location": "L52"
+    },
+    {
       "id": "eslint_config_prettier",
       "label": "eslint-config-prettier",
       "_origin": "ast",
@@ -18554,17 +18565,6 @@
       "norm_label": "@nestjs/cli",
       "source_file": "package.json",
       "source_location": "L44"
-    },
-    {
-      "id": "nestjs_schematics",
-      "label": "@nestjs/schematics",
-      "_origin": "ast",
-      "community": 214,
-      "community_name": "devDependencies",
-      "file_type": "concept",
-      "norm_label": "@nestjs/schematics",
-      "source_file": "package.json",
-      "source_location": "L45"
     },
     {
       "id": "nestjs_testing",
@@ -20965,18 +20965,6 @@
       "source_location": "L13"
     },
     {
-      "id": "blueprint_context_bugs_mcp_06_no_inventory_event_history_tool",
-      "label": "mcp-06-no-inventory-event-history-tool.md",
-      "_origin": "ast",
-      "community": 230,
-      "community_name": "Fix Brief: MCP-06 \u2014 No inventory-event history tool",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "mcp-06-no-inventory-event-history-tool.md",
-      "source_file": "blueprint/context/bugs/mcp-06-no-inventory-event-history-tool.md",
-      "source_location": "L1"
-    },
-    {
       "id": "blueprint_context_bugs_mcp_06_no_inventory_event_history_tool_acceptance_criteria",
       "label": "Acceptance criteria",
       "_origin": "ast",
@@ -22272,6 +22260,18 @@
       "norm_label": "source gap",
       "source_file": "blueprint/context/bugs/skill-05-no-release-synchronization-between-mcp-and-skills.md",
       "source_location": "L11"
+    },
+    {
+      "id": "blueprint_context_bugs_skill_06_the_skill_metadata_and_structure_are_too_narrowly_hermes_shaped",
+      "label": "skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
+      "_origin": "ast",
+      "community": 239,
+      "community_name": "Fix Brief: SKILL-06 \u2014 The skill metadata and structure are too narrowly Hermes-shaped",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
+      "source_file": "blueprint/context/bugs/skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
+      "source_location": "L1"
     },
     {
       "id": "blueprint_context_bugs_skill_06_the_skill_metadata_and_structure_are_too_narrowly_hermes_shaped_acceptance_criteria",
@@ -24622,6 +24622,18 @@
       "source_location": "L11"
     },
     {
+      "id": "blueprint_context_bugs_mcp_06_no_inventory_event_history_tool",
+      "label": "mcp-06-no-inventory-event-history-tool.md",
+      "_origin": "ast",
+      "community": 274,
+      "community_name": "bugs/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "mcp-06-no-inventory-event-history-tool.md",
+      "source_file": "blueprint/context/bugs/mcp-06-no-inventory-event-history-tool.md",
+      "source_location": "L1"
+    },
+    {
       "id": "blueprint_context_bugs_mcp_x01_guard_grocery_remove_pending_state",
       "label": "mcp-x01-guard-grocery-remove-pending-state.md",
       "_origin": "ast",
@@ -24727,18 +24739,6 @@
       "node_kind": "page",
       "norm_label": "skill-01-the-checked-in-skill-contradicts-actual-product-creation-behavior.md",
       "source_file": "blueprint/context/bugs/skill-01-the-checked-in-skill-contradicts-actual-product-creation-behavior.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "blueprint_context_bugs_skill_06_the_skill_metadata_and_structure_are_too_narrowly_hermes_shaped",
-      "label": "skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
-      "_origin": "ast",
-      "community": 274,
-      "community_name": "bugs/README.md",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
-      "source_file": "blueprint/context/bugs/skill-06-the-skill-metadata-and-structure-are-too-narrowly-hermes-shaped.md",
       "source_location": "L1"
     },
     {
@@ -27114,26 +27114,26 @@
       "source_location": "L54"
     },
     {
-      "id": "package_devdependencies_eslint",
-      "label": "eslint",
+      "id": "package_devdependencies_nestjs_schematics",
+      "label": "@nestjs/schematics",
       "_origin": "ast",
       "community": 302,
-      "community_name": "eslint",
+      "community_name": "@nestjs/schematics",
       "file_type": "code",
-      "norm_label": "eslint",
+      "norm_label": "@nestjs/schematics",
       "source_file": "package.json",
-      "source_location": "L52"
+      "source_location": "L45"
     },
     {
-      "id": "eslint",
-      "label": "eslint",
+      "id": "nestjs_schematics",
+      "label": "@nestjs/schematics",
       "_origin": "ast",
       "community": 302,
-      "community_name": "eslint",
+      "community_name": "@nestjs/schematics",
       "file_type": "concept",
-      "norm_label": "eslint",
+      "norm_label": "@nestjs/schematics",
       "source_file": "package.json",
-      "source_location": "L52"
+      "source_location": "L45"
     },
     {
       "id": "package_devdependencies_source_map_support",
@@ -87878,7 +87878,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L251",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -87889,7 +87889,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp.controller.spec.ts",
-      "source_location": "L262",
+      "source_location": "L252",
       "weight": 1.0
     },
     {
@@ -88043,7 +88043,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/mcp/mcp-server.factory.spec.ts",
-      "source_location": "L630",
+      "source_location": "L620",
       "weight": 1.0
     },
     {

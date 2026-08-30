@@ -301,7 +301,7 @@
   "299": "@eslint/eslintrc",
   "300": "@eslint/js",
   "301": "eslint-plugin-prettier",
-  "302": "eslint",
+  "302": "@nestjs/schematics",
   "303": "source-map-support",
   "304": "supertest",
   "305": "ts-jest",

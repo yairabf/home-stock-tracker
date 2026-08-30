@@ -109,6 +109,16 @@ describe('McpServerFactory grocery tools', () => {
       additionalProperties: false,
       required: ['id'],
     });
+    expect(
+      result.tools.find(({ name }) => name === 'get_product')?.inputSchema,
+    ).toMatchObject({
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        productName: { type: 'string', minLength: 1 },
+      },
+      type: 'object',
+    });
   });
 
   it('adds an item with an adapter-owned source and structured output', async () => {
@@ -242,23 +252,39 @@ describe('McpServerFactory grocery tools', () => {
     expect(productService.findOne).not.toHaveBeenCalled();
   });
 
-  it.each([
-    {},
-    { id: item.productId, productName: 'milk' },
-    { productName: '' },
-  ])(
-    'rejects an invalid product selector before service invocation',
-    async (args) => {
-      const result = await client.callTool({
-        name: 'get_product',
-        arguments: args,
-      });
+  it('returns one stable validation failure for missing or ambiguous selectors', async () => {
+    const missingSelector = await client.callTool({
+      name: 'get_product',
+      arguments: {},
+    });
+    const ambiguousSelector = await client.callTool({
+      name: 'get_product',
+      arguments: { id: item.productId, productName: 'milk' },
+    });
 
-      expect(result.isError).toBe(true);
-      expect(productService.findOne).not.toHaveBeenCalled();
-      expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
-    },
-  );
+    expect(missingSelector.isError).toBe(true);
+    expect(ambiguousSelector.isError).toBe(true);
+    expect(missingSelector.content).toEqual(ambiguousSelector.content);
+    expect(missingSelector.content).toEqual([
+      {
+        type: 'text',
+        text: expect.stringContaining('Provide exactly one of id or productName'),
+      },
+    ]);
+    expect(productService.findOne).not.toHaveBeenCalled();
+    expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
+  });
+
+  it('rejects a blank product name before service invocation', async () => {
+    const result = await client.callTool({
+      name: 'get_product',
+      arguments: { productName: '' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(productService.findOne).not.toHaveBeenCalled();
+    expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
+  });
 
   it('returns an unknown product name as an MCP tool error', async () => {
     productService.findByExactOrAliasName.mockRejectedValue(
