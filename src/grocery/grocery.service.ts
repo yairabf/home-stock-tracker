@@ -15,10 +15,7 @@ import {
   GroceryRequestedAdditionDto,
 } from './dto/add-grocery-item-result.dto';
 import { GroceryItemResponseDto } from './dto/grocery-item-response.dto';
-import {
-  GroceryQuantityMode,
-  UpdateGroceryItemDto,
-} from './dto/update-grocery-item.dto';
+import { UpdateGroceryItemDto } from './dto/update-grocery-item.dto';
 import {
   groceryConflict,
   groceryInvalid,
@@ -43,9 +40,7 @@ export class GroceryService {
       dto.productName,
     );
 
-    if (
-      dto.ifPendingExists === PendingGroceryItemPolicy.create_separate
-    ) {
+    if (dto.ifPendingExists === PendingGroceryItemPolicy.create_separate) {
       return this.createGroceryItem(product.id, product.canonicalName, dto);
     }
 
@@ -140,38 +135,29 @@ export class GroceryService {
       existing,
       existing.product.canonicalName,
     );
-    this.validateUpdate(existing.requestedQuantity, existing.unit, dto, current);
-
-    const requestedQuantity =
-      dto.quantityMode === GroceryQuantityMode.increment
-        ? existing.requestedQuantity! + dto.quantity
-        : dto.quantity;
-    const unit =
-      dto.quantityMode === GroceryQuantityMode.set && dto.unit !== undefined
-        ? dto.unit
-        : existing.unit;
+    this.validateUpdate(existing, dto, current);
+    const data = this.updatedFields(dto);
+    const expected = this.expectedFields(dto);
     const result = await this.prisma.groceryListItem.updateMany({
-      where: {
-        id,
-        status: GroceryItemStatus.pending,
-        requestedQuantity: dto.expectedRequestedQuantity,
-        unit: dto.expectedUnit,
-      },
-      data: { requestedQuantity, unit },
+      where: { id, status: GroceryItemStatus.pending, ...expected },
+      data,
     });
     if (result.count !== 1) {
       await this.throwCurrentUpdateConflict(id);
     }
 
     return GroceryItemResponseDto.fromEntity(
-      { ...existing, requestedQuantity, unit },
+      { ...existing, ...data },
       existing.product.canonicalName,
     );
   }
 
   private validateUpdate(
-    requestedQuantity: number | null,
-    unit: string | null,
+    existing: {
+      requestedQuantity: number | null;
+      unit: string | null;
+      note: string | null;
+    },
     dto: UpdateGroceryItemDto,
     current: GroceryItemResponseDto,
   ): void {
@@ -182,9 +168,12 @@ export class GroceryService {
         current,
       );
     }
+    this.validateUpdateShape(dto);
     if (
-      requestedQuantity !== dto.expectedRequestedQuantity ||
-      unit !== dto.expectedUnit
+      (dto.requestedQuantity !== undefined &&
+        existing.requestedQuantity !== dto.expectedRequestedQuantity) ||
+      (dto.unit !== undefined && existing.unit !== dto.expectedUnit) ||
+      (dto.note !== undefined && existing.note !== dto.expectedNote)
     ) {
       throw groceryConflict(
         'GROCERY_ITEM_CHANGED',
@@ -192,31 +181,92 @@ export class GroceryService {
         current,
       );
     }
-    if (!Number.isFinite(dto.quantity) || dto.quantity <= 0) {
+  }
+
+  private validateUpdateShape(dto: UpdateGroceryItemDto): void {
+    const updates = [dto.requestedQuantity, dto.unit, dto.note];
+    if (updates.every((value) => value === undefined)) {
+      throw groceryInvalid(
+        'INVALID_UPDATE',
+        'No grocery item fields supplied for update',
+      );
+    }
+    this.validateSelectedField(
+      dto.requestedQuantity,
+      dto.expectedRequestedQuantity,
+      'INVALID_QUANTITY',
+      'requestedQuantity',
+    );
+    this.validateSelectedField(
+      dto.unit,
+      dto.expectedUnit,
+      'INVALID_UNIT',
+      'unit',
+    );
+    this.validateSelectedField(
+      dto.note,
+      dto.expectedNote,
+      'INVALID_NOTE',
+      'note',
+    );
+    if (
+      dto.requestedQuantity !== undefined &&
+      (!Number.isFinite(dto.requestedQuantity) || dto.requestedQuantity <= 0)
+    ) {
       throw groceryInvalid('INVALID_QUANTITY', 'Quantity must be positive');
     }
-    if (dto.unit !== undefined && dto.unit.trim().length === 0) {
+    if (typeof dto.unit === 'string' && dto.unit.trim().length === 0) {
       throw groceryInvalid('INVALID_UNIT', 'Unit must not be empty');
     }
-    if (
-      dto.quantityMode === GroceryQuantityMode.increment &&
-      requestedQuantity === null
-    ) {
-      throw groceryInvalid(
-        'QUANTITY_UNSPECIFIED',
-        'Cannot increment an unspecified quantity',
-      );
+    if (typeof dto.note === 'string' && dto.note.trim().length === 0) {
+      throw groceryInvalid('INVALID_NOTE', 'Note must not be empty');
     }
-    if (
-      dto.quantityMode === GroceryQuantityMode.increment &&
-      dto.unit !== undefined &&
-      normalizeUnit(dto.unit) !== normalizeUnit(unit)
-    ) {
-      throw groceryInvalid(
-        'UNIT_MISMATCH',
-        'Increment unit must match the current unit',
-      );
+  }
+
+  private validateSelectedField(
+    value: unknown,
+    expected: unknown,
+    code: 'INVALID_QUANTITY' | 'INVALID_UNIT' | 'INVALID_NOTE',
+    field: string,
+  ): void {
+    if (value !== undefined && expected === undefined) {
+      throw groceryInvalid(code, `Expected ${field} is required`);
     }
+    if (value === undefined && expected !== undefined) {
+      throw groceryInvalid(code, `Expected ${field} requires an update value`);
+    }
+  }
+
+  private updatedFields(dto: UpdateGroceryItemDto): {
+    requestedQuantity?: number;
+    unit?: string | null;
+    note?: string | null;
+  } {
+    return {
+      ...(dto.requestedQuantity !== undefined
+        ? { requestedQuantity: dto.requestedQuantity }
+        : {}),
+      ...(dto.unit !== undefined ? { unit: this.trimNullable(dto.unit) } : {}),
+      ...(dto.note !== undefined ? { note: this.trimNullable(dto.note) } : {}),
+    };
+  }
+
+  private expectedFields(dto: UpdateGroceryItemDto): {
+    requestedQuantity?: number | null;
+    unit?: string | null;
+    note?: string | null;
+  } {
+    return {
+      ...(dto.requestedQuantity !== undefined
+        ? { requestedQuantity: dto.expectedRequestedQuantity }
+        : {}),
+      ...(dto.unit !== undefined ? { unit: dto.expectedUnit } : {}),
+      ...(dto.note !== undefined ? { note: dto.expectedNote } : {}),
+    };
+  }
+
+  private trimNullable(value: string | null): string | null {
+    return typeof value === 'string' ? value.trim() : value;
   }
 
   private async throwCurrentUpdateConflict(id: string): Promise<never> {
@@ -267,8 +317,4 @@ export class GroceryService {
       existing.product.canonicalName,
     );
   }
-}
-
-function normalizeUnit(unit: string | null): string | null {
-  return unit?.trim().toLocaleLowerCase() ?? null;
 }

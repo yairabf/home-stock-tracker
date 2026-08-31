@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import {
   IsDefined,
-  IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -9,34 +9,46 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-export enum GroceryQuantityMode {
-  set = 'set',
-  increment = 'increment',
-}
-
 export class UpdateGroceryItemDto {
-  @IsEnum(GroceryQuantityMode)
-  quantityMode: GroceryQuantityMode;
-
+  @IsOptional()
   @IsNumber({ allowInfinity: false, allowNaN: false })
   @IsPositive()
-  quantity: number;
+  requestedQuantity?: number;
+
+  @ValidateIf(
+    (dto: UpdateGroceryItemDto) => dto.requestedQuantity !== undefined,
+  )
+  @IsDefined()
+  @ValidateIf((_, value: unknown) => value !== null)
+  @IsNumber({ allowInfinity: false, allowNaN: false })
+  @IsPositive()
+  expectedRequestedQuantity?: number | null;
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
   @IsString()
-  unit?: string;
+  @IsNotEmpty()
+  unit?: string | null;
 
-  @IsDefined()
-  @ValidateIf((_, value: unknown) => value !== null)
-  @IsNumber({ allowInfinity: false, allowNaN: false })
-  @IsPositive()
-  expectedRequestedQuantity: number | null;
-
+  @ValidateIf((dto: UpdateGroceryItemDto) => dto.unit !== undefined)
   @IsDefined()
   @ValidateIf((_, value: unknown) => value !== null)
   @IsString()
-  expectedUnit: string | null;
+  expectedUnit?: string | null;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @IsNotEmpty()
+  note?: string | null;
+
+  @ValidateIf((dto: UpdateGroceryItemDto) => dto.note !== undefined)
+  @IsDefined()
+  @ValidateIf((_, value: unknown) => value !== null)
+  @IsString()
+  expectedNote?: string | null;
 }

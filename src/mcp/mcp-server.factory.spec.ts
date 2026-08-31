@@ -110,13 +110,18 @@ describe('McpServerFactory grocery tools', () => {
       result.tools.find(({ name }) => name === 'grocery_update')?.inputSchema,
     ).toMatchObject({
       additionalProperties: false,
-      required: [
-        'id',
-        'quantityMode',
-        'quantity',
-        'expectedRequestedQuantity',
-        'expectedUnit',
-      ],
+      required: ['id'],
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        requestedQuantity: { type: 'number', exclusiveMinimum: 0 },
+        expectedRequestedQuantity: {
+          anyOf: [{ type: 'number', exclusiveMinimum: 0 }, { type: 'null' }],
+        },
+        unit: {},
+        expectedUnit: {},
+        note: {},
+        expectedNote: {},
+      },
     });
     expect(
       result.tools.find(({ name }) => name === 'grocery_remove')?.inputSchema,
@@ -148,34 +153,34 @@ describe('McpServerFactory grocery tools', () => {
     }
   });
 
-  it('updates a pending item with expected values and structured output', async () => {
+  it('updates final fields with expected values and structured output', async () => {
     groceryService.updateItem.mockResolvedValue({
       ...item,
-      requestedQuantity: 3,
+      requestedQuantity: 4,
+      note: 'lactose-free',
     });
 
     const result = await client.callTool({
       name: 'grocery_update',
       arguments: {
         id: item.id,
-        quantityMode: 'increment',
-        quantity: 1,
-        unit: 'liter',
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
-        expectedUnit: 'liter',
+        note: 'lactose-free',
+        expectedNote: null,
       },
     });
 
     expect(groceryService.updateItem).toHaveBeenCalledWith(item.id, {
-      quantityMode: 'increment',
-      quantity: 1,
-      unit: 'liter',
+      requestedQuantity: 4,
       expectedRequestedQuantity: 2,
-      expectedUnit: 'liter',
+      note: 'lactose-free',
+      expectedNote: null,
     });
     expect(result.structuredContent).toMatchObject({
       id: item.id,
-      requestedQuantity: 3,
+      requestedQuantity: 4,
+      note: 'lactose-free',
     });
   });
 
@@ -192,10 +197,8 @@ describe('McpServerFactory grocery tools', () => {
       name: 'grocery_update',
       arguments: {
         id: item.id,
-        quantityMode: 'increment',
-        quantity: 1,
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
-        expectedUnit: 'liter',
       },
     });
 

@@ -22,7 +22,6 @@ import {
 } from '../generated/prisma/enums';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { TransportSource } from '../common/transport-source';
-import { GroceryQuantityMode } from '../grocery/dto/update-grocery-item.dto';
 import { PendingGroceryItemPolicy } from '../grocery/dto/add-grocery-item.dto';
 import { AddGroceryItemOutcome } from '../grocery/dto/add-grocery-item-result.dto';
 
@@ -358,15 +357,21 @@ export class McpServerFactory {
       'grocery_update',
       {
         description:
-          'Set or increment the quantity of one pending grocery-list item.',
+          'Update final fields on one pending grocery-list item using expected old values.',
         inputSchema: z
           .object({
             id: z.uuid(),
-            quantityMode: z.enum(GroceryQuantityMode),
-            quantity: z.number().positive().finite(),
-            unit: z.string().trim().min(1).optional(),
-            expectedRequestedQuantity: z.number().positive().finite().nullable(),
-            expectedUnit: z.string().nullable(),
+            requestedQuantity: z.number().positive().finite().optional(),
+            expectedRequestedQuantity: z
+              .number()
+              .positive()
+              .finite()
+              .nullable()
+              .optional(),
+            unit: z.string().trim().min(1).nullable().optional(),
+            expectedUnit: z.string().nullable().optional(),
+            note: z.string().trim().min(1).nullable().optional(),
+            expectedNote: z.string().nullable().optional(),
           })
           .strict(),
         outputSchema: groceryItemOutputSchema,

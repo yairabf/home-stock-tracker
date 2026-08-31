@@ -9,10 +9,10 @@ export type GroceryErrorCode =
   | 'GROCERY_ITEM_NOT_FOUND'
   | 'GROCERY_ITEM_NOT_PENDING'
   | 'GROCERY_ITEM_CHANGED'
-  | 'QUANTITY_UNSPECIFIED'
-  | 'UNIT_MISMATCH'
   | 'INVALID_QUANTITY'
-  | 'INVALID_UNIT';
+  | 'INVALID_UNIT'
+  | 'INVALID_NOTE'
+  | 'INVALID_UPDATE';
 
 export interface GroceryErrorResponse {
   code: GroceryErrorCode;

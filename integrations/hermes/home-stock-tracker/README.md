@@ -45,10 +45,11 @@ list, require one exact toilet-paper match, exclude that ID, and propose one
 `complete_grocery_purchase` call containing only the remaining IDs.
 
 To review duplicate confirmation, first create a numeric pending test item, then
-ask Hermes to add the same product. It should call `grocery_add` once, ask whether
-to add the requested quantity or cancel after `confirmation_required`, and call
-`grocery_update` only after confirmation. A decline must make no second tool
-call.
+ask Hermes to add the same product. It should call `grocery_add` once, explain the
+current quantity after `confirmation_required`, and ask for the desired final
+total. After the answer, it should calculate that total and call `grocery_update`
+once with the final quantity and expected old quantity. A decline or no-change
+answer must make no second tool call.
 
 ## Proactive stock-check cron
 

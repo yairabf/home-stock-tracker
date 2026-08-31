@@ -30,10 +30,10 @@ returns `404` while disabled.
 
 ## Public health routes
 
-| Method | Route | Result |
-| --- | --- | --- |
-| `GET` | `/health` | Process liveness: `{"status":"ok"}`. |
-| `GET` | `/ready` | Database status. Returns `200` when PostgreSQL is up and `503` when down. |
+| Method | Route     | Result                                                                    |
+| ------ | --------- | ------------------------------------------------------------------------- |
+| `GET`  | `/health` | Process liveness: `{"status":"ok"}`.                                      |
+| `GET`  | `/ready`  | Database status. Returns `200` when PostgreSQL is up and `503` when down. |
 
 Health checks never invoke the LLM or mutate household data.
 
@@ -41,23 +41,23 @@ Health checks never invoke the LLM or mutate household data.
 
 ### Products
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/v1/products` | Create a canonical product. |
-| `GET` | `/api/v1/products` | List all products. |
-| `GET` | `/api/v1/products/:id` | Get one product by UUID. |
-| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`. |
+| Method | Route                          | Purpose                     |
+| ------ | ------------------------------ | --------------------------- |
+| `POST` | `/api/v1/products`             | Create a canonical product. |
+| `GET`  | `/api/v1/products`             | List all products.          |
+| `GET`  | `/api/v1/products/:id`         | Get one product by UUID.    |
+| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`.   |
 
 Product creation requires `canonicalName`. Optional values are `aliases`,
 `category`, and `typicalUnit`.
 
 ### Household
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/v1/household` | Get the profile, creating defaults when absent. |
-| `POST` | `/api/v1/household` | Create the single household profile. |
-| `PATCH` | `/api/v1/household/:id` | Update household settings. |
+| Method  | Route                   | Purpose                                         |
+| ------- | ----------------------- | ----------------------------------------------- |
+| `GET`   | `/api/v1/household`     | Get the profile, creating defaults when absent. |
+| `POST`  | `/api/v1/household`     | Create the single household profile.            |
+| `PATCH` | `/api/v1/household/:id` | Update household settings.                      |
 
 The default is two adults, three children, and a `0.7` recommendation
 threshold. Counts must be non-negative integers and
@@ -65,12 +65,12 @@ threshold. Counts must be non-negative integers and
 
 ### Grocery list
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/v1/grocery/items` | Add a product or return matching pending lines for confirmation. |
-| `GET` | `/api/v1/grocery/items` | List pending items or filter by `status`. |
-| `PATCH` | `/api/v1/grocery/items/:id` | Set or increment one pending item's quantity. |
-| `DELETE` | `/api/v1/grocery/items/:id` | Remove one pending item. |
+| Method   | Route                       | Purpose                                                          |
+| -------- | --------------------------- | ---------------------------------------------------------------- |
+| `POST`   | `/api/v1/grocery/items`     | Add a product or return matching pending lines for confirmation. |
+| `GET`    | `/api/v1/grocery/items`     | List pending items or filter by `status`.                        |
+| `PATCH`  | `/api/v1/grocery/items/:id` | Update selected fields on one pending item.                      |
+| `DELETE` | `/api/v1/grocery/items/:id` | Remove one pending item.                                         |
 
 An add request requires `productName`. Optional values are a positive
 `requestedQuantity`, `unit`, `note`, and `ifPendingExists`.
@@ -80,11 +80,13 @@ match returns `confirmation_required`, the matching lines, and the requested
 addition without mutation. `create_separate` creates an intentional additional
 line. Default concurrent adds are serialized by product.
 
-Quantity updates require `quantityMode` (`set` or `increment`), a positive
-`quantity`, and the selected line's `expectedRequestedQuantity` and
-`expectedUnit`. These expected values prevent a stale user confirmation from
-overwriting a concurrent change. Incrementing an unspecified quantity or using
-a conflicting unit is rejected without mutation.
+A PATCH may select `requestedQuantity`, `unit`, `note`, or any combination. The
+quantity is the final positive value to store, not an increment. Use `null` to
+clear `unit` or `note`; omit a field to preserve it. Every selected field requires
+its matching old value: `expectedRequestedQuantity`, `expectedUnit`, or
+`expectedNote`. These values prevent a stale user decision from overwriting a
+concurrent change. Expected values for unselected fields and requests with no
+selected fields are rejected without mutation.
 
 - Status: `pending`, `purchased`, or `removed`
 - Source is server-owned: `api` for REST requests and `mcp` for MCP tool calls.
@@ -100,17 +102,17 @@ stable machine-readable removal contract.
 
 ### Inventory and predictions
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/v1/inventory/events` | Record an inventory event. |
-| `GET` | `/api/v1/inventory/events` | List events with filters and pagination. |
-| `POST` | `/api/v1/inventory/purchases` | Record `PURCHASED` or `RESTOCKED`. |
-| `POST` | `/api/v1/inventory/purchases/complete` | Complete grocery IDs for one product. |
-| `POST` | `/api/v1/inventory/purchases/complete-partial` | Complete selected items or all except selected IDs. |
-| `GET` | `/api/v1/inventory/estimate/:productId` | Estimate one product's stock state. |
-| `GET` | `/api/v1/inventory/predictions/low-stock` | Return actionable recommendations. |
-| `POST` | `/api/v1/inventory/predictions/:predictionId/feedback` | Accept, reject, or correct a prediction. |
-| `POST` | `/api/v1/inventory/statistics/:productId/calculate` | Recalculate learned statistics. |
+| Method | Route                                                  | Purpose                                             |
+| ------ | ------------------------------------------------------ | --------------------------------------------------- |
+| `POST` | `/api/v1/inventory/events`                             | Record an inventory event.                          |
+| `GET`  | `/api/v1/inventory/events`                             | List events with filters and pagination.            |
+| `POST` | `/api/v1/inventory/purchases`                          | Record `PURCHASED` or `RESTOCKED`.                  |
+| `POST` | `/api/v1/inventory/purchases/complete`                 | Complete grocery IDs for one product.               |
+| `POST` | `/api/v1/inventory/purchases/complete-partial`         | Complete selected items or all except selected IDs. |
+| `GET`  | `/api/v1/inventory/estimate/:productId`                | Estimate one product's stock state.                 |
+| `GET`  | `/api/v1/inventory/predictions/low-stock`              | Return actionable recommendations.                  |
+| `POST` | `/api/v1/inventory/predictions/:predictionId/feedback` | Accept, reject, or correct a prediction.            |
+| `POST` | `/api/v1/inventory/statistics/:productId/calculate`    | Recalculate learned statistics.                     |
 
 Event listing accepts optional `productId`, `eventType`, `limit` from 1 to 100,
 and non-negative `offset`.
@@ -205,18 +207,18 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 ### Tools
 
-| Tool | Kind | Purpose |
-| --- | --- | --- |
-| `grocery_add` | Write | Add one product or return `confirmation_required` with matching pending lines. |
-| `grocery_update` | Write | Set or increment one pending line using expected quantity and unit values. |
-| `grocery_remove` | Write | Change one pending item to removed by grocery-item UUID. |
-| `grocery_list` | Read | List pending items by default or filter by status. |
-| `get_product` | Read | Resolve an exact product name/alias or known UUID. |
-| `get_inventory` | Read | Estimate one product's stock state. |
-| `record_purchase` | Write | Record `PURCHASED` or `RESTOCKED`. |
-| `record_stock_signal` | Write | Record low, out, confirmed, or corrected stock. |
-| `complete_grocery_purchase` | Write | Complete a non-empty unique list of pending item UUIDs atomically. |
-| `get_low_stock_predictions` | Read | Return actionable high-confidence recommendations. |
+| Tool                        | Kind  | Purpose                                                                                          |
+| --------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
+| `grocery_add`               | Write | Add one product or return `confirmation_required` with matching pending lines.                   |
+| `grocery_update`            | Write | Set final quantity, unit, or note fields on one pending line using matching expected old values. |
+| `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
+| `grocery_list`              | Read  | List pending items by default or filter by status.                                               |
+| `get_product`               | Read  | Resolve an exact product name/alias or known UUID.                                               |
+| `get_inventory`             | Read  | Estimate one product's stock state.                                                              |
+| `record_purchase`           | Write | Record `PURCHASED` or `RESTOCKED`.                                                               |
+| `record_stock_signal`       | Write | Record low, out, confirmed, or corrected stock.                                                  |
+| `complete_grocery_purchase` | Write | Complete a non-empty unique list of pending item UUIDs atomically.                               |
+| `get_low_stock_predictions` | Read  | Return actionable high-confidence recommendations.                                               |
 
 Tool responses contain structured content plus JSON text. Domain failures become
 safe MCP tool errors and unexpected errors are sanitized.
@@ -227,10 +229,13 @@ won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
 
 When `grocery_add` returns `confirmation_required`, do not mutate again until
-the user confirms. A confirmed quantity addition uses `grocery_update`, not
-`create_separate`. Treat `GROCERY_ITEM_CHANGED`, `GROCERY_ITEM_NOT_PENDING`, and
-`GROCERY_ITEM_NOT_FOUND` as final for that confirmation and ask for a fresh
-decision.
+the user selects the desired final state. Explain the current line, clarify how
+many items should be on it, calculate that final quantity in the client, and send
+it as `requestedQuantity` with the returned quantity as
+`expectedRequestedQuantity`. Use `grocery_update`, not `create_separate`, for
+that confirmed update. Treat `GROCERY_ITEM_CHANGED`,
+`GROCERY_ITEM_NOT_PENDING`, and `GROCERY_ITEM_NOT_FOUND` as final for that
+decision and ask again using the latest state.
 
 ### Safe tool workflow
 

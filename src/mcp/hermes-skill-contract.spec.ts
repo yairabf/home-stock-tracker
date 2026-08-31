@@ -7,24 +7,26 @@ describe('Hermes grocery duplicate workflow contract', () => {
     'integrations/hermes/home-stock-tracker',
   );
   const skill = readFileSync(join(integrationRoot, 'SKILL.md'), 'utf8');
-  const scenarios = readFileSync(
-    join(integrationRoot, 'scenarios.md'),
-    'utf8',
-  );
+  const scenarios = readFileSync(join(integrationRoot, 'scenarios.md'), 'utf8');
   const readme = readFileSync(join(integrationRoot, 'README.md'), 'utf8');
 
-  it('documents the runtime tools and confirmation result', () => {
-    expect(skill).toContain('| `grocery_update` |');
+  it('documents final-value updates after confirmation', () => {
+    expect(skill).toMatch(/\| `grocery_update`\s+\|/);
     expect(skill).toContain('`confirmation_required`');
+    expect(skill).toContain('final `requestedQuantity`');
     expect(skill).toContain('`expectedRequestedQuantity`');
     expect(skill).toContain('`expectedUnit`');
+    expect(skill).toContain('`expectedNote`');
+    expect(skill).toContain('Never ask the service to perform arithmetic.');
     expect(skill).toContain('`ifPendingExists: "create_separate"`');
-    expect(readme).toContain('`grocery_add`, `grocery_update`');
+    expect(readme).toContain('calculate that total');
+    expect(skill).not.toContain('`quantityMode`');
   });
 
   it.each([
     'Duplicate cancellation',
-    'Confirmed duplicate increment',
+    'Duplicate with final quantity',
+    'Duplicate with larger addition',
     'Missing requested quantity',
     'Existing unspecified quantity',
     'Multiple duplicate lines',
@@ -33,6 +35,6 @@ describe('Hermes grocery duplicate workflow contract', () => {
     'Stale confirmed update',
     'Confirmed update transport uncertainty',
   ])('keeps the %s scenario executable for review', (scenario) => {
-    expect(scenarios).toContain(`| ${scenario} |`);
+    expect(scenarios).toMatch(new RegExp(`\\| ${scenario}\\s+\\|`));
   });
 });

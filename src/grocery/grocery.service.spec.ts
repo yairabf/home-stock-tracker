@@ -6,7 +6,6 @@ import {
 import type { PrismaService } from '../prisma/prisma.service';
 import type { ProductService } from '../product/product.service';
 import { GroceryService } from './grocery.service';
-import { GroceryQuantityMode } from './dto/update-grocery-item.dto';
 import { PendingGroceryItemPolicy } from './dto/add-grocery-item.dto';
 import { AddGroceryItemOutcome } from './dto/add-grocery-item-result.dto';
 
@@ -176,7 +175,7 @@ describe('GroceryService updateItem', () => {
     unit: 'Liters',
     dateAdded: new Date('2026-08-30T10:00:00.000Z'),
     status: GroceryItemStatus.pending,
-    note: null,
+    note: 'usual brand',
     source: GroceryItemSource.api,
     relatedInventoryEventId: null,
     product: { canonicalName: 'milk' },
@@ -194,43 +193,107 @@ describe('GroceryService updateItem', () => {
     service = new GroceryService(prisma, {} as ProductService);
   });
 
-  it('increments a numeric quantity with optimistic concurrency fields', async () => {
+  it('sets the final requested quantity without arithmetic', async () => {
     await expect(
       service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
-        unit: ' liters ',
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
+      }),
+    ).resolves.toMatchObject({
+      requestedQuantity: 4,
+      unit: 'Liters',
+      note: 'usual brand',
+      source: GroceryItemSource.api,
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id,
+        status: GroceryItemStatus.pending,
+        requestedQuantity: 2,
+      },
+      data: { requestedQuantity: 4 },
+    });
+  });
+
+  it('sets a trimmed unit while preserving other fields', async () => {
+    await expect(
+      service.updateItem(id, {
+        unit: ' cartons ',
         expectedUnit: 'Liters',
       }),
-    ).resolves.toMatchObject({ requestedQuantity: 3, unit: 'Liters' });
+    ).resolves.toMatchObject({
+      requestedQuantity: 2,
+      unit: 'cartons',
+      note: 'usual brand',
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id, status: GroceryItemStatus.pending, unit: 'Liters' },
+      data: { unit: 'cartons' },
+    });
+  });
+
+  it('clears a unit', async () => {
+    await expect(
+      service.updateItem(id, { unit: null, expectedUnit: 'Liters' }),
+    ).resolves.toMatchObject({ unit: null });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id, status: GroceryItemStatus.pending, unit: 'Liters' },
+      data: { unit: null },
+    });
+  });
+
+  it('sets a trimmed note while preserving other fields', async () => {
+    await expect(
+      service.updateItem(id, {
+        note: ' lactose-free ',
+        expectedNote: 'usual brand',
+      }),
+    ).resolves.toMatchObject({
+      requestedQuantity: 2,
+      unit: 'Liters',
+      note: 'lactose-free',
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id, status: GroceryItemStatus.pending, note: 'usual brand' },
+      data: { note: 'lactose-free' },
+    });
+  });
+
+  it('clears a note', async () => {
+    await expect(
+      service.updateItem(id, { note: null, expectedNote: 'usual brand' }),
+    ).resolves.toMatchObject({ note: null });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id, status: GroceryItemStatus.pending, note: 'usual brand' },
+      data: { note: null },
+    });
+  });
+
+  it('updates selected fields in one atomic write', async () => {
+    await expect(
+      service.updateItem(id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+        unit: 'cartons',
+        expectedUnit: 'Liters',
+        note: null,
+        expectedNote: 'usual brand',
+      }),
+    ).resolves.toMatchObject({
+      requestedQuantity: 4,
+      unit: 'cartons',
+      note: null,
+    });
     expect(updateMany).toHaveBeenCalledWith({
       where: {
         id,
         status: GroceryItemStatus.pending,
         requestedQuantity: 2,
         unit: 'Liters',
+        note: 'usual brand',
       },
-      data: { requestedQuantity: 3, unit: 'Liters' },
+      data: { requestedQuantity: 4, unit: 'cartons', note: null },
     });
-  });
-
-  it('sets quantity and unit explicitly', async () => {
-    findUnique.mockResolvedValue({
-      ...item,
-      requestedQuantity: null,
-      unit: null,
-    });
-
-    await expect(
-      service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.set,
-        quantity: 4,
-        unit: 'cartons',
-        expectedRequestedQuantity: null,
-        expectedUnit: null,
-      }),
-    ).resolves.toMatchObject({ requestedQuantity: 4, unit: 'cartons' });
   });
 
   it('returns a stable not-found error', async () => {
@@ -238,10 +301,8 @@ describe('GroceryService updateItem', () => {
 
     await expect(
       service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
-        expectedUnit: 'Liters',
       }),
     ).rejects.toMatchObject({ response: { code: 'GROCERY_ITEM_NOT_FOUND' } });
     expect(updateMany).not.toHaveBeenCalled();
@@ -255,10 +316,8 @@ describe('GroceryService updateItem', () => {
 
     await expect(
       service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
-        expectedUnit: 'Liters',
       }),
     ).rejects.toMatchObject({
       response: { code: 'GROCERY_ITEM_NOT_PENDING' },
@@ -268,42 +327,63 @@ describe('GroceryService updateItem', () => {
 
   it.each([
     {
-      name: 'unspecified quantity',
-      current: { requestedQuantity: null },
-      input: {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
-        expectedRequestedQuantity: null,
-        expectedUnit: 'Liters',
-      },
-      code: 'QUANTITY_UNSPECIFIED',
+      name: 'empty update',
+      input: {},
+      code: 'INVALID_UPDATE',
     },
     {
-      name: 'unit mismatch',
-      current: {},
+      name: 'quantity without expected value',
+      input: { requestedQuantity: 4 },
+      code: 'INVALID_QUANTITY',
+    },
+    {
+      name: 'orphan expected quantity',
       input: {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
-        unit: 'cartons',
+        note: null,
+        expectedNote: 'usual brand',
         expectedRequestedQuantity: 2,
-        expectedUnit: 'Liters',
       },
-      code: 'UNIT_MISMATCH',
+      code: 'INVALID_QUANTITY',
     },
     {
-      name: 'stale quantity',
-      current: {},
+      name: 'unit without expected value',
+      input: { unit: 'cartons' },
+      code: 'INVALID_UNIT',
+    },
+    {
+      name: 'orphan expected unit',
       input: {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
-        expectedRequestedQuantity: 1,
+        note: null,
+        expectedNote: 'usual brand',
         expectedUnit: 'Liters',
       },
-      code: 'GROCERY_ITEM_CHANGED',
+      code: 'INVALID_UNIT',
     },
-  ])('rejects $name without mutation', async ({ current, input, code }) => {
-    findUnique.mockResolvedValue({ ...item, ...current });
-
+    {
+      name: 'note without expected value',
+      input: { note: 'lactose-free' },
+      code: 'INVALID_NOTE',
+    },
+    {
+      name: 'orphan expected note',
+      input: {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+        expectedNote: 'usual brand',
+      },
+      code: 'INVALID_NOTE',
+    },
+    {
+      name: 'empty unit',
+      input: { unit: ' ', expectedUnit: 'Liters' },
+      code: 'INVALID_UNIT',
+    },
+    {
+      name: 'empty note',
+      input: { note: ' ', expectedNote: 'usual brand' },
+      code: 'INVALID_NOTE',
+    },
+  ])('rejects $name without mutation', async ({ input, code }) => {
     await expect(service.updateItem(id, input)).rejects.toMatchObject({
       response: { code },
     });
@@ -311,32 +391,48 @@ describe('GroceryService updateItem', () => {
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, 0, -1])(
-    'rejects invalid quantity %s when called outside a transport',
-    async (quantity) => {
+    'rejects invalid quantity %s without mutation',
+    async (requestedQuantity) => {
       await expect(
         service.updateItem(id, {
-          quantityMode: GroceryQuantityMode.set,
-          quantity,
+          requestedQuantity,
           expectedRequestedQuantity: 2,
-          expectedUnit: 'Liters',
         }),
       ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
       expect(updateMany).not.toHaveBeenCalled();
     },
   );
 
-  it('rejects an empty unit when called outside a transport', async () => {
-    await expect(
-      service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.set,
-        quantity: 1,
-        unit: ' ',
-        expectedRequestedQuantity: 2,
-        expectedUnit: 'Liters',
-      }),
-    ).rejects.toMatchObject({ response: { code: 'INVALID_UNIT' } });
-    expect(updateMany).not.toHaveBeenCalled();
-  });
+  it.each([
+    {
+      name: 'quantity',
+      current: {},
+      input: { requestedQuantity: 4, expectedRequestedQuantity: 1 },
+    },
+    {
+      name: 'unit',
+      current: {},
+      input: { unit: 'cartons', expectedUnit: 'liter' },
+    },
+    {
+      name: 'note',
+      current: {},
+      input: { note: 'lactose-free', expectedNote: 'old note' },
+    },
+  ])(
+    'rejects stale $name state without mutation',
+    async ({ current, input }) => {
+      findUnique.mockResolvedValue({ ...item, ...current });
+
+      await expect(service.updateItem(id, input)).rejects.toMatchObject({
+        response: {
+          code: 'GROCERY_ITEM_CHANGED',
+          currentItem: { id, requestedQuantity: 2, note: 'usual brand' },
+        },
+      });
+      expect(updateMany).not.toHaveBeenCalled();
+    },
+  );
 
   it('returns the latest item when a concurrent update wins', async () => {
     updateMany.mockResolvedValue({ count: 0 });
@@ -346,10 +442,8 @@ describe('GroceryService updateItem', () => {
 
     await expect(
       service.updateItem(id, {
-        quantityMode: GroceryQuantityMode.increment,
-        quantity: 1,
+        requestedQuantity: 4,
         expectedRequestedQuantity: 2,
-        expectedUnit: 'Liters',
       }),
     ).rejects.toMatchObject({
       response: {

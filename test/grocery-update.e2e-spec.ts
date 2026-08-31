@@ -7,6 +7,7 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
@@ -18,7 +19,7 @@ import {
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 
-describe('Pending grocery quantity updates (e2e)', () => {
+describe('Pending grocery field updates (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let client: Client;
@@ -49,15 +50,9 @@ describe('Pending grocery quantity updates (e2e)', () => {
     });
     productId = product.id;
 
-    const address = app.getHttpServer().address();
-    if (!address || typeof address === 'string') {
-      throw new Error('Test server did not bind to a TCP port');
-    }
     client = new Client({ name: 'grocery-update-e2e', version: '1.0.0' });
     await client.connect(
-      new StreamableHTTPClientTransport(
-        new URL(`http://127.0.0.1:${address.port}/mcp`),
-      ),
+      new StreamableHTTPClientTransport(new URL('/mcp', await app.getUrl())),
     );
   });
 
@@ -77,121 +72,356 @@ describe('Pending grocery quantity updates (e2e)', () => {
     }
   });
 
-  it('increments a pending item through REST', async () => {
-    const item = await createItem();
+  describe('REST', () => {
+    it('sets a final quantity while preserving omitted fields', async () => {
+      const item = await createItem();
 
-    await request(app.getHttpServer())
-      .patch(`/api/v1/grocery/items/${item.id}`)
-      .send(updateInput())
-      .expect(200)
-      .expect(({ body }) => {
-        expect(body).toMatchObject({
-          id: item.id,
-          requestedQuantity: 3,
-          unit: 'liter',
+      await patch(item.id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      })
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body).toMatchObject({
+            id: item.id,
+            requestedQuantity: 4,
+            unit: 'liter',
+            note: 'usual brand',
+            source: GroceryItemSource.api,
+          });
         });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        requestedQuantity: 4,
+        unit: 'liter',
+        note: 'usual brand',
+        source: GroceryItemSource.api,
       });
-    await expect(storedQuantity(item.id)).resolves.toBe(3);
-  });
-
-  it('returns current state for a stale REST update', async () => {
-    const item = await createItem();
-
-    await request(app.getHttpServer())
-      .patch(`/api/v1/grocery/items/${item.id}`)
-      .send({ ...updateInput(), expectedRequestedQuantity: 1 })
-      .expect(409)
-      .expect(({ body }) => {
-        expect(body).toMatchObject({
-          code: 'GROCERY_ITEM_CHANGED',
-          currentItem: { id: item.id, requestedQuantity: 2 },
-        });
-      });
-    await expect(storedQuantity(item.id)).resolves.toBe(2);
-  });
-
-  it('increments a pending item through MCP', async () => {
-    const item = await createItem();
-
-    await expect(
-      client.callTool({
-        name: 'grocery_update',
-        arguments: { id: item.id, ...updateInput() },
-      }),
-    ).resolves.toMatchObject({
-      structuredContent: { id: item.id, requestedQuantity: 3 },
     });
-    await expect(storedQuantity(item.id)).resolves.toBe(3);
-  });
 
-  it('returns current state for a stale MCP update', async () => {
-    const item = await createItem();
-
-    const result = await client.callTool({
-      name: 'grocery_update',
-      arguments: {
-        id: item.id,
-        ...updateInput(),
-        expectedRequestedQuantity: 1,
+    it.each([
+      {
+        name: 'unit',
+        update: { unit: null, expectedUnit: 'liter' },
+        expected: { unit: null, note: 'usual brand' },
       },
+      {
+        name: 'note',
+        update: { note: null, expectedNote: 'usual brand' },
+        expected: { unit: 'liter', note: null },
+      },
+    ])('clears a nullable $name', async ({ update, expected }) => {
+      const item = await createItem();
+
+      await patch(item.id, update)
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body).toMatchObject({
+            id: item.id,
+            requestedQuantity: 2,
+            ...expected,
+          });
+        });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        requestedQuantity: 2,
+        ...expected,
+      });
     });
 
-    expect(result.isError).toBe(true);
-    expect(JSON.parse(result.content[0].text as string)).toMatchObject({
-      code: 'GROCERY_ITEM_CHANGED',
-      currentItem: { id: item.id, requestedQuantity: 2, unit: 'liter' },
+    it('updates quantity, unit, and note in one request', async () => {
+      const item = await createItem();
+
+      await patch(item.id, combinedUpdate())
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body).toMatchObject({
+            id: item.id,
+            requestedQuantity: 4,
+            unit: 'cartons',
+            note: 'lactose-free',
+          });
+        });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        requestedQuantity: 4,
+        unit: 'cartons',
+        note: 'lactose-free',
+      });
     });
-    await expect(storedQuantity(item.id)).resolves.toBe(2);
+
+    it.each([
+      {
+        name: 'quantity',
+        update: { requestedQuantity: 4, expectedRequestedQuantity: 1 },
+      },
+      {
+        name: 'unit',
+        update: { unit: 'cartons', expectedUnit: 'bottle' },
+      },
+      {
+        name: 'note',
+        update: { note: 'lactose-free', expectedNote: 'old note' },
+      },
+    ])('returns current state for stale $name', async ({ update }) => {
+      const item = await createItem();
+
+      await patch(item.id, update)
+        .expect(409)
+        .expect(({ body }) => {
+          expect(body).toMatchObject({
+            code: 'GROCERY_ITEM_CHANGED',
+            currentItem: {
+              id: item.id,
+              requestedQuantity: 2,
+              unit: 'liter',
+              note: 'usual brand',
+            },
+          });
+        });
+      await expect(storedItem(item.id)).resolves.toMatchObject(
+        originalFields(),
+      );
+    });
+
+    it.each([
+      { name: 'empty update', update: {}, status: 422 },
+      {
+        name: 'missing expected quantity',
+        update: { requestedQuantity: 4 },
+        status: 400,
+      },
+      {
+        name: 'invalid quantity',
+        update: { requestedQuantity: 0, expectedRequestedQuantity: 2 },
+        status: 400,
+      },
+      {
+        name: 'empty note',
+        update: { note: ' ', expectedNote: 'usual brand' },
+        status: 400,
+      },
+    ])('rejects $name without mutation', async ({ update, status }) => {
+      const item = await createItem();
+
+      await patch(item.id, update).expect(status);
+      await expect(storedItem(item.id)).resolves.toMatchObject(
+        originalFields(),
+      );
+    });
+
+    it('rejects a non-pending item without mutation', async () => {
+      const item = await createItem(GroceryItemStatus.purchased);
+
+      await patch(item.id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      })
+        .expect(409)
+        .expect(({ body }) => {
+          expect(body).toMatchObject({ code: 'GROCERY_ITEM_NOT_PENDING' });
+        });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        status: GroceryItemStatus.purchased,
+        requestedQuantity: 2,
+      });
+    });
   });
 
-  it('returns a stable MCP error for an unspecified quantity', async () => {
-    const item = await createItem(null);
+  describe('MCP', () => {
+    it('discovers direct fields without quantity operations', async () => {
+      const tools = await client.listTools();
+      const schema = tools.tools.find(
+        ({ name }) => name === 'grocery_update',
+      )?.inputSchema;
 
-    await expect(
-      client.callTool({
+      expect(schema).toMatchObject({
+        additionalProperties: false,
+        required: ['id'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          requestedQuantity: { type: 'number', exclusiveMinimum: 0 },
+          expectedRequestedQuantity: {},
+          unit: {},
+          expectedUnit: {},
+          note: {},
+          expectedNote: {},
+        },
+      });
+      expect(schema?.properties).not.toHaveProperty('quantityMode');
+      expect(schema?.properties).not.toHaveProperty('quantity');
+    });
+
+    it('updates final quantity, unit, and note together', async () => {
+      const item = await createItem();
+
+      await expect(
+        client.callTool({
+          name: 'grocery_update',
+          arguments: { id: item.id, ...combinedUpdate() },
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: {
+          id: item.id,
+          requestedQuantity: 4,
+          unit: 'cartons',
+          note: 'lactose-free',
+        },
+      });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        requestedQuantity: 4,
+        unit: 'cartons',
+        note: 'lactose-free',
+        source: GroceryItemSource.api,
+      });
+    });
+
+    it.each([
+      {
+        name: 'unit',
+        update: { unit: null, expectedUnit: 'liter' },
+        expected: { unit: null, note: 'usual brand' },
+      },
+      {
+        name: 'note',
+        update: { note: null, expectedNote: 'usual brand' },
+        expected: { unit: 'liter', note: null },
+      },
+    ])('clears a nullable $name', async ({ update, expected }) => {
+      const item = await createItem();
+
+      await expect(
+        client.callTool({
+          name: 'grocery_update',
+          arguments: { id: item.id, ...update },
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: { id: item.id, ...expected },
+      });
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        requestedQuantity: 2,
+        ...expected,
+      });
+    });
+
+    it('returns current state for a stale expected value', async () => {
+      const item = await createItem();
+
+      const result = await client.callTool({
         name: 'grocery_update',
         arguments: {
           id: item.id,
-          ...updateInput(),
-          expectedRequestedQuantity: null,
+          note: 'lactose-free',
+          expectedNote: 'old note',
         },
-      }),
-    ).resolves.toEqual({
-      content: [
-        {
-          type: 'text',
-          text: 'QUANTITY_UNSPECIFIED: Cannot increment an unspecified quantity',
-        },
-      ],
-      isError: true,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(JSON.parse(textContent(result))).toMatchObject({
+        code: 'GROCERY_ITEM_CHANGED',
+        currentItem: { id: item.id, ...originalFields() },
+      });
+      await expect(storedItem(item.id)).resolves.toMatchObject(
+        originalFields(),
+      );
     });
-    await expect(storedQuantity(item.id)).resolves.toBeNull();
+
+    it.each([
+      {
+        name: 'an empty update',
+        update: {},
+        message: 'INVALID_UPDATE',
+      },
+      {
+        name: 'a selected field without its expected value',
+        update: { requestedQuantity: 4 },
+        message: 'INVALID_QUANTITY',
+      },
+      {
+        name: 'an operation-based payload',
+        update: { quantityMode: 'increment', quantity: 2 },
+        message: 'Invalid arguments',
+      },
+    ])('rejects $name without mutation', async ({ update, message }) => {
+      const item = await createItem();
+
+      const result = await client.callTool({
+        name: 'grocery_update',
+        arguments: { id: item.id, ...update },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textContent(result)).toContain(message);
+      await expect(storedItem(item.id)).resolves.toMatchObject(
+        originalFields(),
+      );
+    });
+
+    it('rejects a non-pending item without mutation', async () => {
+      const item = await createItem(GroceryItemStatus.purchased);
+
+      const result = await client.callTool({
+        name: 'grocery_update',
+        arguments: {
+          id: item.id,
+          requestedQuantity: 4,
+          expectedRequestedQuantity: 2,
+        },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(textContent(result)).toContain('GROCERY_ITEM_NOT_PENDING');
+      await expect(storedItem(item.id)).resolves.toMatchObject({
+        status: GroceryItemStatus.purchased,
+        ...originalFields(),
+      });
+    });
   });
 
-  function createItem(requestedQuantity: number | null = 2) {
+  function patch(id: string, body: Record<string, unknown>) {
+    return request(app.getHttpServer())
+      .patch(`/api/v1/grocery/items/${id}`)
+      .send(body);
+  }
+
+  function createItem(status: GroceryItemStatus = GroceryItemStatus.pending) {
     return prisma.groceryListItem.create({
       data: {
         productId,
-        requestedQuantity,
+        requestedQuantity: 2,
         unit: 'liter',
-        status: GroceryItemStatus.pending,
+        note: 'usual brand',
+        status,
         source: GroceryItemSource.api,
       },
     });
   }
 
-  function updateInput() {
+  function combinedUpdate() {
     return {
-      quantityMode: 'increment',
-      quantity: 1,
-      unit: 'liter',
+      requestedQuantity: 4,
       expectedRequestedQuantity: 2,
+      unit: 'cartons',
       expectedUnit: 'liter',
+      note: 'lactose-free',
+      expectedNote: 'usual brand',
     };
   }
 
-  async function storedQuantity(id: string): Promise<number | null> {
-    const item = await prisma.groceryListItem.findUnique({ where: { id } });
-    return item?.requestedQuantity ?? null;
+  function originalFields() {
+    return {
+      requestedQuantity: 2,
+      unit: 'liter',
+      note: 'usual brand',
+    };
+  }
+
+  async function storedItem(id: string) {
+    return prisma.groceryListItem.findUniqueOrThrow({ where: { id } });
+  }
+
+  function textContent(result: CallToolResult): string {
+    const content = result.content[0];
+    if (!content || content.type !== 'text') {
+      throw new Error('Expected text tool content');
+    }
+    return content.text;
   }
 });
