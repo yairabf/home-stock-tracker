@@ -22,6 +22,9 @@ import {
 } from '../generated/prisma/enums';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { TransportSource } from '../common/transport-source';
+import { GroceryQuantityMode } from '../grocery/dto/update-grocery-item.dto';
+import { PendingGroceryItemPolicy } from '../grocery/dto/add-grocery-item.dto';
+import { AddGroceryItemOutcome } from '../grocery/dto/add-grocery-item-result.dto';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -38,6 +41,17 @@ const groceryItemOutputSchema = z.object({
 
 const groceryListOutputSchema = z.object({
   items: z.array(groceryItemOutputSchema),
+});
+
+const groceryAddOutputSchema = z.object({
+  outcome: z.enum(AddGroceryItemOutcome),
+  createdItem: groceryItemOutputSchema.nullable(),
+  existingItems: z.array(groceryItemOutputSchema),
+  requestedAddition: z.object({
+    requestedQuantity: z.number().nullable(),
+    unit: z.string().nullable(),
+    note: z.string().nullable(),
+  }),
 });
 
 const productOutputSchema = z.object({
@@ -324,9 +338,10 @@ export class McpServerFactory {
             requestedQuantity: z.number().positive().optional(),
             unit: z.string().optional(),
             note: z.string().optional(),
+            ifPendingExists: z.enum(PendingGroceryItemPolicy).optional(),
           })
           .strict(),
-        outputSchema: groceryItemOutputSchema,
+        outputSchema: groceryAddOutputSchema,
       },
       (input) =>
         this.runTool('grocery_add', async () =>
@@ -336,6 +351,29 @@ export class McpServerFactory {
               source: GroceryItemSource.mcp,
             }),
           ),
+        ),
+    );
+
+    server.registerTool(
+      'grocery_update',
+      {
+        description:
+          'Set or increment the quantity of one pending grocery-list item.',
+        inputSchema: z
+          .object({
+            id: z.uuid(),
+            quantityMode: z.enum(GroceryQuantityMode),
+            quantity: z.number().positive().finite(),
+            unit: z.string().trim().min(1).optional(),
+            expectedRequestedQuantity: z.number().positive().finite().nullable(),
+            expectedUnit: z.string().nullable(),
+          })
+          .strict(),
+        outputSchema: groceryItemOutputSchema,
+      },
+      ({ id, ...input }) =>
+        this.runTool('grocery_update', async () =>
+          this.toolResult(await this.groceryService.updateItem(id, input)),
         ),
     );
 
@@ -412,10 +450,19 @@ export class McpServerFactory {
       return response;
     }
     const message = 'message' in response ? response.message : error.message;
+    const code = 'code' in response ? response.code : undefined;
     if (Array.isArray(message)) {
       return message.filter((value) => typeof value === 'string').join(', ');
     }
-    return typeof message === 'string' ? message : error.message;
+    const safeMessage = typeof message === 'string' ? message : error.message;
+    if ('currentItem' in response && response.currentItem !== undefined) {
+      return JSON.stringify({
+        code,
+        message: safeMessage,
+        currentItem: response.currentItem,
+      });
+    }
+    return typeof code === 'string' ? `${code}: ${safeMessage}` : safeMessage;
   }
 
   private toolError(message: string): CallToolResult {

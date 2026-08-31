@@ -67,12 +67,24 @@ threshold. Counts must be non-negative integers and
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v1/grocery/items` | Add a known product. |
+| `POST` | `/api/v1/grocery/items` | Add a product or return matching pending lines for confirmation. |
 | `GET` | `/api/v1/grocery/items` | List pending items or filter by `status`. |
+| `PATCH` | `/api/v1/grocery/items/:id` | Set or increment one pending item's quantity. |
 | `DELETE` | `/api/v1/grocery/items/:id` | Remove one pending item. |
 
 An add request requires `productName`. Optional values are a positive
-`requestedQuantity`, `unit`, and `note`.
+`requestedQuantity`, `unit`, `note`, and `ifPendingExists`.
+
+`ifPendingExists` defaults to `return_existing`. A canonical-product pending
+match returns `confirmation_required`, the matching lines, and the requested
+addition without mutation. `create_separate` creates an intentional additional
+line. Default concurrent adds are serialized by product.
+
+Quantity updates require `quantityMode` (`set` or `increment`), a positive
+`quantity`, and the selected line's `expectedRequestedQuantity` and
+`expectedUnit`. These expected values prevent a stale user confirmation from
+overwriting a concurrent change. Incrementing an unspecified quantity or using
+a conflicting unit is rejected without mutation.
 
 - Status: `pending`, `purchased`, or `removed`
 - Source is server-owned: `api` for REST requests and `mcp` for MCP tool calls.
@@ -195,7 +207,8 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 | Tool | Kind | Purpose |
 | --- | --- | --- |
-| `grocery_add` | Write | Add one known product by name with optional quantity, unit, and note. |
+| `grocery_add` | Write | Add one product or return `confirmation_required` with matching pending lines. |
+| `grocery_update` | Write | Set or increment one pending line using expected quantity and unit values. |
 | `grocery_remove` | Write | Change one pending item to removed by grocery-item UUID. |
 | `grocery_list` | Read | List pending items by default or filter by status. |
 | `get_product` | Read | Resolve an exact product name/alias or known UUID. |
@@ -212,6 +225,12 @@ safe MCP tool errors and unexpected errors are sanitized.
 `Grocery list item <id> is not pending` when the item was purchased, removed, or
 won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
+
+When `grocery_add` returns `confirmation_required`, do not mutate again until
+the user confirms. A confirmed quantity addition uses `grocery_update`, not
+`create_separate`. Treat `GROCERY_ITEM_CHANGED`, `GROCERY_ITEM_NOT_PENDING`, and
+`GROCERY_ITEM_NOT_FOUND` as final for that confirmation and ask for a fresh
+decision.
 
 ### Safe tool workflow
 

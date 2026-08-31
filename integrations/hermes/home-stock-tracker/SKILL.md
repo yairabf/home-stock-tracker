@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.2.0
+version: 1.3.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -32,7 +32,8 @@ logic in conversation.
 
 | Tool | Use when | Do not use when |
 | --- | --- | --- |
-| `grocery_add` | The user explicitly asks to add one named product to the grocery list. Preserve an explicitly supplied positive quantity, unit, and note. | The user only reports low stock, asks what is needed, or gives an invalid or unclear quantity. |
+| `grocery_add` | The user explicitly asks to add one named product to the grocery list. Preserve an explicitly supplied positive quantity, unit, and note. Branch on its `created` or `confirmation_required` outcome. | The user only reports low stock, asks what is needed, or gives an invalid or unclear quantity. |
+| `grocery_update` | The user confirms adding a known quantity to one exact pending line returned by `grocery_add`, or supplies a clarified target quantity for that line. Pass the returned quantity and unit back as expected values. | The pending line is ambiguous, its quantity is unspecified for an increment, units conflict, or the user has not confirmed the update. |
 | `grocery_remove` | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`. | Only a product ID or unverified item name is available. |
 | `grocery_list` | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list. | The user asks for predicted low-stock recommendations. |
 | `get_product` | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID. | Fuzzy guessing, broad product search, or product creation is required. |
@@ -85,14 +86,56 @@ one mutation; that is still one intent.
 
 ## Grocery conversation workflows
 
+### Add one item and handle an existing line
+
+For a clear request such as "add one milk," call `grocery_add` once and inspect
+its structured outcome.
+
+- On `created`, summarize `createdItem`. Do not call another mutation.
+- On `confirmation_required` with exactly one `existingItems` entry, do not
+  mutate again yet. Preserve `requestedAddition` and ask: "This item is already
+  on the list. Do you want to add the requested quantity, or cancel?"
+- If the user cancels or declines, make no tool call and confirm cancellation.
+- If the user confirms, call `grocery_update` for that exact existing item.
+  Use `quantityMode: "increment"`, the original `requestedAddition.requestedQuantity`,
+  and the existing item's `requestedQuantity` and `unit` as
+  `expectedRequestedQuantity` and `expectedUnit`. Include the requested unit
+  only when the user supplied it and it matches the existing unit.
+- Never use `create_separate` as the meaning of "add another" or a yes answer.
+  Use `grocery_add` with `ifPendingExists: "create_separate"` only when the user
+  explicitly asks for a separate list line.
+
+Ask a focused question without mutating when the safe update is not fully
+defined:
+
+- If `requestedAddition.requestedQuantity` is null, ask how many to add or
+  whether to cancel.
+- If the existing item's `requestedQuantity` is null, ask for the desired new
+  total quantity. After the user supplies it, use `quantityMode: "set"` with
+  `expectedRequestedQuantity: null`.
+- If multiple `existingItems` are returned, describe their quantities, units,
+  notes, and dates as needed and ask which line to update. Do not choose one.
+- If the requested and existing units conflict, explain the two units and ask
+  for a compatible quantity and unit. Do not convert units.
+
+Treat `GROCERY_ITEM_CHANGED`, `GROCERY_ITEM_NOT_PENDING`, and
+`GROCERY_ITEM_NOT_FOUND` as final results for that confirmation. Present the
+safe current state when returned and ask for a fresh decision; do not retry the
+update automatically. Treat `QUANTITY_UNSPECIFIED`, `UNIT_MISMATCH`,
+`INVALID_QUANTITY`, and `INVALID_UNIT` as clarification branches, never as
+permission to guess. After an uncertain mutation transport result, stop and
+report uncertainty without retrying either tool.
+
 ### Add several items
 
 For a clear request such as "add milk and eggs," call `grocery_add` once for
 each explicitly named item. Keep any quantity, unit, or note attached only to
 the item the user attached it to. Do not copy a quantity or unit across items.
 
-Run the additions in the user's order. After each confirmed result, continue to
-the next item. If a mutation result is uncertain, stop, report which additions
+Run the additions in the user's order. After each `created` result, continue to
+the next item. If an addition returns `confirmation_required`, pause the
+sequence and complete the confirmation flow for that item before attempting
+later items. If a mutation result is uncertain, stop, report which additions
 were confirmed and which later additions were not attempted, and do not retry.
 
 ### Read lists and recommendations
@@ -189,7 +232,9 @@ If no mapping is clear, ask rather than choosing the closest enum.
 **"Add two liters of milk."**
 
 Call `grocery_add` with `productName: "milk"`, `requestedQuantity: 2`, and
-`unit: "liters"`. Summarize the returned grocery item.
+`unit: "liters"`. On `created`, summarize `createdItem`. On
+`confirmation_required`, ask whether to add two liters or cancel and wait before
+calling `grocery_update`.
 
 **"Remove milk from the list."**
 

@@ -6,7 +6,16 @@ must come from the immediately preceding tool result, never from the model.
 
 | Case | User request or condition | Expected action | Expected outcome |
 | --- | --- | --- | --- |
-| Add grocery item | "Add two liters of milk." | `grocery_add({ productName: "milk", requestedQuantity: 2, unit: "liters" })` | Summarize the returned pending item. |
+| Add grocery item | "Add two liters of milk," and `grocery_add` returns `created`. | `grocery_add({ productName: "milk", requestedQuantity: 2, unit: "liters" })` | Summarize `createdItem`. |
+| Duplicate cancellation | "Add one milk," and `grocery_add` returns one existing numeric line with `confirmation_required`; the user then says no. | Ask whether to add one or cancel, then call no tool after the decline. | No quantity or row changes. |
+| Confirmed duplicate increment | "Add one milk," and `grocery_add` returns one existing line with quantity 2 and unit `carton`; the user confirms. | `grocery_update({ id: <existing item id>, quantityMode: "increment", quantity: 1, expectedRequestedQuantity: 2, expectedUnit: "carton" })` | The existing line becomes quantity 3; no separate row is created. |
+| Missing requested quantity | "Add milk," and `grocery_add` returns `requestedAddition.requestedQuantity: null`. | Ask how many to add or whether to cancel. Do not call `grocery_update` yet. | No mutation occurs before a quantity is supplied. |
+| Existing unspecified quantity | A confirmed duplicate has `existingItems[0].requestedQuantity: null`. | Ask for the desired new total. Then call `grocery_update` with `quantityMode: "set"`, that total, and `expectedRequestedQuantity: null`. | The one selected line receives the explicit total. |
+| Multiple duplicate lines | `grocery_add` returns two `existingItems`. | Describe the distinguishing returned fields and ask which line to update. | Do not choose an ID or mutate until the user selects one. |
+| Conflicting duplicate units | The requested addition uses liters while the existing line uses cartons. | Explain the mismatch and ask for a compatible quantity and unit. Do not convert or mutate. | No quantity is guessed or converted. |
+| Explicit separate line | "Add milk as a separate line." | `grocery_add({ productName: "milk", ifPendingExists: "create_separate" })` | One intentional additional pending row is created. |
+| Stale confirmed update | `grocery_update` returns `GROCERY_ITEM_CHANGED` with current state. | Show the changed state and ask for a fresh decision. Do not retry. | The stale confirmation causes no additional mutation. |
+| Confirmed update transport uncertainty | `grocery_update` ends without a reliable result. | Stop and report uncertainty. Do not retry `grocery_update` or fall back to `grocery_add`. | A possible duplicate mutation is avoided. |
 | Invalid grocery quantity | "Add minus two milks." | Ask for a valid positive quantity. Do not call a tool. | No mutation occurs. |
 | Add several grocery items | "Add milk and eggs." | Call `grocery_add({ productName: "milk" })`, then `grocery_add({ productName: "eggs" })`. | Summarize both confirmed additions in the user's order. |
 | Item-specific measurements | "Add two liters of milk and eggs." | Call `grocery_add({ productName: "milk", requestedQuantity: 2, unit: "liters" })`, then `grocery_add({ productName: "eggs" })`. | Do not copy milk's quantity or unit to eggs. |
@@ -71,6 +80,9 @@ For each row, verify:
 - omitted items never appear in `complete_grocery_purchase` arguments;
 - no optional quantity, unit, note, confidence, or metadata is invented;
 - no mutation runs after an ambiguous request or uncertain mutation result;
+- every `confirmation_required` add waits for a user answer before another mutation;
+- a confirmed duplicate uses `grocery_update`, not `create_separate`;
+- expected quantity and unit values come from the selected existing item;
 - final wording reflects the structured result rather than claiming unobserved
   inventory facts;
 - every successful scheduled tick calls `get_low_stock_predictions` exactly once;

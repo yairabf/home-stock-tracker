@@ -6,6 +6,97 @@ import {
 import type { PrismaService } from '../prisma/prisma.service';
 import type { ProductService } from '../product/product.service';
 import { GroceryService } from './grocery.service';
+import { GroceryQuantityMode } from './dto/update-grocery-item.dto';
+import { PendingGroceryItemPolicy } from './dto/add-grocery-item.dto';
+import { AddGroceryItemOutcome } from './dto/add-grocery-item-result.dto';
+
+describe('GroceryService addItem', () => {
+  const product = { id: 'product-1', canonicalName: 'milk' };
+  const item = {
+    id: 'grocery-item-1',
+    productId: product.id,
+    requestedQuantity: 1,
+    unit: 'liter',
+    dateAdded: new Date('2026-08-30T10:00:00.000Z'),
+    status: GroceryItemStatus.pending,
+    note: null,
+    source: GroceryItemSource.api,
+    relatedInventoryEventId: null,
+  };
+  let queryRaw: jest.Mock;
+  let findMany: jest.Mock;
+  let create: jest.Mock;
+  let transaction: jest.Mock;
+  let service: GroceryService;
+
+  beforeEach(() => {
+    queryRaw = jest.fn().mockResolvedValue([]);
+    findMany = jest.fn().mockResolvedValue([]);
+    create = jest.fn().mockResolvedValue(item);
+    const tx = {
+      $queryRaw: queryRaw,
+      groceryListItem: { findMany, create },
+    };
+    transaction = jest.fn((callback: (client: typeof tx) => unknown) =>
+      callback(tx),
+    );
+    const prisma = {
+      $transaction: transaction,
+      groceryListItem: { create },
+    } as unknown as PrismaService;
+    const productService = {
+      findOrCreateByExactOrAliasMatch: jest.fn().mockResolvedValue(product),
+    } as unknown as ProductService;
+    service = new GroceryService(prisma, productService);
+  });
+
+  it('creates the first pending item inside the product lock', async () => {
+    await expect(
+      service.addItem({
+        productName: 'whole milk',
+        requestedQuantity: 1,
+        unit: 'liter',
+      }),
+    ).resolves.toMatchObject({
+      outcome: AddGroceryItemOutcome.created,
+      createdItem: { id: item.id },
+      existingItems: [],
+      requestedAddition: { requestedQuantity: 1, unit: 'liter' },
+    });
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+    expect(findMany).toHaveBeenCalledWith({
+      where: { productId: product.id, status: GroceryItemStatus.pending },
+      orderBy: { dateAdded: 'desc' },
+    });
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns every canonical-product pending match without mutation', async () => {
+    findMany.mockResolvedValue([item, { ...item, id: 'grocery-item-2' }]);
+
+    await expect(
+      service.addItem({ productName: 'whole milk', requestedQuantity: 1 }),
+    ).resolves.toMatchObject({
+      outcome: AddGroceryItemOutcome.confirmation_required,
+      createdItem: null,
+      existingItems: [{ id: item.id }, { id: 'grocery-item-2' }],
+      requestedAddition: { requestedQuantity: 1 },
+    });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('creates an explicit separate line without checking pending items', async () => {
+    await expect(
+      service.addItem({
+        productName: 'milk',
+        requestedQuantity: 1,
+        ifPendingExists: PendingGroceryItemPolicy.create_separate,
+      }),
+    ).resolves.toMatchObject({ outcome: AddGroceryItemOutcome.created });
+    expect(transaction).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('GroceryService removeItem', () => {
   const id = 'grocery-item-1';
@@ -73,5 +164,198 @@ describe('GroceryService removeItem', () => {
     await expect(service.removeItem(id)).rejects.toEqual(
       new ConflictException(`Grocery list item ${id} is not pending`),
     );
+  });
+});
+
+describe('GroceryService updateItem', () => {
+  const id = 'grocery-item-1';
+  const item = {
+    id,
+    productId: 'product-1',
+    requestedQuantity: 2,
+    unit: 'Liters',
+    dateAdded: new Date('2026-08-30T10:00:00.000Z'),
+    status: GroceryItemStatus.pending,
+    note: null,
+    source: GroceryItemSource.api,
+    relatedInventoryEventId: null,
+    product: { canonicalName: 'milk' },
+  };
+  let findUnique: jest.Mock;
+  let updateMany: jest.Mock;
+  let service: GroceryService;
+
+  beforeEach(() => {
+    findUnique = jest.fn().mockResolvedValue(item);
+    updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      groceryListItem: { findUnique, updateMany },
+    } as unknown as PrismaService;
+    service = new GroceryService(prisma, {} as ProductService);
+  });
+
+  it('increments a numeric quantity with optimistic concurrency fields', async () => {
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        unit: ' liters ',
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      }),
+    ).resolves.toMatchObject({ requestedQuantity: 3, unit: 'Liters' });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id,
+        status: GroceryItemStatus.pending,
+        requestedQuantity: 2,
+        unit: 'Liters',
+      },
+      data: { requestedQuantity: 3, unit: 'Liters' },
+    });
+  });
+
+  it('sets quantity and unit explicitly', async () => {
+    findUnique.mockResolvedValue({
+      ...item,
+      requestedQuantity: null,
+      unit: null,
+    });
+
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.set,
+        quantity: 4,
+        unit: 'cartons',
+        expectedRequestedQuantity: null,
+        expectedUnit: null,
+      }),
+    ).resolves.toMatchObject({ requestedQuantity: 4, unit: 'cartons' });
+  });
+
+  it('returns a stable not-found error', async () => {
+    findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      }),
+    ).rejects.toMatchObject({ response: { code: 'GROCERY_ITEM_NOT_FOUND' } });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('does not update a non-pending item', async () => {
+    findUnique.mockResolvedValue({
+      ...item,
+      status: GroceryItemStatus.purchased,
+    });
+
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      }),
+    ).rejects.toMatchObject({
+      response: { code: 'GROCERY_ITEM_NOT_PENDING' },
+    });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      name: 'unspecified quantity',
+      current: { requestedQuantity: null },
+      input: {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        expectedRequestedQuantity: null,
+        expectedUnit: 'Liters',
+      },
+      code: 'QUANTITY_UNSPECIFIED',
+    },
+    {
+      name: 'unit mismatch',
+      current: {},
+      input: {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        unit: 'cartons',
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      },
+      code: 'UNIT_MISMATCH',
+    },
+    {
+      name: 'stale quantity',
+      current: {},
+      input: {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        expectedRequestedQuantity: 1,
+        expectedUnit: 'Liters',
+      },
+      code: 'GROCERY_ITEM_CHANGED',
+    },
+  ])('rejects $name without mutation', async ({ current, input, code }) => {
+    findUnique.mockResolvedValue({ ...item, ...current });
+
+    await expect(service.updateItem(id, input)).rejects.toMatchObject({
+      response: { code },
+    });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, 0, -1])(
+    'rejects invalid quantity %s when called outside a transport',
+    async (quantity) => {
+      await expect(
+        service.updateItem(id, {
+          quantityMode: GroceryQuantityMode.set,
+          quantity,
+          expectedRequestedQuantity: 2,
+          expectedUnit: 'Liters',
+        }),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
+      expect(updateMany).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects an empty unit when called outside a transport', async () => {
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.set,
+        quantity: 1,
+        unit: ' ',
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      }),
+    ).rejects.toMatchObject({ response: { code: 'INVALID_UNIT' } });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('returns the latest item when a concurrent update wins', async () => {
+    updateMany.mockResolvedValue({ count: 0 });
+    findUnique
+      .mockResolvedValueOnce(item)
+      .mockResolvedValueOnce({ ...item, requestedQuantity: 5 });
+
+    await expect(
+      service.updateItem(id, {
+        quantityMode: GroceryQuantityMode.increment,
+        quantity: 1,
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'Liters',
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'GROCERY_ITEM_CHANGED',
+        currentItem: { requestedQuantity: 5 },
+      },
+    });
   });
 });

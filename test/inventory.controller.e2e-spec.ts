@@ -59,7 +59,10 @@ describe('InventoryController (e2e)', () => {
       .send({ productName })
       .expect(201);
 
-    expect(response.body).toMatchObject({ productId, source: 'api' });
+    expect(response.body).toMatchObject({
+      outcome: 'created',
+      createdItem: { productId, source: 'api' },
+    });
   });
 
   it('rejects caller-controlled REST source attribution', async () => {

@@ -8,7 +8,7 @@ tool-selection instructions. The NestJS service remains independent from Hermes.
 Configure Hermes separately with a trusted MCP connection to the Home Stock
 Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 
-`grocery_add`, `grocery_remove`, `grocery_list`, `get_product`, `get_inventory`,
+`grocery_add`, `grocery_update`, `grocery_remove`, `grocery_list`, `get_product`, `get_inventory`,
 `record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
 `get_low_stock_predictions`.
 
@@ -43,6 +43,12 @@ To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
 list, require one exact toilet-paper match, exclude that ID, and propose one
 `complete_grocery_purchase` call containing only the remaining IDs.
+
+To review duplicate confirmation, first create a numeric pending test item, then
+ask Hermes to add the same product. It should call `grocery_add` once, ask whether
+to add the requested quantity or cancel after `confirmation_required`, and call
+`grocery_update` only after confirmation. A decline must make no second tool
+call.
 
 ## Proactive stock-check cron
 

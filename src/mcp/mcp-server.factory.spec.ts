@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import {
@@ -14,6 +14,7 @@ import { InventoryService } from '../inventory/inventory.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { AddGroceryItemOutcome } from '../grocery/dto/add-grocery-item-result.dto';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -30,7 +31,7 @@ const item = {
 
 describe('McpServerFactory grocery tools', () => {
   let groceryService: jest.Mocked<
-    Pick<GroceryService, 'addItem' | 'removeItem' | 'listItems'>
+    Pick<GroceryService, 'addItem' | 'updateItem' | 'removeItem' | 'listItems'>
   >;
   let client: Client;
   let closeServer: () => Promise<void>;
@@ -52,6 +53,7 @@ describe('McpServerFactory grocery tools', () => {
   beforeEach(async () => {
     groceryService = {
       addItem: jest.fn(),
+      updateItem: jest.fn(),
       removeItem: jest.fn(),
       listItems: jest.fn(),
     };
@@ -94,6 +96,7 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.tools.map(({ name }) => name)).toEqual([
       'grocery_add',
+      'grocery_update',
       'grocery_remove',
       'grocery_list',
       'get_product',
@@ -103,6 +106,18 @@ describe('McpServerFactory grocery tools', () => {
       'complete_grocery_purchase',
       'get_low_stock_predictions',
     ]);
+    expect(
+      result.tools.find(({ name }) => name === 'grocery_update')?.inputSchema,
+    ).toMatchObject({
+      additionalProperties: false,
+      required: [
+        'id',
+        'quantityMode',
+        'quantity',
+        'expectedRequestedQuantity',
+        'expectedUnit',
+      ],
+    });
     expect(
       result.tools.find(({ name }) => name === 'grocery_remove')?.inputSchema,
     ).toMatchObject({
@@ -133,8 +148,75 @@ describe('McpServerFactory grocery tools', () => {
     }
   });
 
+  it('updates a pending item with expected values and structured output', async () => {
+    groceryService.updateItem.mockResolvedValue({
+      ...item,
+      requestedQuantity: 3,
+    });
+
+    const result = await client.callTool({
+      name: 'grocery_update',
+      arguments: {
+        id: item.id,
+        quantityMode: 'increment',
+        quantity: 1,
+        unit: 'liter',
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'liter',
+      },
+    });
+
+    expect(groceryService.updateItem).toHaveBeenCalledWith(item.id, {
+      quantityMode: 'increment',
+      quantity: 1,
+      unit: 'liter',
+      expectedRequestedQuantity: 2,
+      expectedUnit: 'liter',
+    });
+    expect(result.structuredContent).toMatchObject({
+      id: item.id,
+      requestedQuantity: 3,
+    });
+  });
+
+  it('preserves current item state in a stale update tool error', async () => {
+    groceryService.updateItem.mockRejectedValue(
+      new ConflictException({
+        code: 'GROCERY_ITEM_CHANGED',
+        message: `Grocery list item ${item.id} changed`,
+        currentItem: { ...item, requestedQuantity: 5 },
+      }),
+    );
+
+    const result = await client.callTool({
+      name: 'grocery_update',
+      arguments: {
+        id: item.id,
+        quantityMode: 'increment',
+        quantity: 1,
+        expectedRequestedQuantity: 2,
+        expectedUnit: 'liter',
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0].text as string)).toMatchObject({
+      code: 'GROCERY_ITEM_CHANGED',
+      currentItem: { id: item.id, requestedQuantity: 5 },
+    });
+  });
+
   it('adds an item with an adapter-owned source and structured output', async () => {
-    groceryService.addItem.mockResolvedValue(item);
+    groceryService.addItem.mockResolvedValue({
+      outcome: AddGroceryItemOutcome.created,
+      createdItem: item,
+      existingItems: [],
+      requestedAddition: {
+        requestedQuantity: 2,
+        unit: 'liter',
+        note: null,
+      },
+    });
 
     const result = await client.callTool({
       name: 'grocery_add',
@@ -152,12 +234,47 @@ describe('McpServerFactory grocery tools', () => {
       source: GroceryItemSource.mcp,
     });
     expect(result.structuredContent).toEqual({
-      ...item,
-      dateAdded: item.dateAdded.toISOString(),
+      outcome: 'created',
+      createdItem: {
+        ...item,
+        dateAdded: item.dateAdded.toISOString(),
+      },
+      existingItems: [],
+      requestedAddition: {
+        requestedQuantity: 2,
+        unit: 'liter',
+        note: null,
+      },
     });
     expect(result.content).toEqual([
       { type: 'text', text: JSON.stringify(result.structuredContent) },
     ]);
+  });
+
+  it('returns confirmation details without retrying a duplicate add', async () => {
+    groceryService.addItem.mockResolvedValue({
+      outcome: AddGroceryItemOutcome.confirmation_required,
+      createdItem: null,
+      existingItems: [item],
+      requestedAddition: {
+        requestedQuantity: 1,
+        unit: null,
+        note: null,
+      },
+    });
+
+    const result = await client.callTool({
+      name: 'grocery_add',
+      arguments: { productName: 'milk', requestedQuantity: 1 },
+    });
+
+    expect(groceryService.addItem).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent).toMatchObject({
+      outcome: 'confirmation_required',
+      createdItem: null,
+      existingItems: [{ id: item.id }],
+      requestedAddition: { requestedQuantity: 1 },
+    });
   });
 
   it('lists pending items by default and preserves an empty list', async () => {
