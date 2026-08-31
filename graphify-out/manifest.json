@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.ts": {
-    "mtime": 1788174430.0421185,
-    "seen": 1788175958.001483,
+    "mtime": 1788176351.3616657,
+    "seen": 1788205629.811845,
     "ast_hash": "82d7dcc002dbd8e6e010dc4f3f316700",
     "semantic_hash": ""
   },
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788175522.6754715,
-    "seen": 1788175958.00661,
-    "ast_hash": "e25f9f427868d23588936d12e0fdc70b",
+    "mtime": 1788176187.6753576,
+    "seen": 1788205629.816593,
+    "ast_hash": "188cd292770cded0d619f72ae07ae649",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1698,8 +1698,8 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788174597.9340816,
-    "seen": 1788175958.002348,
+    "mtime": 1788176351.3629003,
+    "seen": 1788205629.812632,
     "ast_hash": "91268f9a6a013f5fbce959fc88fe0404",
     "semantic_hash": ""
   },
@@ -1794,8 +1794,8 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788174619.1852405,
-    "seen": 1788175958.002348,
+    "mtime": 1788176351.3620825,
+    "seen": 1788205629.8126311,
     "ast_hash": "1ccf08b38816966b0be8cc0728927ac8",
     "semantic_hash": ""
   },
@@ -1806,20 +1806,20 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/README.md": {
-    "mtime": 1788175645.0941362,
-    "seen": 1788175958.007221,
+    "mtime": 1788176351.360029,
+    "seen": 1788205629.817164,
     "ast_hash": "e25ed3027b16c59f61c9fd6d45e8b710",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1788175681.0461304,
-    "seen": 1788175958.007222,
+    "mtime": 1788176351.360292,
+    "seen": 1788205629.8171651,
     "ast_hash": "2bb990f842f214a0f0c60db1adafd58b",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
-    "mtime": 1788175681.0688493,
-    "seen": 1788175958.007222,
+    "mtime": 1788176351.360559,
+    "seen": 1788205629.8171651,
     "ast_hash": "d35057fd987fb273b529cfc21f4a4fda",
     "semantic_hash": ""
   },
@@ -2028,8 +2028,8 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-03-no-tool-can-update-a-pending-grocery-item.md": {
-    "mtime": 1788174293.1394389,
-    "seen": 1788175958.006264,
+    "mtime": 1788176351.341887,
+    "seen": 1788205629.816258,
     "ast_hash": "f1a537d4332ae484ced83ace994cdb1b",
     "semantic_hash": ""
   },
@@ -2154,8 +2154,8 @@
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1788175681.0115876,
-    "seen": 1788175958.007173,
+    "mtime": 1788176351.3424625,
+    "seen": 1788205629.8171148,
     "ast_hash": "8971bdea54b7236ef20ff0d551a6b339",
     "semantic_hash": ""
   },
@@ -2166,8 +2166,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.spec.ts": {
-    "mtime": 1788174559.0450468,
-    "seen": 1788175958.001483,
+    "mtime": 1788176351.361299,
+    "seen": 1788205629.811844,
     "ast_hash": "ff5138cca286d240a6aa40aa062b8396",
     "semantic_hash": ""
   },
@@ -2214,20 +2214,20 @@
     "semantic_hash": ""
   },
   "src/grocery/dto/update-grocery-item.dto.ts": {
-    "mtime": 1788174368.0210347,
-    "seen": 1788175958.001431,
+    "mtime": 1788176351.3607872,
+    "seen": 1788205629.811796,
     "ast_hash": "c183b6d7e5a968f9fc051f7eff3dbf71",
     "semantic_hash": ""
   },
   "src/grocery/grocery-operation.exception.ts": {
-    "mtime": 1788174447.8002765,
-    "seen": 1788175958.001431,
+    "mtime": 1788176351.3609817,
+    "seen": 1788205629.811797,
     "ast_hash": "c2d2fc2e214657b865317cc120492f75",
     "semantic_hash": ""
   },
   "src/mcp/hermes-skill-contract.spec.ts": {
-    "mtime": 1788175744.2820382,
-    "seen": 1788175958.002347,
+    "mtime": 1788176351.3618727,
+    "seen": 1788205629.81263,
     "ast_hash": "a52b230ca0b5d0b6d996fae4b6d06d89",
     "semantic_hash": ""
   },
@@ -2238,8 +2238,8 @@
     "semantic_hash": ""
   },
   "test/grocery-update.e2e-spec.ts": {
-    "mtime": 1788175374.0909083,
-    "seen": 1788175958.0029812,
+    "mtime": 1788176351.3635886,
+    "seen": 1788205629.813205,
     "ast_hash": "c0eb28e838cf90f29dcf015cca776269",
     "semantic_hash": ""
   },
@@ -2250,9 +2250,51 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1788175955.2072215,
-    "seen": 1788175958.000812,
-    "ast_hash": "eefdccb15e1be429ab43861f4d94dd9b",
+    "mtime": 1788176303.454051,
+    "seen": 1788205629.811201,
+    "ast_hash": "27dc1e5474fda90c9143c4fee54e695a",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/27-product-name-namespace.md": {
+    "mtime": 1788205832.966263,
+    "seen": 1788205929.667701,
+    "ast_hash": "2774ea1817891ba89b70b75e47d7a9c6",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/28-grocery-quantity-contract.md": {
+    "mtime": 1788205772.3301964,
+    "seen": 1788205929.667702,
+    "ast_hash": "91b01d6189f32d00520a412e370495f9",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/29-product-search-and-resolution-proposals.md": {
+    "mtime": 1788205855.3749135,
+    "seen": 1788205929.6677032,
+    "ast_hash": "fdf677ee3157b68e41b77a1e7f6ceb56",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/30-policy-aware-grocery-additions.md": {
+    "mtime": 1788205780.5937035,
+    "seen": 1788205929.6677032,
+    "ast_hash": "f2ce9798441e961f15065506bafabb56",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/31-confirmed-grocery-catalog-decisions.md": {
+    "mtime": 1788205903.241408,
+    "seen": 1788205929.667704,
+    "ast_hash": "1d609bb96b779f5d0391632589ad3ccd",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/README.md": {
+    "mtime": 1788205771.0632548,
+    "seen": 1788205929.667704,
+    "ast_hash": "555647acfb03e19e91c1b46a92a5f9b3",
+    "semantic_hash": ""
+  },
+  "blueprint/history/fixes/mcp-03-direct-pending-grocery-item-updates.md": {
+    "mtime": 1788176351.3421886,
+    "seen": 1788205629.8170218,
+    "ast_hash": "64a55684b96f7be9ee6ddfcfc31aea12",
     "semantic_hash": ""
   }
 }

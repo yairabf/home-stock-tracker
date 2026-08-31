@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.ts": {
-    "mtime": 1788164328.7827072,
-    "seen": 1788166041.943407,
-    "ast_hash": "b6cd5ff93badec0958888298c7ea4473",
+    "mtime": 1788176351.3616657,
+    "seen": 1788205629.811845,
+    "ast_hash": "82d7dcc002dbd8e6e010dc4f3f316700",
     "semantic_hash": ""
   },
   "src/household/dto/create-household.dto.ts": {
@@ -1572,8 +1572,8 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1787767417.7651484,
-    "seen": 1788166041.9435031,
+    "mtime": 1788176187.6753576,
+    "seen": 1788205629.816593,
     "ast_hash": "188cd292770cded0d619f72ae07ae649",
     "semantic_hash": ""
   },
@@ -1698,9 +1698,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788164328.790681,
-    "seen": 1788166041.943424,
-    "ast_hash": "8d30a1d0030ff0fdb7b581831ad76826",
+    "mtime": 1788176351.3629003,
+    "seen": 1788205629.812632,
+    "ast_hash": "91268f9a6a013f5fbce959fc88fe0404",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788164328.790536,
-    "seen": 1788166041.943423,
-    "ast_hash": "4b9f9e7cec36b37fb0a1207093f74ae8",
+    "mtime": 1788176351.3620825,
+    "seen": 1788205629.8126311,
+    "ast_hash": "1ccf08b38816966b0be8cc0728927ac8",
     "semantic_hash": ""
   },
   "blueprint/history/features/12-mcp-tool-interface.md": {
@@ -1806,21 +1806,21 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/README.md": {
-    "mtime": 1788164328.7746098,
-    "seen": 1788166041.9435148,
-    "ast_hash": "c710195172ecec0333e23ecc3606f14f",
+    "mtime": 1788176351.360029,
+    "seen": 1788205629.817164,
+    "ast_hash": "e25ed3027b16c59f61c9fd6d45e8b710",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1788164328.7747688,
-    "seen": 1788166041.943516,
-    "ast_hash": "94eb2f160d6eedf82221bf861184cc17",
+    "mtime": 1788176351.360292,
+    "seen": 1788205629.8171651,
+    "ast_hash": "2bb990f842f214a0f0c60db1adafd58b",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
-    "mtime": 1788164328.7749074,
-    "seen": 1788166041.943516,
-    "ast_hash": "cf7479a53f0b6451c452e34fc06efd36",
+    "mtime": 1788176351.360559,
+    "seen": 1788205629.8171651,
+    "ast_hash": "d35057fd987fb273b529cfc21f4a4fda",
     "semantic_hash": ""
   },
   "src/auth/service-auth-config.service.spec.ts": {
@@ -2028,9 +2028,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-03-no-tool-can-update-a-pending-grocery-item.md": {
-    "mtime": 1788166021.3483934,
-    "seen": 1788166041.943496,
-    "ast_hash": "90edcafa93308cd6614767ee680acb0c",
+    "mtime": 1788176351.341887,
+    "seen": 1788205629.816258,
+    "ast_hash": "f1a537d4332ae484ced83ace994cdb1b",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-04-no-agent-safe-product-search-or-catalog-discovery.md": {
@@ -2154,9 +2154,9 @@
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1788164328.693038,
-    "seen": 1788166041.943514,
-    "ast_hash": "b3437e434af41ca9c72858568294cc67",
+    "mtime": 1788176351.3424625,
+    "seen": 1788205629.8171148,
+    "ast_hash": "8971bdea54b7236ef20ff0d551a6b339",
     "semantic_hash": ""
   },
   "docs/operations.md": {
@@ -2166,9 +2166,9 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.spec.ts": {
-    "mtime": 1788164328.782502,
-    "seen": 1788166041.943406,
-    "ast_hash": "ef1f0b6e4a43e05090b95d801c2138e8",
+    "mtime": 1788176351.361299,
+    "seen": 1788205629.811844,
+    "ast_hash": "ff5138cca286d240a6aa40aa062b8396",
     "semantic_hash": ""
   },
   "test/grocery-remove.e2e-spec.ts": {
@@ -2214,21 +2214,21 @@
     "semantic_hash": ""
   },
   "src/grocery/dto/update-grocery-item.dto.ts": {
-    "mtime": 1788164328.781367,
-    "seen": 1788166041.943404,
-    "ast_hash": "01624079fba5627b08fcfd5429bc29bd",
+    "mtime": 1788176351.3607872,
+    "seen": 1788205629.811796,
+    "ast_hash": "c183b6d7e5a968f9fc051f7eff3dbf71",
     "semantic_hash": ""
   },
   "src/grocery/grocery-operation.exception.ts": {
-    "mtime": 1788164328.7814448,
-    "seen": 1788166041.9434052,
-    "ast_hash": "2da346c65060fbfdda46cf2c6297d7fa",
+    "mtime": 1788176351.3609817,
+    "seen": 1788205629.811797,
+    "ast_hash": "c2d2fc2e214657b865317cc120492f75",
     "semantic_hash": ""
   },
   "src/mcp/hermes-skill-contract.spec.ts": {
-    "mtime": 1788164328.7904093,
-    "seen": 1788166041.943423,
-    "ast_hash": "5cc6ab21795945b2a15964a29a4c8b71",
+    "mtime": 1788176351.3618727,
+    "seen": 1788205629.81263,
+    "ast_hash": "a52b230ca0b5d0b6d996fae4b6d06d89",
     "semantic_hash": ""
   },
   "test/grocery-add-duplicate.e2e-spec.ts": {
@@ -2238,15 +2238,63 @@
     "semantic_hash": ""
   },
   "test/grocery-update.e2e-spec.ts": {
-    "mtime": 1788164328.7937338,
-    "seen": 1788166041.9434361,
-    "ast_hash": "d339c3b09c56c4b84515b312f5421481",
+    "mtime": 1788176351.3635886,
+    "seen": 1788205629.813205,
+    "ast_hash": "c0eb28e838cf90f29dcf015cca776269",
     "semantic_hash": ""
   },
   "blueprint/history/fixes/mcp-02-duplicate-safe-grocery-additions.md": {
     "mtime": 1788164328.6917377,
     "seen": 1788166041.943511,
     "ast_hash": "87facd2f24f25e115c6795cfd7856ae5",
+    "semantic_hash": ""
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1788176303.454051,
+    "seen": 1788205629.811201,
+    "ast_hash": "27dc1e5474fda90c9143c4fee54e695a",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/27-product-name-namespace.md": {
+    "mtime": 1788205384.1208432,
+    "seen": 1788205629.816594,
+    "ast_hash": "2ba26a6f0a8e560d687116557626a508",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/28-grocery-quantity-contract.md": {
+    "mtime": 1788205432.2587886,
+    "seen": 1788205629.816594,
+    "ast_hash": "7cfbff8621f4b87f8e51d91416c8ecc4",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/29-product-search-and-resolution-proposals.md": {
+    "mtime": 1788205497.4441664,
+    "seen": 1788205629.8165948,
+    "ast_hash": "045d229fd4e882ae9d221adc3b9ae270",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/30-policy-aware-grocery-additions.md": {
+    "mtime": 1788205523.8127296,
+    "seen": 1788205629.8165948,
+    "ast_hash": "7cb3097e251bb6c64ba8a80cbd21169a",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/31-confirmed-grocery-catalog-decisions.md": {
+    "mtime": 1788205572.213528,
+    "seen": 1788205629.816596,
+    "ast_hash": "5583b5dd19b421b2f69bbe6512370a97",
+    "semantic_hash": ""
+  },
+  "blueprint/context/feature-plans/README.md": {
+    "mtime": 1788205338.6232276,
+    "seen": 1788205629.816596,
+    "ast_hash": "f05c589850e8d6c9ed3e0eee0e52863a",
+    "semantic_hash": ""
+  },
+  "blueprint/history/fixes/mcp-03-direct-pending-grocery-item-updates.md": {
+    "mtime": 1788176351.3421886,
+    "seen": 1788205629.8170218,
+    "ast_hash": "64a55684b96f7be9ee6ddfcfc31aea12",
     "semantic_hash": ""
   }
 }
