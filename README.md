@@ -13,13 +13,13 @@ and low-stock recommendations.
 
 ## Documentation
 
-| Guide | Contents |
-| --- | --- |
-| [API and MCP reference](docs/api-reference.md) | Authentication, REST routes, request values, MCP endpoint, all fourteen tools, and safe tool workflows. |
-| [Agent integrations](docs/agent-integrations.md) | Complete Hermes, OpenClaw, and generic MCP-client setup with official references. |
-| [Operations guide](docs/operations.md) | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
-| [Deployment guide](docs/deployment.md) | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery. |
-| [Hermes skill guide](integrations/hermes/home-stock-tracker/README.md) | Skill installation, WhatsApp delivery, and proactive stock-check cron jobs. |
+| Guide                                                                  | Contents                                                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, all fifteen tools, and safe tool workflows.                    |
+| [Agent integrations](docs/agent-integrations.md)                       | Complete Hermes, OpenClaw, and generic MCP-client setup with official references.                                         |
+| [Operations guide](docs/operations.md)                                 | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
+| [Deployment guide](docs/deployment.md)                                 | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery.                             |
+| [Hermes skill guide](integrations/hermes/home-stock-tracker/README.md) | Skill installation, WhatsApp delivery, and proactive stock-check cron jobs.                                               |
 
 Official agent references:
 
@@ -116,15 +116,15 @@ To connect an agent, set `MCP_ENABLED=true`, restart the service, and follow the
 
 ## Common commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run start:dev` | Start NestJS in watch mode. |
-| `npm run build` | Compile into `dist/`. |
-| `npm run start:prod` | Run a previously built application. |
-| `npm run lint` | Run ESLint with configured fixes. |
-| `npm run format` | Format TypeScript sources and tests. |
-| `npm run test` | Run Jest unit tests. |
-| `npm run test:e2e` | Run end-to-end tests against PostgreSQL. |
+| Command              | Purpose                                  |
+| -------------------- | ---------------------------------------- |
+| `npm run start:dev`  | Start NestJS in watch mode.              |
+| `npm run build`      | Compile into `dist/`.                    |
+| `npm run start:prod` | Run a previously built application.      |
+| `npm run lint`       | Run ESLint with configured fixes.        |
+| `npm run format`     | Format TypeScript sources and tests.     |
+| `npm run test`       | Run Jest unit tests.                     |
+| `npm run test:e2e`   | Run end-to-end tests against PostgreSQL. |
 
 ## Current status
 

@@ -41,13 +41,13 @@ Health checks never invoke the LLM or mutate household data.
 
 ### Products
 
-| Method | Route                          | Purpose                     |
-| ------ | ------------------------------ | --------------------------- |
-| `POST` | `/api/v1/products`             | Create a canonical product.                    |
-| `GET`  | `/api/v1/products`             | List all products.                             |
+| Method | Route                          | Purpose                                         |
+| ------ | ------------------------------ | ----------------------------------------------- |
+| `POST` | `/api/v1/products`             | Create a canonical product.                     |
+| `GET`  | `/api/v1/products`             | List all products.                              |
 | `GET`  | `/api/v1/products/search`      | Deterministically search the product namespace. |
-| `GET`  | `/api/v1/products/:id`         | Get one product by UUID.                       |
-| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`.                      |
+| `GET`  | `/api/v1/products/:id`         | Get one product by UUID.                        |
+| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`.                       |
 
 Product creation requires `canonicalName`. Optional values are `aliases`,
 `category`, and `typicalUnit`.
@@ -119,15 +119,15 @@ threshold. Counts must be non-negative integers and
 
 ### Grocery list
 
-| Method   | Route                                | Purpose                                                          |
-| -------- | ------------------------------------ | ---------------------------------------------------------------- |
-| `POST`   | `/api/v1/grocery/items`              | Add with an unknown-product policy or return a successful decision branch. |
-| `POST`   | `/api/v1/grocery/items/confirm-new-product` | Apply approved product facts and complete the original grocery addition.   |
-| `POST`   | `/api/v1/grocery/items/confirm-product-alias` | Apply an approved alias to an exact product and complete the addition.      |
-| `GET`    | `/api/v1/grocery/items`              | List pending items or filter by `status`.                        |
-| `PATCH`  | `/api/v1/grocery/items/:id/quantity` | Set one pending item's absolute final quantity.                  |
-| `PATCH`  | `/api/v1/grocery/items/:id`          | Update selected fields on one pending item.                      |
-| `DELETE` | `/api/v1/grocery/items/:id`          | Remove one pending item.                                         |
+| Method   | Route                                         | Purpose                                                                    |
+| -------- | --------------------------------------------- | -------------------------------------------------------------------------- |
+| `POST`   | `/api/v1/grocery/items`                       | Add with an unknown-product policy or return a successful decision branch. |
+| `POST`   | `/api/v1/grocery/items/confirm-new-product`   | Apply approved product facts and complete the original grocery addition.   |
+| `POST`   | `/api/v1/grocery/items/confirm-product-alias` | Apply an approved alias to an exact product and complete the addition.     |
+| `GET`    | `/api/v1/grocery/items`                       | List pending items or filter by `status`.                                  |
+| `PATCH`  | `/api/v1/grocery/items/:id/quantity`          | Set one pending item's absolute final quantity.                            |
+| `PATCH`  | `/api/v1/grocery/items/:id`                   | Update selected fields on one pending item.                                |
+| `DELETE` | `/api/v1/grocery/items/:id`                   | Remove one pending item.                                                   |
 
 An add request separates product identity from grocery-line facts. REST defaults
 an omitted `unknownProductPolicy` to `create_if_missing`, so the default request
@@ -383,23 +383,24 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 ### Tools
 
-| Tool                        | Kind  | Purpose                                                                                          |
-| --------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
-| `grocery_add`               | Write | Add through proposal or deterministic creation policy, or return a successful decision branch.  |
-| `grocery_confirm_new_product` | Write | Apply approved final product facts and complete the original grocery addition without LLM use.  |
-| `grocery_confirm_product_alias` | Write | Apply an approved alias to an exact product ID and complete the original grocery addition.       |
-| `grocery_set_quantity`      | Write | Set one pending line's absolute final quantity using its latest expected quantity.               |
-| `grocery_update`            | Write | Set unit, note, or intentional field combinations using matching expected old values.            |
-| `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
-| `grocery_list`              | Read  | List pending items by default or filter by status.                                               |
-| `get_product`               | Read  | Resolve an exact product name/alias or known UUID.                                               |
-| `search_products`           | Read  | Deterministically discover exact or nearby products without mutation or LLM use.                 |
-| `get_inventory`             | Read  | Estimate one product's stock state.                                                              |
-| `record_purchase`           | Write | Record `PURCHASED` or `RESTOCKED`.                                                               |
-| `record_stock_signal`       | Write | Record low, out, confirmed, or corrected stock.                                                  |
-| `record_prediction_feedback` | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.          |
-| `complete_grocery_purchase` | Write | Complete a non-empty unique list of pending item UUIDs atomically.                               |
-| `get_low_stock_predictions` | Read  | Return actionable high-confidence recommendations.                                               |
+| Tool                            | Kind  | Purpose                                                                                        |
+| ------------------------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| `grocery_add`                   | Write | Add through proposal or deterministic creation policy, or return a successful decision branch. |
+| `grocery_confirm_new_product`   | Write | Apply approved final product facts and complete the original grocery addition without LLM use. |
+| `grocery_confirm_product_alias` | Write | Apply an approved alias to an exact product ID and complete the original grocery addition.     |
+| `grocery_set_quantity`          | Write | Set one pending line's absolute final quantity using its latest expected quantity.             |
+| `grocery_update`                | Write | Set unit, note, or intentional field combinations using matching expected old values.          |
+| `grocery_remove`                | Write | Change one pending item to removed by grocery-item UUID.                                       |
+| `grocery_list`                  | Read  | List pending items by default or filter by status.                                             |
+| `get_product`                   | Read  | Resolve an exact product name/alias or known UUID.                                             |
+| `search_products`               | Read  | Deterministically discover exact or nearby products without mutation or LLM use.               |
+| `get_inventory`                 | Read  | Estimate one product's stock state.                                                            |
+| `list_inventory_events`         | Read  | List recorded inventory events with filters and bounded pagination.                            |
+| `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
+| `record_stock_signal`           | Write | Record low, out, confirmed, or corrected stock.                                                |
+| `record_prediction_feedback`    | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.         |
+| `complete_grocery_purchase`     | Write | Complete a non-empty unique list of pending item UUIDs atomically.                             |
+| `get_low_stock_predictions`     | Read  | Return actionable high-confidence recommendations.                                             |
 
 Tool responses contain structured content plus JSON text. Domain failures become
 safe MCP tool errors and unexpected errors are sanitized. `get_product` applies
@@ -407,6 +408,22 @@ the same exact normalized canonical-name and alias lookup as REST and returns th
 same approved display spelling. `PRODUCT_NAME_CONFLICT` is the stable namespace
 conflict for MCP and internal callers; it is final and should not be retried as a
 name lookup or write without changing the requested ownership.
+
+`list_inventory_events` accepts optional UUID `productId` and
+`InventoryEventType` `eventType` filters. `limit` defaults to `20` and accepts
+integers from `1` through `100`; `offset` defaults to `0` and accepts
+non-negative integers. Results are ordered by newest timestamp first, with event
+ID as the stable descending tie-breaker, and return `{ items, total, limit,
+offset }`. Agent-visible event items include `id`, `productId`, `eventType`,
+`quantity`, `unit`, `timestamp`, `source`, and `confidence`. Stored event
+`metadata` is intentionally omitted from this MCP response.
+
+For a spoken product name, resolve its UUID with `get_product` or read-only
+`search_products` before listing history. A history result describes recorded
+evidence at its timestamps. It does not estimate current stock; use
+`get_inventory` separately for that question and label its result as an
+estimate. An empty history page means no matching recorded events, not that the
+product is currently unavailable.
 
 `grocery_remove` returns `Grocery list item <id> not found` for an unknown ID and
 `Grocery list item <id> is not pending` when the item was purchased, removed, or
@@ -463,12 +480,13 @@ latest state without retrying or recalculating automatically.
 2. Present multiple search candidates in returned order and require the user's choice before using one ID.
 3. Treat proposals as advisory; apply only a final user-approved create or alias payload.
 4. Call `grocery_list` before removing or completing grocery-item UUIDs.
-5. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
-6. Never guess IDs, quantities, units, event types, or stock state.
-7. Write only when the mutation and target are unambiguous.
-8. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
-9. Treat `uncertain` and empty recommendation lists as successful results.
-10. Never turn a recommendation into a list mutation without a separate request.
+5. Resolve named products before history reads and distinguish recorded events from estimated current stock.
+6. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
+7. Never guess IDs, quantities, units, event types, metadata, or stock state.
+8. Write only when the mutation and target are unambiguous.
+9. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
+10. Treat `uncertain`, empty history, and empty recommendation lists as successful results.
+11. Never turn a recommendation into a list mutation without a separate request.
 
 For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with only

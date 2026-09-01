@@ -115,6 +115,24 @@ describe('agent inventory skill contract', () => {
   );
 
   it.each(bundles)(
+    '$platform documents safe inventory-event history reads',
+    ({ skill, scenarios, readme }) => {
+      expect(skill).toContain('version: 1.9.0');
+      expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
+      expect(readme).toContain('`list_inventory_events`');
+      expect(skill).toContain('Results are newest first.');
+      expect(skill).toContain('MCP history intentionally omits stored');
+      expect(skill).toContain('not proof of the exact current');
+      expect(skill).toContain('History reads never authorize a mutation.');
+      expect(scenarios).toContain('| Named product history');
+      expect(scenarios).toContain('| Filtered purchase history');
+      expect(scenarios).toContain('| Empty inventory history');
+      expect(scenarios).toContain('| Inventory history pagination');
+      expect(scenarios).toContain('| Correction history review');
+    },
+  );
+
+  it.each(bundles)(
     '$platform documents policy-aware grocery addition without guessed facts',
     ({ skill, scenarios, readme }) => {
       expect(skill).toContain('`propose_if_missing`');

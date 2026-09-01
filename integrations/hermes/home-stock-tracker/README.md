@@ -15,9 +15,10 @@ Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 
 `grocery_add`, `grocery_confirm_new_product`,
 `grocery_confirm_product_alias`, `grocery_set_quantity`, `grocery_update`,
-`grocery_remove`, `grocery_list`, `get_product`, `search_products`, `get_inventory`,
-`record_purchase`, `record_stock_signal`, `record_prediction_feedback`,
-`complete_grocery_purchase`, and `get_low_stock_predictions`.
+`grocery_remove`, `grocery_list`, `get_product`, `search_products`,
+`get_inventory`, `list_inventory_events`, `record_purchase`,
+`record_stock_signal`, `record_prediction_feedback`, `complete_grocery_purchase`, and
+`get_low_stock_predictions`.
 
 MCP endpoint configuration, authentication, and credentials do not belong in
 this skill bundle. Do not store service tokens here.
@@ -50,6 +51,12 @@ For a product-discovery smoke check, ask "Which milk products exist?" Hermes
 should call `search_products`, present every plausible candidate in returned
 order, and ask for a choice when several remain. It must not silently select a
 candidate or claim that search creates, aliases, or updates anything.
+
+For a history smoke check, ask "When did we last buy milk?" Hermes should
+resolve milk with `get_product`, then call `list_inventory_events` with the
+returned product ID, `eventType: "PURCHASED"`, and `limit: 1`. It should describe
+the result as recorded history, not estimated current stock, and must not expose
+or invent event metadata.
 
 For an unknown-name add smoke check, ask Hermes to add a deliberately unfamiliar
 product phrase. It should call `grocery_add` in proposal mode with `productName`

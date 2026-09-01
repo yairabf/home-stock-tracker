@@ -285,6 +285,26 @@ const inventoryEventOutputSchema = z.object({
   metadata: z.json().nullable(),
 });
 
+const inventoryEventHistoryInputSchema = z
+  .object({
+    productId: z.uuid().optional(),
+    eventType: z.enum(InventoryEventType).optional(),
+    limit: z.number().int().min(1).max(100).default(20),
+    offset: z.number().int().min(0).default(0),
+  })
+  .strict();
+
+const inventoryEventHistoryItemOutputSchema = inventoryEventOutputSchema.omit({
+  metadata: true,
+});
+
+const inventoryEventHistoryOutputSchema = z.object({
+  items: z.array(inventoryEventHistoryItemOutputSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1).max(100),
+  offset: z.number().int().min(0),
+});
+
 const completeGroceryPurchaseOutputSchema = z.object({
   events: z.array(inventoryEventOutputSchema),
   completedItems: z.array(groceryItemOutputSchema),
@@ -574,6 +594,33 @@ export class McpServerFactory {
             ),
           ),
         ),
+    );
+
+    server.registerTool(
+      'list_inventory_events',
+      {
+        description:
+          'List recorded inventory events newest first. This is history, not an estimate of current stock.',
+        inputSchema: inventoryEventHistoryInputSchema,
+        outputSchema: inventoryEventHistoryOutputSchema,
+      },
+      (input) =>
+        this.runTool('list_inventory_events', async () => {
+          const result = await this.inventoryService.listEvents(input);
+          return this.toolResult({
+            ...result,
+            items: result.items.map((event) => ({
+              id: event.id,
+              productId: event.productId,
+              eventType: event.eventType,
+              quantity: event.quantity,
+              unit: event.unit,
+              timestamp: event.timestamp,
+              source: event.source,
+              confidence: event.confidence,
+            })),
+          });
+        }),
     );
   }
 

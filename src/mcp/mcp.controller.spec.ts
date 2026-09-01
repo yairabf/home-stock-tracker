@@ -19,6 +19,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from '../auth/service-auth.module';
 import { ServiceAuthGuard } from '../auth/service-auth.guard';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { InventoryEventType } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 
 @Controller()
@@ -48,6 +49,7 @@ describe('McpController', () => {
   const inventoryService = {
     recordPurchase: jest.fn(),
     recordEvent: jest.fn(),
+    listEvents: jest.fn(),
     completeGroceryPurchase: jest.fn(),
   };
   const predictionFeedbackService = { submitFeedback: jest.fn() };
@@ -135,6 +137,7 @@ describe('McpController', () => {
         'get_product',
         'search_products',
         'get_inventory',
+        'list_inventory_events',
         'record_purchase',
         'record_stock_signal',
         'record_prediction_feedback',
@@ -160,6 +163,24 @@ describe('McpController', () => {
           limit: { type: 'integer', maximum: 20 },
         },
       });
+      const eventHistoryTool = tools.tools.find(
+        ({ name }) => name === 'list_inventory_events',
+      );
+      expect(eventHistoryTool?.inputSchema).toMatchObject({
+        additionalProperties: false,
+        properties: {
+          productId: { type: 'string', format: 'uuid' },
+          eventType: {
+            type: 'string',
+            enum: Object.values(InventoryEventType),
+          },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          offset: { type: 'integer', minimum: 0, default: 0 },
+        },
+      });
+      expect(JSON.stringify(eventHistoryTool?.outputSchema)).not.toContain(
+        'metadata',
+      );
       productSearchService.search.mockResolvedValue({
         exactMatch: null,
         candidates: [],
@@ -176,6 +197,22 @@ describe('McpController', () => {
       await expect(
         client.callTool({ name: 'grocery_list', arguments: {} }),
       ).resolves.toMatchObject({ structuredContent: { items: [] } });
+
+      inventoryService.listEvents.mockResolvedValue({
+        items: [],
+        total: 0,
+        limit: 20,
+        offset: 0,
+      });
+      await expect(
+        client.callTool({ name: 'list_inventory_events', arguments: {} }),
+      ).resolves.toMatchObject({
+        structuredContent: { items: [], total: 0, limit: 20, offset: 0 },
+      });
+      expect(inventoryService.listEvents).toHaveBeenCalledWith({
+        limit: 20,
+        offset: 0,
+      });
 
       const groceryItemId = '00000000-0000-4000-8000-000000000001';
       inventoryService.completeGroceryPurchase.mockResolvedValue({

@@ -61,7 +61,10 @@ describe('McpServerFactory grocery tools', () => {
   let inventoryService: jest.Mocked<
     Pick<
       InventoryService,
-      'recordPurchase' | 'recordEvent' | 'completeGroceryPurchase'
+      | 'recordPurchase'
+      | 'recordEvent'
+      | 'listEvents'
+      | 'completeGroceryPurchase'
     >
   >;
   let recommendationService: jest.Mocked<
@@ -91,6 +94,7 @@ describe('McpServerFactory grocery tools', () => {
     inventoryService = {
       recordPurchase: jest.fn(),
       recordEvent: jest.fn(),
+      listEvents: jest.fn(),
       completeGroceryPurchase: jest.fn(),
     };
     recommendationService = { getRecommendations: jest.fn() };
@@ -134,6 +138,7 @@ describe('McpServerFactory grocery tools', () => {
       'get_product',
       'search_products',
       'get_inventory',
+      'list_inventory_events',
       'record_purchase',
       'record_stock_signal',
       'record_prediction_feedback',
@@ -297,6 +302,46 @@ describe('McpServerFactory grocery tools', () => {
         limit: { type: 'integer', minimum: 1, maximum: 20 },
       },
     });
+    const eventHistoryTool = result.tools.find(
+      ({ name }) => name === 'list_inventory_events',
+    );
+    expect(eventHistoryTool?.description).toContain(
+      'history, not an estimate of current stock',
+    );
+    expect(eventHistoryTool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      properties: {
+        productId: { type: 'string', format: 'uuid' },
+        eventType: {
+          type: 'string',
+          enum: Object.values(InventoryEventType),
+        },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+        offset: { type: 'integer', minimum: 0, default: 0 },
+      },
+    });
+    expect(eventHistoryTool?.outputSchema).toMatchObject({
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            additionalProperties: false,
+            properties: {
+              id: { type: 'string' },
+              productId: { type: 'string' },
+              eventType: { type: 'string' },
+              timestamp: { type: 'string' },
+            },
+          },
+        },
+        total: { type: 'integer', minimum: 0 },
+        limit: { type: 'integer', minimum: 1, maximum: 100 },
+        offset: { type: 'integer', minimum: 0 },
+      },
+    });
+    expect(
+      eventHistoryTool?.outputSchema?.properties?.items.items.properties,
+    ).not.toHaveProperty('metadata');
     for (const name of [
       'grocery_add',
       'grocery_confirm_new_product',
@@ -1034,6 +1079,150 @@ describe('McpServerFactory grocery tools', () => {
       deterministicSignals: { coldStart: true, eventCount: 0 },
     });
     expect(result.structuredContent).not.toHaveProperty('quantity');
+  });
+
+  it('lists filtered inventory history without exposing metadata', async () => {
+    const event = {
+      ...inventoryEvent(InventoryEventType.PURCHASED),
+      metadata: { privateNote: 'do not expose' },
+    };
+    inventoryService.listEvents.mockResolvedValue({
+      items: [event],
+      total: 7,
+      limit: 5,
+      offset: 10,
+    });
+
+    const result = await client.callTool({
+      name: 'list_inventory_events',
+      arguments: {
+        productId: item.productId,
+        eventType: InventoryEventType.PURCHASED,
+        limit: 5,
+        offset: 10,
+      },
+    });
+
+    expect(inventoryService.listEvents).toHaveBeenCalledWith({
+      productId: item.productId,
+      eventType: InventoryEventType.PURCHASED,
+      limit: 5,
+      offset: 10,
+    });
+    expect(result.structuredContent).toEqual({
+      items: [
+        {
+          id: event.id,
+          productId: event.productId,
+          eventType: event.eventType,
+          quantity: event.quantity,
+          unit: event.unit,
+          timestamp: event.timestamp.toISOString(),
+          source: event.source,
+          confidence: event.confidence,
+        },
+      ],
+      total: 7,
+      limit: 5,
+      offset: 10,
+    });
+    expect(result.structuredContent).not.toHaveProperty('items.0.metadata');
+  });
+
+  it('applies history pagination defaults and returns an empty page', async () => {
+    inventoryService.listEvents.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 20,
+      offset: 0,
+    });
+
+    const result = await client.callTool({
+      name: 'list_inventory_events',
+      arguments: {},
+    });
+
+    expect(inventoryService.listEvents).toHaveBeenCalledWith({
+      limit: 20,
+      offset: 0,
+    });
+    expect(result.structuredContent).toEqual({
+      items: [],
+      total: 0,
+      limit: 20,
+      offset: 0,
+    });
+  });
+
+  it.each([
+    ['product', { productId: item.productId }],
+    ['event type', { eventType: InventoryEventType.STOCK_OUT }],
+  ])('supports an independent %s history filter', async (_case, filter) => {
+    inventoryService.listEvents.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 20,
+      offset: 0,
+    });
+
+    await client.callTool({
+      name: 'list_inventory_events',
+      arguments: filter,
+    });
+
+    expect(inventoryService.listEvents).toHaveBeenCalledWith({
+      ...filter,
+      limit: 20,
+      offset: 0,
+    });
+  });
+
+  it.each([
+    ['malformed product ID', { productId: 'not-a-uuid' }],
+    ['unknown event type', { eventType: 'UNKNOWN' }],
+    ['zero limit', { limit: 0 }],
+    ['fractional limit', { limit: 1.5 }],
+    ['limit above maximum', { limit: 101 }],
+    ['fractional offset', { offset: 1.5 }],
+    ['negative offset', { offset: -1 }],
+    ['unknown field', { includeMetadata: true }],
+  ])(
+    'rejects %s before listing inventory history',
+    async (_case, arguments_) => {
+      const result = await client.callTool({
+        name: 'list_inventory_events',
+        arguments: arguments_,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(inventoryService.listEvents).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sanitizes unexpected inventory-history failures', async () => {
+    inventoryService.listEvents.mockRejectedValue(
+      new Error('database password leaked here'),
+    );
+
+    const result = await client.callTool({
+      name: 'list_inventory_events',
+      arguments: {},
+    });
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'The inventory operation could not be completed',
+        },
+      ],
+      isError: true,
+    });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'list_inventory_events',
+      errorType: 'unexpected_error',
+    });
   });
 
   it('rejects malformed read IDs before invoking services', async () => {

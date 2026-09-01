@@ -39,9 +39,9 @@ Add this to `~/.hermes/config.yaml`:
 ```yaml
 mcp_servers:
   home-stock-tracker:
-    url: "http://localhost:3000/mcp"
+    url: 'http://localhost:3000/mcp'
     headers:
-      Authorization: "Bearer <API_AUTH_TOKEN>"
+      Authorization: 'Bearer <API_AUTH_TOKEN>'
 ```
 
 Keep the file private. Reload and test the connection:

@@ -22,7 +22,7 @@ openclaw mcp doctor home-stock-tracker --probe
 openclaw mcp show home-stock-tracker --json
 ```
 
-Confirm all fifteen tools are discoverable before enabling writes. Keep the
+Confirm all sixteen tools are discoverable before enabling writes. Keep the
 token outside this repository, screenshots, and shared logs. Prefer the secret
 mechanism supported by the deployment over a literal sensitive header.
 
@@ -65,6 +65,12 @@ only after confirming the MCP endpoint and target household.
 For product discovery, ask "Which milk products exist?" The agent should call
 `search_products`, preserve returned order, and ask for a choice when several
 candidates remain. Search is read-only and never creates or aliases a product.
+
+For a history smoke check, ask "When did we last buy milk?" The agent should
+resolve milk with `get_product`, then call `list_inventory_events` with the
+returned product ID, `eventType: "PURCHASED"`, and `limit: 1`. It should describe
+the result as recorded history, not estimated current stock, and must not expose
+or invent event metadata.
 
 For an unfamiliar product, the agent should call `grocery_add` in proposal mode
 with `productName` and nested `groceryItem`. A `product_resolution_required`
