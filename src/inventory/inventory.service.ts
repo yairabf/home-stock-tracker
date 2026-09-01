@@ -26,10 +26,17 @@ import {
   GroceryItemStatus,
 } from '../generated/prisma/enums';
 import {
+  CompleteGroceryPurchaseItemInput,
   CompleteGroceryPurchaseInput,
   CompleteGroceryPurchaseResult,
 } from './types/complete-grocery-purchase';
 import { OperationalLogger } from '../observability/operational-logger.service';
+
+interface PurchaseEventInput {
+  productId: string;
+  quantity?: number;
+  unit?: string;
+}
 
 @Injectable()
 export class InventoryService {
@@ -228,17 +235,18 @@ export class InventoryService {
   async completeGroceryPurchase(
     input: CompleteGroceryPurchaseInput,
   ): Promise<CompleteGroceryPurchaseResult> {
-    this.validateCompleteGroceryPurchaseInput(input);
+    const selectedItems = this.normalizeCompleteGroceryPurchaseInput(input);
+    const groceryItemIds = selectedItems.map((item) => item.groceryItemId);
 
     const items = await this.prisma.groceryListItem.findMany({
-      where: { id: { in: input.groceryItemIds } },
+      where: { id: { in: groceryItemIds } },
       include: { product: PRODUCT_WITH_NAMES_INCLUDE },
     });
     const itemsById = new Map(items.map((item) => [item.id, item]));
-    const orderedItems = input.groceryItemIds.map((id) => itemsById.get(id));
+    const orderedItems = groceryItemIds.map((id) => itemsById.get(id));
     const invalidItems = orderedItems.flatMap((item, index) => {
       if (!item) {
-        return [{ id: input.groceryItemIds[index], reason: 'not_found' }];
+        return [{ id: groceryItemIds[index], reason: 'not_found' }];
       }
       if (
         item.status !== GroceryItemStatus.pending ||
@@ -259,15 +267,22 @@ export class InventoryService {
     const validItems = orderedItems.filter(
       (item): item is NonNullable<typeof item> => item !== undefined,
     );
-    const productIds = [...new Set(validItems.map((item) => item.productId))];
+    const eventInputs = this.buildPurchaseEventInputs(
+      validItems,
+      selectedItems,
+    );
     const result = await this.prisma.$transaction(async (tx) => {
       const events = await Promise.all(
-        productIds.map((productId) =>
+        eventInputs.map((eventInput) =>
           tx.inventoryEvent.create({
             data: {
-              productId,
+              productId: eventInput.productId,
               eventType: InventoryEventType.PURCHASED,
               source: input.source,
+              ...(eventInput.quantity !== undefined && {
+                quantity: eventInput.quantity,
+              }),
+              ...(eventInput.unit !== undefined && { unit: eventInput.unit }),
             },
           }),
         ),
@@ -313,18 +328,125 @@ export class InventoryService {
     };
   }
 
-  private validateCompleteGroceryPurchaseInput(
+  private normalizeCompleteGroceryPurchaseInput(
     input: CompleteGroceryPurchaseInput,
-  ): void {
-    if (input.groceryItemIds.length === 0) {
-      throw new BadRequestException('At least one grocery item is required');
-    }
-    if (new Set(input.groceryItemIds).size !== input.groceryItemIds.length) {
-      throw new BadRequestException('Grocery item IDs must be unique');
-    }
-    if (input.source.trim().length === 0) {
+  ): CompleteGroceryPurchaseItemInput[] {
+    if (typeof input.source !== 'string' || input.source.trim().length === 0) {
       throw new BadRequestException('Purchase source is required');
     }
+
+    const hasLegacyItems = input.groceryItemIds !== undefined;
+    const hasMeasuredItems = input.items !== undefined;
+    if (hasLegacyItems === hasMeasuredItems) {
+      throw new BadRequestException(
+        'Provide exactly one grocery purchase selection',
+      );
+    }
+
+    const selectedItems = hasLegacyItems
+      ? input.groceryItemIds.map((groceryItemId) => ({ groceryItemId }))
+      : input.items;
+    if (selectedItems.length === 0) {
+      throw new BadRequestException('At least one grocery item is required');
+    }
+
+    const normalizedItems = selectedItems.map((item) =>
+      this.normalizeActualMeasurement(item),
+    );
+    const itemIds = normalizedItems.map((item) => item.groceryItemId);
+    if (new Set(itemIds).size !== itemIds.length) {
+      throw new BadRequestException('Grocery item IDs must be unique');
+    }
+
+    return normalizedItems;
+  }
+
+  private normalizeActualMeasurement(
+    item: CompleteGroceryPurchaseItemInput,
+  ): CompleteGroceryPurchaseItemInput {
+    if (
+      item.actualQuantity !== undefined &&
+      (!Number.isFinite(item.actualQuantity) || item.actualQuantity <= 0)
+    ) {
+      throw new BadRequestException(
+        `Actual quantity for grocery item ${item.groceryItemId} must be a finite positive number`,
+      );
+    }
+    if (item.actualUnit !== undefined && item.actualQuantity === undefined) {
+      throw new BadRequestException(
+        `Actual unit for grocery item ${item.groceryItemId} requires actual quantity`,
+      );
+    }
+    if (
+      item.actualUnit !== undefined &&
+      (typeof item.actualUnit !== 'string' ||
+        item.actualUnit.trim().length === 0)
+    ) {
+      throw new BadRequestException(
+        `Actual unit for grocery item ${item.groceryItemId} must not be blank`,
+      );
+    }
+
+    return {
+      ...item,
+      ...(item.actualUnit !== undefined && {
+        actualUnit: item.actualUnit.trim(),
+      }),
+    };
+  }
+
+  private buildPurchaseEventInputs(
+    items: Array<{ productId: string }>,
+    selectedItems: CompleteGroceryPurchaseItemInput[],
+  ): PurchaseEventInput[] {
+    const selectionsByProduct = new Map<
+      string,
+      CompleteGroceryPurchaseItemInput[]
+    >();
+    items.forEach((item, index) => {
+      const selections = selectionsByProduct.get(item.productId) ?? [];
+      selections.push(selectedItems[index]);
+      selectionsByProduct.set(item.productId, selections);
+    });
+
+    return [...selectionsByProduct].map(([productId, selections]) =>
+      this.buildPurchaseEventInput(productId, selections),
+    );
+  }
+
+  private buildPurchaseEventInput(
+    productId: string,
+    selections: CompleteGroceryPurchaseItemInput[],
+  ): PurchaseEventInput {
+    const measured = selections.filter(
+      (selection) => selection.actualQuantity !== undefined,
+    );
+    if (measured.length === 0) {
+      return { productId };
+    }
+    if (measured.length !== selections.length) {
+      throw new BadRequestException(
+        `Actual quantities for product ${productId} must be supplied for every selected item or none`,
+      );
+    }
+
+    const units = new Set(measured.map((selection) => selection.actualUnit));
+    if (units.size !== 1) {
+      throw new BadRequestException(
+        `Actual units for product ${productId} must match exactly`,
+      );
+    }
+    const quantity = measured.reduce(
+      (sum, selection) => sum + (selection.actualQuantity ?? 0),
+      0,
+    );
+    if (!Number.isFinite(quantity)) {
+      throw new BadRequestException(
+        `Aggregate actual quantity for product ${productId} must be finite`,
+      );
+    }
+
+    return { productId, quantity, unit: measured[0].actualUnit };
   }
 
   async completePartialPurchase(

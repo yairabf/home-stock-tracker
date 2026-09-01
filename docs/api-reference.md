@@ -399,7 +399,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
 | `record_stock_signal`           | Write | Record low, out, confirmed, or corrected stock.                                                |
 | `record_prediction_feedback`    | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.         |
-| `complete_grocery_purchase`     | Write | Complete a non-empty unique list of pending item UUIDs atomically.                             |
+| `complete_grocery_purchase`     | Write | Complete pending rows atomically and optionally record explicit actual purchase measurements.  |
 | `get_low_stock_predictions`     | Read  | Return actionable high-confidence recommendations.                                             |
 
 Tool responses contain structured content plus JSON text. Domain failures become
@@ -429,6 +429,38 @@ product is currently unavailable.
 `Grocery list item <id> is not pending` when the item was purchased, removed, or
 won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
+
+`complete_grocery_purchase` prefers a non-empty `items` array whose strict item
+objects contain `groceryItemId` plus optional `actualQuantity` and `actualUnit`.
+Quantity must be finite and positive. A unit must be trimmed, non-empty, and
+accompanied by quantity. Use actual fields only for measurements the user
+explicitly reported; never copy a grocery row's requested quantity or unit, or
+a product's typical unit. For example:
+
+```json
+{
+  "items": [
+    {
+      "groceryItemId": "0f5b898d-a917-4e34-95cc-4d275075fbf1",
+      "actualQuantity": 2,
+      "actualUnit": "cartons"
+    },
+    { "groceryItemId": "ef98843f-1c26-4f46-86ab-b111a6405e45" }
+  ]
+}
+```
+
+Selected rows for the same product produce one purchase event. Their explicit
+actual quantities are summed only when every selected row for that product has
+a quantity and all trimmed units match exactly, including every row omitting a
+unit. Partial measurements or conflicting units reject the entire operation;
+clients must ask for clarification and must not convert units. Rows without
+actual measurements create purchase events with omitted quantity and unit.
+
+The legacy `{ "groceryItemIds": ["..."] }` shape remains supported for
+transitional clients and records no actual measurement. Supply exactly one of
+`items` or `groceryItemIds`. Completion preserves the all-or-nothing transaction
+and uncertain-write guidance described below.
 
 `record_prediction_feedback` accepts one strict object with `predictionId` and
 `outcome`. The outcome is `accepted`, `rejected`, or `corrected`.
@@ -479,7 +511,8 @@ latest state without retrying or recalculating automatically.
 1. Resolve exact names with `get_product`; use `search_products` for nearby or ambiguous catalog discovery.
 2. Present multiple search candidates in returned order and require the user's choice before using one ID.
 3. Treat proposals as advisory; apply only a final user-approved create or alias payload.
-4. Call `grocery_list` before removing or completing grocery-item UUIDs.
+4. Call `grocery_list` before removing or completing grocery-item UUIDs; prefer
+   completion `items` and add actual fields only from explicit user facts.
 5. Resolve named products before history reads and distinguish recorded events from estimated current stock.
 6. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
 7. Never guess IDs, quantities, units, event types, metadata, or stock state.
@@ -489,5 +522,6 @@ latest state without retrying or recalculating automatically.
 11. Never turn a recommendation into a list mutation without a separate request.
 
 For "I bought everything except toilet paper," list pending items, require one
-exact match per named item, and call `complete_grocery_purchase` once with only
-the IDs actually purchased.
+exact match per named item, and call `complete_grocery_purchase` once with
+`items: [{ groceryItemId: <returned id> }, ...]` for only the rows actually
+purchased.

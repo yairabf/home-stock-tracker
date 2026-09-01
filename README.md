@@ -15,7 +15,7 @@ and low-stock recommendations.
 
 | Guide                                                                  | Contents                                                                                                                  |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, all fifteen tools, and safe tool workflows.                    |
+| [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, all sixteen tools, and safe tool workflows.                    |
 | [Agent integrations](docs/agent-integrations.md)                       | Complete Hermes, OpenClaw, and generic MCP-client setup with official references.                                         |
 | [Operations guide](docs/operations.md)                                 | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
 | [Deployment guide](docs/deployment.md)                                 | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery.                             |
@@ -32,7 +32,8 @@ Official agent references:
 
 - Maintains canonical products and aliases.
 - Adds, lists, removes, and completes grocery-list items through explicit
-  unknown-product and pending-line policies.
+  unknown-product and pending-line policies, preserving reported actual purchase
+  measurements without inventing them from requested values.
 - Records purchases, restocks, and direct stock signals.
 - Preserves an append-only inventory event history.
 - Learns product-specific purchase and need intervals.

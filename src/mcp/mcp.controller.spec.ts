@@ -181,6 +181,31 @@ describe('McpController', () => {
       expect(JSON.stringify(eventHistoryTool?.outputSchema)).not.toContain(
         'metadata',
       );
+      expect(
+        tools.tools.find(({ name }) => name === 'complete_grocery_purchase')
+          ?.inputSchema,
+      ).toMatchObject({
+        additionalProperties: false,
+        properties: {
+          groceryItemIds: {
+            type: 'array',
+            items: { type: 'string', format: 'uuid' },
+          },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['groceryItemId'],
+              properties: {
+                groceryItemId: { type: 'string', format: 'uuid' },
+                actualQuantity: { type: 'number', exclusiveMinimum: 0 },
+                actualUnit: { type: 'string', minLength: 1 },
+              },
+            },
+          },
+        },
+      });
       productSearchService.search.mockResolvedValue({
         exactMatch: null,
         candidates: [],
@@ -222,15 +247,39 @@ describe('McpController', () => {
       await expect(
         client.callTool({
           name: 'complete_grocery_purchase',
-          arguments: { groceryItemIds: [groceryItemId] },
+          arguments: {
+            items: [
+              {
+                groceryItemId,
+                actualQuantity: 2,
+                actualUnit: 'cartons',
+              },
+            ],
+          },
         }),
       ).resolves.toMatchObject({
         structuredContent: { events: [], completedItems: [] },
       });
       expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
-        groceryItemIds: [groceryItemId],
+        items: [
+          {
+            groceryItemId,
+            actualQuantity: 2,
+            actualUnit: 'cartons',
+          },
+        ],
         source: 'mcp',
       });
+      await expect(
+        client.callTool({
+          name: 'complete_grocery_purchase',
+          arguments: {
+            groceryItemIds: [groceryItemId],
+            items: [{ groceryItemId }],
+          },
+        }),
+      ).resolves.toMatchObject({ isError: true });
+      expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledTimes(1);
       expect(transport.sessionId).toBeUndefined();
     } finally {
       await client.close();

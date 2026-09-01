@@ -310,6 +310,58 @@ const completeGroceryPurchaseOutputSchema = z.object({
   completedItems: z.array(groceryItemOutputSchema),
 });
 
+const completeGroceryPurchaseItemInputSchema = z
+  .object({
+    groceryItemId: z.uuid(),
+    actualQuantity: z.number().positive().finite().optional(),
+    actualUnit: z.string().trim().min(1).optional(),
+  })
+  .strict()
+  .superRefine((item, context) => {
+    if (item.actualUnit !== undefined && item.actualQuantity === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['actualUnit'],
+        message: 'Actual unit requires actual quantity',
+      });
+    }
+  });
+
+const completeGroceryPurchaseInputSchema = z
+  .object({
+    groceryItemIds: z
+      .array(z.uuid())
+      .min(1)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: 'Grocery item IDs must be unique',
+      })
+      .describe('Legacy ID-only selection retained during transition')
+      .optional(),
+    items: z
+      .array(completeGroceryPurchaseItemInputSchema)
+      .min(1)
+      .refine(
+        (items) =>
+          new Set(items.map((item) => item.groceryItemId)).size ===
+          items.length,
+        { message: 'Grocery item IDs must be unique' },
+      )
+      .describe('Preferred selection with optional actual measurements')
+      .optional(),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    const selectionCount =
+      Number(input.groceryItemIds !== undefined) +
+      Number(input.items !== undefined);
+    if (selectionCount !== 1) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Provide exactly one grocery purchase selection',
+      });
+    }
+  });
+
 const recommendationOutputSchema = z.object({
   recommendations: z.array(
     z.object({
@@ -419,28 +471,23 @@ export class McpServerFactory {
       'complete_grocery_purchase',
       {
         description:
-          'Complete selected pending grocery items from one shopping trip.',
-        inputSchema: z
-          .object({
-            groceryItemIds: z
-              .array(z.uuid())
-              .min(1)
-              .refine((ids) => new Set(ids).size === ids.length, {
-                message: 'Grocery item IDs must be unique',
-              }),
-          })
-          .strict(),
+          'Complete selected pending grocery items from one shopping trip. Prefer items with only user-supplied actual measurements; groceryItemIds is the legacy ID-only form.',
+        inputSchema: completeGroceryPurchaseInputSchema,
         outputSchema: completeGroceryPurchaseOutputSchema,
       },
-      ({ groceryItemIds }) =>
-        this.runTool('complete_grocery_purchase', async () =>
-          this.toolResult(
+      (input) =>
+        this.runTool('complete_grocery_purchase', async () => {
+          const selection =
+            input.items !== undefined
+              ? { items: input.items }
+              : { groceryItemIds: input.groceryItemIds! };
+          return this.toolResult(
             await this.inventoryService.completeGroceryPurchase({
-              groceryItemIds,
+              ...selection,
               source: TransportSource.mcp,
             }),
-          ),
-        ),
+          );
+        }),
     );
   }
 

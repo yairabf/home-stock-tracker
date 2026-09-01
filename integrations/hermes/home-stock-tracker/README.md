@@ -77,7 +77,10 @@ separate quantity question and does not repeat the catalog confirmation.
 To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
 list, require one exact toilet-paper match, exclude that ID, and propose one
-`complete_grocery_purchase` call containing only the remaining IDs.
+`complete_grocery_purchase({ items: [{ groceryItemId: ... }] })` call containing
+only the remaining items. It must omit actual fields unless the user explicitly
+states what was purchased, never copy requested values, and ask before sending
+incomplete or conflicting measurements for duplicate-product rows.
 
 To review duplicate confirmation, first create a numeric pending test item, then
 ask Hermes to add the same product. It should call `grocery_add` once, explain the

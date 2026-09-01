@@ -342,6 +342,34 @@ describe('McpServerFactory grocery tools', () => {
     expect(
       eventHistoryTool?.outputSchema?.properties?.items.items.properties,
     ).not.toHaveProperty('metadata');
+    const purchaseCompletionTool = result.tools.find(
+      ({ name }) => name === 'complete_grocery_purchase',
+    );
+    expect(purchaseCompletionTool?.description).toContain(
+      'only user-supplied actual measurements',
+    );
+    expect(purchaseCompletionTool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      properties: {
+        groceryItemIds: {
+          type: 'array',
+          items: { type: 'string', format: 'uuid' },
+        },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['groceryItemId'],
+            properties: {
+              groceryItemId: { type: 'string', format: 'uuid' },
+              actualQuantity: { type: 'number', exclusiveMinimum: 0 },
+              actualUnit: { type: 'string', minLength: 1 },
+            },
+          },
+        },
+      },
+    });
     for (const name of [
       'grocery_add',
       'grocery_confirm_new_product',
@@ -1471,7 +1499,7 @@ describe('McpServerFactory grocery tools', () => {
     ).not.toContain('database password leaked here');
   });
 
-  it('completes selected grocery items with MCP provenance', async () => {
+  it('completes selected grocery items with actual measurements and MCP provenance', async () => {
     const secondItem = {
       ...item,
       id: '00000000-0000-4000-8000-000000000004',
@@ -1486,7 +1514,10 @@ describe('McpServerFactory grocery tools', () => {
       relatedInventoryEventId: '00000000-0000-4000-8000-000000000003',
     };
     const events = [
-      inventoryEvent(InventoryEventType.PURCHASED),
+      {
+        ...inventoryEvent(InventoryEventType.PURCHASED),
+        unit: 'liters',
+      },
       {
         ...inventoryEvent(InventoryEventType.PURCHASED),
         id: secondItem.relatedInventoryEventId,
@@ -1500,11 +1531,27 @@ describe('McpServerFactory grocery tools', () => {
 
     const result = await client.callTool({
       name: 'complete_grocery_purchase',
-      arguments: { groceryItemIds: [completedItem.id, secondItem.id] },
+      arguments: {
+        items: [
+          {
+            groceryItemId: completedItem.id,
+            actualQuantity: 2,
+            actualUnit: 'liters',
+          },
+          { groceryItemId: secondItem.id },
+        ],
+      },
     });
 
     expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
-      groceryItemIds: [completedItem.id, secondItem.id],
+      items: [
+        {
+          groceryItemId: completedItem.id,
+          actualQuantity: 2,
+          actualUnit: 'liters',
+        },
+        { groceryItemId: secondItem.id },
+      ],
       source: 'mcp',
     });
     expect(result.structuredContent).toEqual({
@@ -1522,12 +1569,50 @@ describe('McpServerFactory grocery tools', () => {
     ]);
   });
 
+  it('keeps the legacy grocery item ID selection available', async () => {
+    inventoryService.completeGroceryPurchase.mockResolvedValue({
+      events: [],
+      completedItems: [],
+    });
+
+    await client.callTool({
+      name: 'complete_grocery_purchase',
+      arguments: { groceryItemIds: [item.id] },
+    });
+
+    expect(inventoryService.completeGroceryPurchase).toHaveBeenCalledWith({
+      groceryItemIds: [item.id],
+      source: 'mcp',
+    });
+  });
+
   it.each([
     {},
     { groceryItemIds: [] },
     { groceryItemIds: ['not-a-uuid'] },
     { groceryItemIds: [item.id, item.id] },
     { groceryItemIds: [item.id], productId: item.productId },
+    { items: [] },
+    { items: [{ groceryItemId: 'not-a-uuid' }] },
+    {
+      items: [{ groceryItemId: item.id }, { groceryItemId: item.id }],
+    },
+    { items: [{ groceryItemId: item.id, actualQuantity: 0 }] },
+    { items: [{ groceryItemId: item.id, actualUnit: 'cartons' }] },
+    {
+      items: [
+        {
+          groceryItemId: item.id,
+          actualQuantity: 2,
+          actualUnit: '   ',
+        },
+      ],
+    },
+    { items: [{ groceryItemId: item.id, unexpected: true }] },
+    {
+      groceryItemIds: [item.id],
+      items: [{ groceryItemId: item.id }],
+    },
   ])(
     'rejects invalid completion input before service invocation',
     async (args) => {

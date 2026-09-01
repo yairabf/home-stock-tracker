@@ -117,7 +117,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.9.0');
+      expect(skill).toContain('version: 1.10.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -176,7 +176,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.9.0');
+      expect(skill).toContain('version: 1.10.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -196,6 +196,34 @@ describe('agent inventory skill contract', () => {
       expect(scenarios).toContain('| Repeated prediction feedback');
       expect(scenarios).toContain(
         '| Prediction feedback transport uncertainty',
+      );
+    },
+  );
+
+  it.each(bundles)(
+    '$platform documents actual purchase completion without invention',
+    ({ skill, scenarios, readme }) => {
+      expect(skill).toContain('version: 1.10.0');
+      expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
+      expect(skill).toContain('preferred inclusive `items` array');
+      expect(skill).toContain('`actualQuantity`');
+      expect(skill).toContain('`actualUnit`');
+      expect(skill).toMatch(/Never\s+copy `requestedQuantity`/);
+      expect(skill).toContain('Never convert units.');
+      expect(skill).toContain('transitional older');
+      expect(skill).toMatch(
+        /do not\s+retry or claim that any item was completed/,
+      );
+      expect(readme).toContain(
+        '`complete_grocery_purchase({ items: [{ groceryItemId: ... }] })`',
+      );
+      expect(readme).toContain('requested values');
+      expect(scenarios).toContain('| Complete with actual measurement');
+      expect(scenarios).toContain('| Complete without actual measurement');
+      expect(scenarios).toContain('| Duplicate product measured consistently');
+      expect(scenarios).toContain('| Duplicate product measurement ambiguity');
+      expect(scenarios).not.toContain(
+        'complete_grocery_purchase({ groceryItemIds:',
       );
     },
   );

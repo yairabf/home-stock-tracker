@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.9.0
+version: 1.10.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -46,7 +46,7 @@ do not recreate its logic in conversation.
 | `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                           |
 | `record_stock_signal`           | The user directly reports one resolved product as low, out, confirmed available, or corrects an earlier stock record without referring to a prediction.                                                               | The statement is feedback about one specific prediction or is too vague to map to an allowed event type.                                                     |
 | `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.    |
-| `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve the current pending item IDs with `grocery_list` first.                                                                           | Any named included or excluded item has zero or multiple exact pending matches, no selected items remain, or the user only plans to shop later.              |
+| `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                       | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
 | `get_low_stock_predictions`     | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                                         | The user asks for the grocery list or one product's estimated state.                                                                                         |
 
 ## Resolve identifiers first
@@ -286,13 +286,24 @@ except X":
    that result. Each named item must match exactly one pending item.
 3. Ask a focused question without mutating when any name has zero or multiple
    exact matches, or when it is unclear whether the user bought an item.
-4. Build an inclusive `groceryItemIds` array containing only items the user said
-   were purchased. For "everything except X," remove the exactly matched
-   exceptions from the pending snapshot.
-5. If the inclusive array is empty, explain that nothing was recorded and do
+4. Build the preferred inclusive `items` array in user order. Each object must
+   contain one returned `groceryItemId`. For "everything except X," remove the
+   exactly matched exceptions from the pending snapshot.
+5. Add `actualQuantity` only when the user explicitly states the amount actually
+   purchased. Add a trimmed `actualUnit` only with that actual quantity. Never
+   copy `requestedQuantity`, the grocery item's requested `unit`, or the
+   product's typical unit into these actual fields.
+6. When selected rows share one product, supply measurements only if every row
+   has an explicit actual quantity and their units match exactly after trimming,
+   including all rows omitting a unit. If measurements are incomplete or units
+   conflict, ask one focused question before mutation. Never convert units.
+7. If the inclusive array is empty, explain that nothing was recorded and do
    not call a mutation.
-6. Call `complete_grocery_purchase` once with the inclusive IDs. Summarize only
-   the returned completed items.
+8. Call `complete_grocery_purchase` once with `{ items }`. Summarize only the
+   returned completed items and recorded actual measurements.
+
+The legacy `{ groceryItemIds }` form remains available for transitional older
+clients, but new agent calls must use `{ items }`.
 
 Never pass omitted item IDs to `complete_grocery_purchase`. Never approximate
 this flow with `record_purchase`, `grocery_remove`, or repeated partial
@@ -399,5 +410,7 @@ supplement an empty result with guesses.
 
 Call `grocery_list`. Match "toilet paper" to exactly one pending
 `productName`, remove that item from the pending snapshot, then call
-`complete_grocery_purchase` once with all remaining item IDs. Leave toilet paper
-pending and summarize only the confirmed completed items.
+`complete_grocery_purchase` once with
+`{ items: [{ groceryItemId: <returned id> }, ...] }` for all remaining items.
+Omit actual fields because the user supplied no actual measurements. Leave
+toilet paper pending and summarize only the confirmed completed items.

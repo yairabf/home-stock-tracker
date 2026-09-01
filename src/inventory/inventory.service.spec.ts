@@ -943,12 +943,17 @@ describe('InventoryService', () => {
       },
     });
 
-    const purchaseEvent = (id: string, productId: string) => ({
+    const purchaseEvent = (
+      id: string,
+      productId: string,
+      quantity: number | null = null,
+      unit: string | null = null,
+    ) => ({
       id,
       productId,
       eventType: InventoryEventType.PURCHASED,
-      quantity: null,
-      unit: null,
+      quantity,
+      unit,
       timestamp: new Date('2026-08-27T11:00:00.000Z'),
       source: 'hermes_mcp',
       confidence: null,
@@ -1042,18 +1047,266 @@ describe('InventoryService', () => {
       ]);
     });
 
-    it.each([
-      { groceryItemIds: [], source: 'hermes_mcp' },
-      {
-        groceryItemIds: [milkItemId, milkItemId],
-        source: 'hermes_mcp',
-      },
-      { groceryItemIds: [milkItemId], source: '   ' },
-    ])('rejects invalid input before reading or writing', async (input) => {
-      await expect(service.completeGroceryPurchase(input)).rejects.toThrow(
-        BadRequestException,
+    it('aggregates explicit same-unit measurements without changing requested values', async () => {
+      const firstMilkItem = {
+        ...groceryItem(milkItemId, milkProductId, 'milk'),
+        requestedQuantity: 4,
+        unit: 'requested bottles',
+      };
+      const secondMilkItem = {
+        ...groceryItem(secondMilkItemId, milkProductId, 'milk'),
+        requestedQuantity: 7,
+        unit: 'requested cases',
+      };
+      prisma.groceryListItem.findMany.mockResolvedValue([
+        secondMilkItem,
+        firstMilkItem,
+      ]);
+
+      const createEvent = jest
+        .fn()
+        .mockResolvedValue(
+          purchaseEvent('milk-event', milkProductId, 5, 'cartons'),
+        );
+      const updateItem = jest
+        .fn()
+        .mockImplementation(
+          ({ where, data }: { where: { id: string }; data: object }) => {
+            const original = [firstMilkItem, secondMilkItem].find(
+              (item) => item.id === where.id,
+            );
+            return Promise.resolve({ ...original, ...data });
+          },
+        );
+      prisma.$transaction.mockImplementation(
+        (callback: (transaction: object) => unknown) =>
+          callback({
+            inventoryEvent: { create: createEvent },
+            groceryListItem: { update: updateItem },
+          }),
       );
+
+      const result = await service.completeGroceryPurchase({
+        items: [
+          {
+            groceryItemId: milkItemId,
+            actualQuantity: 2,
+            actualUnit: ' cartons ',
+          },
+          {
+            groceryItemId: secondMilkItemId,
+            actualQuantity: 3,
+            actualUnit: 'cartons',
+          },
+        ],
+        source: 'hermes_mcp',
+      });
+
+      expect(createEvent).toHaveBeenCalledWith({
+        data: {
+          productId: milkProductId,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'hermes_mcp',
+          quantity: 5,
+          unit: 'cartons',
+        },
+      });
+      expect(result.events[0]).toMatchObject({ quantity: 5, unit: 'cartons' });
+      expect(
+        result.completedItems.map((item) => ({
+          id: item.id,
+          requestedQuantity: item.requestedQuantity,
+          unit: item.unit,
+        })),
+      ).toEqual([
+        {
+          id: milkItemId,
+          requestedQuantity: 4,
+          unit: 'requested bottles',
+        },
+        {
+          id: secondMilkItemId,
+          requestedQuantity: 7,
+          unit: 'requested cases',
+        },
+      ]);
+    });
+
+    it.each([
+      {
+        case: 'an unmeasured preferred item',
+        selection: { groceryItemId: milkItemId },
+        expectedData: {
+          productId: milkProductId,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'hermes_mcp',
+        },
+        quantity: null,
+      },
+      {
+        case: 'a measured item without a unit',
+        selection: { groceryItemId: milkItemId, actualQuantity: 2.5 },
+        expectedData: {
+          productId: milkProductId,
+          eventType: InventoryEventType.PURCHASED,
+          source: 'hermes_mcp',
+          quantity: 2.5,
+        },
+        quantity: 2.5,
+      },
+    ])('records $case without inventing a unit', async (testCase) => {
+      const milkItem = groceryItem(milkItemId, milkProductId, 'milk');
+      prisma.groceryListItem.findMany.mockResolvedValue([milkItem]);
+      const createEvent = jest
+        .fn()
+        .mockResolvedValue(
+          purchaseEvent('milk-event', milkProductId, testCase.quantity),
+        );
+      const updateItem = jest.fn().mockResolvedValue({
+        ...milkItem,
+        status: GroceryItemStatus.purchased,
+        relatedInventoryEventId: 'milk-event',
+      });
+      prisma.$transaction.mockImplementation(
+        (callback: (transaction: object) => unknown) =>
+          callback({
+            inventoryEvent: { create: createEvent },
+            groceryListItem: { update: updateItem },
+          }),
+      );
+
+      const result = await service.completeGroceryPurchase({
+        items: [testCase.selection],
+        source: 'hermes_mcp',
+      });
+
+      expect(createEvent).toHaveBeenCalledWith({ data: testCase.expectedData });
+      expect(result.events[0]).toMatchObject({
+        quantity: testCase.quantity,
+        unit: null,
+      });
+    });
+
+    it.each([
+      {
+        case: 'an empty legacy selection',
+        input: { groceryItemIds: [], source: 'hermes_mcp' },
+      },
+      {
+        case: 'duplicate legacy IDs',
+        input: {
+          groceryItemIds: [milkItemId, milkItemId],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'an empty preferred selection',
+        input: { items: [], source: 'hermes_mcp' },
+      },
+      {
+        case: 'duplicate preferred IDs',
+        input: {
+          items: [{ groceryItemId: milkItemId }, { groceryItemId: milkItemId }],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'zero actual quantity',
+        input: {
+          items: [{ groceryItemId: milkItemId, actualQuantity: 0 }],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'non-finite actual quantity',
+        input: {
+          items: [{ groceryItemId: milkItemId, actualQuantity: Infinity }],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'an actual unit without quantity',
+        input: {
+          items: [{ groceryItemId: milkItemId, actualUnit: 'cartons' }],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'a blank actual unit',
+        input: {
+          items: [
+            {
+              groceryItemId: milkItemId,
+              actualQuantity: 2,
+              actualUnit: '   ',
+            },
+          ],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'both selection forms',
+        input: {
+          groceryItemIds: [milkItemId],
+          items: [{ groceryItemId: milkItemId }],
+          source: 'hermes_mcp',
+        },
+      },
+      {
+        case: 'neither selection form',
+        input: { source: 'hermes_mcp' },
+      },
+      {
+        case: 'a blank source',
+        input: { groceryItemIds: [milkItemId], source: '   ' },
+      },
+    ])('rejects $case before reading or writing', async ({ input }) => {
+      await expect(
+        service.completeGroceryPurchase(
+          input as Parameters<InventoryService['completeGroceryPurchase']>[0],
+        ),
+      ).rejects.toThrow(BadRequestException);
       expect(prisma.groceryListItem.findMany).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        case: 'partially measured rows for one product',
+        items: [
+          { groceryItemId: milkItemId, actualQuantity: 2 },
+          { groceryItemId: secondMilkItemId },
+        ],
+        message: 'must be supplied for every selected item or none',
+      },
+      {
+        case: 'conflicting units for one product',
+        items: [
+          {
+            groceryItemId: milkItemId,
+            actualQuantity: 2,
+            actualUnit: 'cartons',
+          },
+          {
+            groceryItemId: secondMilkItemId,
+            actualQuantity: 3,
+            actualUnit: 'boxes',
+          },
+        ],
+        message: 'must match exactly',
+      },
+    ])('rejects $case before starting a transaction', async (testCase) => {
+      prisma.groceryListItem.findMany.mockResolvedValue([
+        groceryItem(milkItemId, milkProductId, 'milk'),
+        groceryItem(secondMilkItemId, milkProductId, 'milk'),
+      ]);
+
+      await expect(
+        service.completeGroceryPurchase({
+          items: testCase.items,
+          source: 'hermes_mcp',
+        }),
+      ).rejects.toThrow(testCase.message);
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 

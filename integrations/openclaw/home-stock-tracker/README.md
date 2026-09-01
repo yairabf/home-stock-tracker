@@ -85,6 +85,14 @@ quantity and the user's answer, then call `grocery_set_quantity` once with the
 item ID, final quantity, and expected old quantity. A decline or unchanged total
 makes no second tool call.
 
+For a purchase-completion smoke check, ask what the agent would do for "I bought
+everything except toilet paper." It should read the pending list, resolve the
+exception exactly, and propose one preferred
+`complete_grocery_purchase({ items: [{ groceryItemId: ... }] })` call. Actual
+quantity and unit fields belong only to explicit user facts and must never be
+copied from requested values. Incomplete or conflicting measurements across
+duplicate-product rows require a focused question before mutation.
+
 For a prediction-feedback smoke check, first ask for one product estimate and
 retain its non-null returned `predictionId`. Then say that the prediction was
 right, wrong, or provide a concrete corrected state. The agent should call
