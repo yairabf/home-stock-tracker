@@ -168,8 +168,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.controller.ts": {
-    "mtime": 1788288777.0015898,
-    "seen": 1788289610.436834,
+    "mtime": 1788290921.5042229,
+    "seen": 1788292007.7523358,
     "ast_hash": "315436144ad200f3fbd2d88cdb256f93",
     "semantic_hash": ""
   },
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.ts": {
-    "mtime": 1788288615.0756376,
-    "seen": 1788289610.4368498,
+    "mtime": 1788290921.5061405,
+    "seen": 1788292007.752353,
     "ast_hash": "5f283dd37245606fa49514d42689a94a",
     "semantic_hash": ""
   },
@@ -516,14 +516,14 @@
     "semantic_hash": ""
   },
   "src/product/product.service.spec.ts": {
-    "mtime": 1788289734.5916812,
-    "seen": 1788290217.7871091,
+    "mtime": 1788290921.5094543,
+    "seen": 1788292007.753655,
     "ast_hash": "3f88dfc7fdf6932423d5ace5ce18dd66",
     "semantic_hash": ""
   },
   "src/product/product.service.ts": {
-    "mtime": 1788289734.506079,
-    "seen": 1788290217.7871099,
+    "mtime": 1788290921.5098507,
+    "seen": 1788292007.7536561,
     "ast_hash": "4a1a18c63150868b5b2ff839e94de6d9",
     "semantic_hash": ""
   },
@@ -1548,15 +1548,15 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788289379.9872527,
-    "seen": 1788289610.441818,
+    "mtime": 1788290921.4682517,
+    "seen": 1788292007.757231,
     "ast_hash": "3cb63498e181cc0c423bbb0fb03f900d",
     "semantic_hash": ""
   },
   "blueprint/build-plan.md": {
-    "mtime": 1788277797.024479,
-    "seen": 1788289610.441818,
-    "ast_hash": "927324510b368ebad110ddf001fcff7a",
+    "mtime": 1788290921.468708,
+    "seen": 1788292007.757231,
+    "ast_hash": "c4e8ecc0255b917b995721c20c1e5851",
     "semantic_hash": ""
   },
   "blueprint/context/ai-interaction.md": {
@@ -1572,20 +1572,20 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788290207.0340269,
-    "seen": 1788290217.791677,
-    "ast_hash": "76746cd3d2445dfddfc2d60781050693",
+    "mtime": 1788290714.797233,
+    "seen": 1788292007.757635,
+    "ast_hash": "188cd292770cded0d619f72ae07ae649",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
-    "mtime": 1788290206.9461927,
-    "seen": 1788290217.791787,
-    "ast_hash": "72bb881bd5d863ab6fddaa9df9c06a55",
+    "mtime": 1788290708.5556135,
+    "seen": 1788292007.7577448,
+    "ast_hash": "1a15b181bfcf38118e982c6a1d60d33f",
     "semantic_hash": ""
   },
   "blueprint/context/project-overview.md": {
-    "mtime": 1788277797.1476376,
-    "seen": 1788289610.442328,
+    "mtime": 1788290921.4696515,
+    "seen": 1788292007.757746,
     "ast_hash": "8ae7257a885db30e7fb1f6a549e58fb4",
     "semantic_hash": ""
   },
@@ -1698,14 +1698,14 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788288977.4077678,
-    "seen": 1788289610.437706,
+    "mtime": 1788290921.5077155,
+    "seen": 1788292007.753183,
     "ast_hash": "ff7391b4f93d57745e0bf4d4c4a24ee8",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1788289276.1302505,
-    "seen": 1788289610.437707,
+    "mtime": 1788290921.507999,
+    "seen": 1788292007.753184,
     "ast_hash": "7db6de6cf2136a6a4799a09df159d3f9",
     "semantic_hash": ""
   },
@@ -1794,8 +1794,8 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788289070.818938,
-    "seen": 1788289610.437706,
+    "mtime": 1788290921.507148,
+    "seen": 1788292007.753183,
     "ast_hash": "ef481563c2495ed10d1246a2c727211c",
     "semantic_hash": ""
   },
@@ -1806,20 +1806,20 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/README.md": {
-    "mtime": 1788289439.2973025,
-    "seen": 1788289610.442951,
+    "mtime": 1788290921.50015,
+    "seen": 1788292007.758392,
     "ast_hash": "190cbdbb341f2500510af22b1534df0e",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1788289397.2913702,
-    "seen": 1788289610.442951,
+    "mtime": 1788290921.5006757,
+    "seen": 1788292007.758393,
     "ast_hash": "4f82f9b7f7c4b3de0e836414cd64b9c4",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
-    "mtime": 1788289426.1826952,
-    "seen": 1788289610.442952,
+    "mtime": 1788290921.5010717,
+    "seen": 1788292007.758394,
     "ast_hash": "52b67828d6b997b66cd2fb212124b096",
     "semantic_hash": ""
   },
@@ -2040,8 +2040,8 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-05-no-controlled-alias-management-tool.md": {
-    "mtime": 1788289426.3614888,
-    "seen": 1788289610.441948,
+    "mtime": 1788290921.4691048,
+    "seen": 1788292007.7573628,
     "ast_hash": "e25a3c9d4ed6cf9ba5aa405ea5bfe519",
     "semantic_hash": ""
   },
@@ -2136,9 +2136,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/triage.md": {
-    "mtime": 1788277525.8151934,
-    "seen": 1788289610.442202,
-    "ast_hash": "9d07b3c17ea632f11a6988fd04f42d04",
+    "mtime": 1788293006.609752,
+    "seen": 1788293046.776329,
+    "ast_hash": "ede064b5b81295d541350d6107a8ccda",
     "semantic_hash": ""
   },
   "blueprint/history/features/18-deployment-readiness.md": {
@@ -2148,14 +2148,14 @@
     "semantic_hash": ""
   },
   "docs/agent-integrations.md": {
-    "mtime": 1788289380.0642838,
-    "seen": 1788289610.442901,
+    "mtime": 1788290921.4705887,
+    "seen": 1788292007.7583418,
     "ast_hash": "4679f432a614c19b2d6b5e039b80b4bb",
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1788289734.6828897,
-    "seen": 1788290217.7924669,
+    "mtime": 1788290921.4711554,
+    "seen": 1788292007.7583418,
     "ast_hash": "ae0087ff3c218c8b65f2185b1fd261ad",
     "semantic_hash": ""
   },
@@ -2166,8 +2166,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.service.spec.ts": {
-    "mtime": 1788288609.84773,
-    "seen": 1788289610.4368498,
+    "mtime": 1788290921.505594,
+    "seen": 1788292007.752353,
     "ast_hash": "83bb664cdc3e8325210f855badb9f9d9",
     "semantic_hash": ""
   },
@@ -2190,8 +2190,8 @@
     "semantic_hash": ""
   },
   "src/grocery/grocery.controller.spec.ts": {
-    "mtime": 1788288777.0678473,
-    "seen": 1788289610.436834,
+    "mtime": 1788290921.5036874,
+    "seen": 1788292007.7523358,
     "ast_hash": "102a3d7b84ca2951e06e681f762d5d5c",
     "semantic_hash": ""
   },
@@ -2226,8 +2226,8 @@
     "semantic_hash": ""
   },
   "src/mcp/hermes-skill-contract.spec.ts": {
-    "mtime": 1788289459.108031,
-    "seen": 1788289610.437705,
+    "mtime": 1788290921.5067048,
+    "seen": 1788292007.753182,
     "ast_hash": "71d1bbe7128080fa493e0083c0d72d7b",
     "semantic_hash": ""
   },
@@ -2298,14 +2298,14 @@
     "semantic_hash": ""
   },
   "src/product/product-name.exception.spec.ts": {
-    "mtime": 1788277894.032244,
-    "seen": 1788289610.438029,
+    "mtime": 1788290921.508798,
+    "seen": 1788292007.753487,
     "ast_hash": "c68bcd1a446ee7f1d0168d0d05440953",
     "semantic_hash": ""
   },
   "src/product/product-name.exception.ts": {
-    "mtime": 1788277893.8030019,
-    "seen": 1788289610.43803,
+    "mtime": 1788290921.5090928,
+    "seen": 1788292007.7534878,
     "ast_hash": "6f5c42058c26a5ceac0d07271886b7d5",
     "semantic_hash": ""
   },
@@ -2520,8 +2520,8 @@
     "semantic_hash": ""
   },
   "test/policy-aware-grocery.mcp.e2e-spec.ts": {
-    "mtime": 1788289070.891896,
-    "seen": 1788289610.4386508,
+    "mtime": 1788290921.5107315,
+    "seen": 1788292007.754109,
     "ast_hash": "7118be8528e0a4f7e06a62ee3f07e319",
     "semantic_hash": ""
   },
@@ -2532,44 +2532,44 @@
     "semantic_hash": ""
   },
   "test/policy-aware-grocery.service.e2e-spec.ts": {
-    "mtime": 1788288654.6147013,
-    "seen": 1788289610.4386518,
+    "mtime": 1788290921.5110526,
+    "seen": 1788292007.754125,
     "ast_hash": "4c877591dbb29d627b9eab3985e4a43f",
     "semantic_hash": ""
   },
   "src/grocery/dto/confirm-grocery-catalog-decision.dto.spec.ts": {
-    "mtime": 1788277952.499117,
-    "seen": 1788289610.436745,
+    "mtime": 1788290921.50201,
+    "seen": 1788292007.752217,
     "ast_hash": "e517bcac8dcc88efdbb8beb82ef4f8d2",
     "semantic_hash": ""
   },
   "src/grocery/dto/confirm-grocery-catalog-decision.dto.ts": {
-    "mtime": 1788277893.58619,
-    "seen": 1788289610.436746,
+    "mtime": 1788290921.5023663,
+    "seen": 1788292007.752218,
     "ast_hash": "de454d99906e596f40bf9fa41c000f54",
     "semantic_hash": ""
   },
   "src/grocery/types/confirmed-grocery-catalog-decision.ts": {
-    "mtime": 1788277952.4824667,
-    "seen": 1788289610.436851,
+    "mtime": 1788290921.5063524,
+    "seen": 1788292007.7523541,
     "ast_hash": "a1f13dd7aea95550d3df00a2a9abaf35",
     "semantic_hash": ""
   },
   "src/mcp/schemas/grocery-confirmation.schema.spec.ts": {
-    "mtime": 1788277893.9560068,
-    "seen": 1788289610.437738,
+    "mtime": 1788290921.5083182,
+    "seen": 1788292007.753216,
     "ast_hash": "a59351d793cab2e7e317a4ddf832d010",
     "semantic_hash": ""
   },
   "src/mcp/schemas/grocery-confirmation.schema.ts": {
-    "mtime": 1788277893.725069,
-    "seen": 1788289610.437739,
+    "mtime": 1788290921.5084937,
+    "seen": 1788292007.753216,
     "ast_hash": "d2b950e7899ab6fa9b6e344c3b072791",
     "semantic_hash": ""
   },
   "test/confirmed-grocery-catalog.rest.e2e-spec.ts": {
-    "mtime": 1788288873.1488621,
-    "seen": 1788289610.438535,
+    "mtime": 1788290921.5101094,
+    "seen": 1788292007.753959,
     "ast_hash": "60d450c53e311257719afd591503bb4d",
     "semantic_hash": ""
   },
@@ -2577,6 +2577,30 @@
     "mtime": 1788277525.8156679,
     "seen": 1788289610.442712,
     "ast_hash": "d222a3b6f643c4bb7027af7ed67d5460",
+    "semantic_hash": ""
+  },
+  "blueprint/history/features/31-confirmed-grocery-catalog-decisions.md": {
+    "mtime": 1788290921.470164,
+    "seen": 1788292007.7581499,
+    "ast_hash": "f8a9bdb0f29bc8d06023cf3f08cb5d29",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260901_193922_okay_i_want_to_plan_all_the_bugs_that_we_have_fixe.md": {
+    "mtime": 1788291562.130864,
+    "seen": 1788292007.758392,
+    "ast_hash": "5ce530f64fefee58daf7bfed09eb7366",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260901_194704_can_you_update_the_blueprint_context_bugs_triage_m.md": {
+    "mtime": 1788292024.5024405,
+    "seen": 1788293046.777361,
+    "ast_hash": "1f9e3a1395815f440d011f14640fdaed",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260901_195807_according_to_blueprint_context_bugs_triage_md_whic.md": {
+    "mtime": 1788292687.2106466,
+    "seen": 1788293046.777361,
+    "ast_hash": "7f3b280515b5204d28caa2d3902af774",
     "semantic_hash": ""
   }
 }

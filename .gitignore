@@ -35,4 +35,8 @@ yarn-error.log*
 *.swp
 *.swo
 
+# Graphify machine-local query scratch
+graphify-out/.graphify_python
+graphify-out/.vocab.txt
+
 /src/generated/prisma

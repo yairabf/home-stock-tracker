@@ -1,180 +1,238 @@
-# MCP and skill gaps — triage
+# MCP and skill gaps - current triage
 
-Reviewed against the repository on 2026-08-30. The briefs in this directory
-are useful hypotheses, but they should not be treated as 19 independent bugs.
-They mix confirmed correctness defects, product decisions, missing MVP
-capabilities, and release-hardening work.
+Reviewed against the repository on 2026-09-01. The 20 briefs in this directory
+are useful source hypotheses, but they are not 20 independent bugs. They mix
+completed fixes, missing MCP adapters, product choices, documentation drift, and
+release hardening.
 
-## Fix first: confirmed correctness defects
+This file records the current decision for every brief. Revalidate a deferred
+item before implementation because the tool surface and integration targets may
+change again.
 
-### MCP-01 — `get_product` publishes an unreliable input schema
+## Decision summary
 
-Confirmed. `get_product` still uses a top-level Zod union. Runtime calls are
-tested, but the tests do not establish that `tools/list` visibly publishes both
-selector fields to a real MCP client.
+| Decision | Count | Briefs |
+| --- | ---: | --- |
+| Resolved | 7 | MCP-01, MCP-02, MCP-03, MCP-04, MCP-12, MCP-X01, SKILL-01 |
+| Fix next | 4 | MCP-06, MCP-07, MCP-09, SKILL-03 |
+| Wait or combine | 7 | MCP-05 remainder, MCP-10, MCP-11, SKILL-04, SKILL-05, SKILL-06, SKILL-07 |
+| Reject as a separate bug | 2 | MCP-08, SKILL-02 |
 
-This is small, high-impact, and should be fixed first.
+## Resolved
 
-### MCP-X01 — guard the `grocery_remove` pending-state transition
+### MCP-01 - reliable `get_product` input schema
 
-Confirmed and serious. `GroceryService.removeItem()` loads any existing row and
-unconditionally changes it to `removed`. A purchased item can therefore be
-rewritten as removed, and concurrent purchase/removal is unsafe.
+Resolved on 2026-08-30. `get_product` publishes one strict object schema with
+visible `id` and `productName` selectors and enforces exactly one selector at
+runtime. Real MCP discovery coverage is archived in
+[`blueprint/history/fixes/reliable-get-product-schema.md`](../../history/fixes/reliable-get-product-schema.md).
 
-This is a domain invariant and should be fixed immediately in the shared
-service, not only in the MCP adapter.
+### MCP-02 - duplicate-safe grocery additions
 
-### MCP-12 — source attribution is channel-specific and incorrect
+Resolved on 2026-08-31. The shared service now returns a structured
+`confirmation_required` result for an existing pending line, supports explicit
+separate-line creation, and protects the default path against concurrent
+duplicates. The completed fix is archived in
+[`blueprint/history/fixes/mcp-02-duplicate-safe-grocery-additions.md`](../../history/fixes/mcp-02-duplicate-safe-grocery-additions.md).
 
-Confirmed. `grocery_add` records `hermes_whatsapp`, while other MCP mutations
-use `hermes_mcp`. Neither is truthful for every generic MCP client. The Prisma
-enum currently permits only `hermes_whatsapp` or `api`, so the coherent fix will
-probably include a small migration and consistent generic MCP provenance.
+### MCP-03 - direct pending grocery-item updates
 
-### SKILL-01 — the checked-in skill contradicts product creation behavior (resolved 2026-09-01)
+Resolved on 2026-08-31. REST and MCP expose pending-only, selected-field updates
+for quantity, unit, and note with matching expected old values and stable stale
+state handling. The completed fix is archived in
+[`blueprint/history/fixes/mcp-03-direct-pending-grocery-item-updates.md`](../../history/fixes/mcp-03-direct-pending-grocery-item-updates.md).
 
-Resolved by feature 30. `grocery_add` now has explicit `create_if_missing` and
-`propose_if_missing` policies. REST defaults to deterministic creation from
-complete product facts; MCP defaults uncertain names to a successful,
-non-mutating `product_resolution_required` decision branch. The Hermes skill no
-longer treats unknown names as a dead end or silently invents product facts.
+### MCP-04 - product search and catalog discovery
 
-## Relevant, but requiring a product decision
+Resolved by feature 29 on 2026-09-01. REST and MCP share deterministic exact,
+token-prefix, and literal-substring search over the authoritative product-name
+namespace. Search is bounded, stable, read-only, and provider-free. The feature
+is archived in
+[`blueprint/history/features/29-product-search-and-resolution-proposals.md`](../../history/features/29-product-search-and-resolution-proposals.md).
 
-### MCP-02 — duplicate pending grocery items
+### MCP-12 - generic MCP source attribution
 
-Confirmed mechanically: every add creates a new row. Whether every duplicate is
-a defect depends on the desired semantics because separate pending lines can be
-intentional.
+Resolved on 2026-08-30. MCP adapters assign generic `mcp` provenance, REST
+controllers assign `api`, and public inputs cannot select their own source. The
+completed fix is archived in
+[`blueprint/history/fixes/mcp-source-attribution.md`](../../history/fixes/mcp-source-attribution.md).
 
-Recommended behavior:
+### MCP-X01 - pending-only grocery removal
 
-- Default to returning the existing pending line without mutation.
-- Require an explicit mode to create a separate line.
-- Once `grocery_update` exists, allow an explicit request such as “add another”
-  to increment the existing line when safe.
+Resolved on 2026-08-30. Grocery removal uses an atomic pending-state predicate;
+unknown, non-pending, and stale concurrent attempts return stable failures. The
+completed fix is archived in
+[`blueprint/history/fixes/guard-grocery-remove-pending-state.md`](../../history/fixes/guard-grocery-remove-pending-state.md).
 
-Concurrency safety likely requires database support rather than only a
-service-level read-before-create.
+### SKILL-01 - policy-aware unknown-product behavior
 
-### MCP-03 — update a pending grocery item
+Resolved by feature 30 on 2026-09-01. `grocery_add` now has explicit
+`create_if_missing` and `propose_if_missing` policies. Uncertain MCP names use a
+successful, non-mutating `product_resolution_required` branch, and the skill no
+longer invents missing product facts. The feature is archived in
+[`blueprint/history/features/30-policy-aware-grocery-additions.md`](../../history/features/30-policy-aware-grocery-additions.md).
 
-Confirmed missing and highly relevant. Neither REST nor MCP can update stored
-quantity, unit, or note fields.
+## Fix next
 
-The proposed brief may be more elaborate than the MVP needs. Set, increment,
-note editing, pending-only mutation, unit safety, and stale-state protection are
-important, but a revision or timestamp token may be clearer than comparing
-quantity and unit independently. Design this together with MCP-02.
+These are the remaining gaps that affect truthful documentation or implemented
+MVP behavior. They should be handled one at a time through the normal Blueprint
+workflow.
 
-### MCP-09 — purchase completion loses actual quantity details
+### SKILL-03 - correct the OpenClaw integration claim
 
-Confirmed. `complete_grocery_purchase` accepts only grocery item IDs and cannot
-record what was actually purchased.
+Confirmed documentation defect. The repository contains only
+`integrations/hermes/home-stock-tracker/`, and its skill includes Hermes cron,
+WhatsApp, and `[SILENT]` behavior. `docs/agent-integrations.md` nevertheless says
+the same body is agent-neutral and tells OpenClaw to install it directly.
 
-This matters for learning quality, but is not a prerequisite for making the
-current MCP safe. Implement it after duplicate/update behavior is settled and
-preserve the existing ID-only contract through an explicit transition.
+The immediate fix is to make the documentation truthful. Either describe
+OpenClaw as a manual adaptation target or add a real platform-specific adapter.
+Do not claim that the Hermes bundle is portable unchanged. A broader portable
+manifest belongs with the later contract and release effort.
 
-## Strong MVP capabilities, but not correctness bugs
+### MCP-07 - prediction feedback MCP adapter
 
-### MCP-07 — prediction feedback
+Confirmed missing MCP capability and an explicit MVP gap. REST already exposes
+accepted, rejected, and corrected prediction feedback through the shared
+`PredictionFeedbackService`, while predictions return stable IDs. Add a thin MCP
+adapter over the existing service, define repeated-feedback conflict behavior,
+and teach the skill to distinguish feedback about a specific prediction from a
+general stock correction.
 
-Strongly relevant. Prediction feedback is an explicit MVP feature and already
-exists through REST. MCP only lacks an adapter for it. This is one of the
-highest-value missing tools.
+### MCP-06 - inventory-event history MCP adapter
 
-### MCP-06 — inventory event history
+Confirmed missing MCP capability. `InventoryService.listEvents()` already
+provides bounded, paginated, newest-first history with product and event filters.
+The remaining work is a read-only MCP adapter, a privacy review that omits or
+allowlists metadata, real discovery coverage, and skill guidance that separates
+recorded history from estimated current state.
 
-Relevant and comparatively cheap. The service already exposes bounded,
-paginated, newest-first history. The remaining work is primarily an MCP adapter
-and a privacy review of returned metadata.
+### MCP-09 - actual purchase measurements during grocery completion
 
-### MCP-04 — product search (resolved 2026-09-01)
+Confirmed data-quality defect. `complete_grocery_purchase` still accepts only
+grocery-item IDs and creates `PURCHASED` events without actual quantity or unit.
+Evolve the shared domain contract before the MCP schema. Preserve an explicit
+transition for existing ID-only callers, keep completion and event creation
+atomic, and never copy requested measurements into actual measurements unless
+the user supplied them as actual values.
 
-Resolved by feature 29. REST and MCP now share deterministic exact, token-prefix,
-and literal substring search over the authoritative product-name namespace.
-Search is capped, stable, read-only, provider-free, and includes
-prediction-disabled identities as metadata. Hermes guidance requires explicit
-user choice when multiple candidates remain.
+## Wait or combine
 
-### MCP-05 — controlled alias management
+### MCP-05 - standalone alias administration
 
-Relevant, but it reveals a deeper service issue: `addAlias()` checks for a
-duplicate only on the target product and does not appear to reject an alias
-already owned by another product. Fix that domain rule before exposing alias
-management through MCP.
+The grocery-specific acceptance path is delivered by feature 31 through
+`grocery_confirm_product_alias`. It requires an exact product ID and explicit
+user approval, is same-owner idempotent, and rejects cross-owner namespace
+conflicts. A generic `product_add_alias` administration tool remains a product
+choice, not an active correctness bug. Wait until there is a concrete need for
+catalog maintenance outside a grocery-add decision.
 
-### MCP-08 — atomic multi-item additions
+### MCP-10 - read-only household context
 
-Useful, but it should wait until duplicate and update semantics are settled.
-Otherwise a batch contract would freeze unresolved single-item behavior. It is
-less urgent than its placement in the original execution order suggests.
+Reasonable but low priority. It mainly supports setup verification and detailed
+prediction explanations. Add it only when those workflows demonstrate that
+existing prediction responses and operator checks are insufficient.
 
-### MCP-10 — read-only household context
+### MCP-11, SKILL-04, SKILL-05, SKILL-06, and SKILL-07 - one contract and release feature
 
-Reasonable but low priority. It is mainly useful for setup verification and
-prediction explanations. Prediction responses already include some household
-context, so first decide whether a separate tool adds sufficient value.
+Do not implement these as five separate fixes. Together they describe the lack
+of one authoritative, machine-verifiable integration contract. After MCP-06,
+MCP-07, and MCP-09 settle the intended tool surface, create one feature that
+owns:
 
-## Combine into one integration-contract effort
+- one source for service, MCP contract, and compatible skill versions;
+- a real `tools/list` schema snapshot or equivalent contract fixture;
+- drift checks for tool tables, arguments, enums, documentation, and bundles;
+- machine-readable workflow scenarios and safety invariants;
+- a read-only installation and compatibility probe;
+- platform-specific manifests, prerequisites, verification, and rollback;
+- no secrets or deployment-specific household identifiers.
 
-The following are valid but should not be implemented as separate fixes:
+Standard MCP initialization metadata and `tools/list` may be sufficient. Add a
+custom `get_capabilities` tool only if a real client or installer cannot verify
+compatibility through standard metadata plus a repository-owned manifest.
 
-- MCP-11 — contract/capability compatibility probe.
-- SKILL-04 — installation and schema verification.
-- SKILL-05 — release synchronization.
-- SKILL-07 — executable scenarios.
+## Reject as separate bugs
 
-They are four aspects of the same problem: the project has no authoritative,
-machine-verifiable MCP contract. One coherent feature should establish:
+### MCP-08 - universal atomic multi-item additions
 
-- One source for the MCP contract version.
-- A real `tools/list` snapshot or contract test.
-- Machine-readable scenario fixtures.
-- A read-only installation probe.
-- Drift checks for skill documentation and expected tools.
+Reject the current `grocery_add_many` brief as a correctness bug. Policy-aware
+single-item additions can legitimately return independent
+`product_resolution_required` or `confirmation_required` decisions that need
+user input. A universal all-or-nothing batch would either hide those decisions
+or create a complex, long-lived transaction contract.
 
-Do this after the intended tool surface is finalized. A dedicated
-`get_capabilities` tool may not be necessary initially; standard MCP server
-metadata, `tools/list`, and a repository-owned compatibility manifest may be
-enough.
+Keep the current honest per-item workflow and never auto-retry an uncertain
+write. Reconsider batching later as a product feature only if real usage shows
+that partial multi-item progress is unacceptable and the interaction contract
+is designed explicitly.
 
-## Conditional or deferrable
+### SKILL-02 - workflows for tools that do not exist
 
-### SKILL-02 — workflows for tools that do not exist
+Close this as an umbrella observation, not an implementation unit. Update the
+skill alongside each delivered MCP capability. MCP-06 and MCP-07 own their new
+read and feedback workflows; MCP-08 is rejected in its current form; and the
+remaining optional tools keep their own product decisions.
 
-This is an umbrella consequence rather than an independent fix. Close it as the
-corresponding MCP capabilities are added.
+## Recommended execution order
 
-### SKILL-03 — Hermes and OpenClaw instructions are mixed
+The remaining fixes do not all have functional dependencies. Some can be
+implemented concurrently when each has its own Git branch and worktree. Do not
+run concurrent implementations in one working tree because Blueprint has one
+shared `blueprint/context/current-feature.md` and the agents would overwrite
+each other's workflow state.
 
-Relevant only when OpenClaw is an active target. The checked-in repository
-currently contains a Hermes bundle only. Defer unless portable OpenClaw support
-is an immediate goal.
+### Parallel wave 1
 
-### SKILL-06 — narrow skill metadata and structure
+Run these three fixes concurrently in separate worktrees:
 
-Useful packaging polish for portable distribution, but unnecessary for the
-current private Hermes deployment. Defer until cross-platform distribution is
-required.
+- SKILL-03: correct the OpenClaw portability claim. Keep this lane limited to
+  platform documentation or a clearly isolated adapter so it does not rewrite
+  the shared Hermes workflows owned by the MCP lanes.
+- MCP-07: add prediction feedback through the existing shared service.
+- MCP-06: add inventory-event history through the existing shared service.
 
-## Recommended sequence
+MCP-06 and MCP-07 are functionally independent. They will still overlap in
+`src/mcp/mcp-server.factory.ts`, MCP registration tests, API documentation, and
+Hermes guidance. That overlap is a merge and review concern, not a reason to
+serialize all implementation. Give each lane a separate worktree, keep commits
+focused, merge one lane at a time, rebase the next lane onto the updated `main`,
+resolve the central registry and documentation conflicts deliberately, and rerun
+the full verification gate after every merge.
 
-1. MCP-01, MCP-X01, and MCP-12. SKILL-01 is resolved.
-2. Joint design and implementation for MCP-02 and MCP-03.
-3. MCP-07, followed by MCP-06.
-4. MCP-05 (MCP-04 and the cross-product alias-conflict rule are complete).
-5. MCP-09, then reconsider whether MCP-08 is still necessary.
-6. MCP-10 if setup and explainability needs justify it.
-7. Combine MCP-11 and SKILL-04, SKILL-05, and SKILL-07 into one contract and
-   release feature.
-8. Defer SKILL-03 and SKILL-06 unless portable OpenClaw distribution becomes an
-   immediate goal.
+### Sequential wave 2
 
-## Verification note
+Implement MCP-09 after parallel wave 1 lands. MCP-09 has no hard dependency on
+MCP-06 or MCP-07, but it changes the broader purchase-completion domain contract
+and overlaps `InventoryService`, the MCP registry, tests, public documentation,
+and Hermes guidance. Keeping it in the next wave reduces simultaneous contract
+changes and makes its backward-compatibility review clearer.
 
-At triage time, the targeted MCP, grocery, and prediction-feedback tests passed:
-37 tests across two discovered Jest suites. That shows the current behavior is
-internally consistent, but does not invalidate the findings above; several
-unsafe or incomplete behaviors are what the existing tests currently expect.
+### Dependent wave 3
+
+After MCP-06, MCP-07, and MCP-09 finalize the tool surface, implement MCP-11 and
+SKILL-04 through SKILL-07 as one contract and release feature. This is the only
+group with a real sequencing dependency on the earlier fixes.
+
+Reconsider MCP-05 and MCP-10 only when a concrete user workflow justifies them.
+Keep MCP-08 and SKILL-02 closed unless new evidence changes their framing.
+
+## Documentation drift found during triage
+
+- [`blueprint/context/bugs/README.md`](README.md) still shows every report as
+  unchecked and should be reconciled with this decision ledger.
+- [`blueprint/history/fixes/README.md`](../../history/fixes/README.md) still says
+  the directory is empty despite five archived fixes.
+- [`docs/agent-integrations.md`](../../../docs/agent-integrations.md) overstates
+  the portability of the Hermes bundle for OpenClaw.
+
+These documentation corrections do not change the classifications above.
+
+## Verification basis
+
+This triage was checked against the current MCP registrations, shared grocery,
+inventory, product, and prediction-feedback services, archived fix and feature
+specs, public documentation, and the checked-in Hermes bundle. On 2026-09-01,
+the full configured unit suite passed: 46 suites and 613 tests. That confirms the
+current behavior is internally consistent; it does not make the remaining
+missing adapters or contract limitations complete.

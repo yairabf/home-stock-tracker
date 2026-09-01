@@ -1,5 +1,218 @@
 {
-  "generated_at": "2026-08-27T16:40:16.138311+00:00",
-  "nodes": {},
+  "generated_at": "2026-09-01T19:57:39.354059+00:00",
+  "nodes": {
+    "blueprint_context_bugs_readme": {
+      "code_fingerprint": "0f9ed992519c06b5d94431c9834c93929adbd92a80e27cc3c003b12b319ef062",
+      "label": "bugs/README.md",
+      "last": "2026-09-01T19:39:22.130271+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:39:22.130271+00:00",
+          "outcome": "useful",
+          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
+        }
+      ],
+      "score": 0.999706626,
+      "source_file": "blueprint/context/bugs/README.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "blueprint_context_bugs_triage_mcp_and_skill_gaps_current_triage": {
+      "code_fingerprint": "265f6e8fb311960d737aff8f88337b13fbf7d388ff7e4de4ed5eb056184aede4",
+      "label": "MCP and skill gaps - current triage",
+      "last": "2026-09-01T19:47:04.501938+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        }
+      ],
+      "score": 0.999830244,
+      "source_file": "blueprint/context/bugs/triage.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_agent_integrations_openclaw": {
+      "code_fingerprint": "3c967ce0b11e3143b43e0e7aeb7bc214e60e14b41d14ca724c541e2256a9b5e0",
+      "label": "OpenClaw",
+      "last": "2026-09-01T19:47:04.501938+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        }
+      ],
+      "score": 0.999830244,
+      "source_file": "docs/agent-integrations.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_estimation_estimation_service_estimationservice": {
+      "code_fingerprint": "1718c2d389820f3f79a63be57861cb682eb2f327c76b57b947a3d6736186e222",
+      "label": "EstimationService",
+      "last": "2026-08-27T16:40:44.458164+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 0.888088353,
+      "source_file": "src/estimation/estimation.service.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_grocery_grocery_service_groceryservice": {
+      "code_fingerprint": "cb3974efb7e985940bf38b1abbbd5082817c967a9fd73a3335f058c465b1424f",
+      "label": "GroceryService",
+      "last": "2026-09-01T19:39:22.130271+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:39:22.130271+00:00",
+          "outcome": "useful",
+          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
+        },
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 1.887794978,
+      "source_file": "src/grocery/grocery.service.ts",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_inventory_inventory_service_inventoryservice": {
+      "code_fingerprint": "df1f25b20add0618bc0327ae588d2e1c486cc86a320632d3996f3a600a6a8d10",
+      "label": "InventoryService",
+      "last": "2026-09-01T19:47:04.501938+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        },
+        {
+          "date": "2026-09-01T19:39:22.130271+00:00",
+          "outcome": "useful",
+          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
+        },
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 2.887625222,
+      "source_file": "src/inventory/inventory.service.ts",
+      "status": "preferred",
+      "uses": 3
+    },
+    "src_inventory_prediction_feedback_service_predictionfeedbackservice": {
+      "code_fingerprint": "f4460214891e9b9f7daf5624a515abef183be571b85f01c7f171011f3930213d",
+      "label": "PredictionFeedbackService",
+      "last": "2026-09-01T19:47:04.501938+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        }
+      ],
+      "score": 0.999830244,
+      "source_file": "src/inventory/prediction-feedback.service.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_mcp_mcp_server_factory_mcpserverfactory": {
+      "code_fingerprint": "e8426579205a7caa96c79b2e9d78af38327109f276d571bd17b6c541c5b9e459",
+      "label": "McpServerFactory",
+      "last": "2026-09-01T19:47:04.501938+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        },
+        {
+          "date": "2026-09-01T19:39:22.130271+00:00",
+          "outcome": "useful",
+          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
+        }
+      ],
+      "score": 1.999536869,
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_prisma_prisma_service_prismaservice": {
+      "code_fingerprint": "feb74d59625d69c30e262e00b6cf09b46ba980b234d48b93b724338e02813c46",
+      "label": "PrismaService",
+      "last": "2026-08-27T16:40:44.458164+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 0.888088353,
+      "source_file": "src/prisma/prisma.service.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_product_product_controller_productcontroller": {
+      "code_fingerprint": "4b2c22ae19685402b6185e1a4699366454a190a3b8f70a514cb7efdacc2bade4",
+      "label": "ProductController",
+      "last": "2026-08-27T16:40:44.458164+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 0.888088353,
+      "source_file": "src/product/product.controller.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_product_product_service_productservice": {
+      "code_fingerprint": "69620ece02a5615408e3a5cba392636e339aa1b97d4838b66f79156680076025",
+      "label": "ProductService",
+      "last": "2026-08-27T16:40:44.458164+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 0.888088353,
+      "source_file": "src/product/product.service.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_statistics_statistics_service_statisticsservice": {
+      "code_fingerprint": "82c26b575cb0903dd49a5b0c4fe9269e9ed0c43a8fa614311dabf5f6fee1ffc2",
+      "label": "StatisticsService",
+      "last": "2026-08-27T16:40:44.458164+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-27T16:40:44.458164+00:00",
+          "outcome": "useful",
+          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+        }
+      ],
+      "score": 0.888088353,
+      "source_file": "src/statistics/statistics.service.ts",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }
