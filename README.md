@@ -31,7 +31,8 @@ Official agent references:
 ## What it does
 
 - Maintains canonical products and aliases.
-- Adds, lists, removes, and completes grocery-list items.
+- Adds, lists, removes, and completes grocery-list items through explicit
+  unknown-product and pending-line policies.
 - Records purchases, restocks, and direct stock signals.
 - Preserves an append-only inventory event history.
 - Learns product-specific purchase and need intervals.
@@ -104,9 +105,10 @@ curl -sS \
   "${HOME_STOCK_URL}/api/v1/products"
 ```
 
-A new database has no products. Create products through the
-[REST API](docs/api-reference.md#first-use-example) before asking an agent to
-manage them.
+A new database has no products. REST clients can deterministically create a
+complete product and its first grocery line atomically. MCP agents begin unknown
+names in non-mutating proposal mode and wait for a user decision. See the
+[API reference](docs/api-reference.md#grocery-list) for both request shapes.
 
 To connect an agent, set `MCP_ENABLED=true`, restart the service, and follow the
 [agent integration guide](docs/agent-integrations.md).

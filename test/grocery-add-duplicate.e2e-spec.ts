@@ -11,7 +11,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
-import { GroceryItemStatus } from '../src/generated/prisma/enums';
+import { GroceryItemStatus, ProductType } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 import { createProductFixture } from './product-fixture';
@@ -137,13 +137,19 @@ describe('Duplicate-safe grocery additions (e2e)', () => {
   it('returns the confirmation contract through MCP', async () => {
     await client.callTool({
       name: 'grocery_add',
-      arguments: { productName: canonicalName, requestedQuantity: 1 },
+      arguments: {
+        productName: canonicalName,
+        groceryItem: { requestedQuantity: 1 },
+      },
     });
 
     await expect(
       client.callTool({
         name: 'grocery_add',
-        arguments: { productName: alias, requestedQuantity: 2 },
+        arguments: {
+          productName: alias,
+          groceryItem: { requestedQuantity: 2 },
+        },
       }),
     ).resolves.toMatchObject({
       structuredContent: {
@@ -163,9 +169,18 @@ describe('Duplicate-safe grocery additions (e2e)', () => {
     return request(app.getHttpServer())
       .post('/api/v1/grocery/items')
       .send({
-        productName,
-        requestedQuantity: 1,
-        ...(ifPendingExists ? { ifPendingExists } : {}),
+        product: {
+          canonicalName: productName,
+          aliases: [],
+          category: 'test',
+          typicalUnit: null,
+          productType: ProductType.fast_consumable,
+          isPerishable: false,
+        },
+        groceryItem: {
+          requestedQuantity: 1,
+          ...(ifPendingExists ? { ifPendingExists } : {}),
+        },
       });
   }
 

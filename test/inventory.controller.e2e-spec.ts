@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { ProductType } from '../src/generated/prisma/enums';
 
 // Runs against the dev Postgres container (same DATABASE_URL as `npm run
 // start:dev`) since the project has no dedicated test database yet. The
@@ -56,7 +57,7 @@ describe('InventoryController (e2e)', () => {
   it('attributes REST grocery additions to api', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/v1/grocery/items')
-      .send({ productName })
+      .send(groceryAddBody())
       .expect(201);
 
     expect(response.body).toMatchObject({
@@ -68,7 +69,7 @@ describe('InventoryController (e2e)', () => {
   it('rejects caller-controlled REST source attribution', async () => {
     await request(app.getHttpServer())
       .post('/api/v1/grocery/items')
-      .send({ productName, source: 'mcp' })
+      .send({ ...groceryAddBody(), source: 'mcp' })
       .expect(400);
 
     await request(app.getHttpServer())
@@ -76,6 +77,20 @@ describe('InventoryController (e2e)', () => {
       .send({ productId, eventType: 'PURCHASED', source: 'mcp' })
       .expect(400);
   });
+
+  function groceryAddBody() {
+    return {
+      product: {
+        canonicalName: productName,
+        aliases: [],
+        category: 'test',
+        typicalUnit: null,
+        productType: ProductType.fast_consumable,
+        isPerishable: false,
+      },
+      groceryItem: {},
+    };
+  }
 
   it('records a purchase and returns it (POST /api/v1/inventory/purchases)', async () => {
     const response = await request(app.getHttpServer())

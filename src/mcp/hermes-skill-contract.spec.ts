@@ -22,7 +22,7 @@ describe('Hermes grocery quantity workflow contract', () => {
     expect(skill).toContain('Never ask the service to perform arithmetic.');
     expect(skill).toContain('make no tool call');
     expect(skill).toContain('do not retry or');
-    expect(skill).toContain('`ifPendingExists: "create_separate"`');
+    expect(skill).toContain('`groceryItem.ifPendingExists: "create_separate"`');
     expect(readme).toContain('calculate the total');
     expect(readme).toContain('`grocery_set_quantity`');
     expect(skill).not.toContain('`quantityMode`');
@@ -54,6 +54,25 @@ describe('Hermes grocery quantity workflow contract', () => {
     expect(scenarios).toContain('| Multiple product candidates');
     expect(scenarios).toContain('| Prediction-disabled discovery');
     expect(scenarios).toContain('| Search is read-only');
+  });
+
+  it('documents policy-aware grocery addition without guessed facts', () => {
+    expect(skill).toContain('`propose_if_missing`');
+    expect(skill).toContain('`create_if_missing`');
+    expect(skill).toContain('`product_resolution_required`');
+    expect(skill).toContain('nested `groceryItem`');
+    expect(skill).toContain('Proposal advice is non-authoritative');
+    expect(skill).toContain('do not guess them to force creation');
+    expect(readme).toContain('non-authoritative');
+    expect(scenarios).toContain('| Unknown product proposal');
+    expect(scenarios).toContain('| Proposal is non-authoritative');
+    expect(scenarios).toContain('| Candidate choice');
+    expect(scenarios).toContain('| Resolution cancellation');
+    expect(scenarios).toContain('| Deterministic direct creation');
+    expect(scenarios).toContain('groceryItem: { requestedQuantity: 2');
+    expect(scenarios).not.toContain(
+      'grocery_add({ productName: "milk", requestedQuantity:',
+    );
   });
 
   it.each([

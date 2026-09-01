@@ -122,16 +122,64 @@ threshold. Counts must be non-negative integers and
 
 | Method   | Route                                | Purpose                                                          |
 | -------- | ------------------------------------ | ---------------------------------------------------------------- |
-| `POST`   | `/api/v1/grocery/items`              | Add a product or return matching pending lines for confirmation. |
+| `POST`   | `/api/v1/grocery/items`              | Add with an unknown-product policy or return a successful decision branch. |
 | `GET`    | `/api/v1/grocery/items`              | List pending items or filter by `status`.                        |
 | `PATCH`  | `/api/v1/grocery/items/:id/quantity` | Set one pending item's absolute final quantity.                  |
 | `PATCH`  | `/api/v1/grocery/items/:id`          | Update selected fields on one pending item.                      |
 | `DELETE` | `/api/v1/grocery/items/:id`          | Remove one pending item.                                         |
 
-An add request requires `productName`. Optional values are a positive
-`requestedQuantity`, `unit`, `note`, and `ifPendingExists`. When a new line is
-created without a quantity, its persisted quantity defaults to `1`. Every
-persisted grocery item has a finite positive quantity.
+An add request separates product identity from grocery-line facts. REST defaults
+an omitted `unknownProductPolicy` to `create_if_missing`, so the default request
+requires a complete `product` object:
+
+```json
+{
+  "product": {
+    "canonicalName": "3% Milk",
+    "aliases": ["Three Percent Milk"],
+    "category": "dairy",
+    "typicalUnit": "carton",
+    "productType": "fast_consumable",
+    "isPerishable": true
+  },
+  "groceryItem": {
+    "requestedQuantity": 2,
+    "unit": "cartons"
+  }
+}
+```
+
+Direct clients may explicitly use `create_if_missing` with the same complete
+product facts. This deterministic path does not call an LLM. It reuses an exact
+canonical or alias identity without overwriting its metadata, or atomically
+creates the product and first grocery line.
+
+Assisted clients may explicitly use `propose_if_missing` with `productName` and
+must not also send `product`:
+
+```json
+{
+  "unknownProductPolicy": "propose_if_missing",
+  "productName": "three percent milk",
+  "groceryItem": {
+    "requestedQuantity": 2,
+    "unit": "cartons"
+  }
+}
+```
+
+An exact match continues to the normal grocery result. An unresolved phrase
+returns `product_resolution_required` as a successful 2xx result containing the
+request echo, deterministic candidates, optional non-authoritative proposal
+advice, and server-computed `allowedActions`. No product, alias, or grocery item
+is changed. A client must present the choices and wait for a new user decision;
+feature 31 will add confirmation writes.
+
+`groceryItem` is required in both branches, even when empty. Its optional fields
+are a positive `requestedQuantity`, `unit`, `note`, and `ifPendingExists`. When a
+new line is created without a quantity, its persisted quantity defaults to `1`.
+Every persisted grocery item has a finite positive quantity. The legacy flat add
+body is rejected, and `source` is server-owned.
 
 `ifPendingExists` defaults to `return_existing`. A canonical-product pending
 match returns `confirmation_required`, the matching lines, and the requested
@@ -264,7 +312,7 @@ Add it to the grocery list:
 curl -sS -X POST \
   -H "Authorization: Bearer ${HOME_STOCK_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"productName":"milk","requestedQuantity":2,"unit":"liters"}' \
+  -d '{"product":{"canonicalName":"Milk","aliases":[],"category":"dairy","typicalUnit":"liter","productType":"fast_consumable","isPerishable":true},"groceryItem":{"requestedQuantity":2,"unit":"liters"}}' \
   "${HOME_STOCK_URL}/api/v1/grocery/items"
 ```
 
@@ -291,7 +339,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 | Tool                        | Kind  | Purpose                                                                                          |
 | --------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
-| `grocery_add`               | Write | Add one product or return `confirmation_required` with matching pending lines.                   |
+| `grocery_add`               | Write | Add through proposal or deterministic creation policy, or return a successful decision branch.  |
 | `grocery_set_quantity`      | Write | Set one pending line's absolute final quantity using its latest expected quantity.               |
 | `grocery_update`            | Write | Set unit, note, or intentional field combinations using matching expected old values.            |
 | `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
@@ -315,6 +363,15 @@ name lookup or write without changing the requested ownership.
 `Grocery list item <id> is not pending` when the item was purchased, removed, or
 won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
+
+`grocery_add` defaults to `propose_if_missing`. Begin an uncertain spoken name
+with `{ productName, groceryItem }`; if resolution is required, present the
+deterministic candidates, optional non-authoritative proposal, and
+`allowedActions`, then wait for the user's decision without mutating. Do not
+guess a product identity or quantity. Use explicit `create_if_missing` only when
+the client deliberately has every required product fact and sends
+`{ unknownProductPolicy, product, groceryItem }`; that path is deterministic and
+does not invoke an LLM.
 
 When `grocery_add` returns `confirmation_required`, do not mutate again until
 the user selects the desired final state. Explain the current line and clarify

@@ -32,8 +32,13 @@ import {
 } from '../generated/prisma/enums';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { TransportSource } from '../common/transport-source';
-import { PendingGroceryItemPolicy } from '../grocery/dto/add-grocery-item.dto';
-import { AddGroceryItemOutcome } from '../grocery/dto/add-grocery-item-result.dto';
+import {
+  PendingGroceryItemPolicy,
+  ProductResolutionAction,
+  UnknownProductPolicy,
+  type PolicyAwareGroceryAddition,
+} from '../grocery/types/policy-aware-grocery-addition';
+import { productResolutionProposalSchema } from '../product/types/product-resolution';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -50,17 +55,6 @@ const groceryItemOutputSchema = z.object({
 
 const groceryListOutputSchema = z.object({
   items: z.array(groceryItemOutputSchema),
-});
-
-const groceryAddOutputSchema = z.object({
-  outcome: z.enum(AddGroceryItemOutcome),
-  createdItem: groceryItemOutputSchema.nullable(),
-  existingItems: z.array(groceryItemOutputSchema),
-  requestedAddition: z.object({
-    requestedQuantity: z.number().nullable(),
-    unit: z.string().nullable(),
-    note: z.string().nullable(),
-  }),
 });
 
 const productOutputSchema = z.object({
@@ -85,6 +79,116 @@ const productSearchOutputSchema = z.object({
   exactMatch: productSearchProductOutputSchema.nullable(),
   candidates: z.array(productSearchProductOutputSchema),
 });
+
+const groceryAdditionItemInputSchema = z
+  .object({
+    requestedQuantity: z.number().positive().finite().optional(),
+    unit: z.string().optional(),
+    note: z.string().optional(),
+    ifPendingExists: z
+      .enum(PendingGroceryItemPolicy)
+      .default(PendingGroceryItemPolicy.return_existing),
+  })
+  .strict();
+
+const explicitProductInputSchema = z
+  .object({
+    canonicalName: z.string().trim().min(1),
+    aliases: z.array(z.string().trim().min(1)),
+    category: z.string().trim().min(1),
+    typicalUnit: z.string().nullable(),
+    productType: z.enum(ProductType),
+    isPerishable: z.boolean(),
+  })
+  .strict();
+
+const groceryAddInputSchema = z
+  .object({
+    unknownProductPolicy: z
+      .enum(UnknownProductPolicy)
+      .default(UnknownProductPolicy.propose_if_missing),
+    productName: z.string().trim().min(1).optional(),
+    product: explicitProductInputSchema.optional(),
+    groceryItem: groceryAdditionItemInputSchema,
+  })
+  .strict()
+  .superRefine((input, context) => {
+    const valid =
+      input.unknownProductPolicy === UnknownProductPolicy.create_if_missing
+        ? input.product !== undefined && input.productName === undefined
+        : input.product === undefined && input.productName !== undefined;
+    if (!valid) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Product input must match unknownProductPolicy',
+      });
+    }
+  });
+
+const requestedAdditionOutputSchema = z.object({
+  productName: z.string(),
+  requestedQuantity: z.number().nullable(),
+  unit: z.string().nullable(),
+  note: z.string().nullable(),
+  ifPendingExists: z.enum(PendingGroceryItemPolicy),
+});
+
+const groceryAddOutputSchema = z
+  .object({
+    outcome: z.enum([
+      'created',
+      'confirmation_required',
+      'product_resolution_required',
+    ]),
+    createdItem: groceryItemOutputSchema.nullable().optional(),
+    existingItems: z.array(groceryItemOutputSchema).optional(),
+    requestedAddition: requestedAdditionOutputSchema,
+    candidates: z.array(productSearchProductOutputSchema).optional(),
+    proposal: productResolutionProposalSchema.nullable().optional(),
+    allowedActions: z.array(z.enum(ProductResolutionAction)).optional(),
+  })
+  .strict()
+  .superRefine((result, context) => {
+    const valid =
+      result.outcome === 'created'
+        ? result.createdItem != null && result.existingItems !== undefined
+        : result.outcome === 'confirmation_required'
+          ? result.createdItem === null && result.existingItems !== undefined
+          : result.candidates !== undefined &&
+            result.proposal !== undefined &&
+            result.allowedActions !== undefined;
+    if (!valid) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invalid grocery add result',
+      });
+    }
+  });
+
+function mcpGroceryAddition(
+  input: z.output<typeof groceryAddInputSchema>,
+): PolicyAwareGroceryAddition {
+  if (input.unknownProductPolicy === UnknownProductPolicy.create_if_missing) {
+    if (!input.product) {
+      throw new Error('Validated create_if_missing input has no product');
+    }
+    return {
+      unknownProductPolicy: UnknownProductPolicy.create_if_missing,
+      product: input.product,
+      groceryItem: input.groceryItem,
+      source: GroceryItemSource.mcp,
+    };
+  }
+  if (!input.productName) {
+    throw new Error('Validated propose_if_missing input has no productName');
+  }
+  return {
+    unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
+    productName: input.productName,
+    groceryItem: input.groceryItem,
+    source: GroceryItemSource.mcp,
+  };
+}
 
 const productSearchInputSchema = z
   .object({
@@ -389,25 +493,16 @@ export class McpServerFactory {
       'grocery_add',
       {
         description:
-          'Add a product to the household grocery list. An omitted quantity defaults to 1 only when a new line is created; on confirmation_required, requestedAddition preserves the omitted input as null.',
-        inputSchema: z
-          .object({
-            productName: z.string().trim().min(1),
-            requestedQuantity: z.number().positive().optional(),
-            unit: z.string().optional(),
-            note: z.string().optional(),
-            ifPendingExists: z.enum(PendingGroceryItemPolicy).optional(),
-          })
-          .strict(),
+          'Add a product to the household grocery list. Omitted unknownProductPolicy uses propose_if_missing: begin uncertain names there and present product_resolution_required candidates or advice without mutation. Use explicit create_if_missing only with complete deterministic product facts. An omitted grocery quantity defaults to 1 only for a new line; confirmation_required never changes an existing quantity.',
+        inputSchema: groceryAddInputSchema,
         outputSchema: groceryAddOutputSchema,
       },
       (input) =>
         this.runTool('grocery_add', async () =>
           this.toolResult(
-            await this.groceryService.addItem({
-              ...input,
-              source: GroceryItemSource.mcp,
-            }),
+            await this.groceryService.addPolicyAwareItem(
+              mcpGroceryAddition(input),
+            ),
           ),
         ),
     );

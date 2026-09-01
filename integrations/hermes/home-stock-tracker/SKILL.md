@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.5.0
+version: 1.6.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -32,7 +32,7 @@ logic in conversation.
 
 | Tool                        | Use when                                                                                                                                                                                              | Do not use when                                                                                                                                 |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `grocery_add`               | The user explicitly asks to add one named product to the grocery list. Preserve an explicitly supplied positive quantity, unit, and note. Branch on its `created` or `confirmation_required` outcome. | The user only reports low stock, asks what is needed, or gives an invalid or unclear quantity.                                                  |
+| `grocery_add`               | The user explicitly asks to add one named product. Begin uncertain names in proposal mode with `productName` and nested `groceryItem`; branch on `created`, `confirmation_required`, or `product_resolution_required`. | The user only reports low stock, asks what is needed, gives an invalid quantity, or has not supplied every product fact required for deterministic creation. |
 | `grocery_set_quantity`      | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                               | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                     |
 | `grocery_update`            | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                            | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                  |
 | `grocery_remove`            | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                    | Only a product ID or unverified item name is available.                                                                                         |
@@ -103,10 +103,19 @@ followed by one mutation; that is still one intent.
 
 ### Add one item and handle an existing line
 
-For a clear request such as "add one milk," call `grocery_add` once and inspect
-its structured outcome.
+For a clear request such as "add one milk," begin in proposal mode. MCP defaults
+an omitted `unknownProductPolicy` to `propose_if_missing`, so call
+`grocery_add({ productName: "milk", groceryItem: { requestedQuantity: 1 } })`
+once and inspect its structured outcome. Keep product identity separate from the
+nested grocery-line facts. Never invent either one.
 
 - On `created`, summarize `createdItem`. Do not call another mutation.
+- On `product_resolution_required`, make no further mutation. Present the
+  returned deterministic candidates, optional proposal, and `allowedActions`,
+  then ask the user to choose. Proposal advice is non-authoritative and never
+  grants permission to select an identity, add an alias, or create a product.
+  Feature 31 owns those confirmation writes, so the current skill stops after
+  obtaining the decision.
 - On `confirmation_required` with exactly one `existingItems` entry, do not
   mutate again yet. Preserve `requestedAddition`, explain the current quantity,
   and ask what the final quantity should be. For example: "Milk is already on
@@ -123,8 +132,15 @@ its structured outcome.
   `expectedUnit`, or `expectedNote`. Do not split one confirmed multi-field
   decision across tools.
 - Never use `create_separate` as the meaning of "add another" or a yes answer.
-  Use `grocery_add` with `ifPendingExists: "create_separate"` only when the user
+  Use nested `groceryItem.ifPendingExists: "create_separate"` only when the user
   explicitly asks for a separate list line.
+
+Use explicit `create_if_missing` only for a deliberate direct-client request
+that already supplies all product facts: `canonicalName`, `aliases`, `category`,
+`typicalUnit`, `productType`, and `isPerishable`. Send those under `product` and
+send quantity, unit, note, and pending-line policy under `groceryItem`. This path
+is deterministic and does not use proposal advice. Ordinary conversational names
+do not provide these facts, so do not guess them to force creation.
 
 Ask a focused question without mutating when the safe update is not fully
 defined:
@@ -151,9 +167,10 @@ each explicitly named item. Keep any quantity, unit, or note attached only to
 the item the user attached it to. Do not copy a quantity or unit across items.
 
 Run the additions in the user's order. After each `created` result, continue to
-the next item. If an addition returns `confirmation_required`, pause the
-sequence and complete the confirmation flow for that item before attempting
-later items. If a mutation result is uncertain, stop, report which additions
+the next item. If an addition returns `confirmation_required` or
+`product_resolution_required`, pause the sequence and complete the decision flow
+for that item before attempting later items. If a mutation result is uncertain,
+stop, report which additions
 were confirmed and which later additions were not attempted, and do not retry.
 
 ### Read lists and recommendations
@@ -250,8 +267,11 @@ If no mapping is clear, ask rather than choosing the closest enum.
 
 **"Add two liters of milk."**
 
-Call `grocery_add` with `productName: "milk"`, `requestedQuantity: 2`, and
-`unit: "liters"`. On `created`, summarize `createdItem`. On
+Call `grocery_add` with `productName: "milk"` and nested
+`groceryItem: { requestedQuantity: 2, unit: "liters" }`. Omit
+`unknownProductPolicy` to use proposal mode. On `created`, summarize
+`createdItem`. On `product_resolution_required`, present the choices and wait
+without mutating. On
 `confirmation_required`, explain the current quantity and ask what final total
 the user wants. Calculate that total from the answer before calling
 `grocery_set_quantity` for a quantity-only change.

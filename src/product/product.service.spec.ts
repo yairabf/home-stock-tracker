@@ -102,6 +102,102 @@ describe('ProductService', () => {
   });
 
   describe('namespace writes', () => {
+    it('creates a complete explicit product within the caller transaction', async () => {
+      const transactionClient = {
+        product: { create: createProduct },
+        productName: {
+          findMany: transactionNameFindMany,
+          findUnique: transactionNameFindUnique,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await service.findOrCreateExplicitWithinTransaction(transactionClient, {
+        canonicalName: '  Three Percent Milk ',
+        aliases: ['Three Percent'],
+        category: 'dairy',
+        typicalUnit: 'carton',
+        productType: ProductType.fast_consumable,
+        isPerishable: true,
+      });
+
+      expect(createProduct).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            category: 'dairy',
+            typicalUnit: 'carton',
+            productType: ProductType.fast_consumable,
+            isPerishable: true,
+            names: {
+              create: [
+                expect.objectContaining({
+                  displayName: 'Three Percent Milk',
+                  normalizedName: 'three percent milk',
+                  kind: ProductNameKind.canonical,
+                }),
+                expect.objectContaining({
+                  displayName: 'Three Percent',
+                  normalizedName: 'three percent',
+                  kind: ProductNameKind.alias,
+                }),
+              ],
+            },
+          },
+        }),
+      );
+      expect(productClassifier.classify).not.toHaveBeenCalled();
+      expect(classificationLog.record).not.toHaveBeenCalled();
+    });
+
+    it('reuses an exact explicit identity without applying creation metadata', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionNameFindMany.mockResolvedValue([{ productId: existing.id }]);
+      transactionNameFindUnique.mockResolvedValue({ product: existing });
+      const transactionClient = {
+        product: { create: createProduct },
+        productName: {
+          findMany: transactionNameFindMany,
+          findUnique: transactionNameFindUnique,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.findOrCreateExplicitWithinTransaction(transactionClient, {
+          canonicalName: ' milk ',
+          aliases: ['conflicting metadata'],
+          category: 'changed',
+          typicalUnit: null,
+          productType: ProductType.pantry_staple,
+          isPerishable: false,
+        }),
+      ).resolves.toBe(existing);
+      expect(createProduct).not.toHaveBeenCalled();
+      expect(productClassifier.classify).not.toHaveBeenCalled();
+    });
+
+    it('translates an explicit namespace race into the stable conflict', async () => {
+      createProduct.mockRejectedValue(prismaError('P2002'));
+      const transactionClient = {
+        product: { create: createProduct },
+        productName: {
+          findMany: transactionNameFindMany,
+          findUnique: transactionNameFindUnique,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.findOrCreateExplicitWithinTransaction(transactionClient, {
+          canonicalName: 'Milk',
+          aliases: [],
+          category: 'dairy',
+          typicalUnit: null,
+          productType: ProductType.fast_consumable,
+          isPerishable: true,
+        }),
+      ).rejects.toMatchObject({
+        response: { code: PRODUCT_NAME_CONFLICT },
+      });
+    });
+
     it('creates one canonical row and deduplicated aliases atomically', async () => {
       await service.create({
         canonicalName: '  Three\tPercent Milk ',

@@ -85,3 +85,38 @@ When completing this fix, produce:
 ## Out of scope
 
 Do not use this gap as a reason to add unrelated features, a UI, store-specific integrations, multi-household support, a Python prediction service, Redis, or a second MCP deployment unless the repository demonstrates a concrete requirement.
+
+## Resolution - 2026-09-01
+
+Resolved by feature 30, Policy-aware grocery additions.
+
+- Shared `GroceryService.addPolicyAwareItem()` now owns exact reuse,
+  deterministic creation, proposal resolution, pending-line behavior, request
+  echoes, and the successful result union.
+- `create_if_missing` accepts complete product facts, invokes no LLM, and creates
+  a missing product with its first grocery line atomically. Concurrent canonical
+  creation converges on one product and stable pending-line behavior.
+- `propose_if_missing` reuses exact identities or returns
+  `product_resolution_required` with deterministic candidates, optional
+  non-authoritative advice, and server-computed actions without domain mutation.
+- REST defaults to `create_if_missing`; MCP defaults to `propose_if_missing` and
+  publishes both policy branches and all result fields to a real MCP client.
+- Hermes guidance and executable scenarios begin uncertain names in proposal
+  mode, keep product and grocery facts separate, and forbid guessed identity or
+  quantity.
+- No schema migration was required. REST and MCP keep source attribution
+  server-owned as `api` and `mcp`.
+
+Passing evidence:
+
+- REST E2E covers omission defaults, both explicit policies, all three result
+  branches, invalid mixed shapes, authentication, atomic rollback, and stable
+  conflict serialization.
+- Real MCP E2E covers discovered policy fields, proposal-mode omission,
+  deterministic override, runtime cross-branch rejection, successful resolution
+  results, no proposal mutation, and `mcp` provenance.
+- PostgreSQL-backed service E2E covers atomic commit and rollback, concurrent
+  product convergence, pending-line convergence, exact proposal bypass, and
+  provider-unavailable no-write behavior.
+- Unit and guidance contract tests cover transport validation, deterministic
+  allowed actions, request echoes, agent branching, and nested grocery inputs.

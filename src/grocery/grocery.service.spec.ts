@@ -1,14 +1,20 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../generated/prisma/client';
 import {
   GroceryItemSource,
   GroceryItemStatus,
   ProductNameKind,
+  ProductType,
 } from '../generated/prisma/enums';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { ProductService } from '../product/product.service';
+import type { ProductResolutionService } from '../product/product-resolution.service';
 import { GroceryService } from './grocery.service';
-import { PendingGroceryItemPolicy } from './dto/add-grocery-item.dto';
-import { AddGroceryItemOutcome } from './dto/add-grocery-item-result.dto';
+import {
+  PendingGroceryItemPolicy as PolicyAwarePendingPolicy,
+  UnknownProductPolicy,
+} from './types/policy-aware-grocery-addition';
+import { PRODUCT_NAME_CONFLICT } from '../product/product-name.exception';
 
 const product = {
   id: 'product-1',
@@ -23,150 +29,222 @@ const product = {
   ],
 };
 
-describe('GroceryService addItem', () => {
+describe('GroceryService policy-aware deterministic addition', () => {
   const item = {
     id: 'grocery-item-1',
     productId: product.id,
     requestedQuantity: 1,
-    unit: 'liter',
-    dateAdded: new Date('2026-08-30T10:00:00.000Z'),
+    unit: null,
+    dateAdded: new Date('2026-09-01T10:00:00.000Z'),
     status: GroceryItemStatus.pending,
     note: null,
     source: GroceryItemSource.api,
     relatedInventoryEventId: null,
   };
-  let queryRaw: jest.Mock;
-  let findMany: jest.Mock;
-  let create: jest.Mock;
+  const request = {
+    unknownProductPolicy: UnknownProductPolicy.create_if_missing as const,
+    product: {
+      canonicalName: '  Milk  ',
+      aliases: [],
+      category: 'dairy',
+      typicalUnit: 'carton',
+      productType: ProductType.fast_consumable,
+      isPerishable: true,
+    },
+    groceryItem: {
+      ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+    },
+    source: GroceryItemSource.api,
+  };
+  let tx: {
+    $queryRaw: jest.Mock;
+    groceryListItem: { findMany: jest.Mock; create: jest.Mock };
+  };
   let transaction: jest.Mock;
-  let findOrCreateProduct: jest.Mock;
+  let explicitProduct: jest.Mock;
+  let findProduct: jest.Mock;
+  let resolveProduct: jest.Mock;
   let service: GroceryService;
 
   beforeEach(() => {
-    queryRaw = jest.fn().mockResolvedValue([]);
-    findMany = jest.fn().mockResolvedValue([]);
-    create = jest.fn().mockResolvedValue(item);
-    const tx = {
-      $queryRaw: queryRaw,
-      groceryListItem: { findMany, create },
+    tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      groceryListItem: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue(item),
+      },
     };
-    transaction = jest.fn((callback: (client: typeof tx) => unknown) =>
-      callback(tx),
+    transaction = jest.fn((operation: (client: typeof tx) => unknown) =>
+      operation(tx),
     );
-    const prisma = {
-      $transaction: transaction,
-      groceryListItem: { create },
-    } as unknown as PrismaService;
-    findOrCreateProduct = jest.fn().mockResolvedValue(product);
-    const productService = {
-      findOrCreateByExactOrAliasMatch: findOrCreateProduct,
-    } as unknown as ProductService;
-    service = new GroceryService(prisma, productService);
+    explicitProduct = jest.fn().mockResolvedValue(product);
+    findProduct = jest.fn().mockResolvedValue(product);
+    resolveProduct = jest.fn();
+    service = new GroceryService(
+      { $transaction: transaction } as unknown as PrismaService,
+      {
+        findOrCreateExplicitWithinTransaction: explicitProduct,
+        findByExactOrAliasName: findProduct,
+      } as unknown as ProductService,
+      { resolve: resolveProduct } as unknown as ProductResolutionService,
+    );
   });
 
-  it('creates the first pending item inside the product lock', async () => {
-    await expect(
-      service.addItem({
-        productName: 'whole milk',
+  it('creates product and grocery item inside one serializable transaction', async () => {
+    await expect(service.addPolicyAwareItem(request)).resolves.toMatchObject({
+      outcome: 'created',
+      requestedAddition: {
+        productName: 'Milk',
+        requestedQuantity: null,
+        ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+      },
+    });
+    expect(explicitProduct).toHaveBeenCalledWith(tx, request.product);
+    expect(tx.groceryListItem.create).toHaveBeenCalledWith({
+      data: {
+        productId: product.id,
         requestedQuantity: 1,
-        unit: 'liter',
+        unit: undefined,
+        note: undefined,
+        source: GroceryItemSource.api,
+      },
+    });
+    expect(transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    });
+  });
+
+  it('returns pending lines without changing their quantity', async () => {
+    tx.groceryListItem.findMany.mockResolvedValue([
+      { ...item, requestedQuantity: 3 },
+    ]);
+
+    await expect(service.addPolicyAwareItem(request)).resolves.toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ requestedQuantity: 3 }],
+    });
+    expect(tx.groceryListItem.create).not.toHaveBeenCalled();
+  });
+
+  it('creates an intentional separate line in the same transaction', async () => {
+    await service.addPolicyAwareItem({
+      ...request,
+      groceryItem: {
+        ...request.groceryItem,
+        ifPendingExists: PolicyAwarePendingPolicy.create_separate,
+      },
+    });
+
+    expect(tx.$queryRaw).not.toHaveBeenCalled();
+    expect(tx.groceryListItem.findMany).not.toHaveBeenCalled();
+    expect(tx.groceryListItem.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('recovers a concurrent canonical winner and continues pending detection', async () => {
+    explicitProduct.mockRejectedValue(
+      new ConflictException({ code: PRODUCT_NAME_CONFLICT }),
+    );
+
+    await expect(service.addPolicyAwareItem(request)).resolves.toMatchObject({
+      outcome: 'created',
+    });
+    expect(findProduct).toHaveBeenCalledWith('  Milk  ');
+    expect(transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves a cross-name conflict when canonical recovery fails', async () => {
+    const conflict = new ConflictException({ code: PRODUCT_NAME_CONFLICT });
+    explicitProduct.mockRejectedValue(conflict);
+    findProduct.mockRejectedValue(new Error('not found'));
+
+    await expect(service.addPolicyAwareItem(request)).rejects.toBe(conflict);
+  });
+
+  it('rejects invalid quantities before opening a transaction', async () => {
+    await expect(
+      service.addPolicyAwareItem({
+        ...request,
+        groceryItem: { ...request.groceryItem, requestedQuantity: 0 },
+      }),
+    ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns candidates and advice without a grocery transaction', async () => {
+    resolveProduct.mockResolvedValue({
+      exactMatch: null,
+      candidates: [
+        {
+          id: 'candidate-1',
+          canonicalName: 'Whole Milk',
+          aliases: [],
+          category: 'dairy',
+          typicalUnit: 'carton',
+          productType: ProductType.fast_consumable,
+          isPerishable: true,
+          predictionEnabled: true,
+        },
+      ],
+      proposal: null,
+    });
+
+    await expect(
+      service.addPolicyAwareItem({
+        unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
+        productName: '  milky thing  ',
+        groceryItem: {
+          requestedQuantity: 2,
+          ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+        },
+        source: GroceryItemSource.mcp,
       }),
     ).resolves.toMatchObject({
-      outcome: AddGroceryItemOutcome.created,
-      createdItem: { id: item.id },
-      existingItems: [],
-      requestedAddition: { requestedQuantity: 1, unit: 'liter' },
-    });
-    expect(queryRaw).toHaveBeenCalledTimes(1);
-    expect(findMany).toHaveBeenCalledWith({
-      where: { productId: product.id, status: GroceryItemStatus.pending },
-      orderBy: { dateAdded: 'desc' },
-    });
-    expect(create).toHaveBeenCalledTimes(1);
-  });
-
-  it('defaults an omitted quantity only when persisting a new line', async () => {
-    await expect(
-      service.addItem({ productName: 'whole milk' }),
-    ).resolves.toMatchObject({
-      outcome: AddGroceryItemOutcome.created,
-      requestedAddition: { requestedQuantity: null },
-    });
-    expect(create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ requestedQuantity: 1 }),
-    });
-  });
-
-  it('preserves a positive fractional quantity', async () => {
-    await service.addItem({
-      productName: 'whole milk',
-      requestedQuantity: 0.5,
-    });
-
-    expect(create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ requestedQuantity: 0.5 }),
-    });
-  });
-
-  it('returns every canonical-product pending match without mutation', async () => {
-    findMany.mockResolvedValue([item, { ...item, id: 'grocery-item-2' }]);
-
-    await expect(
-      service.addItem({ productName: 'whole milk', requestedQuantity: 1 }),
-    ).resolves.toMatchObject({
-      outcome: AddGroceryItemOutcome.confirmation_required,
-      createdItem: null,
-      existingItems: [{ id: item.id }, { id: 'grocery-item-2' }],
-      requestedAddition: { requestedQuantity: 1 },
-    });
-    expect(create).not.toHaveBeenCalled();
-  });
-
-  it('preserves omission in a duplicate result without mutation', async () => {
-    findMany.mockResolvedValue([item]);
-
-    await expect(
-      service.addItem({ productName: 'whole milk' }),
-    ).resolves.toMatchObject({
-      outcome: AddGroceryItemOutcome.confirmation_required,
-      requestedAddition: { requestedQuantity: null },
-    });
-    expect(create).not.toHaveBeenCalled();
-  });
-
-  it('creates an explicit separate line without checking pending items', async () => {
-    await expect(
-      service.addItem({
-        productName: 'milk',
-        ifPendingExists: PendingGroceryItemPolicy.create_separate,
-      }),
-    ).resolves.toMatchObject({
-      outcome: AddGroceryItemOutcome.created,
-      requestedAddition: { requestedQuantity: null },
+      outcome: 'product_resolution_required',
+      requestedAddition: {
+        productName: 'milky thing',
+        requestedQuantity: 2,
+      },
+      candidates: [{ id: 'candidate-1' }],
+      allowedActions: [
+        'use_existing_product',
+        'add_alias',
+        'create_product',
+        'cancel',
+      ],
     });
     expect(transaction).not.toHaveBeenCalled();
-    expect(create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ requestedQuantity: 1 }),
-    });
+    expect(explicitProduct).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['zero', 0],
-    ['a negative value', -1],
-    ['NaN', Number.NaN],
-    ['positive infinity', Number.POSITIVE_INFINITY],
-    ['negative infinity', Number.NEGATIVE_INFINITY],
-  ])(
-    'rejects %s before product lookup or mutation',
-    async (_, requestedQuantity) => {
-      await expect(
-        service.addItem({ productName: 'milk', requestedQuantity }),
-      ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
-      expect(findOrCreateProduct).not.toHaveBeenCalled();
-      expect(transaction).not.toHaveBeenCalled();
-      expect(create).not.toHaveBeenCalled();
-    },
-  );
+  it('continues an exact proposal match through pending detection', async () => {
+    resolveProduct.mockResolvedValue({
+      exactMatch: {
+        id: product.id,
+        canonicalName: 'milk',
+        aliases: [],
+        category: 'dairy',
+        typicalUnit: 'carton',
+        productType: ProductType.fast_consumable,
+        isPerishable: true,
+        predictionEnabled: true,
+      },
+      candidates: [],
+      proposal: null,
+    });
+
+    await expect(
+      service.addPolicyAwareItem({
+        unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
+        productName: 'milk',
+        groceryItem: {
+          ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+        },
+        source: GroceryItemSource.mcp,
+      }),
+    ).resolves.toMatchObject({ outcome: 'created' });
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(explicitProduct).not.toHaveBeenCalled();
+  });
 });
 
 describe('GroceryService removeItem', () => {
@@ -193,7 +271,11 @@ describe('GroceryService removeItem', () => {
     const prisma = {
       groceryListItem: { findUnique, updateMany },
     } as unknown as PrismaService;
-    service = new GroceryService(prisma, {} as ProductService);
+    service = new GroceryService(
+      prisma,
+      {} as ProductService,
+      {} as ProductResolutionService,
+    );
   });
 
   it('atomically transitions a pending item to removed', async () => {
@@ -262,7 +344,11 @@ describe('GroceryService setQuantity', () => {
     const prisma = {
       groceryListItem: { findUnique, updateMany },
     } as unknown as PrismaService;
-    service = new GroceryService(prisma, {} as ProductService);
+    service = new GroceryService(
+      prisma,
+      {} as ProductService,
+      {} as ProductResolutionService,
+    );
   });
 
   it.each([4, 0.5])(
@@ -408,7 +494,11 @@ describe('GroceryService updateItem', () => {
     const prisma = {
       groceryListItem: { findUnique, updateMany },
     } as unknown as PrismaService;
-    service = new GroceryService(prisma, {} as ProductService);
+    service = new GroceryService(
+      prisma,
+      {} as ProductService,
+      {} as ProductResolutionService,
+    );
   });
 
   it('sets the final requested quantity without arithmetic', async () => {

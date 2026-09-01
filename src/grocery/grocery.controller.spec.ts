@@ -1,20 +1,34 @@
 import { GroceryItemSource } from '../generated/prisma/enums';
 import { GroceryController } from './grocery.controller';
 import type { GroceryService } from './grocery.service';
+import {
+  PendingGroceryItemPolicy,
+  UnknownProductPolicy,
+} from './types/policy-aware-grocery-addition';
 
 describe('GroceryController', () => {
   it('supplies api provenance to the shared service', async () => {
     const groceryService = {
-      addItem: jest.fn().mockResolvedValue({}),
+      addPolicyAwareItem: jest.fn().mockResolvedValue({}),
     };
     const controller = new GroceryController(
       groceryService as unknown as GroceryService,
     );
 
-    await controller.addItem({ productName: 'milk' });
-
-    expect(groceryService.addItem).toHaveBeenCalledWith({
+    await controller.addItem({
+      unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
       productName: 'milk',
+      groceryItem: {
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
+    });
+
+    expect(groceryService.addPolicyAwareItem).toHaveBeenCalledWith({
+      unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
+      productName: 'milk',
+      groceryItem: {
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
       source: GroceryItemSource.api,
     });
   });

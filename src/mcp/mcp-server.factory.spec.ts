@@ -16,7 +16,11 @@ import { InventoryService } from '../inventory/inventory.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { OperationalLogger } from '../observability/operational-logger.service';
-import { AddGroceryItemOutcome } from '../grocery/dto/add-grocery-item-result.dto';
+import {
+  PendingGroceryItemPolicy,
+  ProductResolutionAction,
+  UnknownProductPolicy,
+} from '../grocery/types/policy-aware-grocery-addition';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -35,7 +39,11 @@ describe('McpServerFactory grocery tools', () => {
   let groceryService: jest.Mocked<
     Pick<
       GroceryService,
-      'addItem' | 'setQuantity' | 'updateItem' | 'removeItem' | 'listItems'
+      | 'addPolicyAwareItem'
+      | 'setQuantity'
+      | 'updateItem'
+      | 'removeItem'
+      | 'listItems'
     >
   >;
   let client: Client;
@@ -58,7 +66,7 @@ describe('McpServerFactory grocery tools', () => {
 
   beforeEach(async () => {
     groceryService = {
-      addItem: jest.fn(),
+      addPolicyAwareItem: jest.fn(),
       setQuantity: jest.fn(),
       updateItem: jest.fn(),
       removeItem: jest.fn(),
@@ -119,7 +127,26 @@ describe('McpServerFactory grocery tools', () => {
     ]);
     expect(
       result.tools.find(({ name }) => name === 'grocery_add')?.description,
-    ).toContain('omitted quantity defaults to 1');
+    ).toContain('propose_if_missing');
+    const groceryAddTool = result.tools.find(
+      ({ name }) => name === 'grocery_add',
+    );
+    expect(groceryAddTool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      required: ['groceryItem'],
+      properties: {
+        unknownProductPolicy: {
+          default: 'propose_if_missing',
+          enum: ['create_if_missing', 'propose_if_missing'],
+        },
+        productName: { type: 'string' },
+        product: { type: 'object' },
+        groceryItem: { type: 'object' },
+      },
+    });
+    expect(JSON.stringify(groceryAddTool?.outputSchema)).toContain(
+      'product_resolution_required',
+    );
     const setQuantityTool = result.tools.find(
       ({ name }) => name === 'grocery_set_quantity',
     );
@@ -390,14 +417,16 @@ describe('McpServerFactory grocery tools', () => {
   });
 
   it('adds an item with an adapter-owned source and structured output', async () => {
-    groceryService.addItem.mockResolvedValue({
-      outcome: AddGroceryItemOutcome.created,
+    groceryService.addPolicyAwareItem.mockResolvedValue({
+      outcome: 'created',
       createdItem: item,
       existingItems: [],
       requestedAddition: {
+        productName: 'milk',
         requestedQuantity: 2,
         unit: 'liter',
         note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
       },
     });
 
@@ -405,15 +434,18 @@ describe('McpServerFactory grocery tools', () => {
       name: 'grocery_add',
       arguments: {
         productName: ' milk ',
-        requestedQuantity: 2,
-        unit: 'liter',
+        groceryItem: { requestedQuantity: 2, unit: 'liter' },
       },
     });
 
-    expect(groceryService.addItem).toHaveBeenCalledWith({
+    expect(groceryService.addPolicyAwareItem).toHaveBeenCalledWith({
+      unknownProductPolicy: UnknownProductPolicy.propose_if_missing,
       productName: 'milk',
-      requestedQuantity: 2,
-      unit: 'liter',
+      groceryItem: {
+        requestedQuantity: 2,
+        unit: 'liter',
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
       source: GroceryItemSource.mcp,
     });
     expect(result.structuredContent).toEqual({
@@ -424,9 +456,11 @@ describe('McpServerFactory grocery tools', () => {
       },
       existingItems: [],
       requestedAddition: {
+        productName: 'milk',
         requestedQuantity: 2,
         unit: 'liter',
         note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
       },
     });
     expect(result.content).toEqual([
@@ -435,28 +469,63 @@ describe('McpServerFactory grocery tools', () => {
   });
 
   it('returns confirmation details without retrying a duplicate add', async () => {
-    groceryService.addItem.mockResolvedValue({
-      outcome: AddGroceryItemOutcome.confirmation_required,
+    groceryService.addPolicyAwareItem.mockResolvedValue({
+      outcome: 'confirmation_required',
       createdItem: null,
       existingItems: [item],
       requestedAddition: {
+        productName: 'milk',
         requestedQuantity: 1,
         unit: null,
         note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
       },
     });
 
     const result = await client.callTool({
       name: 'grocery_add',
-      arguments: { productName: 'milk', requestedQuantity: 1 },
+      arguments: {
+        productName: 'milk',
+        groceryItem: { requestedQuantity: 1 },
+      },
     });
 
-    expect(groceryService.addItem).toHaveBeenCalledTimes(1);
+    expect(groceryService.addPolicyAwareItem).toHaveBeenCalledTimes(1);
     expect(result.structuredContent).toMatchObject({
       outcome: 'confirmation_required',
       createdItem: null,
       existingItems: [{ id: item.id }],
       requestedAddition: { requestedQuantity: 1 },
+    });
+  });
+
+  it('returns product resolution as a successful structured outcome', async () => {
+    groceryService.addPolicyAwareItem.mockResolvedValue({
+      outcome: 'product_resolution_required',
+      requestedAddition: {
+        productName: 'milky thing',
+        requestedQuantity: null,
+        unit: null,
+        note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
+      candidates: [],
+      proposal: null,
+      allowedActions: [
+        ProductResolutionAction.create_product,
+        ProductResolutionAction.cancel,
+      ],
+    });
+
+    const result = await client.callTool({
+      name: 'grocery_add',
+      arguments: { productName: 'milky thing', groceryItem: {} },
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      outcome: 'product_resolution_required',
+      allowedActions: ['create_product', 'cancel'],
     });
   });
 
@@ -501,11 +570,11 @@ describe('McpServerFactory grocery tools', () => {
     });
 
     expect(result.isError).toBe(true);
-    expect(groceryService.addItem).not.toHaveBeenCalled();
+    expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['grocery_add', { productName: 'milk', source: 'api' }],
+    ['grocery_add', { productName: 'milk', groceryItem: {}, source: 'api' }],
     [
       'record_purchase',
       {
@@ -527,7 +596,7 @@ describe('McpServerFactory grocery tools', () => {
     const result = await client.callTool({ name, arguments: args });
 
     expect(result.isError).toBe(true);
-    expect(groceryService.addItem).not.toHaveBeenCalled();
+    expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
     expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
     expect(inventoryService.recordEvent).not.toHaveBeenCalled();
     expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();

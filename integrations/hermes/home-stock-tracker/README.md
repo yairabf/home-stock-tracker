@@ -45,6 +45,14 @@ should call `search_products`, present every plausible candidate in returned
 order, and ask for a choice when several remain. It must not silently select a
 candidate or claim that search creates, aliases, or updates anything.
 
+For an unknown-name add smoke check, ask Hermes to add a deliberately unfamiliar
+product phrase. It should call `grocery_add` in proposal mode with `productName`
+and nested `groceryItem`, receive `product_resolution_required` without catalog
+or grocery mutation, present candidates and optional advice as non-authoritative,
+and wait for the user's decision. It must not guess product facts to force
+`create_if_missing`. Deterministic creation is reserved for a direct client that
+deliberately supplies the complete `product` object.
+
 To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
 list, require one exact toilet-paper match, exclude that ID, and propose one

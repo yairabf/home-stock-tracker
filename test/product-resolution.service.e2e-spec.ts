@@ -1,12 +1,10 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { GroceryItemSource } from '../src/generated/prisma/enums';
 import { AppModule } from '../src/app.module';
 import { LLM_PROVIDER, type LlmProvider } from '../src/llm/llm-provider';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ProductResolutionService } from '../src/product/product-resolution.service';
-import { GroceryService } from '../src/grocery/grocery.service';
 import { createProductFixture } from './product-fixture';
 
 describe('ProductResolutionService (e2e)', () => {
@@ -87,32 +85,6 @@ describe('ProductResolutionService (e2e)', () => {
       reason: 'Both catalog products are plausible',
     });
     await expect(domainCounts()).resolves.toEqual(before);
-  });
-
-  it('does not change the existing grocery_add domain flow', async () => {
-    const name = `${prefix} Grocery Compatibility`;
-    const before = await domainCounts();
-    const groceryService = module.get(GroceryService);
-
-    const result = await groceryService.addItem({
-      productName: name,
-      source: GroceryItemSource.api,
-    });
-    const productId = result.createdItem?.productId;
-    expect(productId).toBeDefined();
-    if (!productId) {
-      throw new Error('Expected grocery_add to create an item');
-    }
-    productIds.push(productId);
-
-    expect(result).toMatchObject({
-      outcome: 'created',
-      createdItem: { productId, productName: name },
-    });
-    const after = await domainCounts();
-    expect(after.products).toBe(before.products + 1);
-    expect(after.names).toBe(before.names + 1);
-    expect(after.groceries).toBe(before.groceries + 1);
   });
 
   async function createProduct(

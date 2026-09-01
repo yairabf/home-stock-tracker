@@ -3,21 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
+import { normalizeProductDisplayName } from '../product/product-name.util';
+import { ProductResolutionService } from '../product/product-resolution.service';
 import {
   getCanonicalProductName,
   PRODUCT_WITH_NAMES_INCLUDE,
+  type ProductWithNames,
 } from '../product/types/product-with-names';
-import {
-  AddGroceryItemDto,
-  PendingGroceryItemPolicy,
-} from './dto/add-grocery-item.dto';
-import {
-  AddGroceryItemOutcome,
-  AddGroceryItemResultDto,
-  GroceryRequestedAdditionDto,
-} from './dto/add-grocery-item-result.dto';
+import { PRODUCT_NAME_CONFLICT } from '../product/product-name.exception';
 import { GroceryItemResponseDto } from './dto/grocery-item-response.dto';
 import { SetGroceryItemQuantityDto } from './dto/set-grocery-item-quantity.dto';
 import { UpdateGroceryItemDto } from './dto/update-grocery-item.dto';
@@ -30,94 +26,271 @@ import {
   GroceryItemSource,
   GroceryItemStatus,
 } from '../generated/prisma/enums';
+import {
+  type CreateIfMissingGroceryAddition,
+  type GroceryAdditionItemInput,
+  type GroceryRequestedAddition,
+  type PolicyAwareGroceryAddition,
+  type PolicyAwareGroceryAdditionResult,
+  PendingGroceryItemPolicy,
+  UnknownProductPolicy,
+  productResolutionActions,
+} from './types/policy-aware-grocery-addition';
+
+const SERIALIZATION_RETRIES = 3;
 
 @Injectable()
 export class GroceryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
+    private readonly productResolutionService: ProductResolutionService,
   ) {}
 
-  async addItem(
-    dto: AddGroceryItemDto & { source: GroceryItemSource },
-  ): Promise<AddGroceryItemResultDto> {
-    if (dto.requestedQuantity !== undefined) {
-      this.validatePositiveQuantity(dto.requestedQuantity);
+  async addPolicyAwareItem(
+    dto: PolicyAwareGroceryAddition,
+  ): Promise<PolicyAwareGroceryAdditionResult> {
+    if (dto.unknownProductPolicy === UnknownProductPolicy.propose_if_missing) {
+      return this.addProposedProductItem(dto);
     }
-    const product = await this.productService.findOrCreateByExactOrAliasMatch(
+    return this.addExplicitProductItem(dto);
+  }
+
+  private async addProposedProductItem(
+    dto: Extract<
+      PolicyAwareGroceryAddition,
+      { unknownProductPolicy: UnknownProductPolicy.propose_if_missing }
+    >,
+  ): Promise<PolicyAwareGroceryAdditionResult> {
+    this.validateRequestedQuantity(dto.groceryItem.requestedQuantity);
+    const requestedAddition = this.policyAwareRequestEcho(
+      dto.productName,
+      dto.groceryItem,
+    );
+    const resolution = await this.productResolutionService.resolve(
       dto.productName,
     );
-
-    if (dto.ifPendingExists === PendingGroceryItemPolicy.create_separate) {
-      return this.createGroceryItem(
-        product.id,
-        getCanonicalProductName(product),
-        dto,
+    const exactMatch = resolution.exactMatch;
+    if (exactMatch) {
+      return this.runSerializable((tx) =>
+        this.addForProductWithinTransaction(
+          tx,
+          {
+            id: exactMatch.id,
+            canonicalName: exactMatch.canonicalName,
+          },
+          dto.groceryItem,
+          dto.source,
+          requestedAddition,
+        ),
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${product.id}, 0))::text AS locked`;
-      const existing = await tx.groceryListItem.findMany({
-        where: { productId: product.id, status: GroceryItemStatus.pending },
-        orderBy: { dateAdded: 'desc' },
-      });
-      if (existing.length > 0) {
-        return {
-          outcome: AddGroceryItemOutcome.confirmation_required,
-          createdItem: null,
-          existingItems: existing.map((item) =>
-            GroceryItemResponseDto.fromEntity(
-              item,
-              getCanonicalProductName(product),
-            ),
-          ),
-          requestedAddition: GroceryRequestedAdditionDto.fromRequest(dto),
-        };
+    return {
+      outcome: 'product_resolution_required',
+      requestedAddition,
+      candidates: resolution.candidates,
+      proposal: resolution.proposal,
+      allowedActions: productResolutionActions(resolution.candidates.length),
+    };
+  }
+
+  private async addExplicitProductItem(
+    dto: CreateIfMissingGroceryAddition,
+  ): Promise<PolicyAwareGroceryAdditionResult> {
+    this.validateRequestedQuantity(dto.groceryItem.requestedQuantity);
+    const requestedAddition = this.policyAwareRequestEcho(
+      dto.product.canonicalName,
+      dto.groceryItem,
+    );
+
+    try {
+      return await this.runSerializable((tx) =>
+        this.createExplicitProductAndGroceryItem(tx, dto, requestedAddition),
+      );
+    } catch (error) {
+      if (!this.isProductNameConflict(error)) {
+        throw error;
       }
+      const product = await this.findConcurrentExplicitProduct(
+        dto.product.canonicalName,
+        error,
+      );
+      return this.runSerializable((tx) =>
+        this.addForProductWithinTransaction(
+          tx,
+          this.groceryProduct(product),
+          dto.groceryItem,
+          dto.source,
+          requestedAddition,
+        ),
+      );
+    }
+  }
 
+  private async createExplicitProductAndGroceryItem(
+    tx: Prisma.TransactionClient,
+    dto: CreateIfMissingGroceryAddition,
+    requestedAddition: GroceryRequestedAddition,
+  ): Promise<PolicyAwareGroceryAdditionResult> {
+    const product =
+      await this.productService.findOrCreateExplicitWithinTransaction(
+        tx,
+        dto.product,
+      );
+    return this.addForProductWithinTransaction(
+      tx,
+      this.groceryProduct(product),
+      dto.groceryItem,
+      dto.source,
+      requestedAddition,
+    );
+  }
+
+  private async findConcurrentExplicitProduct(
+    canonicalName: string,
+    originalError: unknown,
+  ): Promise<ProductWithNames> {
+    try {
+      return await this.productService.findByExactOrAliasName(canonicalName);
+    } catch {
+      throw originalError;
+    }
+  }
+
+  private async addForProductWithinTransaction(
+    tx: Prisma.TransactionClient,
+    product: { id: string; canonicalName: string },
+    groceryItem: GroceryAdditionItemInput,
+    source: GroceryItemSource,
+    requestedAddition: GroceryRequestedAddition,
+  ): Promise<PolicyAwareGroceryAdditionResult> {
+    const productName = product.canonicalName;
+    if (
+      groceryItem.ifPendingExists === PendingGroceryItemPolicy.create_separate
+    ) {
       const item = await tx.groceryListItem.create({
-        data: this.addItemData(product.id, dto),
+        data: this.policyAwareItemData(product.id, groceryItem, source),
       });
-      return this.createdResult(item, getCanonicalProductName(product), dto);
+      return {
+        outcome: 'created',
+        createdItem: GroceryItemResponseDto.fromEntity(item, productName),
+        existingItems: [],
+        requestedAddition,
+      };
+    }
+
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${product.id}, 0))::text AS locked`;
+    const existing = await tx.groceryListItem.findMany({
+      where: { productId: product.id, status: GroceryItemStatus.pending },
+      orderBy: { dateAdded: 'desc' },
     });
+    if (existing.length > 0) {
+      return {
+        outcome: 'confirmation_required',
+        createdItem: null,
+        existingItems: existing.map((item) =>
+          GroceryItemResponseDto.fromEntity(item, productName),
+        ),
+        requestedAddition,
+      };
+    }
+
+    const item = await tx.groceryListItem.create({
+      data: this.policyAwareItemData(product.id, groceryItem, source),
+    });
+    return {
+      outcome: 'created',
+      createdItem: GroceryItemResponseDto.fromEntity(item, productName),
+      existingItems: [],
+      requestedAddition,
+    };
   }
 
-  private async createGroceryItem(
-    productId: string,
-    productName: string,
-    dto: AddGroceryItemDto & { source: GroceryItemSource },
-  ): Promise<AddGroceryItemResultDto> {
-    const item = await this.prisma.groceryListItem.create({
-      data: this.addItemData(productId, dto),
-    });
-    return this.createdResult(item, productName, dto);
+  private groceryProduct(product: ProductWithNames): {
+    id: string;
+    canonicalName: string;
+  } {
+    return {
+      id: product.id,
+      canonicalName: getCanonicalProductName(product),
+    };
   }
 
-  private addItemData(
+  private policyAwareItemData(
     productId: string,
-    dto: AddGroceryItemDto & { source: GroceryItemSource },
+    groceryItem: GroceryAdditionItemInput,
+    source: GroceryItemSource,
   ) {
     return {
       productId,
-      requestedQuantity: dto.requestedQuantity ?? 1,
-      unit: dto.unit,
-      note: dto.note,
-      source: dto.source,
+      requestedQuantity: groceryItem.requestedQuantity ?? 1,
+      unit: groceryItem.unit,
+      note: groceryItem.note,
+      source,
     };
   }
 
-  private createdResult(
-    item: Parameters<typeof GroceryItemResponseDto.fromEntity>[0],
+  private policyAwareRequestEcho(
     productName: string,
-    dto: AddGroceryItemDto & { source: GroceryItemSource },
-  ): AddGroceryItemResultDto {
+    groceryItem: GroceryAdditionItemInput,
+  ): GroceryRequestedAddition {
     return {
-      outcome: AddGroceryItemOutcome.created,
-      createdItem: GroceryItemResponseDto.fromEntity(item, productName),
-      existingItems: [],
-      requestedAddition: GroceryRequestedAdditionDto.fromRequest(dto),
+      productName: normalizeProductDisplayName(productName),
+      requestedQuantity: groceryItem.requestedQuantity ?? null,
+      unit: groceryItem.unit ?? null,
+      note: groceryItem.note ?? null,
+      ifPendingExists: groceryItem.ifPendingExists,
     };
+  }
+
+  private validateRequestedQuantity(requestedQuantity?: number): void {
+    if (requestedQuantity !== undefined) {
+      this.validatePositiveQuantity(requestedQuantity);
+    }
+  }
+
+  private async runSerializable<T>(
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= SERIALIZATION_RETRIES; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(operation, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        });
+      } catch (error) {
+        if (!this.isPrismaError(error, 'P2034')) {
+          throw error;
+        }
+        if (attempt === SERIALIZATION_RETRIES) {
+          throw new ConflictException({
+            code: PRODUCT_NAME_CONFLICT,
+            message: 'Concurrent product creation did not converge',
+          });
+        }
+      }
+    }
+    throw new Error('Serializable transaction retries exhausted');
+  }
+
+  private isProductNameConflict(error: unknown): boolean {
+    if (!(error instanceof ConflictException)) {
+      return false;
+    }
+    const response = error.getResponse();
+    return (
+      typeof response === 'object' &&
+      response !== null &&
+      'code' in response &&
+      response.code === PRODUCT_NAME_CONFLICT
+    );
+  }
+
+  private isPrismaError(error: unknown, code: string): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === code
+    );
   }
 
   async listItems(

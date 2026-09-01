@@ -16,6 +16,7 @@ import { normalizeProductName, toProductNameValue } from './product-name.util';
 import { ProductClassificationLogService } from './product-classification-log.service';
 import { ProductClassifier } from './product-classifier.service';
 import type { ProductClassificationResult } from './types/product-classification';
+import type { ExplicitProductCreationInput } from './types/explicit-product-creation';
 import type { ProductNameValue } from './types/product-name';
 import {
   PRODUCT_WITH_NAMES_ARGS,
@@ -89,6 +90,38 @@ export class ProductService {
       throw new NotFoundException(`No product named "${normalizedName}"`);
     }
     return product;
+  }
+
+  async findOrCreateExplicitWithinTransaction(
+    tx: Prisma.TransactionClient,
+    input: ExplicitProductCreationInput,
+  ): Promise<ProductWithNames> {
+    const names = this.prepareProductNames(
+      input.canonicalName,
+      input.aliases,
+      'canonicalName',
+    );
+    const existing = await this.findProductByNormalizedNameWithinTransaction(
+      tx,
+      names.canonical.normalizedName,
+    );
+    if (existing) {
+      return existing;
+    }
+
+    try {
+      return await this.createProductWithinTransaction(tx, names, {
+        category: input.category,
+        typicalUnit: input.typicalUnit,
+        productType: input.productType,
+        isPerishable: input.isPerishable,
+      });
+    } catch (error) {
+      if (this.isProductNameWriteConflict(error)) {
+        throw productNameConflict();
+      }
+      throw error;
+    }
   }
 
   async addAlias(

@@ -31,15 +31,13 @@ use `hermes_mcp`. Neither is truthful for every generic MCP client. The Prisma
 enum currently permits only `hermes_whatsapp` or `api`, so the coherent fix will
 probably include a small migration and consistent generic MCP provenance.
 
-### SKILL-01 — the checked-in skill contradicts product creation behavior
+### SKILL-01 — the checked-in skill contradicts product creation behavior (resolved 2026-09-01)
 
-Confirmed. `grocery_add` calls `findOrCreateByExactOrAliasMatch()`, while the
-skill treats an unknown product as a dead end.
-
-This needs a product decision: retain grocery auto-creation or require explicit
-catalog creation. The recommended direction is to retain auto-creation for
-conversational usability, while making it visible whether the product was
-created or matched.
+Resolved by feature 30. `grocery_add` now has explicit `create_if_missing` and
+`propose_if_missing` policies. REST defaults to deterministic creation from
+complete product facts; MCP defaults uncertain names to a successful,
+non-mutating `product_resolution_required` decision branch. The Hermes skill no
+longer treats unknown names as a dead end or silently invents product facts.
 
 ## Relevant, but requiring a product decision
 
@@ -163,7 +161,7 @@ required.
 
 ## Recommended sequence
 
-1. MCP-01, MCP-X01, MCP-12, and SKILL-01.
+1. MCP-01, MCP-X01, and MCP-12. SKILL-01 is resolved.
 2. Joint design and implementation for MCP-02 and MCP-03.
 3. MCP-07, followed by MCP-06.
 4. MCP-05 (MCP-04 and the cross-product alias-conflict rule are complete).
