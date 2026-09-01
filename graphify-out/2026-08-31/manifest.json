@@ -1554,9 +1554,9 @@
     "semantic_hash": ""
   },
   "blueprint/build-plan.md": {
-    "mtime": 1788164328.6855805,
-    "seen": 1788166041.9434938,
-    "ast_hash": "4d591b2e4347bb2226e0d9c9d9d5aba7",
+    "mtime": 1788206833.777901,
+    "seen": 1788207002.1697469,
+    "ast_hash": "5acadf852601280d863215df12c36bb4",
     "semantic_hash": ""
   },
   "blueprint/context/ai-interaction.md": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788176187.6753576,
-    "seen": 1788205629.816593,
-    "ast_hash": "188cd292770cded0d619f72ae07ae649",
+    "mtime": 1788206983.080626,
+    "seen": 1788207002.170233,
+    "ast_hash": "c13e4d581adede30cecc1ff3037ed100",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1584,9 +1584,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/project-overview.md": {
-    "mtime": 1788164328.689474,
-    "seen": 1788166041.9435039,
-    "ast_hash": "bf53deba45b858f674aedf5eaafdb7af",
+    "mtime": 1788206880.2470133,
+    "seen": 1788207002.170367,
+    "ast_hash": "93b2b32a9a8b455a173b14add6f09790",
     "semantic_hash": ""
   },
   "blueprint/history/features/01-grocery-list-management.md": {
@@ -1680,9 +1680,9 @@
     "semantic_hash": ""
   },
   "blueprint/project-plan.md": {
-    "mtime": 1788164328.6921782,
-    "seen": 1788166041.9435132,
-    "ast_hash": "f68c628d8717b0ccd16e7f4791db1d5c",
+    "mtime": 1788206834.8406105,
+    "seen": 1788207002.1708941,
+    "ast_hash": "4d505dd3d949db35beda36d2342fc179",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -2256,39 +2256,39 @@
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/27-product-name-namespace.md": {
-    "mtime": 1788205384.1208432,
-    "seen": 1788205629.816594,
-    "ast_hash": "2ba26a6f0a8e560d687116557626a508",
+    "mtime": 1788205832.966263,
+    "seen": 1788205929.667701,
+    "ast_hash": "2774ea1817891ba89b70b75e47d7a9c6",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/28-grocery-quantity-contract.md": {
-    "mtime": 1788205432.2587886,
-    "seen": 1788205629.816594,
-    "ast_hash": "7cfbff8621f4b87f8e51d91416c8ecc4",
+    "mtime": 1788205772.3301964,
+    "seen": 1788205929.667702,
+    "ast_hash": "91b01d6189f32d00520a412e370495f9",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/29-product-search-and-resolution-proposals.md": {
-    "mtime": 1788205497.4441664,
-    "seen": 1788205629.8165948,
-    "ast_hash": "045d229fd4e882ae9d221adc3b9ae270",
+    "mtime": 1788205855.3749135,
+    "seen": 1788205929.6677032,
+    "ast_hash": "fdf677ee3157b68e41b77a1e7f6ceb56",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/30-policy-aware-grocery-additions.md": {
-    "mtime": 1788205523.8127296,
-    "seen": 1788205629.8165948,
-    "ast_hash": "7cb3097e251bb6c64ba8a80cbd21169a",
+    "mtime": 1788205780.5937035,
+    "seen": 1788205929.6677032,
+    "ast_hash": "f2ce9798441e961f15065506bafabb56",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/31-confirmed-grocery-catalog-decisions.md": {
-    "mtime": 1788205572.213528,
-    "seen": 1788205629.816596,
-    "ast_hash": "5583b5dd19b421b2f69bbe6512370a97",
+    "mtime": 1788205903.241408,
+    "seen": 1788205929.667704,
+    "ast_hash": "1d609bb96b779f5d0391632589ad3ccd",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/README.md": {
-    "mtime": 1788205338.6232276,
-    "seen": 1788205629.816596,
-    "ast_hash": "f05c589850e8d6c9ed3e0eee0e52863a",
+    "mtime": 1788205771.0632548,
+    "seen": 1788205929.667704,
+    "ast_hash": "555647acfb03e19e91c1b46a92a5f9b3",
     "semantic_hash": ""
   },
   "blueprint/history/fixes/mcp-03-direct-pending-grocery-item-updates.md": {

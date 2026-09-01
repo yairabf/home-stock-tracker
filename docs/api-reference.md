@@ -51,6 +51,41 @@ Health checks never invoke the LLM or mutate household data.
 Product creation requires `canonicalName`. Optional values are `aliases`,
 `category`, and `typicalUnit`.
 
+Canonical names and aliases share one globally unique namespace. Before storage,
+all names use Unicode NFKC normalization, surrounding whitespace removal, and
+internal whitespace collapse. Exact lookup applies locale-independent lowercase
+to that display value. Approved case is preserved in responses, so `3% Milk`
+can be displayed while `3% milk` resolves to the same product. Semantically
+different phrases, such as `3% milk` and `three percent milk`, match only when
+both are explicitly stored for that product.
+
+Every product response derives `canonicalName` and deterministically ordered
+`aliases` from the authoritative namespace:
+
+```json
+{
+  "id": "product-uuid",
+  "canonicalName": "3% Milk",
+  "aliases": ["Three Percent Milk"],
+  "category": "dairy",
+  "typicalUnit": "carton"
+}
+```
+
+Adding an alias that already belongs to the target product, including its
+canonical name, is an idempotent success. A normalized name owned by another
+product returns HTTP `409` without mutation:
+
+```json
+{
+  "code": "PRODUCT_NAME_CONFLICT",
+  "message": "A product name is already assigned to another product"
+}
+```
+
+The conflict never includes database constraints, SQL, provider errors, or the
+other product's identity.
+
 ### Household
 
 | Method  | Route                   | Purpose                                         |
@@ -221,7 +256,11 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `get_low_stock_predictions` | Read  | Return actionable high-confidence recommendations.                                               |
 
 Tool responses contain structured content plus JSON text. Domain failures become
-safe MCP tool errors and unexpected errors are sanitized.
+safe MCP tool errors and unexpected errors are sanitized. `get_product` applies
+the same exact normalized canonical-name and alias lookup as REST and returns the
+same approved display spelling. `PRODUCT_NAME_CONFLICT` is the stable namespace
+conflict for MCP and internal callers; it is final and should not be retried as a
+name lookup or write without changing the requested ownership.
 
 `grocery_remove` returns `Grocery list item <id> not found` for an unknown ID and
 `Grocery list item <id> is not pending` when the item was purchased, removed, or

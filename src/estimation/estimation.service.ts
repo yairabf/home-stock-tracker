@@ -11,7 +11,7 @@ import {
 } from '../generated/prisma/enums';
 import { MS_PER_DAY } from '../common/constants';
 import type { PredictionEngine } from './prediction-engine';
-import type { ProductResponseDto } from '../product/dto/product-response.dto';
+import type { ProductWithNames } from '../product/types/product-with-names';
 import type {
   DeterministicPredictionCandidate,
   PredictionResult,
@@ -129,7 +129,7 @@ export class EstimationService implements PredictionEngine {
   }
 
   private async buildDeterministicCandidate(
-    product: ProductResponseDto,
+    product: ProductWithNames,
   ): Promise<DeterministicPredictionCandidate> {
     const [eventHistory, learnedStats, household] = await Promise.all([
       this.fetchProductEventHistory(product.id),

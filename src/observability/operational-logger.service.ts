@@ -13,6 +13,8 @@ type PredictionAction = 'estimate' | 'recommend';
 type IntegrationErrorType =
   'provider_error' | 'unexpected_error' | 'domain_error';
 
+type CatalogIntegrityAction = 'lookup' | 'direct_resolution' | 'alias_write';
+
 export interface InventoryActionLog {
   action: InventoryAction;
   outcome: 'success';
@@ -48,23 +50,37 @@ export interface McpIntegrationLog {
   errorType: IntegrationErrorType;
 }
 
+export interface CatalogIntegrityLog {
+  outcome: 'failure';
+  action: CatalogIntegrityAction;
+  productIds: string[];
+  normalizedNameFingerprint: string;
+  ownerCount: number;
+  errorType: 'multiple_name_owners';
+}
+
 interface OperationalEvent {
   event:
     | 'inventory.action'
     | 'prediction.run'
     | 'prediction.persistence'
     | 'integration.llm'
-    | 'integration.mcp';
+    | 'integration.mcp'
+    | 'catalog.integrity';
   outcome: OperationalOutcome;
-  action?: InventoryAction | PredictionAction;
+  action?: InventoryAction | PredictionAction | CatalogIntegrityAction;
   productId?: string;
+  productIds?: string[];
   inventoryEventId?: string;
   predictionId?: string;
   affectedCount?: number;
   skippedCount?: number;
   provider?: 'openai';
   tool?: string;
-  errorType?: IntegrationErrorType | 'persistence_error';
+  normalizedNameFingerprint?: string;
+  ownerCount?: number;
+  errorType?:
+    IntegrationErrorType | 'persistence_error' | 'multiple_name_owners';
 }
 
 @Injectable()
@@ -129,6 +145,26 @@ export class OperationalLogger {
       event: 'integration.mcp',
       outcome,
       tool,
+      errorType,
+    });
+  }
+
+  catalogIntegrity(input: CatalogIntegrityLog): void {
+    const {
+      outcome,
+      action,
+      productIds,
+      normalizedNameFingerprint,
+      ownerCount,
+      errorType,
+    } = input;
+    this.write({
+      event: 'catalog.integrity',
+      outcome,
+      action,
+      productIds,
+      normalizedNameFingerprint,
+      ownerCount,
       errorType,
     });
   }

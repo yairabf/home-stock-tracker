@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { GroceryItemStatus } from '../generated/prisma/enums';
+import { GroceryItemStatus, ProductNameKind } from '../generated/prisma/enums';
 import {
   PREDICTION_ENGINE,
   type PredictionEngine,
@@ -28,7 +28,13 @@ export class LowStockRecommendationService {
       this.householdService.getOrCreate(),
       this.prisma.product.findMany({
         where: { predictionEnabled: true },
-        select: { id: true, canonicalName: true },
+        select: {
+          id: true,
+          names: {
+            where: { kind: ProductNameKind.canonical },
+            select: { displayName: true },
+          },
+        },
       }),
       this.prisma.groceryListItem.findMany({
         where: { status: GroceryItemStatus.pending },
@@ -56,11 +62,15 @@ export class LowStockRecommendationService {
 
   private async predictSafely(product: {
     id: string;
-    canonicalName: string;
+    names: { displayName: string }[];
   }): Promise<RecommendationCandidate | null> {
     try {
+      const canonicalName = product.names[0]?.displayName;
+      if (!canonicalName) {
+        throw new Error('Product canonical name is missing');
+      }
       return {
-        productName: product.canonicalName,
+        productName: canonicalName,
         prediction: await this.predictionEngine.predictProduct(product.id),
       };
     } catch {

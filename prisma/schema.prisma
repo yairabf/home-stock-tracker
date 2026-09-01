@@ -19,6 +19,11 @@ enum ProductType {
   discrete_consumable
 }
 
+enum ProductNameKind {
+  canonical
+  alias
+}
+
 enum GroceryItemStatus {
   pending
   purchased
@@ -32,21 +37,31 @@ enum GroceryItemSource {
 }
 
 model Product {
-  id                 String        @id @default(uuid())
-  canonicalName      String
-  aliases            String[]      @default([])
+  id                 String       @id @default(uuid())
   category           String?
   typicalUnit        String?
   productType        ProductType?
-  isPerishable       Boolean       @default(false)
+  isPerishable       Boolean      @default(false)
   predictionStrategy String?
-  predictionEnabled  Boolean       @default(true)
+  predictionEnabled  Boolean      @default(true)
   config             Json?
 
+  names            ProductName[]
   groceryListItems GroceryListItem[]
   inventoryEvents  InventoryEvent[]
   predictions      Prediction[]
   statistics       ProductStatistics?
+}
+
+model ProductName {
+  id             String          @id @default(uuid())
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  displayName    String
+  normalizedName String          @unique
+  kind           ProductNameKind
+
+  @@index([productId])
 }
 
 model GroceryListItem {
@@ -94,16 +109,16 @@ enum FeedbackStatus {
 }
 
 model InventoryEvent {
-  id        String             @id @default(uuid())
-  productId String
-  product   Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
-  eventType InventoryEventType
-  quantity  Float?
-  unit      String?
-  timestamp DateTime           @default(now())
-  source    String
+  id         String             @id @default(uuid())
+  productId  String
+  product    Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  eventType  InventoryEventType
+  quantity   Float?
+  unit       String?
+  timestamp  DateTime           @default(now())
+  source     String
   confidence Float?
-  metadata  Json?
+  metadata   Json?
 
   groceryListItems GroceryListItem[]
 
@@ -112,31 +127,31 @@ model InventoryEvent {
 }
 
 model Household {
-  id                          String   @id @default(uuid())
-  adultsCount                 Int      @default(2)
-  childrenCount               Int      @default(3)
-  childAgeGroups              String[]
-  predictionPreferences       Json?
-  suggestionConfidenceThreshold Float  @default(0.7)
-  productPolicies             Json?
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
+  id                            String   @id @default(uuid())
+  adultsCount                   Int      @default(2)
+  childrenCount                 Int      @default(3)
+  childAgeGroups                String[]
+  predictionPreferences         Json?
+  suggestionConfidenceThreshold Float    @default(0.7)
+  productPolicies               Json?
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
 }
 
 model Prediction {
-  id                  String         @id @default(uuid())
-  productId           String
-  product             Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  predictedState      PredictedState
-  confidenceScore     Float
-  predictedAt         DateTime       @default(now())
-  recommendedAction   String?
+  id                   String            @id @default(uuid())
+  productId            String
+  product              Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  predictedState       PredictedState
+  confidenceScore      Float
+  predictedAt          DateTime          @default(now())
+  recommendedAction    String?
   deterministicSignals Json
   llmResult            Json?
   reason               String
   modelProviderVersion String?
-  feedbackStatus      FeedbackStatus @default(pending)
-  llmInferenceLogs    LlmInferenceLog[]
+  feedbackStatus       FeedbackStatus    @default(pending)
+  llmInferenceLogs     LlmInferenceLog[]
 
   @@index([productId])
   @@index([predictedAt])
@@ -158,19 +173,19 @@ model LlmInferenceLog {
 }
 
 model ProductStatistics {
-  id                             String    @id @default(uuid())
-  productId                      String    @unique
-  product                        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  avgPurchaseIntervalDays        Float?
-  avgNeedIntervalDays            Float?
-  typicalPurchaseQuantity        Float?
+  id                               String    @id @default(uuid())
+  productId                        String    @unique
+  product                          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  avgPurchaseIntervalDays          Float?
+  avgNeedIntervalDays              Float?
+  typicalPurchaseQuantity          Float?
   estimatedConsumptionIntervalDays Float?
-  predictionAccuracy             Float?
-  lastPurchaseAt                 DateTime?
-  lastLowStockSignalAt           DateTime?
-  lastStockConfirmationAt        DateTime?
-  observationCount               Int       @default(0)
-  updatedAt                      DateTime  @updatedAt
+  predictionAccuracy               Float?
+  lastPurchaseAt                   DateTime?
+  lastLowStockSignalAt             DateTime?
+  lastStockConfirmationAt          DateTime?
+  observationCount                 Int       @default(0)
+  updatedAt                        DateTime  @updatedAt
 
   @@index([productId])
 }

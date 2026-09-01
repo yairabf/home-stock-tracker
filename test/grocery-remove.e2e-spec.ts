@@ -18,6 +18,7 @@ import {
 import { GroceryService } from '../src/grocery/grocery.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Guarded grocery removal (e2e)', () => {
   let app: INestApplication<App>;
@@ -47,8 +48,8 @@ describe('Guarded grocery removal (e2e)', () => {
 
     prisma = app.get(PrismaService);
     groceryService = app.get(GroceryService);
-    const product = await prisma.product.create({
-      data: { canonicalName: `e2e grocery removal ${Date.now()}` },
+    const product = await createProductFixture(prisma, {
+      canonicalName: `e2e grocery removal ${Date.now()}`,
     });
     productId = product.id;
 

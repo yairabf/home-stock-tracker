@@ -1,5 +1,9 @@
 import { Test } from '@nestjs/testing';
-import { GroceryItemStatus, PredictedState } from '../generated/prisma/enums';
+import {
+  GroceryItemStatus,
+  PredictedState,
+  ProductNameKind,
+} from '../generated/prisma/enums';
 import {
   PREDICTION_ENGINE,
   type PredictionEngine,
@@ -79,8 +83,8 @@ describe('LowStockRecommendationService', () => {
 
   it('loads only enabled products and uses the household threshold', async () => {
     prisma.product.findMany.mockResolvedValue([
-      { id: 'strong', canonicalName: 'Strong' },
-      { id: 'weak', canonicalName: 'Weak' },
+      { id: 'strong', names: [{ displayName: 'Strong' }] },
+      { id: 'weak', names: [{ displayName: 'Weak' }] },
     ]);
     householdService.getOrCreate.mockResolvedValue({
       suggestionConfidenceThreshold: 0.85,
@@ -93,15 +97,21 @@ describe('LowStockRecommendationService', () => {
 
     expect(prisma.product.findMany).toHaveBeenCalledWith({
       where: { predictionEnabled: true },
-      select: { id: true, canonicalName: true },
+      select: {
+        id: true,
+        names: {
+          where: { kind: ProductNameKind.canonical },
+          select: { displayName: true },
+        },
+      },
     });
     expect(result.map(({ productId }) => productId)).toEqual(['strong']);
   });
 
   it('does not predict products already pending on the grocery list', async () => {
     prisma.product.findMany.mockResolvedValue([
-      { id: 'pending', canonicalName: 'Pending' },
-      { id: 'eligible', canonicalName: 'Eligible' },
+      { id: 'pending', names: [{ displayName: 'Pending' }] },
+      { id: 'eligible', names: [{ displayName: 'Eligible' }] },
     ]);
     prisma.groceryListItem.findMany.mockResolvedValue([
       { productId: 'pending' },
@@ -120,8 +130,8 @@ describe('LowStockRecommendationService', () => {
 
   it('returns successful recommendations when a sibling prediction fails', async () => {
     prisma.product.findMany.mockResolvedValue([
-      { id: 'failed', canonicalName: 'Failed' },
-      { id: 'successful', canonicalName: 'Successful' },
+      { id: 'failed', names: [{ displayName: 'Failed' }] },
+      { id: 'successful', names: [{ displayName: 'Successful' }] },
     ]);
     predictionEngine.predictProduct.mockImplementation((productId) =>
       productId === 'failed'

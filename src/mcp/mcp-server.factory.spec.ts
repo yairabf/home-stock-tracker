@@ -4,6 +4,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import {
   GroceryItemSource,
   GroceryItemStatus,
+  ProductNameKind,
 } from '../generated/prisma/enums';
 import { GroceryService } from '../grocery/grocery.service';
 import { McpServerFactory } from './mcp-server.factory';
@@ -356,8 +357,22 @@ describe('McpServerFactory grocery tools', () => {
   it('gets a product by UUID with the existing response contract', async () => {
     productService.findOne.mockResolvedValue({
       id: item.productId,
-      canonicalName: 'milk',
-      aliases: ['whole milk'],
+      names: [
+        {
+          id: 'name-canonical',
+          productId: item.productId,
+          displayName: 'milk',
+          normalizedName: 'milk',
+          kind: ProductNameKind.canonical,
+        },
+        {
+          id: 'name-alias',
+          productId: item.productId,
+          displayName: 'whole milk',
+          normalizedName: 'whole milk',
+          kind: ProductNameKind.alias,
+        },
+      ],
       category: 'dairy',
       typicalUnit: 'liter',
       productType: null,
@@ -385,8 +400,22 @@ describe('McpServerFactory grocery tools', () => {
   it('gets a product by exact name or alias with the existing response contract', async () => {
     productService.findByExactOrAliasName.mockResolvedValue({
       id: item.productId,
-      canonicalName: 'milk',
-      aliases: ['whole milk'],
+      names: [
+        {
+          id: 'name-canonical',
+          productId: item.productId,
+          displayName: 'milk',
+          normalizedName: 'milk',
+          kind: ProductNameKind.canonical,
+        },
+        {
+          id: 'name-alias',
+          productId: item.productId,
+          displayName: 'whole milk',
+          normalizedName: 'whole milk',
+          kind: ProductNameKind.alias,
+        },
+      ],
       category: 'dairy',
       typicalUnit: 'liter',
       productType: null,

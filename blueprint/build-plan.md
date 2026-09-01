@@ -39,3 +39,4 @@
 - [ ] 24. **Receipt and barcode ingestion** - use receipts or barcode scans as additional purchase and inventory signals
 - [ ] 25. **Home Assistant integration** - expose grocery, inventory, and low-stock state to the household automation environment
 - [ ] 26. **Management dashboard** - add a web interface for reviewing inventory state, predictions, history, and manual corrections if conversational control proves insufficient
+- [x] 27. **Product name namespace** - store canonical names and aliases in one globally unique normalized namespace for deterministic indexed lookup ✓ 2026-09-01

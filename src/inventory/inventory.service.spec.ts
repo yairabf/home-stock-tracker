@@ -12,10 +12,22 @@ import { CompletePartialPurchaseDto } from './dto/complete-partial-purchase.dto'
 import {
   InventoryEventType,
   GroceryItemStatus,
+  ProductNameKind,
 } from '../generated/prisma/enums';
 import { OperationalLogger } from '../observability/operational-logger.service';
 
 const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
+const PRODUCT_NAMES = {
+  names: [
+    {
+      id: 'name-1',
+      productId: PRODUCT_ID,
+      displayName: 'milk',
+      normalizedName: 'milk',
+      kind: ProductNameKind.canonical,
+    },
+  ],
+};
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -333,14 +345,14 @@ describe('InventoryService', () => {
         productId: PRODUCT_ID,
         status: GroceryItemStatus.purchased,
         relatedInventoryEventId: createdEvent.id,
-        product: { canonicalName: 'milk' },
+        product: PRODUCT_NAMES,
       };
       const updatedItem2 = {
         id: groceryItemId2,
         productId: PRODUCT_ID,
         status: GroceryItemStatus.purchased,
         relatedInventoryEventId: createdEvent.id,
-        product: { canonicalName: 'milk' },
+        product: PRODUCT_NAMES,
       };
 
       prisma.$transaction.mockImplementation(async (callback) => {
@@ -400,7 +412,7 @@ describe('InventoryService', () => {
           groceryListItem: {
             update: jest.fn().mockResolvedValue({
               id: groceryItemId1,
-              product: { canonicalName: 'milk' },
+              product: PRODUCT_NAMES,
             }),
           },
         };
@@ -535,7 +547,7 @@ describe('InventoryService', () => {
 
       const mockUpdate = jest.fn().mockResolvedValue({
         id: groceryItemId1,
-        product: { canonicalName: 'milk' },
+        product: PRODUCT_NAMES,
       });
 
       prisma.$transaction.mockImplementation(async (callback) => {
@@ -563,7 +575,11 @@ describe('InventoryService', () => {
           status: GroceryItemStatus.purchased,
           relatedInventoryEventId: 'event-1',
         },
-        include: { product: true },
+        include: {
+          product: expect.objectContaining({
+            include: expect.objectContaining({ names: expect.any(Object) }),
+          }),
+        },
       });
     });
 
@@ -620,7 +636,7 @@ describe('InventoryService', () => {
           productId: PRODUCT_ID,
           status: GroceryItemStatus.purchased,
           relatedInventoryEventId: createdEvent.id,
-          product: { canonicalName: 'milk' },
+          product: PRODUCT_NAMES,
         };
 
         prisma.$transaction.mockImplementation(async (callback) => {
@@ -737,14 +753,14 @@ describe('InventoryService', () => {
           productId: PRODUCT_ID,
           status: GroceryItemStatus.purchased,
           relatedInventoryEventId: createdEvent.id,
-          product: { canonicalName: 'milk' },
+          product: PRODUCT_NAMES,
         };
         const updatedItem3 = {
           id: groceryItemId3,
           productId: PRODUCT_ID,
           status: GroceryItemStatus.purchased,
           relatedInventoryEventId: createdEvent.id,
-          product: { canonicalName: 'milk' },
+          product: PRODUCT_NAMES,
         };
 
         prisma.$transaction.mockImplementation(async (callback) => {
@@ -785,7 +801,7 @@ describe('InventoryService', () => {
         const createdEvent = { id: 'event-1' };
         const updatedItem = {
           id: groceryItemId1,
-          product: { canonicalName: 'milk' },
+          product: PRODUCT_NAMES,
         };
 
         prisma.$transaction.mockImplementation(async (callback) => {
@@ -840,7 +856,7 @@ describe('InventoryService', () => {
 
       const mockUpdate = jest.fn().mockResolvedValue({
         id: groceryItemId1,
-        product: { canonicalName: 'milk' },
+        product: PRODUCT_NAMES,
       });
 
       prisma.$transaction.mockImplementation(async (callback) => {
@@ -865,7 +881,11 @@ describe('InventoryService', () => {
           status: GroceryItemStatus.purchased,
           relatedInventoryEventId: 'event-1',
         },
-        include: { product: true },
+        include: {
+          product: expect.objectContaining({
+            include: expect.objectContaining({ names: expect.any(Object) }),
+          }),
+        },
       });
     });
 
@@ -910,7 +930,17 @@ describe('InventoryService', () => {
       note: null,
       source: 'hermes_whatsapp',
       relatedInventoryEventId,
-      product: { canonicalName: productName },
+      product: {
+        names: [
+          {
+            id: `name-${productId}`,
+            productId,
+            displayName: productName,
+            normalizedName: productName.toLowerCase(),
+            kind: ProductNameKind.canonical,
+          },
+        ],
+      },
     });
 
     const purchaseEvent = (id: string, productId: string) => ({

@@ -14,6 +14,7 @@ import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { GroceryItemStatus } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Duplicate-safe grocery additions (e2e)', () => {
   let app: INestApplication<App>;
@@ -46,8 +47,9 @@ describe('Duplicate-safe grocery additions (e2e)', () => {
     const suffix = Date.now();
     canonicalName = `e2e duplicate milk ${suffix}`;
     alias = `e2e duplicate dairy ${suffix}`;
-    const product = await prisma.product.create({
-      data: { canonicalName, aliases: [alias] },
+    const product = await createProductFixture(prisma, {
+      canonicalName,
+      aliases: [alias],
     });
     productId = product.id;
 

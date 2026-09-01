@@ -1,5 +1,9 @@
-import type { ProductModel } from '../../generated/prisma/models';
 import type { ProductType } from '../../generated/prisma/enums';
+import {
+  getCanonicalProductName,
+  getProductAliases,
+  type ProductWithNames,
+} from '../types/product-with-names';
 
 export class ProductResponseDto {
   id: string;
@@ -13,11 +17,11 @@ export class ProductResponseDto {
   predictionEnabled: boolean;
   config: unknown;
 
-  static fromEntity(product: ProductModel): ProductResponseDto {
+  static fromEntity(product: ProductWithNames): ProductResponseDto {
     const dto = new ProductResponseDto();
     dto.id = product.id;
-    dto.canonicalName = product.canonicalName;
-    dto.aliases = product.aliases;
+    dto.canonicalName = getCanonicalProductName(product);
+    dto.aliases = getProductAliases(product);
     dto.category = product.category;
     dto.typicalUnit = product.typicalUnit;
     dto.productType = product.productType;

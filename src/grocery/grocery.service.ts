@@ -6,6 +6,10 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import {
+  getCanonicalProductName,
+  PRODUCT_WITH_NAMES_INCLUDE,
+} from '../product/types/product-with-names';
+import {
   AddGroceryItemDto,
   PendingGroceryItemPolicy,
 } from './dto/add-grocery-item.dto';
@@ -41,7 +45,11 @@ export class GroceryService {
     );
 
     if (dto.ifPendingExists === PendingGroceryItemPolicy.create_separate) {
-      return this.createGroceryItem(product.id, product.canonicalName, dto);
+      return this.createGroceryItem(
+        product.id,
+        getCanonicalProductName(product),
+        dto,
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -55,7 +63,10 @@ export class GroceryService {
           outcome: AddGroceryItemOutcome.confirmation_required,
           createdItem: null,
           existingItems: existing.map((item) =>
-            GroceryItemResponseDto.fromEntity(item, product.canonicalName),
+            GroceryItemResponseDto.fromEntity(
+              item,
+              getCanonicalProductName(product),
+            ),
           ),
           requestedAddition: GroceryRequestedAdditionDto.fromRequest(dto),
         };
@@ -64,7 +75,7 @@ export class GroceryService {
       const item = await tx.groceryListItem.create({
         data: this.addItemData(product.id, dto),
       });
-      return this.createdResult(item, product.canonicalName, dto);
+      return this.createdResult(item, getCanonicalProductName(product), dto);
     });
   }
 
@@ -110,12 +121,15 @@ export class GroceryService {
   ): Promise<GroceryItemResponseDto[]> {
     const items = await this.prisma.groceryListItem.findMany({
       where: { status },
-      include: { product: true },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
       orderBy: { dateAdded: 'desc' },
     });
 
     return items.map((item) =>
-      GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
+      GroceryItemResponseDto.fromEntity(
+        item,
+        getCanonicalProductName(item.product),
+      ),
     );
   }
 
@@ -125,7 +139,7 @@ export class GroceryService {
   ): Promise<GroceryItemResponseDto> {
     const existing = await this.prisma.groceryListItem.findUnique({
       where: { id },
-      include: { product: true },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
     });
     if (!existing) {
       throw groceryNotFound(id);
@@ -133,7 +147,7 @@ export class GroceryService {
 
     const current = GroceryItemResponseDto.fromEntity(
       existing,
-      existing.product.canonicalName,
+      getCanonicalProductName(existing.product),
     );
     this.validateUpdate(existing, dto, current);
     const data = this.updatedFields(dto);
@@ -148,7 +162,7 @@ export class GroceryService {
 
     return GroceryItemResponseDto.fromEntity(
       { ...existing, ...data },
-      existing.product.canonicalName,
+      getCanonicalProductName(existing.product),
     );
   }
 
@@ -272,14 +286,14 @@ export class GroceryService {
   private async throwCurrentUpdateConflict(id: string): Promise<never> {
     const latest = await this.prisma.groceryListItem.findUnique({
       where: { id },
-      include: { product: true },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
     });
     if (!latest) {
       throw groceryNotFound(id);
     }
     const current = GroceryItemResponseDto.fromEntity(
       latest,
-      latest.product.canonicalName,
+      getCanonicalProductName(latest.product),
     );
     const code =
       latest.status === GroceryItemStatus.pending
@@ -295,7 +309,7 @@ export class GroceryService {
   async removeItem(id: string): Promise<GroceryItemResponseDto> {
     const existing = await this.prisma.groceryListItem.findUnique({
       where: { id },
-      include: { product: true },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
     });
     if (!existing) {
       throw new NotFoundException(`Grocery list item ${id} not found`);
@@ -314,7 +328,7 @@ export class GroceryService {
 
     return GroceryItemResponseDto.fromEntity(
       { ...existing, status: GroceryItemStatus.removed },
-      existing.product.canonicalName,
+      getCanonicalProductName(existing.product),
     );
   }
 }

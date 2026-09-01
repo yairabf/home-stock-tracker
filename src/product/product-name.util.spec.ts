@@ -1,24 +1,60 @@
-import { normalizeAliases, normalizeProductName } from './product-name.util';
+import {
+  normalizeAliases,
+  normalizeProductDisplayName,
+  normalizeProductName,
+  toProductNameValue,
+} from './product-name.util';
+
+describe('normalizeProductDisplayName', () => {
+  it('normalizes Unicode and surrounding and repeated whitespace', () => {
+    expect(normalizeProductDisplayName('  ３％\t Milk\n')).toBe('3% Milk');
+  });
+
+  it('preserves approved display case', () => {
+    expect(normalizeProductDisplayName('Three Percent Milk')).toBe(
+      'Three Percent Milk',
+    );
+  });
+
+  it('returns an empty string for blank input', () => {
+    expect(normalizeProductDisplayName(' \t\n ')).toBe('');
+  });
+});
 
 describe('normalizeProductName', () => {
-  it('trims leading and trailing whitespace', () => {
-    expect(normalizeProductName('  Milk  ')).toBe('milk');
+  it.each([
+    ['  Milk  ', 'milk'],
+    ['MILK', 'milk'],
+    ['Café', 'café'],
+    ['Café', 'café'],
+    ['toilet\t  paper', 'toilet paper'],
+  ])('normalizes %j to %j', (rawName, normalizedName) => {
+    expect(normalizeProductName(rawName)).toBe(normalizedName);
   });
 
-  it('case-folds to lowercase', () => {
-    expect(normalizeProductName('MILK')).toBe('milk');
+  it('keeps semantic variants distinct', () => {
+    expect(normalizeProductName('3% milk')).not.toBe(
+      normalizeProductName('three percent milk'),
+    );
   });
 
-  it('leaves an already-normalized name unchanged', () => {
-    expect(normalizeProductName('milk')).toBe('milk');
+  it('uses locale-independent lowercase', () => {
+    expect(normalizeProductName('I')).toBe('i');
+    expect(normalizeProductName('I')).not.toBe('I'.toLocaleLowerCase('tr'));
   });
 
-  it('returns an empty string for empty input', () => {
+  it('returns an empty string for empty or whitespace-only input', () => {
     expect(normalizeProductName('')).toBe('');
-  });
-
-  it('returns an empty string for whitespace-only input', () => {
     expect(normalizeProductName('   ')).toBe('');
+  });
+});
+
+describe('toProductNameValue', () => {
+  it('returns approved display spelling and its lookup key', () => {
+    expect(toProductNameValue('  Three\tPercent Milk  ')).toEqual({
+      displayName: 'Three Percent Milk',
+      normalizedName: 'three percent milk',
+    });
   });
 });
 
@@ -27,28 +63,12 @@ describe('normalizeAliases', () => {
     expect(normalizeAliases(undefined, 'milk')).toEqual([]);
   });
 
-  it('trims and case-folds each alias', () => {
-    expect(normalizeAliases(['  Moo Juice  ', 'COW JUICE'], 'milk')).toEqual([
-      'moo juice',
-      'cow juice',
-    ]);
-  });
-
-  it('drops empty and whitespace-only aliases', () => {
-    expect(normalizeAliases(['', '   ', 'moo juice'], 'milk')).toEqual([
-      'moo juice',
-    ]);
-  });
-
-  it('drops an alias equal to the normalized canonical name', () => {
-    expect(normalizeAliases(['Milk', 'moo juice'], 'milk')).toEqual([
-      'moo juice',
-    ]);
-  });
-
-  it('dedupes case-insensitive duplicate aliases', () => {
-    expect(normalizeAliases(['moo juice', 'MOO JUICE'], 'milk')).toEqual([
-      'moo juice',
-    ]);
+  it('normalizes, filters, and deduplicates aliases', () => {
+    expect(
+      normalizeAliases(
+        ['', ' Milk ', '  Moo\tJuice  ', 'MOO JUICE', 'ＣＯＷ JUICE'],
+        'milk',
+      ),
+    ).toEqual(['moo juice', 'cow juice']);
   });
 });

@@ -41,6 +41,33 @@ describe('OperationalLogger', () => {
     expect(JSON.stringify(log.mock.calls)).not.toContain('private note');
   });
 
+  it('emits allowlisted catalog integrity failures at error level', () => {
+    service.catalogIntegrity({
+      outcome: 'failure',
+      action: 'lookup',
+      productIds: ['product-a', 'product-b'],
+      normalizedNameFingerprint: 'sha256:1234567890abcdef',
+      ownerCount: 2,
+      errorType: 'multiple_name_owners',
+      rawName: 'private product name',
+      databaseError: new Error('provider detail'),
+    } as never);
+
+    expect(error).toHaveBeenCalledWith({
+      event: 'catalog.integrity',
+      outcome: 'failure',
+      action: 'lookup',
+      productIds: ['product-a', 'product-b'],
+      normalizedNameFingerprint: 'sha256:1234567890abcdef',
+      ownerCount: 2,
+      errorType: 'multiple_name_owners',
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain(
+      'private product name',
+    );
+    expect(JSON.stringify(error.mock.calls)).not.toContain('provider detail');
+  });
+
   it('uses warn for fallbacks and error for failures', () => {
     service.predictionRun({
       action: 'estimate',

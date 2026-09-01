@@ -18,6 +18,7 @@ import {
 } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Pending grocery field updates (e2e)', () => {
   let app: INestApplication<App>;
@@ -45,8 +46,8 @@ describe('Pending grocery field updates (e2e)', () => {
     await app.listen(0, '127.0.0.1');
 
     prisma = app.get(PrismaService);
-    const product = await prisma.product.create({
-      data: { canonicalName: `e2e grocery update ${Date.now()}` },
+    const product = await createProductFixture(prisma, {
+      canonicalName: `e2e grocery update ${Date.now()}`,
     });
     productId = product.id;
 

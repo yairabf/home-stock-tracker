@@ -12,6 +12,7 @@ import {
 } from '../src/generated/prisma/enums';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 // Runs against the dev Postgres container (same DATABASE_URL as `npm run
 // start:dev`) since the project has no dedicated test database yet.
@@ -55,12 +56,10 @@ describe('Estimation (e2e)', () => {
   describe('GET /inventory/estimate/:productId', () => {
     beforeEach(async () => {
       // Create fresh product for each test
-      const product = await prisma.product.create({
-        data: {
-          canonicalName: 'test-milk',
-          productType: ProductType.fast_consumable,
-          predictionEnabled: true,
-        },
+      const product = await createProductFixture(prisma, {
+        canonicalName: 'test-milk',
+        productType: ProductType.fast_consumable,
+        predictionEnabled: true,
       });
       productId = product.id;
     });

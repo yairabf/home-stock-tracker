@@ -17,6 +17,7 @@ import type { HouseholdModel } from '../src/generated/prisma/models';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Low-stock recommendations (e2e)', () => {
   let app: INestApplication<App>;
@@ -169,11 +170,9 @@ describe('Low-stock recommendations (e2e)', () => {
   });
 
   async function createProduct(name: string, predictionEnabled: boolean) {
-    const product = await prisma.product.create({
-      data: {
-        canonicalName: `recommendation-${name}-${Date.now()}`,
-        predictionEnabled,
-      },
+    const product = await createProductFixture(prisma, {
+      canonicalName: `recommendation-${name}-${Date.now()}`,
+      predictionEnabled,
     });
     products.set(name, product.id);
     productIds.push(product.id);

@@ -7,6 +7,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { InventoryEventType, ProductType } from '../src/generated/prisma/enums';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Statistics E2E Tests', () => {
   let app: INestApplication;
@@ -39,16 +40,14 @@ describe('Statistics E2E Tests', () => {
     await prisma.product.deleteMany();
 
     // Create test product
-    const product = await prisma.product.create({
-      data: {
-        canonicalName: 'Test Milk',
-        aliases: ['milk', 'dairy milk'],
-        category: 'Dairy',
-        typicalUnit: 'liter',
-        productType: ProductType.fast_consumable,
-        isPerishable: true,
-        predictionEnabled: true,
-      },
+    const product = await createProductFixture(prisma, {
+      canonicalName: 'Test Milk',
+      aliases: ['milk', 'dairy milk'],
+      category: 'Dairy',
+      typicalUnit: 'liter',
+      productType: ProductType.fast_consumable,
+      isPerishable: true,
+      predictionEnabled: true,
     });
     productId = product.id;
   });

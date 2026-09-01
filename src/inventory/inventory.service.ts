@@ -2,6 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
+import {
+  getCanonicalProductName,
+  PRODUCT_WITH_NAMES_INCLUDE,
+} from '../product/types/product-with-names';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
@@ -194,7 +198,7 @@ export class InventoryService {
               status: GroceryItemStatus.purchased,
               relatedInventoryEventId: event.id,
             },
-            include: { product: true },
+            include: { product: PRODUCT_WITH_NAMES_INCLUDE },
           }),
         ),
       );
@@ -213,7 +217,10 @@ export class InventoryService {
     return {
       event: InventoryEventResponseDto.fromEntity(result.event),
       groceryItems: result.updatedItems.map((item) =>
-        GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
+        GroceryItemResponseDto.fromEntity(
+          item,
+          getCanonicalProductName(item.product),
+        ),
       ),
     };
   }
@@ -225,7 +232,7 @@ export class InventoryService {
 
     const items = await this.prisma.groceryListItem.findMany({
       where: { id: { in: input.groceryItemIds } },
-      include: { product: true },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
     });
     const itemsById = new Map(items.map((item) => [item.id, item]));
     const orderedItems = input.groceryItemIds.map((id) => itemsById.get(id));
@@ -280,7 +287,7 @@ export class InventoryService {
               status: GroceryItemStatus.purchased,
               relatedInventoryEventId: eventIdsByProduct.get(item.productId),
             },
-            include: { product: true },
+            include: { product: PRODUCT_WITH_NAMES_INCLUDE },
           }),
         ),
       );
@@ -298,7 +305,10 @@ export class InventoryService {
         InventoryEventResponseDto.fromEntity(event),
       ),
       completedItems: result.completedItems.map((item) =>
-        GroceryItemResponseDto.fromEntity(item, item.product.canonicalName),
+        GroceryItemResponseDto.fromEntity(
+          item,
+          getCanonicalProductName(item.product),
+        ),
       ),
     };
   }
@@ -432,7 +442,7 @@ export class InventoryService {
               status: GroceryItemStatus.purchased,
               relatedInventoryEventId: event.id,
             },
-            include: { product: true },
+            include: { product: PRODUCT_WITH_NAMES_INCLUDE },
           }),
         ),
       );
@@ -453,7 +463,7 @@ export class InventoryService {
     for (const item of result.updatedItems) {
       completed.push({
         id: item.id,
-        productName: item.product.canonicalName,
+        productName: getCanonicalProductName(item.product),
         status: GroceryItemStatus.purchased,
       });
     }

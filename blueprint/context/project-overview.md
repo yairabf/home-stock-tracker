@@ -36,7 +36,17 @@ The MVP feature set, in build order. Item 12 (MCP tool interface) is the headlin
 17. **Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures.
 18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment.
 
-Post-MVP: expiration tracking, storage locations, product-specific automation policies, an advanced/Python prediction engine, background job infrastructure (Redis/BullMQ), receipt/barcode ingestion, Home Assistant integration, and a management dashboard.
+Post-MVP:
+
+19. **Expiration tracking** - record expiration information and surface products likely to expire soon.
+20. **Storage locations** - track products across household storage locations.
+21. **Product-specific automation policies** - control whether selected products are suggested, ignored, or automatically added at configured confidence.
+22. **Advanced prediction engine** - add richer statistical forecasting and introduce Python only if justified.
+23. **Background job infrastructure** - add Redis and a job queue when prediction work requires asynchronous or distributed execution.
+24. **Receipt and barcode ingestion** - use receipts and barcode scans as additional purchase and inventory signals.
+25. **Home Assistant integration** - expose grocery, inventory, and low-stock state to household automation.
+26. **Management dashboard** - provide a web interface for inventory, predictions, history, and manual corrections if conversational control is insufficient.
+27. **Product name namespace** - store canonical names and aliases in one globally unique normalized namespace for indexed, deterministic lookup.
 
 **Explicit MVP exclusions:** no web UI, no mobile app, no exact real-time inventory requirement, no barcode scanner, no receipt OCR, no supermarket integration, no automatic online purchasing, no computer vision, no Home Assistant integration, no expiration-date tracking (unless trivial), no advanced ML training pipeline, no dedicated Python prediction microservice, no multi-tenant architecture, no Redis unless a concrete need appears, and no automatic grocery-list mutation from predictions alone (predictions recommend; they don't silently modify the list).
 
@@ -59,8 +69,7 @@ Single-row table for the MVP household; schema should not assume single-row fore
 ### Product
 
 - `id` (string, UUID) - primary key.
-- `canonicalName` (string) - e.g. "milk".
-- `aliases` (string[]) - normalized alternate names Hermes/users might say.
+- `names` (`ProductName[]`) - the authoritative canonical name and explicit aliases.
 - `category` (string).
 - `typicalUnit` (string, optional) - e.g. "liter", "unit".
 - `productType` (enum: `fast_consumable` | `pantry_staple` | `household_consumable` | `discrete_consumable`).
@@ -68,6 +77,16 @@ Single-row table for the MVP household; schema should not assume single-row fore
 - `predictionStrategy` (string/enum, optional) - which estimation approach applies.
 - `predictionEnabled` (boolean).
 - `config` (JSON, optional) - product-specific overrides.
+
+### ProductName
+
+- `id` (string, UUID) - primary key.
+- `productId` (FK -> Product) - owning product; names are deleted with the product.
+- `displayName` (string) - approved spelling returned through public product contracts.
+- `normalizedName` (string, globally unique) - deterministic lookup key produced with Unicode NFKC normalization, trimming, locale-independent lowercase, and internal whitespace collapse.
+- `kind` (enum: `canonical` | `alias`) - exactly one canonical row is required per product; aliases are explicit identity terms.
+
+Canonical and alias names share one global namespace: one normalized phrase can identify at most one product. Existing REST and MCP product responses continue to expose derived `canonicalName` and `aliases` fields.
 
 ### GroceryListItem
 

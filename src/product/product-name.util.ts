@@ -1,13 +1,21 @@
-/** Trims and case-folds a product name so lookups are whitespace/case-insensitive. */
-export function normalizeProductName(rawName: string): string {
-  return rawName.trim().toLowerCase();
+import type { ProductNameValue } from './types/product-name';
+
+export function normalizeProductDisplayName(rawName: string): string {
+  return rawName.normalize('NFKC').trim().replace(/\s+/gu, ' ');
 }
 
-/**
- * Normalizes a raw alias list against an already-normalized `canonicalName`:
- * trims and case-folds each alias, drops empty/whitespace-only entries and any
- * alias equal to the canonical name, and dedupes the rest.
- */
+export function normalizeProductName(rawName: string): string {
+  return normalizeProductDisplayName(rawName).toLowerCase();
+}
+
+export function toProductNameValue(rawName: string): ProductNameValue {
+  const displayName = normalizeProductDisplayName(rawName);
+  return {
+    displayName,
+    normalizedName: displayName.toLowerCase(),
+  };
+}
+
 export function normalizeAliases(
   rawAliases: string[] | undefined,
   canonicalName: string,

@@ -1,33 +1,33 @@
-# Graph Report - home-stock-tracker  (2026-08-31)
+# Graph Report - home-stock-tracker  (2026-09-01)
 
 ## Corpus Check
-- 382 files · ~251,163 words
+- 392 files · ~257,395 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3869 nodes · 4798 edges · 319 communities (281 shown, 38 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 407 edges (avg confidence: 0.97)
+- 3940 nodes · 4981 edges · 333 communities (285 shown, 48 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 409 edges (avg confidence: 0.97)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `54bad3fa`
+- Built from commit: `2d22ae06`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - product.service.ts
 - managedFiles
-- HouseholdResponseDto
+- prediction-reasoner.service.ts
 - EstimationService
 - 8. Deployment - Where and how will this ship?
 - InventoryController
 - HouseholdService
 - StatisticsService
-- OperationalLogger
+- operational-logger.service.ts
 - CreateHouseholdDto
 - Model Queries
 - Driver Adapters
-- inventory.controller.ts
+- inventory.service.ts
 - Upgrade to Prisma ORM 7
 - CompletePartialPurchaseDto
 - ProductService
@@ -76,8 +76,8 @@
 - Transactions
 - Workflow
 - continuous - complete the build plan one local feature at a time
-- inventory.controller.spec.ts
-- prediction-reasoner.service.ts
+- inventory.controller.ts
+- llm.module.ts
 - Prisma Compute Framework Readiness
 - MongoDB Setup
 - Prisma SQL Driver Adapter Implementation
@@ -123,7 +123,7 @@
 - SQL Server Setup
 - create-db-cli
 - api-basics
-- current-feature.md
+- Feature: Product name namespace
 - Feature: Grocery list management
 - Feature: Product catalog and normalization
 - Feature: Record purchases and restocks
@@ -177,9 +177,9 @@
 - prototype - lock the look before you build
 - try - manual review guide
 - graphify reference: extra exports and benchmark
-- EstimationResponseDto
+- ServiceAuthConfigService
 - AppService
-- HouseholdController
+- InventoryEventResponseDto
 - AGENTS.md
 - prisma mcp
 - client-api-mapping
@@ -212,7 +212,7 @@
 - graphify reference: add a URL and watch a folder
 - graphify reference: commit hook and native CLAUDE.md integration
 - graphify reference: incremental update and cluster-only
-- PrismaService
+- prisma.service.ts
 - Fix Brief: MCP-03 - Pending grocery items need direct field updates
 - Feature: Hermes inventory skill
 - graphify reference: GitHub clone and cross-repo merge
@@ -286,11 +286,11 @@
 - Fix Brief: SKILL-07 — Scenario coverage is prose-only and not executable
 - bugs/README.md
 - _source-mcp-agent-skill-development-brief.md
-- prediction-reasoning.ts
+- HouseholdResponseDto
 - Feature: Hermes grocery conversations
-- grocery.service.ts
+- PrismaService
 - Feature: Service authentication
-- UpdateGroceryItemDto
+- HouseholdController
 - Recommended execution order
 - Home Stock Tracker
 - Current repository baseline
@@ -300,38 +300,52 @@
 - MCP-04 — No agent-safe product search or catalog discovery
 - MCP-05 — No controlled alias-management tool
 - MCP-07 — No prediction-feedback tool
-- low-stock-recommendation.ts
+- mcp.controller.spec.ts
 - MCP-08 — Multi-item additions are non-atomic
 - MCP-10 — No read-only household context tool
-- estimation.service.ts
+- TestRestController
 - Feature: Confirmed grocery catalog decisions
 - MCP-06 — No inventory-event history tool
 - mcp-server.factory.ts
-- ServiceAuthConfigService
+- product-with-names.ts
 - Fix: Guard grocery removal by pending state
 - Fix: Use transport-owned generic source attribution
-- structured-generation.ts
+- GroceryItemResponseDto
 - Feature: Product name namespace
-- moduleFileExtensions
+- ProductWithNames
 - Fix: Publish a reliable `get_product` input schema
 - Feature: Grocery quantity contract
 - Feature: Product search and resolution proposals
-- @nestjs/core
-- pg
-- reflect-metadata
+- AddProductAliasDto
+- EstimationResponseDto
+- structured-generation.ts
 - McpServerFactory
-- rxjs
-- zod
+- @eslint/eslintrc
+- @eslint/js
 - Fix: MCP-03 direct pending grocery item updates
-- ListGroceryItemsDto
+- grocery.service.ts
 - feature-plans/README.md
-- @prisma/adapter-pg
+- product-name-namespace-migration.e2e-spec.ts
+- eslint-plugin-prettier
+- @nestjs/schematics
+- OperationalLogger
+- product-name.exception.ts
+- source-map-support
+- UpdateGroceryItemDto
+- supertest
+- ts-jest
+- tsconfig-paths
+- @types/express
+- @types/jest
+- @types/node
+- @types/supertest
+- typescript
 
 ## God Nodes (most connected - your core abstractions)
-1. `ProductService` - 65 edges
+1. `ProductService` - 72 edges
 2. `managedFiles` - 57 edges
-3. `InventoryService` - 54 edges
-4. `PrismaService` - 54 edges
+3. `PrismaService` - 56 edges
+4. `InventoryService` - 54 edges
 5. `EstimationService` - 51 edges
 6. `StatisticsService` - 44 edges
 7. `GroceryService` - 41 edges
@@ -340,45 +354,45 @@
 10. `CompletePartialPurchaseDto` - 30 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `createProductFixture()` --indirect_call--> `toProductNameValue()`  [INFERRED]
+  test/product-fixture.ts → src/product/product-name.util.ts
 - `AddGroceryItemDto` --uses--> `AddGroceryItemDto`  [INFERRED]
   src/grocery/dto/add-grocery-item.dto.ts → src/grocery/grocery.controller.ts
+- `GroceryItemResponseDto` --uses--> `GroceryItemResponseDto`  [INFERRED]
+  src/grocery/dto/grocery-item-response.dto.ts → src/grocery/grocery.controller.ts
 - `ListGroceryItemsDto` --uses--> `ListGroceryItemsDto`  [INFERRED]
   src/grocery/dto/list-grocery-items.dto.ts → src/grocery/grocery.controller.ts
 - `GroceryService` --uses--> `AddGroceryItemDto`  [INFERRED]
   src/grocery/grocery.service.ts → src/grocery/grocery.controller.ts
-- `GroceryService` --uses--> `GroceryItemResponseDto`  [INFERRED]
-  src/grocery/grocery.service.ts → src/grocery/grocery.controller.ts
-- `CreateHouseholdDto` --uses--> `CreateHouseholdDto`  [INFERRED]
-  src/household/dto/create-household.dto.ts → src/household/household.controller.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (319 total, 38 thin omitted)
+## Communities (333 total, 48 thin omitted)
 
 ### Community 0 - "product.service.ts"
-Cohesion: 0.21
-Nodes (13): LlmGenerationResult, ProductClassificationLogService, Injectable, PRODUCT_CLASSIFICATION_MIN_CONFIDENCE, PRODUCT_CLASSIFICATION_PROMPT_VERSION, ProductClassifier, Injectable, nonBlankString (+5 more)
+Cohesion: 0.18
+Nodes (14): LlmGenerationResult, ProductClassificationLogService, Injectable, PRODUCT_CLASSIFICATION_MIN_CONFIDENCE, PRODUCT_CLASSIFICATION_PROMPT_VERSION, ProductClassifier, Injectable, ProductMetadata (+6 more)
 
 ### Community 1 - "managedFiles"
 Cohesion: 0.04
 Nodes (57): managedFiles, .agents/skills/adopt/SKILL.md, .agents/skills/audit/SKILL.md, .agents/skills/autopilot/SKILL.md, .agents/skills/brief/SKILL.md, .agents/skills/check/SKILL.md, .agents/skills/ci/SKILL.md, .agents/skills/complete/SKILL.md (+49 more)
 
-### Community 2 - "HouseholdResponseDto"
-Cohesion: 0.16
-Nodes (8): HouseholdResponseDto, HouseholdResponseDto, Body, Get, HttpCode, Param, Patch, Post
+### Community 2 - "prediction-reasoner.service.ts"
+Cohesion: 0.15
+Nodes (13): PredictionReasoner, Inject, Injectable, nonBlankString, nullableDateTime, nullableNonNegativeNumber, PredictionReasoningInput, predictionReasoningInputSchema (+5 more)
 
 ### Community 3 - "EstimationService"
-Cohesion: 0.06
-Nodes (5): prediction, EstimationService, Injectable, ProductEvent, ProductEventHistory
+Cohesion: 0.05
+Nodes (14): prediction, EstimationService, HouseholdPredictionContext, HybridReasoningResult, LearnedStatistics, PRODUCT_TYPE_THRESHOLDS, ProductPredictionContext, RELEVANT_EVENT_TYPES (+6 more)
 
 ### Community 4 - "8. Deployment - Where and how will this ship?"
 Cohesion: 0.05
 Nodes (39): 1. Problem - What problem are we solving?, 2. Users - Who is this for?, 3. Features - What does the MVP need?, 4. Data - What are we storing?, 5. Tech - What stack are we using?, 6. Monetize - How will this make money?, 7. UI/UX - How should this look and feel?, 8. Deployment - Where and how will this ship? (+31 more)
 
 ### Community 5 - "InventoryController"
-Cohesion: 0.10
-Nodes (8): CompletePartialPurchaseResponseDto, CompletePurchaseResponseDto, InventoryEventListResponseDto, InventoryController, Body, Controller, HttpCode, Post
+Cohesion: 0.11
+Nodes (4): CompletePurchaseDto, InventoryController, Controller, Inject
 
 ### Community 6 - "HouseholdService"
 Cohesion: 0.14
@@ -388,13 +402,13 @@ Nodes (3): household, HouseholdService, Injectable
 Cohesion: 0.06
 Nodes (4): inventoryEvent, productStatistics, StatisticsService, Injectable
 
-### Community 8 - "OperationalLogger"
-Cohesion: 0.07
-Nodes (24): PREDICTION_ENGINE, PredictionEngine, LowStockRecommendationService, Inject, Injectable, Inject, McpController, initializeRequest (+16 more)
+### Community 8 - "operational-logger.service.ts"
+Cohesion: 0.11
+Nodes (15): ObservabilityModule, Global, Module, CatalogIntegrityAction, CatalogIntegrityLog, IntegrationErrorType, InventoryAction, InventoryActionLog (+7 more)
 
 ### Community 9 - "CreateHouseholdDto"
-Cohesion: 0.13
-Nodes (9): CreateHouseholdDto, IsArray, IsInt, IsNumber, IsOptional, IsString, Max, Min (+1 more)
+Cohesion: 0.12
+Nodes (10): CreateHouseholdDto, CreateHouseholdDto, IsArray, IsInt, IsNumber, IsOptional, IsString, Max (+2 more)
 
 ### Community 10 - "Model Queries"
 Cohesion: 0.07
@@ -404,9 +418,9 @@ Nodes (27): aggregate, Aggregation Operations, Atomic operations, count, create,
 Cohesion: 0.07
 Nodes (27): Accept self-signed certificates, After (v7), Available Adapters, Before (v6), Configuration, Connection Pool Configuration, Driver Adapters, Installation (+19 more)
 
-### Community 12 - "inventory.controller.ts"
-Cohesion: 0.14
-Nodes (17): CompletedItemDto, GroceryItemResponseDto, InventoryEventResponseDto, PendingItemDto, SkippedItemDto, GroceryItemResponseDto, GroceryErrorCode, GroceryErrorResponse (+9 more)
+### Community 12 - "inventory.service.ts"
+Cohesion: 0.19
+Nodes (6): InventoryEventListResponseDto, InventoryEventListResponseDto, PURCHASE_EVENT_TYPES, PRODUCT_NAMES, CompleteGroceryPurchaseInput, CompleteGroceryPurchaseResult
 
 ### Community 13 - "Upgrade to Prisma ORM 7"
 Cohesion: 0.08
@@ -418,15 +432,15 @@ Nodes (12): ArrayMinSize, CompletePartialPurchaseDto, CompletePartialPurchaseDto
 
 ### Community 15 - "ProductService"
 Cohesion: 0.08
-Nodes (5): product, normalizeAliases(), normalizeProductName(), ProductService, Injectable
+Nodes (3): product, ProductService, Injectable
 
 ### Community 16 - "What You Must Do When Invoked"
 Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native AGENTS.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 17 - "CompletePurchaseDto"
-Cohesion: 0.08
-Nodes (12): ArrayNotEmpty, ArrayUnique, CompletePurchaseDto, CompletePurchaseDto, IsArray, IsNotEmpty, IsNumber, IsObject (+4 more)
+Cohesion: 0.09
+Nodes (11): ArrayNotEmpty, ArrayUnique, CompletePurchaseDto, IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional (+3 more)
 
 ### Community 18 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -443,10 +457,6 @@ Nodes (23): Alternatives, Auto-generate after migrate, Auto-seed after migrate, 
 ### Community 21 - "Feature: Policy-aware grocery additions"
 Cohesion: 0.13
 Nodes (15): Acceptance criteria, Build steps, Create if missing, Data / contracts, Domain and transaction rules, Feature: Policy-aware grocery additions, Files / areas, Goal (+7 more)
-
-### Community 22 - "InventoryService"
-Cohesion: 0.09
-Nodes (3): InventoryService, Injectable, CompleteGroceryPurchaseInput
 
 ### Community 23 - "compilerOptions"
 Cohesion: 0.09
@@ -482,7 +492,7 @@ Nodes (20): cursor, distinct, Filtered include, include, Include relation count,
 
 ### Community 31 - "ListInventoryEventsDto"
 Cohesion: 0.10
-Nodes (12): ListInventoryEventsDto, ListInventoryEventsDto, IsEnum, IsInt, IsOptional, IsPositive, IsUUID, Max (+4 more)
+Nodes (11): ListInventoryEventsDto, ListInventoryEventsDto, IsEnum, IsInt, IsOptional, IsPositive, IsUUID, Max (+3 more)
 
 ### Community 32 - "RecordInventoryEventDto"
 Cohesion: 0.10
@@ -521,8 +531,8 @@ Cohesion: 0.11
 Nodes (18): After schema changes, Command, Common Patterns, Create and apply migration, Create without applying, Examples, Follow-up Commands, Full workflow (+10 more)
 
 ### Community 41 - "dependencies"
-Cohesion: 0.10
-Nodes (21): class-transformer, class-validator, dotenv, @modelcontextprotocol/sdk, @nestjs/common, @nestjs/mapped-types, @nestjs/platform-express, openai (+13 more)
+Cohesion: 0.06
+Nodes (33): class-transformer, class-validator, dotenv, @modelcontextprotocol/sdk, @nestjs/common, @nestjs/core, @nestjs/mapped-types, @nestjs/platform-express (+25 more)
 
 ### Community 42 - "prisma db seed"
 Cohesion: 0.11
@@ -534,7 +544,7 @@ Nodes (17): 1. Install dotenv, 2. Import in prisma.config.ts, Application Code, 
 
 ### Community 44 - "Home Stock Tracker - Project Overview"
 Cohesion: 0.11
-Nodes (17): Data model, Deployment, Features, GroceryListItem, Home Stock Tracker - Project Overview, Household, InventoryEvent, LlmInferenceLog (+9 more)
+Nodes (18): Data model, Deployment, Features, GroceryListItem, Home Stock Tracker - Project Overview, Household, InventoryEvent, LlmInferenceLog (+10 more)
 
 ### Community 45 - "prisma db pull"
 Cohesion: 0.12
@@ -600,11 +610,11 @@ Nodes (14): Error Handling, Prerequisites, Prisma Postgres Setup, Reference File
 Cohesion: 0.13
 Nodes (14): 2.1 Select and spec, 2.2 Create or resume the feature branch, 2.3 Implement small steps, 2.4 Apply Continuous quality gates, 2.5 Repair and re-review findings, 2.6 Complete locally like a human, continuous - complete the build plan one local feature at a time, Formatting (+6 more)
 
-### Community 61 - "inventory.controller.spec.ts"
-Cohesion: 0.12
-Nodes (16): CORRECTED_STATES, CorrectedStateMatchesOutcomeConstraint, PredictionFeedbackDto, PredictionFeedbackOutcome, accepted, corrected, rejected, validateBody() (+8 more)
+### Community 61 - "inventory.controller.ts"
+Cohesion: 0.14
+Nodes (15): CORRECTED_STATES, CorrectedStateMatchesOutcomeConstraint, PredictionFeedbackDto, PredictionFeedbackOutcome, accepted, corrected, rejected, validateBody() (+7 more)
 
-### Community 62 - "prediction-reasoner.service.ts"
+### Community 62 - "llm.module.ts"
 Cohesion: 0.17
 Nodes (10): REQUIRED_ENVIRONMENT, candidate, LLM_PROVIDER, LlmProvider, LlmProviderRegistry, Injectable, DEFAULT_OPENAI_MODEL, OPENAI_CLIENT (+2 more)
 
@@ -629,20 +639,20 @@ Cohesion: 0.14
 Nodes (13): Build loop, Build steps, Data / contracts, Design reference, Feature: Household profile, Files / areas, Goal, Household model (Prisma) (+5 more)
 
 ### Community 68 - "ProductController"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (8): ProductResponseDto, ProductResponseDto, ProductController, Body, Controller, Get, Param, Post
 
 ### Community 69 - "app.module.ts"
-Cohesion: 0.15
-Nodes (22): EstimationModule, Module, GroceryModule, Module, HouseholdModule, Module, InventoryModule, Module (+14 more)
+Cohesion: 0.18
+Nodes (19): EstimationModule, Module, GroceryModule, Module, HouseholdModule, Module, InventoryModule, Module (+11 more)
 
 ### Community 70 - "StatisticsController"
 Cohesion: 0.10
 Nodes (7): StatisticsResponseDto, StatisticsResponseDto, StatisticsController, Controller, HttpCode, Param, Post
 
 ### Community 71 - "CreateProductDto"
-Cohesion: 0.09
-Nodes (12): AddProductAliasDto, CreateProductDto, AddProductAliasDto, IsNotEmpty, IsString, Transform, CreateProductDto, IsArray (+4 more)
+Cohesion: 0.15
+Nodes (7): CreateProductDto, CreateProductDto, IsArray, IsNotEmpty, IsOptional, IsString, Transform
 
 ### Community 72 - "autopilot - optional Blueprint loop"
 Cohesion: 0.15
@@ -698,7 +708,7 @@ Nodes (14): Add one item and handle an existing line, Add several items, Complet
 
 ### Community 85 - "AddGroceryItemDto"
 Cohesion: 0.12
-Nodes (10): AddGroceryItemDto, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Transform (+2 more)
+Nodes (11): AddGroceryItemDto, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Transform (+3 more)
 
 ### Community 86 - "scripts"
 Cohesion: 0.14
@@ -788,6 +798,10 @@ Nodes (10): Command discovery (`--help`), Commands, Common patterns, create-db-c
 Cohesion: 0.18
 Nodes (10): api-basics, Base URL, Collection, Error codes by HTTP status, Error Responses, Pagination, Resource ID Prefixes, Response Envelope (+2 more)
 
+### Community 108 - "Feature: Product name namespace"
+Cohesion: 0.13
+Nodes (14): Build loop, Build steps, Conflict response, Data / contracts, Feature: Product name namespace, Files / areas, Goal, In scope (+6 more)
+
 ### Community 109 - "Feature: Grocery list management"
 Cohesion: 0.18
 Nodes (10): Build loop, Build steps, Data / contracts, Feature: Grocery list management, Files / areas, Goal, In scope, Notes for the AI (+2 more)
@@ -813,8 +827,8 @@ Cohesion: 0.50
 Nodes (3): Hermes inventory skill scenarios, Review record, Scheduled proactive-check scenarios
 
 ### Community 115 - "jest"
-Cohesion: 0.18
-Nodes (11): jest, collectCoverageFrom, coverageDirectory, moduleNameMapper, rootDir, testEnvironment, testRegex, transform (+3 more)
+Cohesion: 0.13
+Nodes (15): jest, collectCoverageFrom, coverageDirectory, moduleFileExtensions, moduleNameMapper, rootDir, testEnvironment, testRegex (+7 more)
 
 ### Community 116 - "Feature: MCP tool interface"
 Cohesion: 0.17
@@ -1000,17 +1014,17 @@ Nodes (8): Formatting, Input, Rules, Step 1 - find the work to explain, Step 2 -
 Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
-### Community 162 - "EstimationResponseDto"
-Cohesion: 0.31
-Nodes (4): EstimationResponseDto, DeterministicSignalsDto, EstimationResponseDto, Param
+### Community 162 - "ServiceAuthConfigService"
+Cohesion: 0.18
+Nodes (4): ServiceAuthConfigService, Injectable, ServiceAuthModule, Module
 
 ### Community 163 - "AppService"
 Cohesion: 0.20
 Nodes (5): AppController, Controller, Get, AppService, Injectable
 
-### Community 164 - "HouseholdController"
+### Community 164 - "InventoryEventResponseDto"
 Cohesion: 0.14
-Nodes (4): CreateHouseholdDto, UpdateHouseholdDto, HouseholdController, Controller
+Nodes (15): CompletePartialPurchaseResponseDto, CompletePurchaseResponseDto, CompletedItemDto, InventoryEventResponseDto, PendingItemDto, SkippedItemDto, CompletedItemDto, CompletePartialPurchaseResponseDto (+7 more)
 
 ### Community 165 - "AGENTS.md"
 Cohesion: 0.25
@@ -1140,9 +1154,9 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 198 - "PrismaService"
-Cohesion: 0.10
-Nodes (8): AppModule, Module, ServiceAuthGuard, Injectable, PrismaService, Injectable, AUTH_TEST_BYPASS, baseResult
+### Community 198 - "prisma.service.ts"
+Cohesion: 0.14
+Nodes (10): AppModule, Module, ServiceAuthGuard, Injectable, AUTH_TEST_BYPASS, baseResult, createProduct(), createProductFixture() (+2 more)
 
 ### Community 199 - "Fix Brief: MCP-03 - Pending grocery items need direct field updates"
 Cohesion: 0.18
@@ -1157,16 +1171,16 @@ Cohesion: 0.27
 Nodes (4): MS_PER_DAY, NEED_EVENT_TYPES, PURCHASE_EVENT_TYPES, ProductStatisticsResult
 
 ### Community 214 - "devDependencies"
-Cohesion: 0.04
-Nodes (49): eslint, eslint-config-prettier, @eslint/eslintrc, @eslint/js, eslint-plugin-prettier, globals, jest, @nestjs/cli (+41 more)
+Cohesion: 0.09
+Nodes (23): eslint, eslint-config-prettier, globals, jest, @nestjs/cli, @nestjs/testing, devDependencies, eslint (+15 more)
 
 ### Community 215 - "GroceryService"
-Cohesion: 0.11
-Nodes (4): groceryListItem, GroceryService, Injectable, Inject
+Cohesion: 0.12
+Nodes (4): groceryListItem, groceryInvalid(), GroceryService, Injectable
 
 ### Community 216 - "GroceryController"
-Cohesion: 0.12
-Nodes (7): Delete, AddGroceryItemDto, GroceryController, Body, Controller, Param, Patch
+Cohesion: 0.10
+Nodes (10): AddGroceryItemDto, GroceryItemResponseDto, ListGroceryItemsDto, ListGroceryItemsDto, IsEnum, IsOptional, GroceryController, Controller (+2 more)
 
 ### Community 217 - "Skill and installation gaps"
 Cohesion: 0.13
@@ -1312,25 +1326,21 @@ Nodes (6): Acceptance criteria, Expected implementation output, Fix Brief: MCP-X
 Cohesion: 0.20
 Nodes (9): Core interactive tools — recommended for the next release, Cross-cutting service requirements, Definition of done for a future installer, Domain and concurrency tests, Intentionally excluded from the initial agent surface, MCP contract tests, Recommended MCP target surface, Skill contract tests (+1 more)
 
-### Community 276 - "prediction-reasoning.ts"
-Cohesion: 0.24
-Nodes (8): nonBlankString, nullableDateTime, nullableNonNegativeNumber, PredictionReasoningInput, predictionReasoningInputSchema, predictionReasoningResultSchema, validInput, validResult
+### Community 276 - "HouseholdResponseDto"
+Cohesion: 0.19
+Nodes (7): HouseholdResponseDto, Body, Get, HttpCode, Param, Patch, Post
 
 ### Community 277 - "Feature: Hermes grocery conversations"
 Cohesion: 0.17
 Nodes (11): Build loop, Build steps, Completion record, Data / contracts, Feature: Hermes grocery conversations, Files / areas, Goal, In scope (+3 more)
 
-### Community 278 - "grocery.service.ts"
-Cohesion: 0.22
-Nodes (8): PendingGroceryItemPolicy, create_separate, return_existing, AddGroceryItemOutcome, confirmation_required, created, GroceryRequestedAdditionDto, item
-
 ### Community 281 - "Feature: Service authentication"
 Cohesion: 0.17
 Nodes (11): Build loop, Build steps, Completion record, Data / contracts, Feature: Service authentication, Files / areas, Goal, In scope (+3 more)
 
-### Community 282 - "UpdateGroceryItemDto"
-Cohesion: 0.15
-Nodes (12): IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Transform, ValidateIf (+4 more)
+### Community 282 - "HouseholdController"
+Cohesion: 0.14
+Nodes (4): HouseholdResponseDto, UpdateHouseholdDto, HouseholdController, Controller
 
 ### Community 283 - "Recommended execution order"
 Cohesion: 0.25
@@ -1368,9 +1378,9 @@ Nodes (4): Acceptance criteria, MCP-05 — No controlled alias-management tool, 
 Cohesion: 0.50
 Nodes (4): Acceptance criteria, MCP-07 — No prediction-feedback tool, Proposed tool, Required workflow
 
-### Community 293 - "low-stock-recommendation.ts"
-Cohesion: 0.19
-Nodes (11): LowStockRecommendationDto, LowStockRecommendationListResponseDto, compareRecommendations(), LowStockRecommendation, LowStockState, qualifies(), RecommendationCandidate, selectLowStockRecommendations() (+3 more)
+### Community 293 - "mcp.controller.spec.ts"
+Cohesion: 0.11
+Nodes (20): PREDICTION_ENGINE, PredictionEngine, DeterministicSignals, PredictionResult, LowStockRecommendationDto, LowStockRecommendationListResponseDto, LowStockRecommendationService, Inject (+12 more)
 
 ### Community 294 - "MCP-08 — Multi-item additions are non-atomic"
 Cohesion: 0.50
@@ -1380,9 +1390,9 @@ Nodes (4): Acceptance criteria, MCP-08 — Multi-item additions are non-atomic, 
 Cohesion: 0.50
 Nodes (4): Acceptance criteria, MCP-10 — No read-only household context tool, Proposed tool, Recommendation
 
-### Community 296 - "estimation.service.ts"
-Cohesion: 0.11
-Nodes (16): HouseholdPredictionContext, HybridReasoningResult, LearnedStatistics, PRODUCT_TYPE_THRESHOLDS, ProductPredictionContext, RELEVANT_EVENT_TYPES, PREDICTION_REASONING_PROMPT_VERSION, PredictionReasoner (+8 more)
+### Community 296 - "TestRestController"
+Cohesion: 0.50
+Nodes (3): TestRestController, Controller, Get
 
 ### Community 297 - "Feature: Confirmed grocery catalog decisions"
 Cohesion: 0.13
@@ -1396,9 +1406,9 @@ Nodes (3): Acceptance criteria, MCP-06 — No inventory-event history tool, Prop
 Cohesion: 0.15
 Nodes (12): TransportSource, completeGroceryPurchaseOutputSchema, estimationOutputSchema, eventMeasurementsSchema, groceryAddOutputSchema, groceryItemOutputSchema, groceryListOutputSchema, householdContextSchema (+4 more)
 
-### Community 300 - "ServiceAuthConfigService"
-Cohesion: 0.18
-Nodes (4): ServiceAuthConfigService, Injectable, ServiceAuthModule, Module
+### Community 300 - "product-with-names.ts"
+Cohesion: 0.28
+Nodes (4): getProductAliases(), PRODUCT_NAMES_ORDER_BY, PRODUCT_WITH_NAMES_ARGS, PRODUCT_WITH_NAMES_INCLUDE
 
 ### Community 301 - "Fix: Guard grocery removal by pending state"
 Cohesion: 0.29
@@ -1408,17 +1418,13 @@ Nodes (6): Build steps, Completion record, Fix: Guard grocery removal by pending
 Cohesion: 0.29
 Nodes (6): Build steps, Completion record, Fix: Use transport-owned generic source attribution, The fix, The problem, Verify
 
-### Community 303 - "structured-generation.ts"
-Cohesion: 0.19
-Nodes (9): OpenAiLlmProvider, parsedResult, request, Injectable, LlmRefusal, LlmResultMetadata, LlmSuccess, LlmUnavailable (+1 more)
+### Community 303 - "GroceryItemResponseDto"
+Cohesion: 0.18
+Nodes (9): Delete, GroceryItemResponseDto, Param, Patch, groceryConflict(), GroceryErrorCode, GroceryErrorResponse, groceryNotFound() (+1 more)
 
 ### Community 304 - "Feature: Product name namespace"
 Cohesion: 0.15
 Nodes (13): Acceptance criteria, Build steps, Data / migration impact, Domain and transaction rules, Feature: Product name namespace, Files / areas, Goal, Handoff notes (+5 more)
-
-### Community 305 - "moduleFileExtensions"
-Cohesion: 0.50
-Nodes (4): moduleFileExtensions, js, json, ts
 
 ### Community 306 - "Fix: Publish a reliable `get_product` input schema"
 Cohesion: 0.29
@@ -1432,41 +1438,65 @@ Nodes (13): Acceptance criteria, Build steps, Data / contracts, Domain and trans
 Cohesion: 0.15
 Nodes (13): Acceptance criteria, Build steps, Data / contracts, Domain and security rules, Feature: Product search and resolution proposals, Files / areas, Goal, Handoff notes (+5 more)
 
-### Community 312 - "McpServerFactory"
+### Community 309 - "AddProductAliasDto"
+Cohesion: 0.18
+Nodes (5): AddProductAliasDto, AddProductAliasDto, IsNotEmpty, IsString, Transform
+
+### Community 310 - "EstimationResponseDto"
 Cohesion: 0.27
-Nodes (5): All, Req, Res, McpServerFactory, Injectable
+Nodes (5): EstimationResponseDto, DeterministicSignalsDto, EstimationResponseDto, Get, Param
+
+### Community 311 - "structured-generation.ts"
+Cohesion: 0.27
+Nodes (7): parsedResult, request, LlmRefusal, LlmResultMetadata, LlmSuccess, LlmUnavailable, StructuredGenerationRequest
+
+### Community 312 - "McpServerFactory"
+Cohesion: 0.20
+Nodes (7): All, Req, Res, McpController, Controller, McpServerFactory, Injectable
 
 ### Community 315 - "Fix: MCP-03 direct pending grocery item updates"
 Cohesion: 0.17
 Nodes (11): Build loop, Build steps, Completion record, Data / contracts, Files / areas, Fix: MCP-03 direct pending grocery item updates, Goal, In scope (+3 more)
 
-### Community 316 - "ListGroceryItemsDto"
-Cohesion: 0.18
-Nodes (6): ListGroceryItemsDto, ListGroceryItemsDto, IsEnum, IsOptional, Get, Query
+### Community 316 - "grocery.service.ts"
+Cohesion: 0.20
+Nodes (9): PendingGroceryItemPolicy, create_separate, return_existing, AddGroceryItemOutcome, confirmation_required, created, GroceryRequestedAdditionDto, product (+1 more)
 
 ### Community 317 - "feature-plans/README.md"
 Cohesion: 0.20
 Nodes (4): Deferred work, Queued Feature Plans, Recommended order, Shared decisions
 
+### Community 318 - "product-name-namespace-migration.e2e-spec.ts"
+Cohesion: 0.12
+Nodes (19): normalizeAliases(), normalizeProductDisplayName(), normalizeProductName(), toProductNameValue(), PreparedProductNames, PRODUCT_NAME_KINDS, ProductNameContract, ProductNameKind (+11 more)
+
+### Community 321 - "OperationalLogger"
+Cohesion: 0.19
+Nodes (5): OpenAiLlmProvider, Inject, Injectable, OperationalLogger, Injectable
+
+### Community 324 - "UpdateGroceryItemDto"
+Cohesion: 0.20
+Nodes (9): IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Transform, ValidateIf (+1 more)
+
 ## Knowledge Gaps
-- **2241 isolated node(s):** `schemaVersion`, `version`, `claude`, `codex`, `copilot` (+2236 more)
+- **2269 isolated node(s):** `schemaVersion`, `version`, `claude`, `codex`, `copilot` (+2264 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **38 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **48 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PrismaService` connect `PrismaService` to `product.service.ts`, `AppService`, `app.module.ts`, `HouseholdService`, `estimation.service.ts`, `CreateHouseholdDto`, `OperationalLogger`, `inventory.controller.ts`, `statistics.service.ts`, `grocery.service.ts`, `GroceryService`, `health.controller.ts`, `inventory.controller.spec.ts`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `GroceryService` connect `GroceryService` to `app.module.ts`, `PrismaService`, `OperationalLogger`, `mcp-server.factory.ts`, `inventory.controller.ts`, `AddGroceryItemDto`, `grocery.service.ts`, `GroceryController`, `UpdateGroceryItemDto`, `ListGroceryItemsDto`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `InventoryService` connect `InventoryService` to `RecordInventoryEventDto`, `RecordPurchaseDto`, `app.module.ts`, `InventoryController`, `StatisticsService`, `OperationalLogger`, `mcp-server.factory.ts`, `inventory.controller.ts`, `CompletePartialPurchaseDto`, `CompletePurchaseDto`, `grocery.service.ts`, `GroceryService`, `inventory.controller.spec.ts`, `ListInventoryEventsDto`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `ProductService` connect `ProductService` to `product.service.ts`, `OperationalLogger`, `prediction-reasoner.service.ts`, `EstimationService`, `ProductController`, `mcp.controller.spec.ts`, `HouseholdService`, `app.module.ts`, `CreateProductDto`, `InventoryEventResponseDto`, `mcp-server.factory.ts`, `inventory.service.ts`, `ProductWithNames`, `AddProductAliasDto`, `statistics.service.ts`, `GroceryService`, `grocery.service.ts`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Why does `PrismaService` connect `PrismaService` to `product.service.ts`, `OperationalLogger`, `prediction-reasoner.service.ts`, `EstimationService`, `AppService`, `mcp.controller.spec.ts`, `HouseholdService`, `app.module.ts`, `prisma.service.ts`, `CreateHouseholdDto`, `inventory.service.ts`, `statistics.service.ts`, `GroceryService`, `health.controller.ts`, `grocery.service.ts`, `inventory.controller.ts`?**
+  _High betweenness centrality (0.009) - this node is a cross-community bridge._
+- **Why does `EstimationService` connect `EstimationService` to `prediction-reasoner.service.ts`, `mcp.controller.spec.ts`, `app.module.ts`, `HouseholdService`, `StatisticsService`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `ProductService` (e.g. with `AddProductAliasDto` and `CreateProductDto`) actually correct?**
   _`ProductService` has 26 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 35 inferred relationships involving `InventoryService` (e.g. with `CompletePartialPurchaseDto` and `CompletePartialPurchaseResponseDto`) actually correct?**
-  _`InventoryService` has 35 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `PrismaService` (e.g. with `PrismaService.PrismaPg()` and `PrismaService.connect()`) actually correct?**
   _`PrismaService` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 35 inferred relationships involving `InventoryService` (e.g. with `CompletePartialPurchaseDto` and `CompletePartialPurchaseResponseDto`) actually correct?**
+  _`InventoryService` has 35 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 31 inferred relationships involving `EstimationService` (e.g. with `inventoryEvent` and `prediction`) actually correct?**
   _`EstimationService` has 31 INFERRED edges - model-reasoned connections that need verification._

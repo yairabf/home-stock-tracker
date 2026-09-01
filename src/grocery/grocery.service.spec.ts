@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import {
   GroceryItemSource,
   GroceryItemStatus,
+  ProductNameKind,
 } from '../generated/prisma/enums';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { ProductService } from '../product/product.service';
@@ -9,8 +10,20 @@ import { GroceryService } from './grocery.service';
 import { PendingGroceryItemPolicy } from './dto/add-grocery-item.dto';
 import { AddGroceryItemOutcome } from './dto/add-grocery-item-result.dto';
 
+const product = {
+  id: 'product-1',
+  names: [
+    {
+      id: 'name-1',
+      productId: 'product-1',
+      displayName: 'milk',
+      normalizedName: 'milk',
+      kind: ProductNameKind.canonical,
+    },
+  ],
+};
+
 describe('GroceryService addItem', () => {
-  const product = { id: 'product-1', canonicalName: 'milk' };
   const item = {
     id: 'grocery-item-1',
     productId: product.id,
@@ -109,7 +122,7 @@ describe('GroceryService removeItem', () => {
     note: null,
     source: GroceryItemSource.api,
     relatedInventoryEventId: null,
-    product: { canonicalName: 'milk' },
+    product: product,
   };
   let findUnique: jest.Mock;
   let updateMany: jest.Mock;
@@ -178,7 +191,7 @@ describe('GroceryService updateItem', () => {
     note: 'usual brand',
     source: GroceryItemSource.api,
     relatedInventoryEventId: null,
-    product: { canonicalName: 'milk' },
+    product: product,
   };
   let findUnique: jest.Mock;
   let updateMany: jest.Mock;

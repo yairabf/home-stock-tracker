@@ -133,8 +133,9 @@ Explicit MVP exclusions:
 ### Products
 
 - Product ID.
-- Canonical name.
-- Aliases and normalized names.
+- Product metadata and an authoritative product-name namespace.
+- Exactly one canonical display name and zero or more explicit aliases per product.
+- A stored normalized lookup value for each canonical name and alias, globally unique across the catalog.
 - Category.
 - Typical unit.
 - Product type, such as fast consumable, pantry staple, household consumable, or discrete consumable.

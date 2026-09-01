@@ -12,6 +12,7 @@ import {
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
+import { createProductFixture } from './product-fixture';
 
 describe('Prediction feedback (e2e)', () => {
   let app: INestApplication<App>;
@@ -40,8 +41,8 @@ describe('Prediction feedback (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const product = await prisma.product.create({
-      data: { canonicalName: `feedback-${Date.now()}` },
+    const product = await createProductFixture(prisma, {
+      canonicalName: `feedback-${Date.now()}`,
     });
     productId = product.id;
     const prediction = await prisma.prediction.create({
