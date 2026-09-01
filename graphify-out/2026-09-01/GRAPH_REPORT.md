@@ -1,11 +1,11 @@
 # Graph Report - home-stock-tracker  (2026-09-01)
 
 ## Corpus Check
-- 398 files · ~262,852 words
+- 398 files · ~263,390 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3987 nodes · 5060 edges · 327 communities (286 shown, 41 thin omitted)
+- 3987 nodes · 5060 edges · 326 communities (285 shown, 41 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 411 edges (avg confidence: 0.97)
 - Token cost: 0 input · 0 output
 
@@ -83,7 +83,7 @@
 - Prisma SQL Driver Adapter Implementation
 - Core Workflows
 - Feature: Household profile
-- ProductResponseDto
+- ProductController
 - app.module.ts
 - StatisticsController
 - CreateProductDto
@@ -288,7 +288,6 @@
 - _source-mcp-agent-skill-development-brief.md
 - HouseholdResponseDto
 - Feature: Hermes grocery conversations
-- ProductController
 - Feature: Service authentication
 - HouseholdController
 - Recommended execution order
@@ -327,7 +326,7 @@
 - product-name-namespace-migration.e2e-spec.ts
 - pg
 - reflect-metadata
-- product.service.spec.ts
+- product-name.exception.ts
 - rxjs
 - zod
 - grocery-quantity-migration.e2e-spec.ts
@@ -362,11 +361,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (327 total, 41 thin omitted)
+## Communities (326 total, 41 thin omitted)
 
 ### Community 0 - "product-classifier.service.ts"
-Cohesion: 0.25
-Nodes (10): LlmGenerationResult, PRODUCT_CLASSIFICATION_MIN_CONFIDENCE, PRODUCT_CLASSIFICATION_PROMPT_VERSION, ProductMetadata, nonBlankString, ProductClassificationInput, productClassificationInputSchema, ProductClassificationResult (+2 more)
+Cohesion: 0.18
+Nodes (13): LlmGenerationResult, ProductClassificationLogService, Injectable, PRODUCT_CLASSIFICATION_MIN_CONFIDENCE, PRODUCT_CLASSIFICATION_PROMPT_VERSION, ProductClassifier, Injectable, nonBlankString (+5 more)
 
 ### Community 1 - "managedFiles"
 Cohesion: 0.04
@@ -609,8 +608,8 @@ Cohesion: 0.13
 Nodes (15): CORRECTED_STATES, CorrectedStateMatchesOutcomeConstraint, PredictionFeedbackDto, PredictionFeedbackOutcome, accepted, corrected, rejected, validateBody() (+7 more)
 
 ### Community 62 - "prediction-reasoner.service.ts"
-Cohesion: 0.17
-Nodes (10): PredictionReasoner, candidate, Inject, Injectable, LLM_PROVIDER, LlmProvider, LlmProviderRegistry, Injectable (+2 more)
+Cohesion: 0.15
+Nodes (11): PredictionReasoner, candidate, Inject, Injectable, LLM_PROVIDER, LlmProvider, LlmProviderRegistry, Injectable (+3 more)
 
 ### Community 63 - "Prisma Compute Framework Readiness"
 Cohesion: 0.14
@@ -632,9 +631,9 @@ Nodes (13): 1. Console-first workflow, 2. Quick provisioning with create-db, 2b.
 Cohesion: 0.14
 Nodes (13): Build loop, Build steps, Data / contracts, Design reference, Feature: Household profile, Files / areas, Goal, Household model (Prisma) (+5 more)
 
-### Community 68 - "ProductResponseDto"
-Cohesion: 0.23
-Nodes (6): ProductResponseDto, ProductResponseDto, Body, Get, Param, Post
+### Community 68 - "ProductController"
+Cohesion: 0.11
+Nodes (8): ProductResponseDto, ProductResponseDto, ProductController, Body, Controller, Get, Param, Post
 
 ### Community 69 - "app.module.ts"
 Cohesion: 0.18
@@ -1385,8 +1384,8 @@ Cohesion: 0.50
 Nodes (4): Acceptance criteria, MCP-10 — No read-only household context tool, Proposed tool, Recommendation
 
 ### Community 296 - "product.service.ts"
-Cohesion: 0.33
-Nodes (9): normalizeAliases(), normalizeProductDisplayName(), normalizeProductName(), toProductNameValue(), PreparedProductNames, PRODUCT_NAME_KINDS, ProductNameContract, ProductNameKind (+1 more)
+Cohesion: 0.30
+Nodes (10): normalizeAliases(), normalizeProductDisplayName(), normalizeProductName(), toProductNameValue(), PreparedProductNames, ProductMetadata, PRODUCT_NAME_KINDS, ProductNameContract (+2 more)
 
 ### Community 297 - "Feature: Confirmed grocery catalog decisions"
 Cohesion: 0.13
@@ -1456,10 +1455,6 @@ Nodes (4): Deferred work, Queued Feature Plans, Recommended order, Shared decisi
 Cohesion: 0.18
 Nodes (10): applyMigration(), applyMigrations(), contractMigrationIndex, expandedMigrations, migrationNames, MIGRATIONS_DIRECTORY, namespaceMigrationIndex, previousMigrations (+2 more)
 
-### Community 322 - "product.service.spec.ts"
-Cohesion: 0.16
-Nodes (7): ProductClassificationLogService, Injectable, ProductClassifier, Inject, Injectable, PRODUCT_NAME_CONFLICT, ProductNameConflictResponse
-
 ### Community 326 - "grocery-quantity-migration.e2e-spec.ts"
 Cohesion: 0.15
 Nodes (10): applyMigration(), applyMigrations(), expectQuantityConstraint(), expectQuantityContract(), migrationNames, MIGRATIONS_DIRECTORY, previousMigrations, quantityMigrationIndex (+2 more)
@@ -1484,9 +1479,9 @@ Nodes (3): TestRestController, Controller, Get
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PrismaService` connect `PrismaService` to `product-classifier.service.ts`, `product.service.spec.ts`, `AppService`, `app.module.ts`, `HouseholdService`, `prisma.service.ts`, `product.service.ts`, `CreateHouseholdDto`, `estimation.service.ts`, `mcp-server.factory.ts`, `inventory.service.ts`, `grocery.service.ts`, `statistics.service.ts`, `GroceryService`, `OperationalLogger`, `health.controller.ts`, `prediction-feedback.service.ts`, `prediction-reasoner.service.ts`?**
+- **Why does `PrismaService` connect `PrismaService` to `product-classifier.service.ts`, `AppService`, `app.module.ts`, `HouseholdService`, `prisma.service.ts`, `product.service.ts`, `CreateHouseholdDto`, `estimation.service.ts`, `mcp-server.factory.ts`, `inventory.service.ts`, `grocery.service.ts`, `statistics.service.ts`, `GroceryService`, `OperationalLogger`, `health.controller.ts`, `prediction-feedback.service.ts`, `prediction-reasoner.service.ts`?**
   _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `ProductService` connect `ProductService` to `product-classifier.service.ts`, `HouseholdService`, `inventory.service.ts`, `ProductController`, `InventoryService`, `ProductWithNames`, `product.service.ts`, `mcp-server.factory.ts`, `AddProductAliasDto`, `prediction-reasoner.service.ts`, `product.service.spec.ts`, `ProductResponseDto`, `app.module.ts`, `CreateProductDto`, `estimation.service.ts`, `grocery.service.ts`, `statistics.service.ts`, `GroceryService`, `OperationalLogger`?**
+- **Why does `ProductService` connect `ProductService` to `ProductWithNames`, `product-classifier.service.ts`, `ProductController`, `app.module.ts`, `HouseholdService`, `CreateProductDto`, `product.service.ts`, `estimation.service.ts`, `mcp-server.factory.ts`, `inventory.service.ts`, `grocery.service.ts`, `AddProductAliasDto`, `GroceryService`, `OperationalLogger`, `InventoryService`, `statistics.service.ts`, `prediction-reasoner.service.ts`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **Why does `InventoryService` connect `InventoryService` to `RecordPurchaseDto`, `InventoryController`, `app.module.ts`, `StatisticsService`, `mcp-server.factory.ts`, `inventory.service.ts`, `CompletePartialPurchaseDto`, `CompletePurchaseDto`, `GroceryService`, `OperationalLogger`, `ListInventoryEventsDto`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._

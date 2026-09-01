@@ -11,6 +11,7 @@ import { GroceryService } from '../grocery/grocery.service';
 import { McpController } from './mcp.controller';
 import { McpServerFactory } from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
+import { ProductSearchService } from '../product/product-search.service';
 import { PREDICTION_ENGINE } from '../estimation/prediction-engine';
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
@@ -40,6 +41,7 @@ describe('McpController', () => {
     listItems: jest.fn(),
   };
   const recommendationService = { getRecommendations: jest.fn() };
+  const productSearchService = { search: jest.fn() };
   const inventoryService = {
     recordPurchase: jest.fn(),
     recordEvent: jest.fn(),
@@ -63,6 +65,7 @@ describe('McpController', () => {
           useValue: groceryService,
         },
         { provide: ProductService, useValue: { findOne: jest.fn() } },
+        { provide: ProductSearchService, useValue: productSearchService },
         {
           provide: PREDICTION_ENGINE,
           useValue: { predictProduct: jest.fn() },
@@ -88,11 +91,7 @@ describe('McpController', () => {
       exclude: [{ path: 'mcp', method: RequestMethod.ALL }],
     });
     await app.listen(0, '127.0.0.1');
-    const address = app.getHttpServer().address();
-    if (!address || typeof address === 'string') {
-      throw new Error('Test server did not bind to a TCP port');
-    }
-    baseUrl = new URL(`http://127.0.0.1:${address.port}`);
+    baseUrl = new URL(await app.getUrl());
   });
 
   afterEach(async () => {
@@ -124,6 +123,7 @@ describe('McpController', () => {
         'grocery_remove',
         'grocery_list',
         'get_product',
+        'search_products',
         'get_inventory',
         'record_purchase',
         'record_stock_signal',
@@ -139,6 +139,27 @@ describe('McpController', () => {
           productName: { type: 'string', minLength: 1 },
         },
         type: 'object',
+      });
+      expect(
+        tools.tools.find(({ name }) => name === 'search_products')?.inputSchema,
+      ).toMatchObject({
+        additionalProperties: false,
+        required: ['query'],
+        properties: {
+          limit: { type: 'integer', maximum: 20 },
+        },
+      });
+      productSearchService.search.mockResolvedValue({
+        exactMatch: null,
+        candidates: [],
+      });
+      await expect(
+        client.callTool({
+          name: 'search_products',
+          arguments: { query: 'milk' },
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: { exactMatch: null, candidates: [] },
       });
       groceryService.listItems.mockResolvedValue([]);
       await expect(

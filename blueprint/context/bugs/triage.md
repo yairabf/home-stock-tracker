@@ -92,11 +92,13 @@ Relevant and comparatively cheap. The service already exposes bounded,
 paginated, newest-first history. The remaining work is primarily an MCP adapter
 and a privacy review of returned metadata.
 
-### MCP-04 — product search
+### MCP-04 — product search (resolved 2026-09-01)
 
-Relevant, particularly for aliases and ambiguity. Exact lookup alone is
-restrictive. Deterministic prefix and substring search should be sufficient;
-semantic or LLM search is unnecessary for the first version.
+Resolved by feature 29. REST and MCP now share deterministic exact, token-prefix,
+and literal substring search over the authoritative product-name namespace.
+Search is capped, stable, read-only, provider-free, and includes
+prediction-disabled identities as metadata. Hermes guidance requires explicit
+user choice when multiple candidates remain.
 
 ### MCP-05 — controlled alias management
 
@@ -164,7 +166,7 @@ required.
 1. MCP-01, MCP-X01, MCP-12, and SKILL-01.
 2. Joint design and implementation for MCP-02 and MCP-03.
 3. MCP-07, followed by MCP-06.
-4. MCP-04, the underlying cross-product alias-conflict rule, and MCP-05.
+4. MCP-05 (MCP-04 and the cross-product alias-conflict rule are complete).
 5. MCP-09, then reconsider whether MCP-08 is still necessary.
 6. MCP-10 if setup and explainability needs justify it.
 7. Combine MCP-11 and SKILL-04, SKILL-05, and SKILL-07 into one contract and

@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788261383.3587244,
-    "seen": 1788261751.242045,
-    "ast_hash": "02f081b3f34709722036083780ab41d8",
+    "mtime": 1788261848.072677,
+    "seen": 1788262396.190944,
+    "ast_hash": "566793c479af052518b1ca52eafaa1d1",
     "semantic_hash": ""
   },
   "blueprint/context/findings.md": {
@@ -1698,9 +1698,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788261561.2488816,
-    "seen": 1788261751.236935,
-    "ast_hash": "e23891b89a50a18e09bdbc29f7c2643f",
+    "mtime": 1788262068.6842654,
+    "seen": 1788262396.186207,
+    "ast_hash": "624baed096aaac04744641f32b678a9f",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
@@ -1794,9 +1794,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788261695.0097957,
-    "seen": 1788261751.236934,
-    "ast_hash": "3624ecf01c69bc3617068e129263184d",
+    "mtime": 1788262225.69559,
+    "seen": 1788262396.1862059,
+    "ast_hash": "1c08a8f9e415dd0f66a8a0f39556d88a",
     "semantic_hash": ""
   },
   "blueprint/history/features/12-mcp-tool-interface.md": {
@@ -1806,21 +1806,21 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/README.md": {
-    "mtime": 1788176351.360029,
-    "seen": 1788205629.817164,
-    "ast_hash": "e25ed3027b16c59f61c9fd6d45e8b710",
+    "mtime": 1788262169.0430226,
+    "seen": 1788262396.1917398,
+    "ast_hash": "b0cdcff37c8c893921ca9a63a5ae2790",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1788176351.360292,
-    "seen": 1788205629.8171651,
-    "ast_hash": "2bb990f842f214a0f0c60db1adafd58b",
+    "mtime": 1788262313.2249327,
+    "seen": 1788262396.191741,
+    "ast_hash": "693bae8cd40f45e5ec8b166830b937ee",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
-    "mtime": 1788176351.360559,
-    "seen": 1788205629.8171651,
-    "ast_hash": "d35057fd987fb273b529cfc21f4a4fda",
+    "mtime": 1788262201.7650003,
+    "seen": 1788262396.191741,
+    "ast_hash": "9a4f66814768b4c438ba571ce92201fe",
     "semantic_hash": ""
   },
   "src/auth/service-auth-config.service.spec.ts": {
@@ -2148,15 +2148,15 @@
     "semantic_hash": ""
   },
   "docs/agent-integrations.md": {
-    "mtime": 1788164328.692836,
-    "seen": 1788166041.9435132,
-    "ast_hash": "d22f7660bd0d312cfdeeca5211f40463",
+    "mtime": 1788262177.27846,
+    "seen": 1788262396.191686,
+    "ast_hash": "d35e7cff21d5e034a2c7f75a057612e1",
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1788257190.1573195,
-    "seen": 1788258083.697417,
-    "ast_hash": "acf042a12fe7f6ccb14c9548f1fae180",
+    "mtime": 1788262098.9692218,
+    "seen": 1788262396.1916869,
+    "ast_hash": "414ef9cbf6866cda01f5b6a9b12da722",
     "semantic_hash": ""
   },
   "docs/operations.md": {
@@ -2226,9 +2226,9 @@
     "semantic_hash": ""
   },
   "src/mcp/hermes-skill-contract.spec.ts": {
-    "mtime": 1788176351.3618727,
-    "seen": 1788205629.81263,
-    "ast_hash": "a52b230ca0b5d0b6d996fae4b6d06d89",
+    "mtime": 1788262330.857921,
+    "seen": 1788262396.186205,
+    "ast_hash": "f0528b1baac1b479d31683a397c48ae4",
     "semantic_hash": ""
   },
   "test/grocery-add-duplicate.e2e-spec.ts": {
@@ -2250,9 +2250,9 @@
     "semantic_hash": ""
   },
   ".claude/settings.local.json": {
-    "mtime": 1788260557.1353474,
-    "seen": 1788261349.661462,
-    "ast_hash": "ce26f834c8fed586940ed6b6395111b2",
+    "mtime": 1788261805.2595422,
+    "seen": 1788262396.184436,
+    "ast_hash": "1e37b45087076b889a4398fb9d0b940b",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/27-product-name-namespace.md": {

@@ -9,7 +9,8 @@ Configure Hermes separately with a trusted MCP connection to the Home Stock
 Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 
 `grocery_add`, `grocery_set_quantity`, `grocery_update`, `grocery_remove`,
-`grocery_list`, `get_product`, `get_inventory`, `record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
+`grocery_list`, `get_product`, `search_products`, `get_inventory`,
+`record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
 `get_low_stock_predictions`.
 
 MCP endpoint configuration, authentication, and credentials do not belong in
@@ -38,6 +39,11 @@ In a trusted test household, ask Hermes to use the skill for one read-only
 request such as "What is on the grocery list?" Verify that it selects
 `grocery_list` and summarizes the structured result. Test mutations only after
 the MCP connection and target household are confirmed.
+
+For a product-discovery smoke check, ask "Which milk products exist?" Hermes
+should call `search_products`, present every plausible candidate in returned
+order, and ask for a choice when several remain. It must not silently select a
+candidate or claim that search creates, aliases, or updates anything.
 
 To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending

@@ -110,6 +110,29 @@ When completing this fix, produce:
 9. Documentation/version updates where public behavior changes.
 10. A concise verification report mapping test evidence to each acceptance criterion.
 
+## Resolution - 2026-09-01
+
+Resolved by feature 29, Product search and resolution proposals.
+
+- Shared `ProductSearchService` owns exact, contiguous token-prefix, and literal
+  substring discovery over the authoritative `ProductName` namespace.
+- Authenticated `GET /api/v1/products/search` and MCP `search_products` expose the
+  same compact fields, deterministic ordering, default limit 10, and hard cap 20.
+- Exact canonical and alias identities short-circuit candidate search. Candidate
+  ranking and unique-product limiting happen in PostgreSQL before hydration.
+- Public search is read-only and provider-free. It never creates a product or
+  alias, changes grocery/inventory state, or returns an advisory proposal.
+- All products are searchable, including prediction-disabled identities. The
+  proposed `includePredictionDisabled` filter was superseded by returning
+  `predictionEnabled` as metadata rather than hiding valid identities.
+- Runtime MCP client, REST, database-backed, literal-character, authentication,
+  no-write, and no-provider tests cover the acceptance criteria.
+- Hermes guidance now requires presenting multiple candidates in returned order
+  and asking the user to choose instead of silently selecting one.
+
+Internal optional LLM resolution advice remains separate from public search and
+never performs or authorizes a write.
+
 ## Out of scope
 
 Do not use this gap as a reason to add unrelated features, a UI, store-specific integrations, multi-household support, a Python prediction service, Redis, or a second MCP deployment unless the repository demonstrates a concrete requirement.

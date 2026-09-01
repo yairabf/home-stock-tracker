@@ -40,6 +40,22 @@ describe('Hermes grocery quantity workflow contract', () => {
     expect(scenarios).not.toContain('`expectedRequestedQuantity: null`');
   });
 
+  it('documents safe deterministic product discovery', () => {
+    expect(skill).toMatch(/\| `search_products`\s+\|/);
+    expect(readme).toContain('`search_products`');
+    expect(skill).toContain('Never silently select a');
+    expect(skill).toContain('candidate.');
+    expect(skill).toContain('list every plausible');
+    expect(skill).toContain('candidate in returned order');
+    expect(skill).toContain('never creates a product');
+    expect(skill).toContain('advice only');
+    expect(scenarios).toContain('| Exact product search');
+    expect(scenarios).toContain('| One nearby product candidate');
+    expect(scenarios).toContain('| Multiple product candidates');
+    expect(scenarios).toContain('| Prediction-disabled discovery');
+    expect(scenarios).toContain('| Search is read-only');
+  });
+
   it.each([
     'Omitted new-line quantity',
     'Duplicate cancellation',

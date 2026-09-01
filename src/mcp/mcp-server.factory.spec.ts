@@ -9,6 +9,7 @@ import {
 import { GroceryService } from '../grocery/grocery.service';
 import { McpServerFactory } from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
+import { ProductSearchService } from '../product/product-search.service';
 import type { PredictionEngine } from '../estimation/prediction-engine';
 import { PredictedState } from '../generated/prisma/enums';
 import { InventoryService } from '../inventory/inventory.service';
@@ -42,6 +43,7 @@ describe('McpServerFactory grocery tools', () => {
   let productService: jest.Mocked<
     Pick<ProductService, 'findOne' | 'findByExactOrAliasName'>
   >;
+  let productSearchService: jest.Mocked<Pick<ProductSearchService, 'search'>>;
   let predictionEngine: jest.Mocked<PredictionEngine>;
   let inventoryService: jest.Mocked<
     Pick<
@@ -66,6 +68,7 @@ describe('McpServerFactory grocery tools', () => {
       findOne: jest.fn(),
       findByExactOrAliasName: jest.fn(),
     };
+    productSearchService = { search: jest.fn() };
     predictionEngine = { predictProduct: jest.fn() };
     inventoryService = {
       recordPurchase: jest.fn(),
@@ -77,6 +80,7 @@ describe('McpServerFactory grocery tools', () => {
     const factory = new McpServerFactory(
       groceryService as GroceryService,
       productService as ProductService,
+      productSearchService as ProductSearchService,
       predictionEngine,
       inventoryService as InventoryService,
       recommendationService as LowStockRecommendationService,
@@ -106,6 +110,7 @@ describe('McpServerFactory grocery tools', () => {
       'grocery_remove',
       'grocery_list',
       'get_product',
+      'search_products',
       'get_inventory',
       'record_purchase',
       'record_stock_signal',
@@ -179,6 +184,20 @@ describe('McpServerFactory grocery tools', () => {
         productName: { type: 'string', minLength: 1 },
       },
       type: 'object',
+    });
+    const searchTool = result.tools.find(
+      ({ name }) => name === 'search_products',
+    );
+    expect(searchTool?.description).toContain(
+      'Present multiple plausible candidates to the user instead of silently choosing one',
+    );
+    expect(searchTool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      required: ['query'],
+      properties: {
+        query: { type: 'string' },
+        limit: { type: 'integer', minimum: 1, maximum: 20 },
+      },
     });
     for (const name of [
       'grocery_add',
@@ -362,7 +381,9 @@ describe('McpServerFactory grocery tools', () => {
     });
 
     expect(result.isError).toBe(true);
-    expect(JSON.parse(result.content[0].text as string)).toMatchObject({
+    const content = result.content as Array<{ type: string; text?: string }>;
+    expect(content[0].type).toBe('text');
+    expect(JSON.parse(content[0].text ?? '') as unknown).toMatchObject({
       code: 'GROCERY_ITEM_CHANGED',
       currentItem: { id: item.id, requestedQuantity: 5 },
     });
@@ -512,6 +533,84 @@ describe('McpServerFactory grocery tools', () => {
     expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();
   });
 
+  it('searches products with normalized input and compact ordered output', async () => {
+    productSearchService.search.mockResolvedValue({
+      exactMatch: null,
+      candidates: [
+        {
+          id: 'product-b',
+          canonicalName: 'Milk B',
+          aliases: ['B Milk'],
+          category: 'dairy',
+          typicalUnit: 'carton',
+          productType: null,
+          isPerishable: true,
+          predictionEnabled: false,
+        },
+        {
+          id: 'product-a',
+          canonicalName: 'Milk A',
+          aliases: [],
+          category: null,
+          typicalUnit: null,
+          productType: null,
+          isPerishable: false,
+          predictionEnabled: true,
+        },
+      ],
+    });
+
+    const result = await client.callTool({
+      name: 'search_products',
+      arguments: { query: '  ＭＩＬＫ  ', limit: 2 },
+    });
+
+    expect(productSearchService.search).toHaveBeenCalledWith({
+      query: 'milk',
+      limit: 2,
+    });
+    expect(result.structuredContent).toEqual({
+      exactMatch: null,
+      candidates: [
+        {
+          id: 'product-b',
+          canonicalName: 'Milk B',
+          aliases: ['B Milk'],
+          category: 'dairy',
+          typicalUnit: 'carton',
+          productType: null,
+          isPerishable: true,
+          predictionEnabled: false,
+        },
+        {
+          id: 'product-a',
+          canonicalName: 'Milk A',
+          aliases: [],
+          category: null,
+          typicalUnit: null,
+          productType: null,
+          isPerishable: false,
+          predictionEnabled: true,
+        },
+      ],
+    });
+  });
+
+  it.each([
+    [{ query: '' }],
+    [{ query: 'x'.repeat(201) }],
+    [{ query: 'milk', limit: 21 }],
+    [{ query: 'milk', unexpected: true }],
+  ])('rejects invalid product search input: %j', async (argumentsValue) => {
+    const result = await client.callTool({
+      name: 'search_products',
+      arguments: argumentsValue,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(productSearchService.search).not.toHaveBeenCalled();
+  });
+
   it('gets a product by UUID with the existing response contract', async () => {
     productService.findOne.mockResolvedValue({
       id: item.productId,
@@ -613,14 +712,14 @@ describe('McpServerFactory grocery tools', () => {
     expect(missingSelector.isError).toBe(true);
     expect(ambiguousSelector.isError).toBe(true);
     expect(missingSelector.content).toEqual(ambiguousSelector.content);
-    expect(missingSelector.content).toEqual([
-      {
-        type: 'text',
-        text: expect.stringContaining(
-          'Provide exactly one of id or productName',
-        ),
-      },
-    ]);
+    const content = missingSelector.content as Array<{
+      type: string;
+      text?: string;
+    }>;
+    expect(content[0].type).toBe('text');
+    expect(content[0].text).toContain(
+      'Provide exactly one of id or productName',
+    );
     expect(productService.findOne).not.toHaveBeenCalled();
     expect(productService.findByExactOrAliasName).not.toHaveBeenCalled();
   });
@@ -687,9 +786,9 @@ describe('McpServerFactory grocery tools', () => {
       arguments: { id: item.productId },
     });
 
-    expect(predictionEngine.predictProduct).toHaveBeenCalledWith(
-      item.productId,
-    );
+    expect(predictionEngine.predictProduct.mock.calls).toEqual([
+      [item.productId],
+    ]);
     expect(result.structuredContent).toMatchObject({
       productId: item.productId,
       predictedState: PredictedState.uncertain,
@@ -710,8 +809,8 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(productResult.isError).toBe(true);
     expect(inventoryResult.isError).toBe(true);
-    expect(productService.findOne).not.toHaveBeenCalled();
-    expect(predictionEngine.predictProduct).not.toHaveBeenCalled();
+    expect(productService.findOne.mock.calls).toHaveLength(0);
+    expect(predictionEngine.predictProduct.mock.calls).toHaveLength(0);
   });
 
   it('returns unknown products as MCP tool errors', async () => {

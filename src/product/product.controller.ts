@@ -1,12 +1,18 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { AddProductAliasDto } from './dto/add-product-alias.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
+import { ProductSearchResponseDto } from './dto/product-search-response.dto';
+import { SearchProductsQueryDto } from './dto/search-products-query.dto';
+import { ProductSearchService } from './product-search.service';
 
 @Controller('products')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly productSearchService: ProductSearchService,
+  ) {}
 
   @Post()
   async create(@Body() dto: CreateProductDto): Promise<ProductResponseDto> {
@@ -18,6 +24,14 @@ export class ProductController {
   async findAll(): Promise<ProductResponseDto[]> {
     const products = await this.productService.findAll();
     return products.map((product) => ProductResponseDto.fromEntity(product));
+  }
+
+  @Get('search')
+  async search(
+    @Query() query: SearchProductsQueryDto,
+  ): Promise<ProductSearchResponseDto> {
+    const result = await this.productSearchService.search(query);
+    return ProductSearchResponseDto.fromContract(result);
   }
 
   @Get(':id')

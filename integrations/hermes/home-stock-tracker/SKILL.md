@@ -37,7 +37,8 @@ logic in conversation.
 | `grocery_update`            | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                            | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                  |
 | `grocery_remove`            | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                    | Only a product ID or unverified item name is available.                                                                                         |
 | `grocery_list`              | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list.                                                                         | The user asks for predicted low-stock recommendations.                                                                                          |
-| `get_product`               | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                               | Fuzzy guessing, broad product search, or product creation is required.                                                                          |
+| `get_product`               | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                               | Nearby or broad product discovery is required.                                                                                                  |
+| `search_products`           | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                  | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                        |
 | `get_inventory`             | The user asks whether one known product is probably available, low, or out. Resolve its product ID first.                                                                                             | The user asks for an exact physical count or for all recommendations.                                                                           |
 | `record_purchase`           | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                       | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                              |
 | `record_stock_signal`       | The user directly reports one resolved product as low, out, confirmed available, or corrected.                                                                                                        | The statement is only a prediction or is too vague to map to an allowed event type.                                                             |
@@ -56,6 +57,17 @@ Spoken product names are not IDs. Before `get_inventory`, `record_purchase`, or
 Use the returned `id` in the next tool call. If the current interaction already
 contains a product object returned by `get_product`, its ID may be reused. Never
 invent or transform an ID.
+
+If exact lookup fails, or the request asks which related products exist, call
+`search_products`. An exact search result may be presented as the resolved
+identity. With one non-exact candidate, present it and confirm that it is what the
+user means before a mutation. With multiple candidates, list every plausible
+candidate in returned order and ask the user to choose. Never silently select a
+candidate. With no candidates, ask for another name or more detail.
+
+`search_products` is read-only and provider-free. It never creates a product,
+adds an alias, applies a proposal, or authorizes a write. Treat any future
+advisory proposal as advice only and require the normal explicit mutation flow.
 
 To remove a grocery item, call `grocery_list` first. Match the requested name
 against returned `productName` values. Call `grocery_remove` only when one exact
@@ -225,8 +237,9 @@ If no mapping is clear, ask rather than choosing the closest enum.
 - An empty `recommendations` array is a successful result: there are no
   actionable high-confidence recommendations now.
 - An `uncertain` inventory estimate is not evidence that an item is low or out.
-- If `get_product` reports no exact product, say it could not find that product
-  and ask for another canonical name or known alias. Do not create it indirectly.
+- If `get_product` reports no exact product, call `search_products`. Present its
+  bounded candidates or ask for more detail when empty. Do not create a product,
+  add an alias, or mutate state from search results alone.
 - For a validation or not-found tool error, correct the request only from known
   user facts or ask a question.
 - After a mutation transport failure with an uncertain outcome, do not retry

@@ -43,10 +43,11 @@ Health checks never invoke the LLM or mutate household data.
 
 | Method | Route                          | Purpose                     |
 | ------ | ------------------------------ | --------------------------- |
-| `POST` | `/api/v1/products`             | Create a canonical product. |
-| `GET`  | `/api/v1/products`             | List all products.          |
-| `GET`  | `/api/v1/products/:id`         | Get one product by UUID.    |
-| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`.   |
+| `POST` | `/api/v1/products`             | Create a canonical product.                    |
+| `GET`  | `/api/v1/products`             | List all products.                             |
+| `GET`  | `/api/v1/products/search`      | Deterministically search the product namespace. |
+| `GET`  | `/api/v1/products/:id`         | Get one product by UUID.                       |
+| `POST` | `/api/v1/products/:id/aliases` | Add `{ "alias": "..." }`.                      |
 
 Product creation requires `canonicalName`. Optional values are `aliases`,
 `category`, and `typicalUnit`.
@@ -85,6 +86,25 @@ product returns HTTP `409` without mutation:
 
 The conflict never includes database constraints, SQL, provider errors, or the
 other product's identity.
+
+`GET /api/v1/products/search` requires `query` and accepts `limit` from 1 through
+20, defaulting to 10. An exact canonical or alias identity returns one
+`exactMatch` and no candidates. Otherwise `exactMatch` is null and `candidates`
+contains unique products in deterministic canonical-prefix, alias-prefix,
+canonical-substring, then alias-substring order, followed by stable length, name,
+and ID tie-breakers. `%`, `_`, and backslash are literal text, not wildcards.
+
+Search returns compact identity and product metadata, including
+`predictionEnabled`, and includes prediction-disabled products. It is provider-free
+and read-only: it never invokes an LLM, returns a proposal, creates a product or
+alias, or changes grocery or inventory state. When several candidates remain,
+present them in returned order and ask the user to choose rather than silently
+selecting one.
+
+The application also has an internal optional advisory resolution service for a
+future policy-aware grocery flow. Its validated proposal is advice only. It is
+not part of this REST endpoint, does not authorize a mutation, and never applies
+a write by itself.
 
 ### Household
 
@@ -277,6 +297,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
 | `grocery_list`              | Read  | List pending items by default or filter by status.                                               |
 | `get_product`               | Read  | Resolve an exact product name/alias or known UUID.                                               |
+| `search_products`           | Read  | Deterministically discover exact or nearby products without mutation or LLM use.                 |
 | `get_inventory`             | Read  | Estimate one product's stock state.                                                              |
 | `record_purchase`           | Write | Record `PURCHASED` or `RESTOCKED`.                                                               |
 | `record_stock_signal`       | Write | Record low, out, confirmed, or corrected stock.                                                  |
@@ -310,13 +331,14 @@ latest state without retrying or recalculating automatically.
 
 ### Safe tool workflow
 
-1. Resolve names with `get_product` before using a product UUID.
-2. Call `grocery_list` before removing or completing grocery-item UUIDs.
-3. Never guess IDs, quantities, units, event types, or stock state.
-4. Write only when the mutation and target are unambiguous.
-5. Never retry a write after a transport failure with an uncertain outcome.
-6. Treat `uncertain` and empty recommendation lists as successful results.
-7. Never turn a recommendation into a list mutation without a separate request.
+1. Resolve exact names with `get_product`; use `search_products` for nearby or ambiguous catalog discovery.
+2. Present multiple search candidates in returned order and require the user's choice before using one ID.
+3. Call `grocery_list` before removing or completing grocery-item UUIDs.
+4. Never guess IDs, quantities, units, event types, or stock state.
+5. Write only when the mutation and target are unambiguous.
+6. Never retry a write after a transport failure with an uncertain outcome.
+7. Treat `uncertain` and empty recommendation lists as successful results.
+8. Never turn a recommendation into a list mutation without a separate request.
 
 For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with only

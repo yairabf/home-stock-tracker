@@ -8,6 +8,16 @@ import {
   type PredictionEngine,
 } from '../estimation/prediction-engine';
 import { ProductResponseDto } from '../product/dto/product-response.dto';
+import { ProductSearchResponseDto } from '../product/dto/product-search-response.dto';
+import { ProductSearchService } from '../product/product-search.service';
+import {
+  normalizeProductDisplayName,
+  normalizeProductName,
+} from '../product/product-name.util';
+import {
+  PRODUCT_SEARCH_MAX_LIMIT,
+  PRODUCT_SEARCH_MAX_QUERY_LENGTH,
+} from '../product/types/product-search';
 import { EstimationResponseDto } from '../inventory/dto/estimation-response.dto';
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
@@ -65,6 +75,35 @@ const productOutputSchema = z.object({
   predictionEnabled: z.boolean(),
   config: z.json().nullable(),
 });
+
+const productSearchProductOutputSchema = productOutputSchema.omit({
+  predictionStrategy: true,
+  config: true,
+});
+
+const productSearchOutputSchema = z.object({
+  exactMatch: productSearchProductOutputSchema.nullable(),
+  candidates: z.array(productSearchProductOutputSchema),
+});
+
+const productSearchInputSchema = z
+  .object({
+    query: z
+      .string()
+      .transform(normalizeProductDisplayName)
+      .pipe(
+        z
+          .string()
+          .min(1)
+          .refine(
+            (query) => [...query].length <= PRODUCT_SEARCH_MAX_QUERY_LENGTH,
+            `Query must contain at most ${PRODUCT_SEARCH_MAX_QUERY_LENGTH} characters`,
+          ),
+      )
+      .transform(normalizeProductName),
+    limit: z.number().int().min(1).max(PRODUCT_SEARCH_MAX_LIMIT).optional(),
+  })
+  .strict();
 
 const householdContextSchema = z.object({
   adultsCount: z.number(),
@@ -159,6 +198,7 @@ export class McpServerFactory {
   constructor(
     private readonly groceryService: GroceryService,
     private readonly productService: ProductService,
+    private readonly productSearchService: ProductSearchService,
     @Inject(PREDICTION_ENGINE)
     private readonly predictionEngine: PredictionEngine,
     private readonly inventoryService: InventoryService,
@@ -303,6 +343,24 @@ export class McpServerFactory {
                 : await this.productService.findByExactOrAliasName(
                     input.productName!,
                   ),
+            ),
+          ),
+        ),
+    );
+
+    server.registerTool(
+      'search_products',
+      {
+        description:
+          'Deterministically search the read-only product catalog. Present multiple plausible candidates to the user instead of silently choosing one.',
+        inputSchema: productSearchInputSchema,
+        outputSchema: productSearchOutputSchema,
+      },
+      (input) =>
+        this.runTool('search_products', async () =>
+          this.toolResult(
+            ProductSearchResponseDto.fromContract(
+              await this.productSearchService.search(input),
             ),
           ),
         ),
