@@ -1,7 +1,12 @@
 # Hermes installation
 
-This directory is a portable Hermes Agent skill bundle. `SKILL.md` contains only
-tool-selection instructions. The NestJS service remains independent from Hermes.
+This directory is a portable Hermes Agent skill bundle. Its generated `SKILL.md`
+combines the platform-neutral tool workflow with Hermes-specific scheduled-check
+rules. The NestJS service remains independent from Hermes.
+
+Do not edit `SKILL.md` or `scenarios.md` directly. Update the canonical sources
+under `integrations/shared/home-stock-tracker/`, then run
+`npm run skills:generate`. Use `npm run skills:check` to detect drift.
 
 ## Prerequisite
 
@@ -27,8 +32,8 @@ active Hermes profile's skills directory:
 ```
 
 Restart or reload Hermes skills, then confirm `home-stock-tracker` appears in
-the skills list. The checked-in bundle remains the source of truth; repeat the
-review and copy when it changes.
+the skills list. The checked-in generated bundle is the installable artifact;
+repeat the review and copy when it changes.
 
 Hermes also supports project skill discovery, external skill directories, and
 GitHub/URL installation. Those deployment choices are intentionally left to the

@@ -96,15 +96,16 @@ contains review cases for every supported conversation.
 
 ## OpenClaw
 
-OpenClaw can register Home Stock Tracker as a remote MCP server and reuse the
-same instruction bundle. The skill body is agent-neutral despite its repository
-location under `integrations/hermes`.
+OpenClaw registers Home Stock Tracker as a remote MCP server and installs its
+dedicated generated bundle from `integrations/openclaw/home-stock-tracker`.
+Shared tool-selection rules come from `integrations/shared/home-stock-tracker`;
+platform metadata, installation, runtime, and delivery behavior remain separate.
 
 Official references:
 
 - [OpenClaw documentation](https://docs.openclaw.ai/)
 - [OpenClaw MCP guide](https://docs.openclaw.ai/cli/mcp)
-- [OpenClaw skills guide](https://docs.openclaw.ai/skills)
+- [OpenClaw skills guide](https://docs.openclaw.ai/cli/skills)
 - [OpenClaw tools and sandbox policy](https://docs.openclaw.ai/gateway/config-tools)
 
 ### Register and probe MCP
@@ -135,13 +136,19 @@ From this repository:
 
 ```bash
 openclaw skills install \
-  ./integrations/hermes/home-stock-tracker \
+  ./integrations/openclaw/home-stock-tracker \
   --as home-stock-tracker
 ```
 
 Use `--global` only when every local OpenClaw agent should see the skill. Use
 agent skill allowlists to restrict household access. Start a fresh session if
-needed and smoke-test with "What is on the grocery list?"
+needed and smoke-test with "What is on the grocery list?" See the dedicated
+[OpenClaw installation guide](../integrations/openclaw/home-stock-tracker/README.md)
+for workspace scope, tool visibility, reload behavior, and smoke checks.
+
+The OpenClaw bundle intentionally contains no recurring automation or quiet
+delivery convention. Configure those separately against the target gateway's
+current automation and delivery contracts.
 
 ## Other MCP clients
 
@@ -172,7 +179,7 @@ Wrapper property names vary. Follow the client's documentation; the endpoint,
 transport, and authorization header remain the same.
 
 If the client supports skills or system instructions, adapt
-`integrations/hermes/home-stock-tracker/SKILL.md`. At minimum retain the
+`integrations/shared/home-stock-tracker/workflow.md`. At minimum retain the
 [safe tool workflow](api-reference.md#safe-tool-workflow), especially ID
 resolution and uncertain-write handling.
 

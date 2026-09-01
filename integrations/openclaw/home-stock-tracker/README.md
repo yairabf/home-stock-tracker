@@ -1,0 +1,88 @@
+# OpenClaw installation
+
+This directory is a portable OpenClaw skill bundle. Its generated `SKILL.md`
+contains the platform-neutral Home Stock Tracker workflow without scheduling or
+delivery conventions. The NestJS service remains independent from OpenClaw.
+
+Do not edit `SKILL.md` or `scenarios.md` directly. Update the canonical sources
+under `integrations/shared/home-stock-tracker/`, then run
+`npm run skills:generate`. Use `npm run skills:check` to detect drift.
+
+## Prerequisite
+
+Register Home Stock Tracker as a trusted Streamable HTTP MCP server, then prove
+the live connection and tool discovery:
+
+```bash
+openclaw mcp set home-stock-tracker \
+  '{"url":"http://localhost:3000/mcp","transport":"streamable-http","headers":{"Authorization":"Bearer <API_AUTH_TOKEN>"}}'
+
+openclaw mcp status --verbose
+openclaw mcp doctor home-stock-tracker --probe
+openclaw mcp show home-stock-tracker --json
+```
+
+Confirm all fourteen tools are discoverable before enabling writes. Keep the
+token outside this repository, screenshots, and shared logs. Prefer the secret
+mechanism supported by the deployment over a literal sensitive header.
+
+The MCP server must be enabled for the runtime that will use the skill. Normal
+`coding` and `messaging` tool profiles expose configured MCP tools. A `minimal`
+profile or a policy that denies `bundle-mcp` hides them even when the standalone
+probe succeeds. Apply the narrowest tool filter and agent allowlist that still
+permits the required household operations.
+
+## Install locally
+
+Review the generated bundle, then install it into the selected agent workspace:
+
+```bash
+openclaw skills install \
+  ./integrations/openclaw/home-stock-tracker \
+  --as home-stock-tracker
+```
+
+Local installs target the active workspace by default. Use `--agent <id>` to
+select one configured agent, or `--global` only when every local agent should
+see the skill. Confirm eligibility and prerequisites:
+
+```bash
+openclaw skills info home-stock-tracker
+openclaw skills check
+```
+
+The skills watcher normally notices the installation on the next agent turn.
+Start a fresh session when the active runtime still holds an older skill or MCP
+catalog. Reload the MCP registry or restart the owning process when its cached
+tool catalog remains stale.
+
+## Smoke check
+
+In a trusted test household, start with "What is on the grocery list?" The agent
+should call `grocery_list` and summarize the structured result. Test mutations
+only after confirming the MCP endpoint and target household.
+
+For product discovery, ask "Which milk products exist?" The agent should call
+`search_products`, preserve returned order, and ask for a choice when several
+candidates remain. Search is read-only and never creates or aliases a product.
+
+For an unfamiliar product, the agent should call `grocery_add` in proposal mode
+with `productName` and nested `groceryItem`. A `product_resolution_required`
+result is non-authoritative and must not cause a write until the user approves
+complete product facts or one exact alias relationship. The follow-up uses
+`grocery_confirm_new_product` or `grocery_confirm_product_alias` without
+inventing facts or retrying an uncertain write.
+
+For duplicate confirmation, the agent should ask for the desired final total
+after `confirmation_required`, calculate the total from the returned current
+quantity and the user's answer, then call `grocery_set_quantity` once with the
+item ID, final quantity, and expected old quantity. A decline or unchanged total
+makes no second tool call.
+
+## Scheduling boundary
+
+This bundle defines interactive inventory workflows only. Recurring automation,
+delivery targets, quiet-result tokens, execution sessions, and lifecycle commands
+belong to the OpenClaw deployment and are intentionally not supplied here. Add
+automation only after reviewing the current OpenClaw automation and delivery
+contracts for the target gateway.
