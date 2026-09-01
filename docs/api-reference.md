@@ -397,6 +397,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `get_inventory`             | Read  | Estimate one product's stock state.                                                              |
 | `record_purchase`           | Write | Record `PURCHASED` or `RESTOCKED`.                                                               |
 | `record_stock_signal`       | Write | Record low, out, confirmed, or corrected stock.                                                  |
+| `record_prediction_feedback` | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.          |
 | `complete_grocery_purchase` | Write | Complete a non-empty unique list of pending item UUIDs atomically.                               |
 | `get_low_stock_predictions` | Read  | Return actionable high-confidence recommendations.                                               |
 
@@ -411,6 +412,17 @@ name lookup or write without changing the requested ownership.
 `Grocery list item <id> is not pending` when the item was purchased, removed, or
 won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
+
+`record_prediction_feedback` accepts one strict object with `predictionId` and
+`outcome`. The outcome is `accepted`, `rejected`, or `corrected`.
+`correctedState` is required only for `corrected` and accepts
+`likely_available`, `probably_low`, or `probably_out`. Use only a non-null ID
+from the active interaction or a fresh `get_inventory` or
+`get_low_stock_predictions` result. Corrected feedback records one linked
+`STOCK_CORRECTED` event in the same transaction, so do not send a second stock
+signal. Any repeated or concurrent submission returns
+`Prediction feedback was already recorded`; do not retry after an uncertain
+transport result.
 
 `grocery_add` defaults to `propose_if_missing`. Begin an uncertain spoken name
 with `{ productName, groceryItem }`; if resolution is required, present the
@@ -451,11 +463,12 @@ latest state without retrying or recalculating automatically.
 2. Present multiple search candidates in returned order and require the user's choice before using one ID.
 3. Treat proposals as advisory; apply only a final user-approved create or alias payload.
 4. Call `grocery_list` before removing or completing grocery-item UUIDs.
-5. Never guess IDs, quantities, units, event types, or stock state.
-6. Write only when the mutation and target are unambiguous.
-7. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
-8. Treat `uncertain` and empty recommendation lists as successful results.
-9. Never turn a recommendation into a list mutation without a separate request.
+5. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
+6. Never guess IDs, quantities, units, event types, or stock state.
+7. Write only when the mutation and target are unambiguous.
+8. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
+9. Treat `uncertain` and empty recommendation lists as successful results.
+10. Never turn a recommendation into a list mutation without a separate request.
 
 For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with only

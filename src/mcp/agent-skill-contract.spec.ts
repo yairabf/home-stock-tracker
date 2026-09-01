@@ -155,6 +155,33 @@ describe('agent inventory skill contract', () => {
     },
   );
 
+  it.each(bundles)(
+    '$platform documents safe prediction feedback workflows',
+    ({ skill, scenarios, readme }) => {
+      expect(skill).toContain('version: 1.9.0');
+      expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
+      expect(readme).toContain('`record_prediction_feedback`');
+      expect(skill).toContain('active interaction');
+      expect(skill).toContain('non-null');
+      expect(skill).toContain('Never guess, transform, or reuse an');
+      expect(skill).toContain(
+        '`likely_available`, `probably_low`, or `probably_out`',
+      );
+      expect(skill).toContain('Do not also call `record_stock_signal`');
+      expect(skill).toContain('`Prediction feedback was already recorded`');
+      expect(scenarios).toContain('| General stock correction');
+      expect(scenarios).toContain('| Accepted prediction feedback');
+      expect(scenarios).toContain('| Rejected prediction feedback');
+      expect(scenarios).toContain('| Corrected prediction feedback');
+      expect(scenarios).toContain('| Ambiguous prediction feedback');
+      expect(scenarios).toContain('| Null prediction ID');
+      expect(scenarios).toContain('| Repeated prediction feedback');
+      expect(scenarios).toContain(
+        '| Prediction feedback transport uncertainty',
+      );
+    },
+  );
+
   it.each(
     bundles.flatMap((bundle) => [
       { bundle, scenario: 'Omitted new-line quantity' },

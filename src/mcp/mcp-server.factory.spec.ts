@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import {
+  FeedbackStatus,
   GroceryItemSource,
   GroceryItemStatus,
   ProductNameKind,
@@ -16,6 +17,8 @@ import { InventoryService } from '../inventory/inventory.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
+import { PredictionFeedbackOutcome } from '../inventory/dto/prediction-feedback.dto';
 import {
   PendingGroceryItemPolicy,
   ProductResolutionAction,
@@ -64,6 +67,9 @@ describe('McpServerFactory grocery tools', () => {
   let recommendationService: jest.Mocked<
     Pick<LowStockRecommendationService, 'getRecommendations'>
   >;
+  let predictionFeedbackService: jest.Mocked<
+    Pick<PredictionFeedbackService, 'submitFeedback'>
+  >;
   let operationalLogger: jest.Mocked<Pick<OperationalLogger, 'mcpIntegration'>>;
 
   beforeEach(async () => {
@@ -88,6 +94,7 @@ describe('McpServerFactory grocery tools', () => {
       completeGroceryPurchase: jest.fn(),
     };
     recommendationService = { getRecommendations: jest.fn() };
+    predictionFeedbackService = { submitFeedback: jest.fn() };
     operationalLogger = { mcpIntegration: jest.fn() };
     const factory = new McpServerFactory(
       groceryService as GroceryService,
@@ -95,6 +102,7 @@ describe('McpServerFactory grocery tools', () => {
       productSearchService as ProductSearchService,
       predictionEngine,
       inventoryService as InventoryService,
+      predictionFeedbackService as PredictionFeedbackService,
       recommendationService as LowStockRecommendationService,
       operationalLogger as OperationalLogger,
     );
@@ -128,6 +136,7 @@ describe('McpServerFactory grocery tools', () => {
       'get_inventory',
       'record_purchase',
       'record_stock_signal',
+      'record_prediction_feedback',
       'complete_grocery_purchase',
       'get_low_stock_predictions',
     ]);
@@ -153,6 +162,28 @@ describe('McpServerFactory grocery tools', () => {
     expect(JSON.stringify(groceryAddTool?.outputSchema)).toContain(
       'product_resolution_required',
     );
+    const predictionFeedbackTool = result.tools.find(
+      ({ name }) => name === 'record_prediction_feedback',
+    );
+    expect(predictionFeedbackTool).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['predictionId', 'outcome'],
+        properties: {
+          predictionId: { type: 'string', format: 'uuid' },
+          outcome: { enum: ['accepted', 'rejected', 'corrected'] },
+          correctedState: {
+            enum: ['likely_available', 'probably_low', 'probably_out'],
+          },
+        },
+      },
+      outputSchema: {
+        properties: {
+          feedbackStatus: { enum: ['accepted', 'rejected'] },
+          correctedState: {},
+        },
+      },
+    });
     const confirmNewProduct = result.tools.find(
       ({ name }) => name === 'grocery_confirm_new_product',
     );
@@ -1126,6 +1157,129 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.content).toEqual([
       { type: 'text', text: `No product with id "${item.productId}"` },
     ]);
+  });
+
+  it.each([
+    [PredictionFeedbackOutcome.accepted, undefined, FeedbackStatus.accepted],
+    [PredictionFeedbackOutcome.rejected, undefined, FeedbackStatus.rejected],
+    [
+      PredictionFeedbackOutcome.corrected,
+      PredictedState.likely_available,
+      FeedbackStatus.rejected,
+    ],
+  ])(
+    'records %s prediction feedback with MCP provenance',
+    async (outcome, correctedState, feedbackStatus) => {
+      const predictionId = '00000000-0000-4000-8000-000000000007';
+      const response = {
+        predictionId,
+        productId: item.productId,
+        feedbackStatus,
+        outcome,
+        correctedState: correctedState ?? null,
+        feedbackEventId: '00000000-0000-4000-8000-000000000008',
+        predictionAccuracy: 0.75,
+      };
+      predictionFeedbackService.submitFeedback.mockResolvedValue(response);
+
+      const result = await client.callTool({
+        name: 'record_prediction_feedback',
+        arguments: {
+          predictionId,
+          outcome,
+          ...(correctedState && { correctedState }),
+        },
+      });
+
+      expect(predictionFeedbackService.submitFeedback).toHaveBeenCalledWith(
+        predictionId,
+        {
+          outcome,
+          ...(correctedState && { correctedState }),
+          source: 'mcp',
+        },
+      );
+      expect(result.structuredContent).toEqual(response);
+      expect(result.content).toEqual([
+        { type: 'text', text: JSON.stringify(response) },
+      ]);
+    },
+  );
+
+  it.each([
+    {},
+    { predictionId: 'not-a-uuid', outcome: 'accepted' },
+    { predictionId: item.id, outcome: 'unknown' },
+    { predictionId: item.id, outcome: 'corrected' },
+    {
+      predictionId: item.id,
+      outcome: 'accepted',
+      correctedState: PredictedState.probably_out,
+    },
+    {
+      predictionId: item.id,
+      outcome: 'corrected',
+      correctedState: PredictedState.uncertain,
+    },
+    { predictionId: item.id, outcome: 'accepted', source: 'api' },
+  ])(
+    'rejects invalid prediction feedback before service invocation',
+    async (args) => {
+      const result = await client.callTool({
+        name: 'record_prediction_feedback',
+        arguments: args,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(predictionFeedbackService.submitFeedback).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns prediction feedback domain conflicts as safe tool errors', async () => {
+    predictionFeedbackService.submitFeedback.mockRejectedValue(
+      new ConflictException('Prediction feedback was already recorded'),
+    );
+
+    const result = await client.callTool({
+      name: 'record_prediction_feedback',
+      arguments: { predictionId: item.id, outcome: 'accepted' },
+    });
+
+    expect(result).toEqual({
+      content: [
+        { type: 'text', text: 'Prediction feedback was already recorded' },
+      ],
+      isError: true,
+    });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'record_prediction_feedback',
+      errorType: 'domain_error',
+    });
+  });
+
+  it('sanitizes unexpected prediction feedback failures', async () => {
+    predictionFeedbackService.submitFeedback.mockRejectedValue(
+      new Error('database password leaked here'),
+    );
+
+    const result = await client.callTool({
+      name: 'record_prediction_feedback',
+      arguments: { predictionId: item.id, outcome: 'accepted' },
+    });
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'The inventory operation could not be completed',
+        },
+      ],
+      isError: true,
+    });
+    expect(
+      JSON.stringify(operationalLogger.mcpIntegration.mock.calls),
+    ).not.toContain('database password leaked here');
   });
 
   it('completes selected grocery items with MCP provenance', async () => {

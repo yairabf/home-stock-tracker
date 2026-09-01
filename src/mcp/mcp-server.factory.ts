@@ -22,8 +22,11 @@ import { EstimationResponseDto } from '../inventory/dto/estimation-response.dto'
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { LowStockRecommendationListResponseDto } from '../inventory/dto/low-stock-recommendation-response.dto';
+import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
+import { PredictionFeedbackOutcome } from '../inventory/dto/prediction-feedback.dto';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
+  FeedbackStatus,
   GroceryItemSource,
   GroceryItemStatus,
   InventoryEventType,
@@ -304,6 +307,47 @@ const recommendationOutputSchema = z.object({
   ),
 });
 
+const concretePredictedStateSchema = z.enum([
+  PredictedState.likely_available,
+  PredictedState.probably_low,
+  PredictedState.probably_out,
+]);
+
+const predictionFeedbackInputSchema = z
+  .object({
+    predictionId: z.uuid(),
+    outcome: z.enum(PredictionFeedbackOutcome),
+    correctedState: concretePredictedStateSchema.optional(),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    const isCorrection = input.outcome === PredictionFeedbackOutcome.corrected;
+    if (isCorrection && input.correctedState === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['correctedState'],
+        message: 'correctedState is required for corrected feedback',
+      });
+    }
+    if (!isCorrection && input.correctedState !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['correctedState'],
+        message: 'correctedState is only allowed for corrected feedback',
+      });
+    }
+  });
+
+const predictionFeedbackOutputSchema = z.object({
+  predictionId: z.uuid(),
+  productId: z.uuid(),
+  feedbackStatus: z.enum([FeedbackStatus.accepted, FeedbackStatus.rejected]),
+  outcome: z.enum(PredictionFeedbackOutcome),
+  correctedState: concretePredictedStateSchema.nullable(),
+  feedbackEventId: z.uuid(),
+  predictionAccuracy: z.number(),
+});
+
 const productSelectorSchema = z
   .object({
     id: z.uuid().optional(),
@@ -331,6 +375,7 @@ export class McpServerFactory {
     @Inject(PREDICTION_ENGINE)
     private readonly predictionEngine: PredictionEngine,
     private readonly inventoryService: InventoryService,
+    private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
     private readonly operationalLogger: OperationalLogger,
   ) {}
@@ -448,6 +493,25 @@ export class McpServerFactory {
           this.toolResult(
             await this.inventoryService.recordEvent({
               ...input,
+              source: TransportSource.mcp,
+            }),
+          ),
+        ),
+    );
+
+    server.registerTool(
+      'record_prediction_feedback',
+      {
+        description:
+          'Accept, reject, or correct one exact prediction using a non-null prediction ID from the active interaction or a fresh prediction read. Do not guess or reuse an unrelated prediction ID.',
+        inputSchema: predictionFeedbackInputSchema,
+        outputSchema: predictionFeedbackOutputSchema,
+      },
+      ({ predictionId, ...feedback }) =>
+        this.runTool('record_prediction_feedback', async () =>
+          this.toolResult(
+            await this.predictionFeedbackService.submitFeedback(predictionId, {
+              ...feedback,
               source: TransportSource.mcp,
             }),
           ),

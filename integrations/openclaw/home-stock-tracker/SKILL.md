@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.8.0
+version: 1.9.0
 author: Home Stock Tracker
 ---
 
@@ -40,7 +40,8 @@ logic in conversation.
 | `search_products`           | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                  | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                        |
 | `get_inventory`             | The user asks whether one known product is probably available, low, or out. Resolve its product ID first.                                                                                             | The user asks for an exact physical count or for all recommendations.                                                                           |
 | `record_purchase`           | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                       | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                              |
-| `record_stock_signal`       | The user directly reports one resolved product as low, out, confirmed available, or corrected.                                                                                                        | The statement is only a prediction or is too vague to map to an allowed event type.                                                             |
+| `record_stock_signal`       | The user directly reports one resolved product as low, out, confirmed available, or corrects an earlier stock record without referring to a prediction.                                                | The statement is feedback about one specific prediction or is too vague to map to an allowed event type.                                        |
+| `record_prediction_feedback` | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction. |
 | `complete_grocery_purchase` | The user reports buying all or selected items from the current grocery list. Resolve the current pending item IDs with `grocery_list` first.                                                          | Any named included or excluded item has zero or multiple exact pending matches, no selected items remain, or the user only plans to shop later. |
 | `get_low_stock_predictions` | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                        | The user asks for the grocery list or one product's estimated state.                                                                            |
 
@@ -89,6 +90,7 @@ Ask a focused question before mutation when:
 - the target could refer to multiple grocery items or products;
 - a quantity is malformed, zero, negative, or conflicts with its unit;
 - stock wording does not map clearly to an allowed event type;
+- feedback does not identify one active prediction with a non-null trusted ID;
 - the user describes a future plan rather than a completed purchase;
 - a named included or excluded grocery item has no unique exact pending match.
 
@@ -198,6 +200,32 @@ were confirmed and which later additions were not attempted, and do not retry.
 Do not merge these answers or turn a recommendation into a grocery-list change
 unless the user explicitly requests that mutation.
 
+### Record prediction feedback
+
+Use `record_prediction_feedback` only when the user refers unambiguously to one
+prediction returned in the active interaction. The `predictionId` must be
+non-null and must come directly from `get_inventory` or
+`get_low_stock_predictions`. If the reference is ambiguous, conversationally
+stale, or has a null ID, ask which prediction they mean or make a fresh
+prediction read before any mutation. Never guess, transform, or reuse an
+unrelated prediction ID.
+
+- Use `accepted` when the user confirms that the referenced prediction was
+  right.
+- Use `rejected` when the user says the referenced prediction was wrong but does
+  not provide a concrete corrected stock state.
+- Use `corrected` only when the user supplies the concrete replacement state:
+  `likely_available`, `probably_low`, or `probably_out`.
+
+A corrected feedback call records its corresponding stock correction in the
+same service operation. Do not also call `record_stock_signal`. A correction or
+direct observation that is not about a specific prediction stays on
+`record_stock_signal`.
+
+Treat `Prediction feedback was already recorded` as final for that prediction.
+After an uncertain transport result, do not retry or claim that feedback was
+recorded.
+
 
 
 ### Complete a shopping trip
@@ -238,7 +266,8 @@ For `record_stock_signal`, use only:
 - `STOCK_OUT` - clearly none left or out.
 - `STOCK_CONFIRMED` - clearly still available or plenty remains.
 - `STOCK_CORRECTED` - the user explicitly corrects an earlier stock record and
-  provides enough information for this correction signal.
+  provides enough information for this correction signal, without referring to
+  a specific prediction.
 
 If no mapping is clear, ask rather than choosing the closest enum.
 
@@ -279,6 +308,19 @@ Call `grocery_list`, find one exact pending `productName` match, then call
 
 Call `get_product` with `productName: "milk"`, then `get_inventory` with the
 returned product `id`. Preserve uncertainty and the returned reason.
+
+**"Yes, that prediction was right."**
+
+When one active prediction is unambiguously referenced and has a non-null
+`predictionId`, call `record_prediction_feedback` with that ID and
+`outcome: "accepted"`.
+
+**"No, we still have milk."**
+
+When this directly answers one active prediction, call
+`record_prediction_feedback` with its non-null `predictionId`,
+`outcome: "corrected"`, and `correctedState: "likely_available"`. Do not also
+call `record_stock_signal`.
 
 **"We're almost out of cereal."**
 

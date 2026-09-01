@@ -16,8 +16,8 @@ Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 `grocery_add`, `grocery_confirm_new_product`,
 `grocery_confirm_product_alias`, `grocery_set_quantity`, `grocery_update`,
 `grocery_remove`, `grocery_list`, `get_product`, `search_products`, `get_inventory`,
-`record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
-`get_low_stock_predictions`.
+`record_purchase`, `record_stock_signal`, `record_prediction_feedback`,
+`complete_grocery_purchase`, and `get_low_stock_predictions`.
 
 MCP endpoint configuration, authentication, and credentials do not belong in
 this skill bundle. Do not store service tokens here.
@@ -80,6 +80,14 @@ input remains an ambiguous `null` request echo and must not imply an increment.
 After the answer, Hermes should calculate the total and call
 `grocery_set_quantity` once with the item ID, final quantity, and expected old
 quantity. A decline or no-change answer must make no second tool call.
+
+For a prediction-feedback smoke check, first ask for one product estimate and
+retain its non-null returned `predictionId`. Then say that the prediction was
+right, wrong, or provide a concrete corrected state. Hermes should call
+`record_prediction_feedback` exactly once with that trusted ID. It must ask or
+make a fresh prediction read when the reference is ambiguous or the ID is null,
+must keep general stock corrections on `record_stock_signal`, and must not retry
+an uncertain or repeated feedback write.
 
 ## Proactive stock-check cron
 

@@ -22,7 +22,7 @@ openclaw mcp doctor home-stock-tracker --probe
 openclaw mcp show home-stock-tracker --json
 ```
 
-Confirm all fourteen tools are discoverable before enabling writes. Keep the
+Confirm all fifteen tools are discoverable before enabling writes. Keep the
 token outside this repository, screenshots, and shared logs. Prefer the secret
 mechanism supported by the deployment over a literal sensitive header.
 
@@ -78,6 +78,14 @@ after `confirmation_required`, calculate the total from the returned current
 quantity and the user's answer, then call `grocery_set_quantity` once with the
 item ID, final quantity, and expected old quantity. A decline or unchanged total
 makes no second tool call.
+
+For a prediction-feedback smoke check, first ask for one product estimate and
+retain its non-null returned `predictionId`. Then say that the prediction was
+right, wrong, or provide a concrete corrected state. The agent should call
+`record_prediction_feedback` exactly once with that trusted ID. It must ask or
+make a fresh prediction read when the reference is ambiguous or the ID is null,
+must keep general stock corrections on `record_stock_signal`, and must not retry
+an uncertain or repeated feedback write.
 
 ## Scheduling boundary
 

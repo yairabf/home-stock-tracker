@@ -19,6 +19,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from '../auth/service-auth.module';
 import { ServiceAuthGuard } from '../auth/service-auth.guard';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 
 @Controller()
 class TestRestController {
@@ -49,6 +50,7 @@ describe('McpController', () => {
     recordEvent: jest.fn(),
     completeGroceryPurchase: jest.fn(),
   };
+  const predictionFeedbackService = { submitFeedback: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -75,6 +77,10 @@ describe('McpController', () => {
         {
           provide: InventoryService,
           useValue: inventoryService,
+        },
+        {
+          provide: PredictionFeedbackService,
+          useValue: predictionFeedbackService,
         },
         {
           provide: LowStockRecommendationService,
@@ -131,6 +137,7 @@ describe('McpController', () => {
         'get_inventory',
         'record_purchase',
         'record_stock_signal',
+        'record_prediction_feedback',
         'complete_grocery_purchase',
         'get_low_stock_predictions',
       ]);
