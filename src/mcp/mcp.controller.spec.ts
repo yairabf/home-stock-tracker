@@ -119,6 +119,7 @@ describe('McpController', () => {
       const tools = await client.listTools();
       expect(tools.tools.map(({ name }) => name)).toEqual([
         'grocery_add',
+        'grocery_set_quantity',
         'grocery_update',
         'grocery_remove',
         'grocery_list',

@@ -184,7 +184,12 @@ describe('Guarded grocery removal (e2e)', () => {
 
   function createItem(status = GroceryItemStatus.pending) {
     return prisma.groceryListItem.create({
-      data: { productId, status, source: GroceryItemSource.api },
+      data: {
+        productId,
+        requestedQuantity: 1,
+        status,
+        source: GroceryItemSource.api,
+      },
     });
   }
 

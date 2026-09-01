@@ -15,6 +15,7 @@ import { ListGroceryItemsDto } from './dto/list-grocery-items.dto';
 import { GroceryItemSource } from '../generated/prisma/enums';
 import { UpdateGroceryItemDto } from './dto/update-grocery-item.dto';
 import { AddGroceryItemResultDto } from './dto/add-grocery-item-result.dto';
+import { SetGroceryItemQuantityDto } from './dto/set-grocery-item-quantity.dto';
 
 @Controller('grocery/items')
 export class GroceryController {
@@ -38,6 +39,14 @@ export class GroceryController {
   @Delete(':id')
   removeItem(@Param('id') id: string): Promise<GroceryItemResponseDto> {
     return this.groceryService.removeItem(id);
+  }
+
+  @Patch(':id/quantity')
+  setQuantity(
+    @Param('id') id: string,
+    @Body() dto: SetGroceryItemQuantityDto,
+  ): Promise<GroceryItemResponseDto> {
+    return this.groceryService.setQuantity(id, dto);
   }
 
   @Patch(':id')

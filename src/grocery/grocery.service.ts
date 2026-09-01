@@ -19,6 +19,7 @@ import {
   GroceryRequestedAdditionDto,
 } from './dto/add-grocery-item-result.dto';
 import { GroceryItemResponseDto } from './dto/grocery-item-response.dto';
+import { SetGroceryItemQuantityDto } from './dto/set-grocery-item-quantity.dto';
 import { UpdateGroceryItemDto } from './dto/update-grocery-item.dto';
 import {
   groceryConflict,
@@ -40,6 +41,9 @@ export class GroceryService {
   async addItem(
     dto: AddGroceryItemDto & { source: GroceryItemSource },
   ): Promise<AddGroceryItemResultDto> {
+    if (dto.requestedQuantity !== undefined) {
+      this.validatePositiveQuantity(dto.requestedQuantity);
+    }
     const product = await this.productService.findOrCreateByExactOrAliasMatch(
       dto.productName,
     );
@@ -96,7 +100,7 @@ export class GroceryService {
   ) {
     return {
       productId,
-      requestedQuantity: dto.requestedQuantity,
+      requestedQuantity: dto.requestedQuantity ?? 1,
       unit: dto.unit,
       note: dto.note,
       source: dto.source,
@@ -130,6 +134,57 @@ export class GroceryService {
         item,
         getCanonicalProductName(item.product),
       ),
+    );
+  }
+
+  async setQuantity(
+    id: string,
+    dto: SetGroceryItemQuantityDto,
+  ): Promise<GroceryItemResponseDto> {
+    this.validatePositiveQuantity(dto.requestedQuantity);
+    this.validatePositiveQuantity(dto.expectedRequestedQuantity);
+    const existing = await this.prisma.groceryListItem.findUnique({
+      where: { id },
+      include: { product: PRODUCT_WITH_NAMES_INCLUDE },
+    });
+    if (!existing) {
+      throw groceryNotFound(id);
+    }
+
+    const current = GroceryItemResponseDto.fromEntity(
+      existing,
+      getCanonicalProductName(existing.product),
+    );
+    if (existing.status !== GroceryItemStatus.pending) {
+      throw groceryConflict(
+        'GROCERY_ITEM_NOT_PENDING',
+        `Grocery list item ${id} is not pending`,
+        current,
+      );
+    }
+    if (existing.requestedQuantity !== dto.expectedRequestedQuantity) {
+      throw groceryConflict(
+        'GROCERY_ITEM_CHANGED',
+        `Grocery list item ${id} changed`,
+        current,
+      );
+    }
+
+    const result = await this.prisma.groceryListItem.updateMany({
+      where: {
+        id,
+        status: GroceryItemStatus.pending,
+        requestedQuantity: dto.expectedRequestedQuantity,
+      },
+      data: { requestedQuantity: dto.requestedQuantity },
+    });
+    if (result.count !== 1) {
+      await this.throwCurrentUpdateConflict(id);
+    }
+
+    return GroceryItemResponseDto.fromEntity(
+      { ...existing, requestedQuantity: dto.requestedQuantity },
+      getCanonicalProductName(existing.product),
     );
   }
 
@@ -168,7 +223,7 @@ export class GroceryService {
 
   private validateUpdate(
     existing: {
-      requestedQuantity: number | null;
+      requestedQuantity: number;
       unit: string | null;
       note: string | null;
     },
@@ -223,17 +278,21 @@ export class GroceryService {
       'INVALID_NOTE',
       'note',
     );
-    if (
-      dto.requestedQuantity !== undefined &&
-      (!Number.isFinite(dto.requestedQuantity) || dto.requestedQuantity <= 0)
-    ) {
-      throw groceryInvalid('INVALID_QUANTITY', 'Quantity must be positive');
+    if (dto.requestedQuantity !== undefined) {
+      this.validatePositiveQuantity(dto.requestedQuantity);
+      this.validatePositiveQuantity(dto.expectedRequestedQuantity as number);
     }
     if (typeof dto.unit === 'string' && dto.unit.trim().length === 0) {
       throw groceryInvalid('INVALID_UNIT', 'Unit must not be empty');
     }
     if (typeof dto.note === 'string' && dto.note.trim().length === 0) {
       throw groceryInvalid('INVALID_NOTE', 'Note must not be empty');
+    }
+  }
+
+  private validatePositiveQuantity(quantity: number): void {
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw groceryInvalid('INVALID_QUANTITY', 'Quantity must be positive');
     }
   }
 
@@ -266,7 +325,7 @@ export class GroceryService {
   }
 
   private expectedFields(dto: UpdateGroceryItemDto): {
-    requestedQuantity?: number | null;
+    requestedQuantity?: number;
     unit?: string | null;
     note?: string | null;
   } {

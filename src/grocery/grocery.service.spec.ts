@@ -39,6 +39,7 @@ describe('GroceryService addItem', () => {
   let findMany: jest.Mock;
   let create: jest.Mock;
   let transaction: jest.Mock;
+  let findOrCreateProduct: jest.Mock;
   let service: GroceryService;
 
   beforeEach(() => {
@@ -56,8 +57,9 @@ describe('GroceryService addItem', () => {
       $transaction: transaction,
       groceryListItem: { create },
     } as unknown as PrismaService;
+    findOrCreateProduct = jest.fn().mockResolvedValue(product);
     const productService = {
-      findOrCreateByExactOrAliasMatch: jest.fn().mockResolvedValue(product),
+      findOrCreateByExactOrAliasMatch: findOrCreateProduct,
     } as unknown as ProductService;
     service = new GroceryService(prisma, productService);
   });
@@ -83,6 +85,29 @@ describe('GroceryService addItem', () => {
     expect(create).toHaveBeenCalledTimes(1);
   });
 
+  it('defaults an omitted quantity only when persisting a new line', async () => {
+    await expect(
+      service.addItem({ productName: 'whole milk' }),
+    ).resolves.toMatchObject({
+      outcome: AddGroceryItemOutcome.created,
+      requestedAddition: { requestedQuantity: null },
+    });
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ requestedQuantity: 1 }),
+    });
+  });
+
+  it('preserves a positive fractional quantity', async () => {
+    await service.addItem({
+      productName: 'whole milk',
+      requestedQuantity: 0.5,
+    });
+
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ requestedQuantity: 0.5 }),
+    });
+  });
+
   it('returns every canonical-product pending match without mutation', async () => {
     findMany.mockResolvedValue([item, { ...item, id: 'grocery-item-2' }]);
 
@@ -97,17 +122,51 @@ describe('GroceryService addItem', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it('preserves omission in a duplicate result without mutation', async () => {
+    findMany.mockResolvedValue([item]);
+
+    await expect(
+      service.addItem({ productName: 'whole milk' }),
+    ).resolves.toMatchObject({
+      outcome: AddGroceryItemOutcome.confirmation_required,
+      requestedAddition: { requestedQuantity: null },
+    });
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('creates an explicit separate line without checking pending items', async () => {
     await expect(
       service.addItem({
         productName: 'milk',
-        requestedQuantity: 1,
         ifPendingExists: PendingGroceryItemPolicy.create_separate,
       }),
-    ).resolves.toMatchObject({ outcome: AddGroceryItemOutcome.created });
+    ).resolves.toMatchObject({
+      outcome: AddGroceryItemOutcome.created,
+      requestedAddition: { requestedQuantity: null },
+    });
     expect(transaction).not.toHaveBeenCalled();
-    expect(create).toHaveBeenCalledTimes(1);
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ requestedQuantity: 1 }),
+    });
   });
+
+  it.each([
+    ['zero', 0],
+    ['a negative value', -1],
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+  ])(
+    'rejects %s before product lookup or mutation',
+    async (_, requestedQuantity) => {
+      await expect(
+        service.addItem({ productName: 'milk', requestedQuantity }),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
+      expect(findOrCreateProduct).not.toHaveBeenCalled();
+      expect(transaction).not.toHaveBeenCalled();
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe('GroceryService removeItem', () => {
@@ -177,6 +236,152 @@ describe('GroceryService removeItem', () => {
       new ConflictException(`Grocery list item ${id} is not pending`),
     );
   });
+});
+
+describe('GroceryService setQuantity', () => {
+  const id = 'grocery-item-1';
+  const item = {
+    id,
+    productId: 'product-1',
+    requestedQuantity: 2,
+    unit: 'Liters',
+    dateAdded: new Date('2026-08-30T10:00:00.000Z'),
+    status: GroceryItemStatus.pending,
+    note: 'usual brand',
+    source: GroceryItemSource.api,
+    relatedInventoryEventId: null,
+    product,
+  };
+  let findUnique: jest.Mock;
+  let updateMany: jest.Mock;
+  let service: GroceryService;
+
+  beforeEach(() => {
+    findUnique = jest.fn().mockResolvedValue(item);
+    updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const prisma = {
+      groceryListItem: { findUnique, updateMany },
+    } as unknown as PrismaService;
+    service = new GroceryService(prisma, {} as ProductService);
+  });
+
+  it.each([4, 0.5])(
+    'sets the absolute quantity to %s while preserving other fields',
+    async (requestedQuantity) => {
+      await expect(
+        service.setQuantity(id, {
+          requestedQuantity,
+          expectedRequestedQuantity: 2,
+        }),
+      ).resolves.toMatchObject({
+        requestedQuantity,
+        unit: 'Liters',
+        note: 'usual brand',
+        source: GroceryItemSource.api,
+        status: GroceryItemStatus.pending,
+        relatedInventoryEventId: null,
+      });
+      expect(updateMany).toHaveBeenCalledWith({
+        where: {
+          id,
+          status: GroceryItemStatus.pending,
+          requestedQuantity: 2,
+        },
+        data: { requestedQuantity },
+      });
+    },
+  );
+
+  it('returns a stable not-found error', async () => {
+    findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.setQuantity(id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      }),
+    ).rejects.toMatchObject({ response: { code: 'GROCERY_ITEM_NOT_FOUND' } });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('does not update a non-pending item', async () => {
+    findUnique.mockResolvedValue({
+      ...item,
+      status: GroceryItemStatus.purchased,
+    });
+
+    await expect(
+      service.setQuantity(id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'GROCERY_ITEM_NOT_PENDING',
+        currentItem: { id, requestedQuantity: 2 },
+      },
+    });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale expected quantity without mutation', async () => {
+    await expect(
+      service.setQuantity(id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 1,
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'GROCERY_ITEM_CHANGED',
+        currentItem: { id, requestedQuantity: 2 },
+      },
+    });
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+
+  it('returns the latest item when a concurrent update wins', async () => {
+    updateMany.mockResolvedValue({ count: 0 });
+    findUnique
+      .mockResolvedValueOnce(item)
+      .mockResolvedValueOnce({ ...item, requestedQuantity: 5 });
+
+    await expect(
+      service.setQuantity(id, {
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      }),
+    ).rejects.toMatchObject({
+      response: {
+        code: 'GROCERY_ITEM_CHANGED',
+        currentItem: { requestedQuantity: 5 },
+      },
+    });
+  });
+
+  it.each([
+    ['final zero', 0, 2],
+    ['final negative', -1, 2],
+    ['final NaN', Number.NaN, 2],
+    ['final positive infinity', Number.POSITIVE_INFINITY, 2],
+    ['final negative infinity', Number.NEGATIVE_INFINITY, 2],
+    ['expected zero', 4, 0],
+    ['expected negative', 4, -1],
+    ['expected NaN', 4, Number.NaN],
+    ['expected positive infinity', 4, Number.POSITIVE_INFINITY],
+    ['expected negative infinity', 4, Number.NEGATIVE_INFINITY],
+  ])(
+    'rejects invalid %s before persistence',
+    async (_, requestedQuantity, expectedRequestedQuantity) => {
+      await expect(
+        service.setQuantity(id, {
+          requestedQuantity,
+          expectedRequestedQuantity,
+        }),
+      ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
+      expect(findUnique).not.toHaveBeenCalled();
+      expect(updateMany).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe('GroceryService updateItem', () => {
@@ -403,13 +608,25 @@ describe('GroceryService updateItem', () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, 0, -1])(
-    'rejects invalid quantity %s without mutation',
-    async (requestedQuantity) => {
+  it.each([
+    ['final NaN', Number.NaN, 2],
+    ['final positive infinity', Number.POSITIVE_INFINITY, 2],
+    ['final negative infinity', Number.NEGATIVE_INFINITY, 2],
+    ['final zero', 0, 2],
+    ['final negative', -1, 2],
+    ['expected null', 4, null],
+    ['expected NaN', 4, Number.NaN],
+    ['expected positive infinity', 4, Number.POSITIVE_INFINITY],
+    ['expected negative infinity', 4, Number.NEGATIVE_INFINITY],
+    ['expected zero', 4, 0],
+    ['expected negative', 4, -1],
+  ])(
+    'rejects invalid %s without mutation',
+    async (_, requestedQuantity, expectedRequestedQuantity) => {
       await expect(
         service.updateItem(id, {
           requestedQuantity,
-          expectedRequestedQuantity: 2,
+          expectedRequestedQuantity,
         }),
       ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
       expect(updateMany).not.toHaveBeenCalled();

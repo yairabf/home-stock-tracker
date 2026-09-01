@@ -19,10 +19,9 @@ export class UpdateGroceryItemDto {
     (dto: UpdateGroceryItemDto) => dto.requestedQuantity !== undefined,
   )
   @IsDefined()
-  @ValidateIf((_, value: unknown) => value !== null)
   @IsNumber({ allowInfinity: false, allowNaN: false })
   @IsPositive()
-  expectedRequestedQuantity?: number | null;
+  expectedRequestedQuantity?: number;
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) =>

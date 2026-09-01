@@ -68,7 +68,7 @@ model GroceryListItem {
   id                String            @id @default(uuid())
   productId         String
   product           Product           @relation(fields: [productId], references: [id])
-  requestedQuantity Float?
+  requestedQuantity Float             @default(1)
   unit              String?
   dateAdded         DateTime          @default(now())
   status            GroceryItemStatus @default(pending)

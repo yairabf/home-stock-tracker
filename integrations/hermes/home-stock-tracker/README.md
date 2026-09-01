@@ -8,8 +8,8 @@ tool-selection instructions. The NestJS service remains independent from Hermes.
 Configure Hermes separately with a trusted MCP connection to the Home Stock
 Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 
-`grocery_add`, `grocery_update`, `grocery_remove`, `grocery_list`, `get_product`, `get_inventory`,
-`record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
+`grocery_add`, `grocery_set_quantity`, `grocery_update`, `grocery_remove`,
+`grocery_list`, `get_product`, `get_inventory`, `record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
 `get_low_stock_predictions`.
 
 MCP endpoint configuration, authentication, and credentials do not belong in
@@ -47,9 +47,11 @@ list, require one exact toilet-paper match, exclude that ID, and propose one
 To review duplicate confirmation, first create a numeric pending test item, then
 ask Hermes to add the same product. It should call `grocery_add` once, explain the
 current quantity after `confirmation_required`, and ask for the desired final
-total. After the answer, it should calculate that total and call `grocery_update`
-once with the final quantity and expected old quantity. A decline or no-change
-answer must make no second tool call.
+total. An omitted new-line quantity would persist as `1`, but omitted duplicate
+input remains an ambiguous `null` request echo and must not imply an increment.
+After the answer, Hermes should calculate the total and call
+`grocery_set_quantity` once with the item ID, final quantity, and expected old
+quantity. A decline or no-change answer must make no second tool call.
 
 ## Proactive stock-check cron
 

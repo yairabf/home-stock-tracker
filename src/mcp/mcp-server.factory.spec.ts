@@ -32,7 +32,10 @@ const item = {
 
 describe('McpServerFactory grocery tools', () => {
   let groceryService: jest.Mocked<
-    Pick<GroceryService, 'addItem' | 'updateItem' | 'removeItem' | 'listItems'>
+    Pick<
+      GroceryService,
+      'addItem' | 'setQuantity' | 'updateItem' | 'removeItem' | 'listItems'
+    >
   >;
   let client: Client;
   let closeServer: () => Promise<void>;
@@ -54,6 +57,7 @@ describe('McpServerFactory grocery tools', () => {
   beforeEach(async () => {
     groceryService = {
       addItem: jest.fn(),
+      setQuantity: jest.fn(),
       updateItem: jest.fn(),
       removeItem: jest.fn(),
       listItems: jest.fn(),
@@ -92,11 +96,12 @@ describe('McpServerFactory grocery tools', () => {
 
   afterEach(async () => closeServer());
 
-  it('discovers the three grocery tools with strict schemas', async () => {
+  it('discovers the grocery tools with strict schemas', async () => {
     const result = await client.listTools();
 
     expect(result.tools.map(({ name }) => name)).toEqual([
       'grocery_add',
+      'grocery_set_quantity',
       'grocery_update',
       'grocery_remove',
       'grocery_list',
@@ -108,15 +113,50 @@ describe('McpServerFactory grocery tools', () => {
       'get_low_stock_predictions',
     ]);
     expect(
-      result.tools.find(({ name }) => name === 'grocery_update')?.inputSchema,
-    ).toMatchObject({
+      result.tools.find(({ name }) => name === 'grocery_add')?.description,
+    ).toContain('omitted quantity defaults to 1');
+    const setQuantityTool = result.tools.find(
+      ({ name }) => name === 'grocery_set_quantity',
+    );
+    expect(setQuantityTool).toMatchObject({
+      description: expect.stringContaining('absolute final quantity'),
+      inputSchema: {
+        additionalProperties: false,
+        required: ['itemId', 'requestedQuantity', 'expectedRequestedQuantity'],
+        properties: {
+          itemId: { type: 'string', format: 'uuid' },
+          requestedQuantity: { type: 'number', exclusiveMinimum: 0 },
+          expectedRequestedQuantity: {
+            type: 'number',
+            exclusiveMinimum: 0,
+          },
+        },
+      },
+      outputSchema: {
+        properties: {
+          requestedQuantity: {
+            type: 'number',
+            exclusiveMinimum: 0,
+          },
+        },
+        required: expect.arrayContaining(['requestedQuantity']),
+      },
+    });
+    const updateTool = result.tools.find(
+      ({ name }) => name === 'grocery_update',
+    );
+    expect(updateTool?.description).toContain(
+      'Prefer grocery_set_quantity for quantity-only changes',
+    );
+    expect(updateTool?.inputSchema).toMatchObject({
       additionalProperties: false,
       required: ['id'],
       properties: {
         id: { type: 'string', format: 'uuid' },
         requestedQuantity: { type: 'number', exclusiveMinimum: 0 },
         expectedRequestedQuantity: {
-          anyOf: [{ type: 'number', exclusiveMinimum: 0 }, { type: 'null' }],
+          type: 'number',
+          exclusiveMinimum: 0,
         },
         unit: {},
         expectedUnit: {},
@@ -152,6 +192,124 @@ describe('McpServerFactory grocery tools', () => {
       expect(schema).toMatchObject({ additionalProperties: false });
       expect(schema?.properties).not.toHaveProperty('source');
     }
+  });
+
+  it('sets an absolute quantity with structured output', async () => {
+    groceryService.setQuantity.mockResolvedValue({
+      ...item,
+      requestedQuantity: 4,
+    });
+
+    const result = await client.callTool({
+      name: 'grocery_set_quantity',
+      arguments: {
+        itemId: item.id,
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      },
+    });
+
+    expect(groceryService.setQuantity).toHaveBeenCalledWith(item.id, {
+      requestedQuantity: 4,
+      expectedRequestedQuantity: 2,
+    });
+    expect(result.structuredContent).toMatchObject({
+      id: item.id,
+      requestedQuantity: 4,
+      unit: 'liter',
+    });
+  });
+
+  it('preserves current item state in a stale quantity error', async () => {
+    groceryService.setQuantity.mockRejectedValue(
+      new ConflictException({
+        code: 'GROCERY_ITEM_CHANGED',
+        message: `Grocery list item ${item.id} changed`,
+        currentItem: { ...item, requestedQuantity: 5 },
+      }),
+    );
+
+    const result = await client.callTool({
+      name: 'grocery_set_quantity',
+      arguments: {
+        itemId: item.id,
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+      },
+    });
+
+    expect(groceryService.setQuantity).toHaveBeenCalledTimes(1);
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0].text as string)).toMatchObject({
+      code: 'GROCERY_ITEM_CHANGED',
+      currentItem: { id: item.id, requestedQuantity: 5 },
+    });
+  });
+
+  it.each([
+    ['missing item ID', { requestedQuantity: 4, expectedRequestedQuantity: 2 }],
+    [
+      'missing final quantity',
+      { itemId: item.id, expectedRequestedQuantity: 2 },
+    ],
+    ['missing expected quantity', { itemId: item.id, requestedQuantity: 4 }],
+    [
+      'extra input',
+      {
+        itemId: item.id,
+        requestedQuantity: 4,
+        expectedRequestedQuantity: 2,
+        increment: 1,
+      },
+    ],
+    [
+      'zero final quantity',
+      {
+        itemId: item.id,
+        requestedQuantity: 0,
+        expectedRequestedQuantity: 2,
+      },
+    ],
+    [
+      'negative expected quantity',
+      {
+        itemId: item.id,
+        requestedQuantity: 4,
+        expectedRequestedQuantity: -1,
+      },
+    ],
+    [
+      'NaN final quantity',
+      {
+        itemId: item.id,
+        requestedQuantity: Number.NaN,
+        expectedRequestedQuantity: 2,
+      },
+    ],
+    [
+      'positive infinity',
+      {
+        itemId: item.id,
+        requestedQuantity: Number.POSITIVE_INFINITY,
+        expectedRequestedQuantity: 2,
+      },
+    ],
+    [
+      'negative infinity',
+      {
+        itemId: item.id,
+        requestedQuantity: 4,
+        expectedRequestedQuantity: Number.NEGATIVE_INFINITY,
+      },
+    ],
+  ])('rejects %s without invoking quantity setting', async (_, arguments_) => {
+    const result = await client.callTool({
+      name: 'grocery_set_quantity',
+      arguments: arguments_,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(groceryService.setQuantity).not.toHaveBeenCalled();
   });
 
   it('updates final fields with expected values and structured output', async () => {

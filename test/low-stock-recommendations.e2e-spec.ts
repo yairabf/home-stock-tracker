@@ -60,6 +60,7 @@ describe('Low-stock recommendations (e2e)', () => {
     await prisma.groceryListItem.create({
       data: {
         productId: products.get('pending')!,
+        requestedQuantity: 1,
         source: GroceryItemSource.api,
       },
     });

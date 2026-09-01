@@ -100,6 +100,11 @@ These are explicitly outside the MVP unless required for the initial household.
 - Provide health and readiness endpoints.
 - Log important actions and prediction decisions for debugging.
 
+Post-MVP extensions currently planned after the initial product-name namespace:
+
+- Require every grocery-list line to have a positive quantity, defaulting an omitted quantity to `1` only when a new line is created.
+- Expose an absolute quantity-setting operation with optimistic concurrency so agents and other clients can apply an explicit final quantity without server-side arithmetic.
+
 Explicit MVP exclusions:
 
 - No web UI.
@@ -158,7 +163,7 @@ Examples:
 
 - Item ID.
 - Product ID.
-- Requested quantity if known.
+- Positive requested quantity, defaulting to `1` when omitted for a newly created grocery line.
 - Unit if known.
 - Date added.
 - Status.
@@ -316,6 +321,7 @@ Preferred:
 Core tools should map closely to service capabilities:
 
 - grocery_add
+- grocery_set_quantity
 - grocery_remove
 - grocery_list
 - record_purchase

@@ -29,7 +29,7 @@ const groceryItemOutputSchema = z.object({
   id: z.string(),
   productId: z.string(),
   productName: z.string(),
-  requestedQuantity: z.number().nullable(),
+  requestedQuantity: z.number().positive().finite(),
   unit: z.string().nullable(),
   dateAdded: z.string(),
   status: z.enum(GroceryItemStatus),
@@ -330,7 +330,8 @@ export class McpServerFactory {
     server.registerTool(
       'grocery_add',
       {
-        description: 'Add a product to the household grocery list.',
+        description:
+          'Add a product to the household grocery list. An omitted quantity defaults to 1 only when a new line is created; on confirmation_required, requestedAddition preserves the omitted input as null.',
         inputSchema: z
           .object({
             productName: z.string().trim().min(1),
@@ -354,10 +355,35 @@ export class McpServerFactory {
     );
 
     server.registerTool(
+      'grocery_set_quantity',
+      {
+        description:
+          'Set one pending grocery item to an absolute final quantity. Calculate relative requests before calling and copy expectedRequestedQuantity from the latest grocery_list result. GROCERY_ITEM_CHANGED requires a fresh user decision: do not retry or recalculate automatically. Make no call when the chosen final quantity is unchanged.',
+        inputSchema: z
+          .object({
+            itemId: z.uuid(),
+            requestedQuantity: z.number().positive().finite(),
+            expectedRequestedQuantity: z.number().positive().finite(),
+          })
+          .strict(),
+        outputSchema: groceryItemOutputSchema,
+      },
+      ({ itemId, requestedQuantity, expectedRequestedQuantity }) =>
+        this.runTool('grocery_set_quantity', async () =>
+          this.toolResult(
+            await this.groceryService.setQuantity(itemId, {
+              requestedQuantity,
+              expectedRequestedQuantity,
+            }),
+          ),
+        ),
+    );
+
+    server.registerTool(
       'grocery_update',
       {
         description:
-          'Update final fields on one pending grocery-list item using expected old values.',
+          'Update unit, note, or intentional combinations of fields on one pending grocery item using expected old values. Prefer grocery_set_quantity for quantity-only changes.',
         inputSchema: z
           .object({
             id: z.uuid(),
@@ -366,7 +392,6 @@ export class McpServerFactory {
               .number()
               .positive()
               .finite()
-              .nullable()
               .optional(),
             unit: z.string().trim().min(1).nullable().optional(),
             expectedUnit: z.string().nullable().optional(),

@@ -55,7 +55,7 @@ hermes mcp list
 hermes mcp test home-stock-tracker
 ```
 
-Confirm all ten tools from the [MCP reference](api-reference.md#tools) are
+Confirm all eleven tools from the [MCP reference](api-reference.md#tools) are
 discoverable before enabling writes.
 
 ### Install the Home Stock Tracker skill
@@ -202,4 +202,4 @@ receives `401` before the enablement check.
 - Check client tool filters and allowlists.
 - Check OpenClaw sandbox/plugin policy when applicable.
 - Reload MCP connections or start a fresh session.
-- Confirm all ten tools are returned.
+- Confirm all eleven tools are returned.

@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.4.0
+version: 1.5.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -33,7 +33,8 @@ logic in conversation.
 | Tool                        | Use when                                                                                                                                                                                              | Do not use when                                                                                                                                 |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `grocery_add`               | The user explicitly asks to add one named product to the grocery list. Preserve an explicitly supplied positive quantity, unit, and note. Branch on its `created` or `confirmation_required` outcome. | The user only reports low stock, asks what is needed, or gives an invalid or unclear quantity.                                                  |
-| `grocery_update`            | The user selects final quantity, unit, or note values for one exact pending line. Send only selected fields and pair each with the old value returned by the service.                                 | The pending line is ambiguous, the desired final value is unclear, or the user has not confirmed the update.                                    |
+| `grocery_set_quantity`      | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                               | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                     |
+| `grocery_update`            | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                            | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                  |
 | `grocery_remove`            | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                    | Only a product ID or unverified item name is available.                                                                                         |
 | `grocery_list`              | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list.                                                                         | The user asks for predicted low-stock recommendations.                                                                                          |
 | `get_product`               | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                               | Fuzzy guessing, broad product search, or product creation is required.                                                                          |
@@ -80,9 +81,11 @@ Ask a focused question before mutation when:
 - the user describes a future plan rather than a completed purchase;
 - a named included or excluded grocery item has no unique exact pending match.
 
-Omit optional fields that the user did not provide. Do not fill them with
-defaults. One explicit request may produce its prerequisite lookup followed by
-one mutation; that is still one intent.
+Omit optional fields that the user did not provide. Do not invent client-side
+defaults. The service defaults omitted quantity to `1` only when it persists a
+new grocery line. Every persisted grocery quantity returned by the service is a
+finite positive number. One explicit request may produce its prerequisite lookup
+followed by one mutation; that is still one intent.
 
 ## Grocery conversation workflows
 
@@ -100,11 +103,13 @@ its structured outcome.
 - If the user selects an additional amount, calculate the final quantity from
   the returned current quantity and the user's answer. If the user gives a final
   total directly, use that total. Never ask the service to perform arithmetic.
-- Call `grocery_update` once for that exact existing item with the calculated
-  final `requestedQuantity` and the returned current quantity as
-  `expectedRequestedQuantity`. Send `unit` or `note` only if the user also chose
-  a final value for it, using the returned old value as `expectedUnit` or
-  `expectedNote`.
+- For a quantity-only change, call `grocery_set_quantity` once with the exact
+  existing item `id` as `itemId`, the calculated final `requestedQuantity`, and
+  the returned current quantity as `expectedRequestedQuantity`.
+- If quantity changes together with unit or note, use `grocery_update` once and
+  pair every selected field with its returned old value: `expectedRequestedQuantity`,
+  `expectedUnit`, or `expectedNote`. Do not split one confirmed multi-field
+  decision across tools.
 - Never use `create_separate` as the meaning of "add another" or a yes answer.
   Use `grocery_add` with `ifPendingExists: "create_separate"` only when the user
   explicitly asks for a separate list line.
@@ -113,19 +118,16 @@ Ask a focused question without mutating when the safe update is not fully
 defined:
 
 - If `requestedAddition.requestedQuantity` is null, ask how many to add or
-  whether to cancel.
-- If the existing item's `requestedQuantity` is null, ask for the desired final
-  total quantity. After the user supplies it, send that value as
-  `requestedQuantity` with `expectedRequestedQuantity: null`.
-- If multiple `existingItems` are returned, describe their quantities, units,
+  whether to cancel. Never interpret omission as adding one to the existing line.
+- If multiple `existingItems` are returned, describe their positive quantities, units,
   notes, and dates as needed and ask which line to update. Do not choose one.
 - If the requested and existing units conflict, explain the two units and ask
   for a compatible quantity and unit. Do not convert units.
 
 Treat `GROCERY_ITEM_CHANGED`, `GROCERY_ITEM_NOT_PENDING`, and
 `GROCERY_ITEM_NOT_FOUND` as final results for that decision. Present the safe
-current state when returned and ask for a fresh decision; do not retry the
-update automatically. Treat `INVALID_QUANTITY`, `INVALID_UNIT`, `INVALID_NOTE`,
+current state when returned and ask for a fresh decision; do not retry or
+recalculate automatically. Treat `INVALID_QUANTITY`, `INVALID_UNIT`, `INVALID_NOTE`,
 and `INVALID_UPDATE` as clarification branches, never as permission to guess.
 After an uncertain mutation transport result, stop and report uncertainty
 without retrying either tool.
@@ -239,7 +241,7 @@ Call `grocery_add` with `productName: "milk"`, `requestedQuantity: 2`, and
 `unit: "liters"`. On `created`, summarize `createdItem`. On
 `confirmation_required`, explain the current quantity and ask what final total
 the user wants. Calculate that total from the answer before calling
-`grocery_update`.
+`grocery_set_quantity` for a quantity-only change.
 
 **"Remove milk from the list."**
 

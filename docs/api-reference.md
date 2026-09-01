@@ -100,28 +100,55 @@ threshold. Counts must be non-negative integers and
 
 ### Grocery list
 
-| Method   | Route                       | Purpose                                                          |
-| -------- | --------------------------- | ---------------------------------------------------------------- |
-| `POST`   | `/api/v1/grocery/items`     | Add a product or return matching pending lines for confirmation. |
-| `GET`    | `/api/v1/grocery/items`     | List pending items or filter by `status`.                        |
-| `PATCH`  | `/api/v1/grocery/items/:id` | Update selected fields on one pending item.                      |
-| `DELETE` | `/api/v1/grocery/items/:id` | Remove one pending item.                                         |
+| Method   | Route                                | Purpose                                                          |
+| -------- | ------------------------------------ | ---------------------------------------------------------------- |
+| `POST`   | `/api/v1/grocery/items`              | Add a product or return matching pending lines for confirmation. |
+| `GET`    | `/api/v1/grocery/items`              | List pending items or filter by `status`.                        |
+| `PATCH`  | `/api/v1/grocery/items/:id/quantity` | Set one pending item's absolute final quantity.                  |
+| `PATCH`  | `/api/v1/grocery/items/:id`          | Update selected fields on one pending item.                      |
+| `DELETE` | `/api/v1/grocery/items/:id`          | Remove one pending item.                                         |
 
 An add request requires `productName`. Optional values are a positive
-`requestedQuantity`, `unit`, `note`, and `ifPendingExists`.
+`requestedQuantity`, `unit`, `note`, and `ifPendingExists`. When a new line is
+created without a quantity, its persisted quantity defaults to `1`. Every
+persisted grocery item has a finite positive quantity.
 
 `ifPendingExists` defaults to `return_existing`. A canonical-product pending
 match returns `confirmation_required`, the matching lines, and the requested
-addition without mutation. `create_separate` creates an intentional additional
-line. Default concurrent adds are serialized by product.
+addition without mutation. If quantity was omitted, the request echo remains
+`requestedAddition.requestedQuantity: null`; omission never means increment the
+existing line by `1`. `create_separate` creates an intentional additional line
+only when explicitly selected. Default concurrent adds are serialized by product.
 
-A PATCH may select `requestedQuantity`, `unit`, `note`, or any combination. The
-quantity is the final positive value to store, not an increment. Use `null` to
-clear `unit` or `note`; omit a field to preserve it. Every selected field requires
-its matching old value: `expectedRequestedQuantity`, `expectedUnit`, or
-`expectedNote`. These values prevent a stale user decision from overwriting a
-concurrent change. Expected values for unselected fields and requests with no
-selected fields are rejected without mutation.
+Use the narrow quantity route for quantity-only changes:
+
+```http
+PATCH /api/v1/grocery/items/<ITEM_ID>/quantity
+Content-Type: application/json
+
+{
+  "requestedQuantity": 5,
+  "expectedRequestedQuantity": 3
+}
+```
+
+Both values are required finite positive numbers. `requestedQuantity` is the
+absolute final value, not an increment. Copy `expectedRequestedQuantity` exactly
+from the latest item read. Relative requests must be calculated by the client
+before calling; make no call when the chosen final value is unchanged. An unknown
+ID returns `404` with `GROCERY_ITEM_NOT_FOUND`. A non-pending item or stale
+expectation returns `409` with `GROCERY_ITEM_NOT_PENDING` or
+`GROCERY_ITEM_CHANGED` and the latest `currentItem`. A stale result requires a
+fresh user decision and must not be recalculated or retried automatically.
+
+The general `PATCH /api/v1/grocery/items/:id` remains available for `unit`,
+`note`, and intentional multi-field changes. It may include a final positive
+`requestedQuantity`, but the narrow route is preferred when quantity is the only
+field changing. Use `null` to clear `unit` or `note`; omit a field to preserve it.
+Every selected field requires its matching old value:
+`expectedRequestedQuantity`, `expectedUnit`, or `expectedNote`. Expected values
+for unselected fields and requests with no selected fields are rejected without
+mutation.
 
 - Status: `pending`, `purchased`, or `removed`
 - Source is server-owned: `api` for REST requests and `mcp` for MCP tool calls.
@@ -245,7 +272,8 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | Tool                        | Kind  | Purpose                                                                                          |
 | --------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
 | `grocery_add`               | Write | Add one product or return `confirmation_required` with matching pending lines.                   |
-| `grocery_update`            | Write | Set final quantity, unit, or note fields on one pending line using matching expected old values. |
+| `grocery_set_quantity`      | Write | Set one pending line's absolute final quantity using its latest expected quantity.               |
+| `grocery_update`            | Write | Set unit, note, or intentional field combinations using matching expected old values.            |
 | `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
 | `grocery_list`              | Read  | List pending items by default or filter by status.                                               |
 | `get_product`               | Read  | Resolve an exact product name/alias or known UUID.                                               |
@@ -268,13 +296,17 @@ won by another concurrent terminal transition. Both are final domain results. Do
 not retry them, and do not retry any write whose transport outcome is uncertain.
 
 When `grocery_add` returns `confirmation_required`, do not mutate again until
-the user selects the desired final state. Explain the current line, clarify how
-many items should be on it, calculate that final quantity in the client, and send
-it as `requestedQuantity` with the returned quantity as
-`expectedRequestedQuantity`. Use `grocery_update`, not `create_separate`, for
-that confirmed update. Treat `GROCERY_ITEM_CHANGED`,
-`GROCERY_ITEM_NOT_PENDING`, and `GROCERY_ITEM_NOT_FOUND` as final for that
-decision and ask again using the latest state.
+the user selects the desired final state. Explain the current line and clarify
+how many items should be on it. An omitted request quantity remains `null` in the
+request echo and is ambiguous, not an increment. Calculate relative requests in
+the client, then use `grocery_set_quantity` with the existing line's `id` as
+`itemId`, the selected final `requestedQuantity`, and the returned current
+quantity as `expectedRequestedQuantity`. Make no call for no change. Use
+`grocery_update` only when quantity changes together with unit or note. Use
+`create_separate` only for an explicitly separate line. Treat
+`GROCERY_ITEM_CHANGED`, `GROCERY_ITEM_NOT_PENDING`, and
+`GROCERY_ITEM_NOT_FOUND` as final for that decision and ask again using the
+latest state without retrying or recalculating automatically.
 
 ### Safe tool workflow
 

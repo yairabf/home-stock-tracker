@@ -923,7 +923,7 @@ describe('InventoryService', () => {
     ) => ({
       id,
       productId,
-      requestedQuantity: null,
+      requestedQuantity: 1,
       unit: null,
       dateAdded: new Date('2026-08-27T10:00:00.000Z'),
       status,
@@ -1011,10 +1011,15 @@ describe('InventoryService', () => {
         'rice-event',
         'milk-event',
       ]);
-      expect(result.completedItems.map((item) => item.id)).toEqual([
-        riceItemId,
-        milkItemId,
-        secondMilkItemId,
+      expect(
+        result.completedItems.map((item) => ({
+          id: item.id,
+          requestedQuantity: item.requestedQuantity,
+        })),
+      ).toEqual([
+        { id: riceItemId, requestedQuantity: 1 },
+        { id: milkItemId, requestedQuantity: 1 },
+        { id: secondMilkItemId, requestedQuantity: 1 },
       ]);
       expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
         action: 'complete_purchase',

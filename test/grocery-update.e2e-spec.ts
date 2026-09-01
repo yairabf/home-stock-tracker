@@ -195,6 +195,16 @@ describe('Pending grocery field updates (e2e)', () => {
         status: 400,
       },
       {
+        name: 'null expected quantity',
+        update: { requestedQuantity: 4, expectedRequestedQuantity: null },
+        status: 400,
+      },
+      {
+        name: 'invalid expected quantity',
+        update: { requestedQuantity: 4, expectedRequestedQuantity: 0 },
+        status: 400,
+      },
+      {
         name: 'empty note',
         update: { note: ' ', expectedNote: 'usual brand' },
         status: 400,

@@ -22,7 +22,7 @@ export class AddGroceryItemDto {
   productName: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ allowInfinity: false, allowNaN: false })
   @IsPositive()
   requestedQuantity?: number;
 

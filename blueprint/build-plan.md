@@ -40,3 +40,4 @@
 - [ ] 25. **Home Assistant integration** - expose grocery, inventory, and low-stock state to the household automation environment
 - [ ] 26. **Management dashboard** - add a web interface for reviewing inventory state, predictions, history, and manual corrections if conversational control proves insufficient
 - [x] 27. **Product name namespace** - store canonical names and aliases in one globally unique normalized namespace for deterministic indexed lookup ✓ 2026-09-01
+- [x] 28. **Grocery quantity contract** - require a positive quantity on every grocery line and expose an absolute, concurrency-safe quantity-setting operation ✓ 2026-09-01

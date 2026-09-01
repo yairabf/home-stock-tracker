@@ -290,11 +290,13 @@ describe('InventoryController (e2e)', () => {
       expect(response.body.groceryItems).toHaveLength(2);
       expect(response.body.groceryItems[0]).toMatchObject({
         productId,
+        requestedQuantity: 2,
         status: 'purchased',
         relatedInventoryEventId: response.body.event.id,
       });
       expect(response.body.groceryItems[1]).toMatchObject({
         productId,
+        requestedQuantity: 4,
         status: 'purchased',
         relatedInventoryEventId: response.body.event.id,
       });
@@ -344,6 +346,7 @@ describe('InventoryController (e2e)', () => {
       const otherItem = await prisma.groceryListItem.create({
         data: {
           productId: otherProductId,
+          requestedQuantity: 1,
         },
       });
 
@@ -386,6 +389,7 @@ describe('InventoryController (e2e)', () => {
       const linkedItem = await prisma.groceryListItem.create({
         data: {
           productId,
+          requestedQuantity: 1,
           source: 'api',
           status: 'pending',
           relatedInventoryEventId: event.id,
@@ -412,6 +416,7 @@ describe('InventoryController (e2e)', () => {
       const purchasedItem = await prisma.groceryListItem.create({
         data: {
           productId,
+          requestedQuantity: 1,
           source: 'api',
           status: 'purchased',
         },

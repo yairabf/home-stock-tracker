@@ -8,7 +8,7 @@ export class GroceryItemResponseDto {
   id: string;
   productId: string;
   productName: string;
-  requestedQuantity: number | null;
+  requestedQuantity: number;
   unit: string | null;
   dateAdded: Date;
   status: GroceryItemStatus;
