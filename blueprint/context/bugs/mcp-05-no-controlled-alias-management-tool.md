@@ -1,5 +1,25 @@
 # Fix Brief: MCP-05 — No controlled alias-management tool
 
+**Status:** grocery-specific path delivered by feature 31 on 2026-09-01;
+standalone catalog maintenance deferred
+
+## Delivery record
+
+Feature 31 delivers the controlled grocery workflow through
+`grocery_confirm_product_alias`. It requires an exact target product ID, a
+user-approved alias, and the original grocery-item payload. The shared
+`GroceryService` use case delegates namespace writes to `ProductService`, is
+same-owner idempotent, rejects cross-owner conflicts, preserves the alias when a
+pending grocery quantity still needs confirmation, and never invokes the LLM.
+REST and real MCP-client tests cover discovery, success, retry, conflicts,
+deleted targets, pending-line behavior, and server-owned provenance.
+
+The originally proposed unrestricted `product_add_alias` administration tool is
+not exposed. Standalone alias teaching outside an original grocery-add request
+remains deferred to a future catalog-maintenance feature because it needs its own
+conversation and governance contract. The grocery-specific acceptance criteria
+below are satisfied; generic catalog administration remains intentionally open.
+
 **Priority:** P1 — data quality and language continuity  
 **Gap type:** Missing tool  
 **Repository baseline:** `4058dc2fdcb65a34c4ba0a9082b030d9ab4c7c96`

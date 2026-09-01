@@ -247,6 +247,228 @@ describe('GroceryService policy-aware deterministic addition', () => {
   });
 });
 
+describe('GroceryService confirmed new product', () => {
+  const groceryItem = {
+    id: 'grocery-item-1',
+    productId: product.id,
+    requestedQuantity: 2,
+    unit: 'cartons',
+    dateAdded: new Date('2026-09-01T10:00:00.000Z'),
+    status: GroceryItemStatus.pending,
+    note: null,
+    source: GroceryItemSource.mcp,
+    relatedInventoryEventId: null,
+  };
+  const request = {
+    product: {
+      canonicalName: '  Milk  ',
+      aliases: ['Whole Milk'],
+      category: 'dairy',
+      typicalUnit: 'carton',
+      productType: ProductType.fast_consumable,
+      isPerishable: true,
+    },
+    groceryItem: { requestedQuantity: 2, unit: 'cartons' },
+    source: GroceryItemSource.mcp,
+  };
+  let tx: {
+    $queryRaw: jest.Mock;
+    groceryListItem: { findMany: jest.Mock; create: jest.Mock };
+  };
+  let transaction: jest.Mock;
+  let confirmProduct: jest.Mock;
+  let resolveProduct: jest.Mock;
+  let service: GroceryService;
+
+  beforeEach(() => {
+    tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      groceryListItem: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue(groceryItem),
+      },
+    };
+    transaction = jest.fn((operation: (client: typeof tx) => unknown) =>
+      operation(tx),
+    );
+    confirmProduct = jest.fn().mockResolvedValue(product);
+    resolveProduct = jest.fn();
+    service = new GroceryService(
+      { $transaction: transaction } as unknown as PrismaService,
+      {
+        confirmExplicitWithinTransaction: confirmProduct,
+      } as unknown as ProductService,
+      { resolve: resolveProduct } as unknown as ProductResolutionService,
+    );
+  });
+
+  it('atomically confirms the identity and creates the grocery line', async () => {
+    await expect(service.confirmNewProduct(request)).resolves.toMatchObject({
+      outcome: 'created',
+      requestedAddition: {
+        productName: 'Milk',
+        requestedQuantity: 2,
+        ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+      },
+    });
+    expect(confirmProduct).toHaveBeenCalledWith(tx, request.product);
+    expect(tx.groceryListItem.create).toHaveBeenCalledWith({
+      data: {
+        productId: product.id,
+        requestedQuantity: 2,
+        unit: 'cartons',
+        note: undefined,
+        source: GroceryItemSource.mcp,
+      },
+    });
+    expect(resolveProduct).not.toHaveBeenCalled();
+  });
+
+  it('returns existing pending lines without changing quantity', async () => {
+    tx.groceryListItem.findMany.mockResolvedValue([
+      { ...groceryItem, requestedQuantity: 4 },
+    ]);
+
+    await expect(service.confirmNewProduct(request)).resolves.toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ requestedQuantity: 4 }],
+    });
+    expect(tx.groceryListItem.create).not.toHaveBeenCalled();
+  });
+
+  it('retries a concurrent identity winner through the same validated path', async () => {
+    confirmProduct
+      .mockRejectedValueOnce(
+        new ConflictException({ code: PRODUCT_NAME_CONFLICT }),
+      )
+      .mockResolvedValueOnce(product);
+
+    await expect(service.confirmNewProduct(request)).resolves.toMatchObject({
+      outcome: 'created',
+    });
+    expect(confirmProduct).toHaveBeenCalledTimes(2);
+    expect(transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves a confirmed namespace conflict after one convergence retry', async () => {
+    const conflict = new ConflictException({ code: PRODUCT_NAME_CONFLICT });
+    confirmProduct.mockRejectedValue(conflict);
+
+    await expect(service.confirmNewProduct(request)).rejects.toBe(conflict);
+    expect(confirmProduct).toHaveBeenCalledTimes(2);
+    expect(tx.groceryListItem.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid quantities before opening a transaction', async () => {
+    await expect(
+      service.confirmNewProduct({
+        ...request,
+        groceryItem: { requestedQuantity: 0 },
+      }),
+    ).rejects.toMatchObject({ response: { code: 'INVALID_QUANTITY' } });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('GroceryService confirmed product alias', () => {
+  const groceryItem = {
+    id: 'grocery-item-1',
+    productId: product.id,
+    requestedQuantity: 1,
+    unit: null,
+    dateAdded: new Date('2026-09-01T10:00:00.000Z'),
+    status: GroceryItemStatus.pending,
+    note: null,
+    source: GroceryItemSource.api,
+    relatedInventoryEventId: null,
+  };
+  const request = {
+    targetProductId: product.id,
+    alias: '  Whole Milk  ',
+    groceryItem: {},
+    source: GroceryItemSource.api,
+  };
+  let tx: {
+    $queryRaw: jest.Mock;
+    groceryListItem: { findMany: jest.Mock; create: jest.Mock };
+  };
+  let transaction: jest.Mock;
+  let confirmAlias: jest.Mock;
+  let service: GroceryService;
+
+  beforeEach(() => {
+    tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      groceryListItem: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue(groceryItem),
+      },
+    };
+    transaction = jest.fn((operation: (client: typeof tx) => unknown) =>
+      operation(tx),
+    );
+    confirmAlias = jest.fn().mockResolvedValue(product);
+    service = new GroceryService(
+      { $transaction: transaction } as unknown as PrismaService,
+      {
+        confirmAliasWithinTransaction: confirmAlias,
+      } as unknown as ProductService,
+      { resolve: jest.fn() } as unknown as ProductResolutionService,
+    );
+  });
+
+  it('persists the approved alias before normal grocery creation', async () => {
+    await expect(service.confirmProductAlias(request)).resolves.toMatchObject({
+      outcome: 'created',
+      requestedAddition: {
+        productName: 'Whole Milk',
+        requestedQuantity: null,
+        ifPendingExists: PolicyAwarePendingPolicy.return_existing,
+      },
+    });
+    expect(confirmAlias).toHaveBeenCalledWith(
+      tx,
+      request.targetProductId,
+      request.alias,
+    );
+    expect(tx.groceryListItem.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the alias transaction successful when quantity confirmation is required', async () => {
+    tx.groceryListItem.findMany.mockResolvedValue([
+      { ...groceryItem, requestedQuantity: 3 },
+    ]);
+
+    await expect(service.confirmProductAlias(request)).resolves.toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ requestedQuantity: 3 }],
+    });
+    expect(confirmAlias).toHaveBeenCalledTimes(1);
+    expect(tx.groceryListItem.create).not.toHaveBeenCalled();
+  });
+
+  it('retries a concurrent same-owner alias through the validated path', async () => {
+    confirmAlias
+      .mockRejectedValueOnce(
+        new ConflictException({ code: PRODUCT_NAME_CONFLICT }),
+      )
+      .mockResolvedValueOnce(product);
+
+    await expect(service.confirmProductAlias(request)).resolves.toMatchObject({
+      outcome: 'created',
+    });
+    expect(confirmAlias).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves target-deleted errors without retrying', async () => {
+    const missing = new NotFoundException({ code: 'PRODUCT_NOT_FOUND' });
+    confirmAlias.mockRejectedValue(missing);
+
+    await expect(service.confirmProductAlias(request)).rejects.toBe(missing);
+    expect(confirmAlias).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('GroceryService removeItem', () => {
   const id = 'grocery-item-1';
   const item = {

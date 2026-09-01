@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.6.0
+version: 1.7.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -33,6 +33,8 @@ logic in conversation.
 | Tool                        | Use when                                                                                                                                                                                              | Do not use when                                                                                                                                 |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `grocery_add`               | The user explicitly asks to add one named product. Begin uncertain names in proposal mode with `productName` and nested `groceryItem`; branch on `created`, `confirmation_required`, or `product_resolution_required`. | The user only reports low stock, asks what is needed, gives an invalid quantity, or has not supplied every product fact required for deterministic creation. |
+| `grocery_confirm_new_product` | The user explicitly approves complete final product facts from a resolution conversation. Send those facts and the original `groceryItem`; no proposal ID or source. | Any product fact is guessed, the user chose an existing product, cancelled, or has not approved the final payload. |
+| `grocery_confirm_product_alias` | The user explicitly confirms that the original phrase is an alias for one exact returned product ID. Send the approved alias and original `groceryItem`. | The target is ambiguous, the relationship was not explicitly approved, or generic catalog maintenance is requested outside a grocery addition. |
 | `grocery_set_quantity`      | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                               | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                     |
 | `grocery_update`            | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                            | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                  |
 | `grocery_remove`            | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                    | Only a product ID or unverified item name is available.                                                                                         |
@@ -114,8 +116,16 @@ nested grocery-line facts. Never invent either one.
   returned deterministic candidates, optional proposal, and `allowedActions`,
   then ask the user to choose. Proposal advice is non-authoritative and never
   grants permission to select an identity, add an alias, or create a product.
-  Feature 31 owns those confirmation writes, so the current skill stops after
-  obtaining the decision.
+  Continue only from the user's explicit decision:
+  - If the user approves complete final product facts, call
+    `grocery_confirm_new_product` once with those approved facts and the original
+    `groceryItem`. Do not pass proposal state or call the LLM again.
+  - If the user explicitly confirms that the original phrase is an alias for one
+    exact candidate, call `grocery_confirm_product_alias` once with that returned
+    product ID, the approved alias, and the original `groceryItem`.
+  - If the user cancels, make no tool call.
+  - If the answer does not fully define either final payload, ask one focused
+    question and do not mutate.
 - On `confirmation_required` with exactly one `existingItems` entry, do not
   mutate again yet. Preserve `requestedAddition`, explain the current quantity,
   and ask what the final quantity should be. For example: "Milk is already on
@@ -159,6 +169,14 @@ recalculate automatically. Treat `INVALID_QUANTITY`, `INVALID_UNIT`, `INVALID_NO
 and `INVALID_UPDATE` as clarification branches, never as permission to guess.
 After an uncertain mutation transport result, stop and report uncertainty
 without retrying either tool.
+
+The confirmation tools can themselves return `confirmation_required`. That
+means the approved catalog identity was applied, but no existing grocery
+quantity was changed. Preserve the returned request and resolve the final
+quantity through the same separate quantity workflow above. Do not repeat the
+catalog confirmation. Treat `PRODUCT_NAME_CONFLICT` and `PRODUCT_NOT_FOUND` as
+stale final decisions: explain the catalog changed and ask for a fresh choice;
+do not auto-retry, regenerate a proposal, or silently choose another target.
 
 ### Add several items
 

@@ -3,7 +3,10 @@ import { ProductNameKind, ProductType } from '../generated/prisma/enums';
 import type { LlmGenerationResult } from '../llm/types/structured-generation';
 import type { OperationalLogger } from '../observability/operational-logger.service';
 import type { PrismaService } from '../prisma/prisma.service';
-import { PRODUCT_NAME_CONFLICT } from './product-name.exception';
+import {
+  PRODUCT_NAME_CONFLICT,
+  PRODUCT_NOT_FOUND,
+} from './product-name.exception';
 import type { ProductClassificationLogService } from './product-classification-log.service';
 import type { ProductClassifier } from './product-classifier.service';
 import { ProductService } from './product.service';
@@ -172,6 +175,165 @@ describe('ProductService', () => {
       ).resolves.toBe(existing);
       expect(createProduct).not.toHaveBeenCalled();
       expect(productClassifier.classify).not.toHaveBeenCalled();
+    });
+
+    it('reuses a confirmed identity only when every supplied name is compatible', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionNameFindMany
+        .mockResolvedValueOnce([{ productId: existing.id }])
+        .mockResolvedValueOnce([
+          { normalizedName: 'milk', productId: existing.id },
+        ]);
+      transactionNameFindUnique.mockResolvedValue({ product: existing });
+      const transactionClient = {
+        product: { create: createProduct },
+        productName: {
+          findMany: transactionNameFindMany,
+          findUnique: transactionNameFindUnique,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmExplicitWithinTransaction(transactionClient, {
+          canonicalName: 'milk',
+          aliases: ['Whole Milk'],
+          category: 'dairy',
+          typicalUnit: 'carton',
+          productType: ProductType.fast_consumable,
+          isPerishable: true,
+        }),
+      ).resolves.toBe(existing);
+      expect(createProduct).not.toHaveBeenCalled();
+      expect(productClassifier.classify).not.toHaveBeenCalled();
+      expect(transactionNameFindMany).toHaveBeenLastCalledWith({
+        where: { normalizedName: { in: ['milk', 'whole milk'] } },
+        select: { normalizedName: true, productId: true },
+      });
+    });
+
+    it('rejects a confirmed alias owned by another product', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionNameFindMany
+        .mockResolvedValueOnce([{ productId: existing.id }])
+        .mockResolvedValueOnce([
+          { normalizedName: 'milk', productId: existing.id },
+          { normalizedName: 'other product', productId: 'product-2' },
+        ]);
+      transactionNameFindUnique.mockResolvedValue({ product: existing });
+      const transactionClient = {
+        product: { create: createProduct },
+        productName: {
+          findMany: transactionNameFindMany,
+          findUnique: transactionNameFindUnique,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmExplicitWithinTransaction(transactionClient, {
+          canonicalName: 'milk',
+          aliases: ['Other Product'],
+          category: 'dairy',
+          typicalUnit: 'carton',
+          productType: ProductType.fast_consumable,
+          isPerishable: true,
+        }),
+      ).rejects.toMatchObject({
+        response: { code: PRODUCT_NAME_CONFLICT },
+      });
+      expect(createProduct).not.toHaveBeenCalled();
+    });
+
+    it('adds a confirmed alias within the caller transaction', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionFindUnique
+        .mockResolvedValueOnce(existing)
+        .mockResolvedValueOnce(existing);
+      const transactionClient = {
+        product: { findUnique: transactionFindUnique },
+        productName: {
+          findMany: transactionNameFindMany,
+          create: createName,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmAliasWithinTransaction(
+          transactionClient,
+          existing.id,
+          '  Whole Milk  ',
+        ),
+      ).resolves.toBe(existing);
+      expect(createName).toHaveBeenCalledWith({
+        data: {
+          productId: existing.id,
+          displayName: 'Whole Milk',
+          normalizedName: 'whole milk',
+          kind: ProductNameKind.alias,
+        },
+      });
+    });
+
+    it('treats an alias already owned by the target as idempotent', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionFindUnique.mockResolvedValue(existing);
+      transactionNameFindMany.mockResolvedValue([{ productId: existing.id }]);
+      const transactionClient = {
+        product: { findUnique: transactionFindUnique },
+        productName: {
+          findMany: transactionNameFindMany,
+          create: createName,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmAliasWithinTransaction(
+          transactionClient,
+          existing.id,
+          'Whole Milk',
+        ),
+      ).resolves.toBe(existing);
+      expect(createName).not.toHaveBeenCalled();
+    });
+
+    it('rejects a confirmed alias owned by another target', async () => {
+      const existing = product({ canonicalName: 'Milk' });
+      transactionFindUnique.mockResolvedValue(existing);
+      transactionNameFindMany.mockResolvedValue([
+        { productId: 'other-product' },
+      ]);
+      const transactionClient = {
+        product: { findUnique: transactionFindUnique },
+        productName: {
+          findMany: transactionNameFindMany,
+          create: createName,
+        },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmAliasWithinTransaction(
+          transactionClient,
+          existing.id,
+          'Other Product',
+        ),
+      ).rejects.toMatchObject({
+        response: { code: PRODUCT_NAME_CONFLICT },
+      });
+      expect(createName).not.toHaveBeenCalled();
+    });
+
+    it('returns a stable error when the alias target was deleted', async () => {
+      transactionFindUnique.mockResolvedValue(null);
+      const transactionClient = {
+        product: { findUnique: transactionFindUnique },
+      } as unknown as Prisma.TransactionClient;
+
+      await expect(
+        service.confirmAliasWithinTransaction(
+          transactionClient,
+          'missing-product',
+          'Milk',
+        ),
+      ).rejects.toMatchObject({ response: { code: PRODUCT_NOT_FOUND } });
     });
 
     it('translates an explicit namespace race into the stable conflict', async () => {

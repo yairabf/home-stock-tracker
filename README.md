@@ -15,7 +15,7 @@ and low-stock recommendations.
 
 | Guide | Contents |
 | --- | --- |
-| [API and MCP reference](docs/api-reference.md) | Authentication, REST routes, request values, MCP endpoint, all ten tools, and safe tool workflows. |
+| [API and MCP reference](docs/api-reference.md) | Authentication, REST routes, request values, MCP endpoint, all fourteen tools, and safe tool workflows. |
 | [Agent integrations](docs/agent-integrations.md) | Complete Hermes, OpenClaw, and generic MCP-client setup with official references. |
 | [Operations guide](docs/operations.md) | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
 | [Deployment guide](docs/deployment.md) | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery. |
@@ -108,7 +108,8 @@ curl -sS \
 A new database has no products. REST clients can deterministically create a
 complete product and its first grocery line atomically. MCP agents begin unknown
 names in non-mutating proposal mode and wait for a user decision. See the
-[API reference](docs/api-reference.md#grocery-list) for both request shapes.
+[API reference](docs/api-reference.md#grocery-list) for proposal, confirmed
+product, and confirmed alias request shapes.
 
 To connect an agent, set `MCP_ENABLED=true`, restart the service, and follow the
 [agent integration guide](docs/agent-integrations.md).

@@ -75,6 +75,22 @@ describe('Hermes grocery quantity workflow contract', () => {
     );
   });
 
+  it('documents explicit confirmed catalog decisions', () => {
+    expect(skill).toMatch(/\| `grocery_confirm_new_product`\s+\|/);
+    expect(skill).toMatch(/\| `grocery_confirm_product_alias`\s+\|/);
+    expect(skill).toContain('Do not pass proposal state');
+    expect(skill).toMatch(/Do not repeat the\s+catalog confirmation/);
+    expect(skill).toContain('`PRODUCT_NAME_CONFLICT`');
+    expect(skill).toContain('`PRODUCT_NOT_FOUND`');
+    expect(readme).toContain('`grocery_confirm_new_product`');
+    expect(readme).toContain('`grocery_confirm_product_alias`');
+    expect(scenarios).toContain('| Confirmed product creation');
+    expect(scenarios).toContain('| Confirmed product alias');
+    expect(scenarios).toContain('| Confirmed alias with quantity ambiguity');
+    expect(scenarios).toContain('| Confirmed relative quantity');
+    expect(scenarios).toContain('| Stale confirmed catalog decision');
+  });
+
   it.each([
     'Omitted new-line quantity',
     'Duplicate cancellation',

@@ -11,7 +11,7 @@ import { OperationalLogger } from '../observability/operational-logger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddProductAliasDto } from './dto/add-product-alias.dto';
 import { CreateProductDto } from './dto/create-product.dto';
-import { productNameConflict } from './product-name.exception';
+import { productNameConflict, productNotFound } from './product-name.exception';
 import { normalizeProductName, toProductNameValue } from './product-name.util';
 import { ProductClassificationLogService } from './product-classification-log.service';
 import { ProductClassifier } from './product-classifier.service';
@@ -124,6 +124,39 @@ export class ProductService {
     }
   }
 
+  async confirmExplicitWithinTransaction(
+    tx: Prisma.TransactionClient,
+    input: ExplicitProductCreationInput,
+  ): Promise<ProductWithNames> {
+    const names = this.prepareProductNames(
+      input.canonicalName,
+      input.aliases,
+      'canonicalName',
+    );
+    const existing = await this.findProductByNormalizedNameWithinTransaction(
+      tx,
+      names.canonical.normalizedName,
+    );
+    if (existing) {
+      await this.validateNameOwnershipWithinTransaction(tx, names, existing.id);
+      return existing;
+    }
+
+    try {
+      return await this.createProductWithinTransaction(tx, names, {
+        category: input.category,
+        typicalUnit: input.typicalUnit,
+        productType: input.productType,
+        isPerishable: input.isPerishable,
+      });
+    } catch (error) {
+      if (this.isProductNameWriteConflict(error)) {
+        throw productNameConflict();
+      }
+      throw error;
+    }
+  }
+
   async addAlias(
     id: string,
     dto: AddProductAliasDto,
@@ -147,6 +180,30 @@ export class ProductService {
         throw error;
       }
       return this.resolveAliasWriteConflict(id, alias.normalizedName);
+    }
+  }
+
+  async confirmAliasWithinTransaction(
+    tx: Prisma.TransactionClient,
+    productId: string,
+    rawAlias: string,
+  ): Promise<ProductWithNames> {
+    const alias = this.requiredProductName(rawAlias, 'alias');
+    const product = await tx.product.findUnique({
+      where: { id: productId },
+      ...PRODUCT_WITH_NAMES_ARGS,
+    });
+    if (!product) {
+      throw productNotFound(productId);
+    }
+
+    try {
+      return await this.addAliasWithinTransaction(tx, product, alias);
+    } catch (error) {
+      if (this.isProductNameWriteConflict(error)) {
+        throw productNameConflict();
+      }
+      throw error;
     }
   }
 
@@ -344,6 +401,39 @@ export class ProductService {
     }
 
     return { canonical, aliases };
+  }
+
+  private async validateNameOwnershipWithinTransaction(
+    tx: Prisma.TransactionClient,
+    names: PreparedProductNames,
+    expectedProductId: string,
+  ): Promise<void> {
+    const suppliedNames = [names.canonical, ...names.aliases];
+    const owners = await tx.productName.findMany({
+      where: {
+        normalizedName: {
+          in: suppliedNames.map(({ normalizedName }) => normalizedName),
+        },
+      },
+      select: { normalizedName: true, productId: true },
+    });
+    const ownersByName = new Map<string, Array<{ productId: string }>>();
+    for (const owner of owners) {
+      const nameOwners = ownersByName.get(owner.normalizedName) ?? [];
+      nameOwners.push({ productId: owner.productId });
+      ownersByName.set(owner.normalizedName, nameOwners);
+    }
+
+    for (const name of suppliedNames) {
+      const ownerProductId = this.resolveUniqueProductId(
+        ownersByName.get(name.normalizedName) ?? [],
+        name.normalizedName,
+        'lookup',
+      );
+      if (ownerProductId && ownerProductId !== expectedProductId) {
+        throw productNameConflict();
+      }
+    }
   }
 
   private requiredProductName(

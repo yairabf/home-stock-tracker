@@ -39,6 +39,10 @@ import {
   type PolicyAwareGroceryAddition,
 } from '../grocery/types/policy-aware-grocery-addition';
 import { productResolutionProposalSchema } from '../product/types/product-resolution';
+import {
+  confirmNewProductInputSchema,
+  confirmProductAliasInputSchema,
+} from './schemas/grocery-confirmation.schema';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -132,6 +136,27 @@ const requestedAdditionOutputSchema = z.object({
   note: z.string().nullable(),
   ifPendingExists: z.enum(PendingGroceryItemPolicy),
 });
+
+const groceryConfirmationOutputSchema = z
+  .object({
+    outcome: z.enum(['created', 'confirmation_required']),
+    createdItem: groceryItemOutputSchema.nullable(),
+    existingItems: z.array(groceryItemOutputSchema),
+    requestedAddition: requestedAdditionOutputSchema,
+  })
+  .strict()
+  .superRefine((result, context) => {
+    const valid =
+      result.outcome === 'created'
+        ? result.createdItem !== null && result.existingItems.length === 0
+        : result.createdItem === null && result.existingItems.length > 0;
+    if (!valid) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Invalid grocery confirmation result',
+      });
+    }
+  });
 
 const groceryAddOutputSchema = z
   .object({
@@ -503,6 +528,44 @@ export class McpServerFactory {
             await this.groceryService.addPolicyAwareItem(
               mcpGroceryAddition(input),
             ),
+          ),
+        ),
+    );
+
+    server.registerTool(
+      'grocery_confirm_new_product',
+      {
+        description:
+          'Apply a user-approved final product-creation payload and complete the original grocery addition without an LLM call. Do not send proposal state or source. An omitted quantity defaults to 1 only for a new line. confirmation_required means an existing pending quantity was not changed; handle that as a separate user decision. PRODUCT_NAME_CONFLICT is final for this decision and must not be auto-retried.',
+        inputSchema: confirmNewProductInputSchema,
+        outputSchema: groceryConfirmationOutputSchema,
+      },
+      (input) =>
+        this.runTool('grocery_confirm_new_product', async () =>
+          this.toolResult(
+            await this.groceryService.confirmNewProduct({
+              ...input,
+              source: GroceryItemSource.mcp,
+            }),
+          ),
+        ),
+    );
+
+    server.registerTool(
+      'grocery_confirm_product_alias',
+      {
+        description:
+          'Apply a user-approved alias to one exact target product ID and complete the original grocery addition without an LLM call. Do not infer the target, send proposal state, or send source. The alias stays saved if confirmation_required reports an existing pending line; quantity remains a separate user decision. PRODUCT_NOT_FOUND and PRODUCT_NAME_CONFLICT are final for this decision and must not be auto-retried.',
+        inputSchema: confirmProductAliasInputSchema,
+        outputSchema: groceryConfirmationOutputSchema,
+      },
+      (input) =>
+        this.runTool('grocery_confirm_product_alias', async () =>
+          this.toolResult(
+            await this.groceryService.confirmProductAlias({
+              ...input,
+              source: GroceryItemSource.mcp,
+            }),
           ),
         ),
     );

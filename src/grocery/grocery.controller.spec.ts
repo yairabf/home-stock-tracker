@@ -51,4 +51,41 @@ describe('GroceryController', () => {
       dto,
     );
   });
+
+  it('supplies api provenance to confirmed product decisions', async () => {
+    const groceryService = {
+      confirmNewProduct: jest.fn().mockResolvedValue({}),
+      confirmProductAlias: jest.fn().mockResolvedValue({}),
+    };
+    const controller = new GroceryController(
+      groceryService as unknown as GroceryService,
+    );
+    const product = {
+      canonicalName: 'Milk',
+      aliases: [],
+      category: 'dairy',
+      typicalUnit: 'carton',
+      productType: 'fast_consumable' as const,
+      isPerishable: true,
+    };
+
+    await controller.confirmNewProduct({ product, groceryItem: {} });
+    await controller.confirmProductAlias({
+      targetProductId: '11111111-1111-4111-8111-111111111111',
+      alias: 'Whole Milk',
+      groceryItem: { requestedQuantity: 2 },
+    });
+
+    expect(groceryService.confirmNewProduct).toHaveBeenCalledWith({
+      product,
+      groceryItem: {},
+      source: GroceryItemSource.api,
+    });
+    expect(groceryService.confirmProductAlias).toHaveBeenCalledWith({
+      targetProductId: '11111111-1111-4111-8111-111111111111',
+      alias: 'Whole Milk',
+      groceryItem: { requestedQuantity: 2 },
+      source: GroceryItemSource.api,
+    });
+  });
 });

@@ -40,6 +40,8 @@ describe('McpServerFactory grocery tools', () => {
     Pick<
       GroceryService,
       | 'addPolicyAwareItem'
+      | 'confirmNewProduct'
+      | 'confirmProductAlias'
       | 'setQuantity'
       | 'updateItem'
       | 'removeItem'
@@ -67,6 +69,8 @@ describe('McpServerFactory grocery tools', () => {
   beforeEach(async () => {
     groceryService = {
       addPolicyAwareItem: jest.fn(),
+      confirmNewProduct: jest.fn(),
+      confirmProductAlias: jest.fn(),
       setQuantity: jest.fn(),
       updateItem: jest.fn(),
       removeItem: jest.fn(),
@@ -113,6 +117,8 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.tools.map(({ name }) => name)).toEqual([
       'grocery_add',
+      'grocery_confirm_new_product',
+      'grocery_confirm_product_alias',
       'grocery_set_quantity',
       'grocery_update',
       'grocery_remove',
@@ -147,11 +153,43 @@ describe('McpServerFactory grocery tools', () => {
     expect(JSON.stringify(groceryAddTool?.outputSchema)).toContain(
       'product_resolution_required',
     );
+    const confirmNewProduct = result.tools.find(
+      ({ name }) => name === 'grocery_confirm_new_product',
+    );
+    expect(confirmNewProduct?.description).toContain('user-approved final');
+    expect(confirmNewProduct).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['product', 'groceryItem'],
+        properties: {
+          product: { type: 'object' },
+          groceryItem: { type: 'object' },
+        },
+      },
+    });
+    expect(JSON.stringify(confirmNewProduct?.outputSchema)).not.toContain(
+      'product_resolution_required',
+    );
+    const confirmAlias = result.tools.find(
+      ({ name }) => name === 'grocery_confirm_product_alias',
+    );
+    expect(confirmAlias?.description).toContain('exact target product ID');
+    expect(confirmAlias).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['targetProductId', 'alias', 'groceryItem'],
+        properties: {
+          targetProductId: { type: 'string', format: 'uuid' },
+          alias: { type: 'string' },
+          groceryItem: { type: 'object' },
+        },
+      },
+    });
     const setQuantityTool = result.tools.find(
       ({ name }) => name === 'grocery_set_quantity',
     );
+    expect(setQuantityTool?.description).toContain('absolute final quantity');
     expect(setQuantityTool).toMatchObject({
-      description: expect.stringContaining('absolute final quantity'),
       inputSchema: {
         additionalProperties: false,
         required: ['itemId', 'requestedQuantity', 'expectedRequestedQuantity'],
@@ -171,9 +209,11 @@ describe('McpServerFactory grocery tools', () => {
             exclusiveMinimum: 0,
           },
         },
-        required: expect.arrayContaining(['requestedQuantity']),
       },
     });
+    expect(setQuantityTool?.outputSchema?.required).toContain(
+      'requestedQuantity',
+    );
     const updateTool = result.tools.find(
       ({ name }) => name === 'grocery_update',
     );
@@ -228,6 +268,8 @@ describe('McpServerFactory grocery tools', () => {
     });
     for (const name of [
       'grocery_add',
+      'grocery_confirm_new_product',
+      'grocery_confirm_product_alias',
       'record_purchase',
       'record_stock_signal',
       'complete_grocery_purchase',
@@ -286,7 +328,8 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(groceryService.setQuantity).toHaveBeenCalledTimes(1);
     expect(result.isError).toBe(true);
-    expect(JSON.parse(result.content[0].text as string)).toMatchObject({
+    const content = result.content as Array<{ type: string; text?: string }>;
+    expect(JSON.parse(content[0].text ?? '') as unknown).toMatchObject({
       code: 'GROCERY_ITEM_CHANGED',
       currentItem: { id: item.id, requestedQuantity: 5 },
     });
@@ -468,6 +511,76 @@ describe('McpServerFactory grocery tools', () => {
     ]);
   });
 
+  it('confirms products and aliases with MCP-owned source', async () => {
+    groceryService.confirmNewProduct.mockResolvedValue({
+      outcome: 'created',
+      createdItem: { ...item, source: GroceryItemSource.mcp },
+      existingItems: [],
+      requestedAddition: {
+        productName: 'Milk',
+        requestedQuantity: 2,
+        unit: null,
+        note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
+    });
+    groceryService.confirmProductAlias.mockResolvedValue({
+      outcome: 'confirmation_required',
+      createdItem: null,
+      existingItems: [item],
+      requestedAddition: {
+        productName: 'Whole Milk',
+        requestedQuantity: 2,
+        unit: null,
+        note: null,
+        ifPendingExists: PendingGroceryItemPolicy.return_existing,
+      },
+    });
+    const productInput = {
+      canonicalName: 'Milk',
+      aliases: [],
+      category: 'dairy',
+      typicalUnit: 'carton',
+      productType: 'fast_consumable',
+      isPerishable: true,
+    };
+
+    const createResult = await client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: {
+        product: productInput,
+        groceryItem: { requestedQuantity: 2 },
+      },
+    });
+    const aliasResult = await client.callTool({
+      name: 'grocery_confirm_product_alias',
+      arguments: {
+        targetProductId: item.productId,
+        alias: 'Whole Milk',
+        groceryItem: { requestedQuantity: 2 },
+      },
+    });
+
+    expect(groceryService.confirmNewProduct).toHaveBeenCalledWith({
+      product: productInput,
+      groceryItem: { requestedQuantity: 2 },
+      source: GroceryItemSource.mcp,
+    });
+    expect(groceryService.confirmProductAlias).toHaveBeenCalledWith({
+      targetProductId: item.productId,
+      alias: 'Whole Milk',
+      groceryItem: { requestedQuantity: 2 },
+      source: GroceryItemSource.mcp,
+    });
+    expect(createResult.structuredContent).toMatchObject({
+      outcome: 'created',
+    });
+    expect(aliasResult.structuredContent).toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ id: item.id }],
+    });
+  });
+
   it('returns confirmation details without retrying a duplicate add', async () => {
     groceryService.addPolicyAwareItem.mockResolvedValue({
       outcome: 'confirmation_required',
@@ -576,6 +689,30 @@ describe('McpServerFactory grocery tools', () => {
   it.each([
     ['grocery_add', { productName: 'milk', groceryItem: {}, source: 'api' }],
     [
+      'grocery_confirm_new_product',
+      {
+        product: {
+          canonicalName: 'Milk',
+          aliases: [],
+          category: 'dairy',
+          typicalUnit: null,
+          productType: 'fast_consumable',
+          isPerishable: true,
+        },
+        groceryItem: {},
+        source: 'api',
+      },
+    ],
+    [
+      'grocery_confirm_product_alias',
+      {
+        targetProductId: item.productId,
+        alias: 'Whole Milk',
+        groceryItem: {},
+        proposalId: 'proposal-1',
+      },
+    ],
+    [
       'record_purchase',
       {
         productId: item.productId,
@@ -597,6 +734,8 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.isError).toBe(true);
     expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
+    expect(groceryService.confirmNewProduct).not.toHaveBeenCalled();
+    expect(groceryService.confirmProductAlias).not.toHaveBeenCalled();
     expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
     expect(inventoryService.recordEvent).not.toHaveBeenCalled();
     expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();

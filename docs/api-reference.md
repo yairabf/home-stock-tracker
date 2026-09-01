@@ -101,10 +101,9 @@ alias, or changes grocery or inventory state. When several candidates remain,
 present them in returned order and ask the user to choose rather than silently
 selecting one.
 
-The application also has an internal optional advisory resolution service for a
-future policy-aware grocery flow. Its validated proposal is advice only. It is
-not part of this REST endpoint, does not authorize a mutation, and never applies
-a write by itself.
+The policy-aware grocery flow also has an optional advisory resolution service.
+Its validated proposal is advice only. It is not part of this product-search
+endpoint, does not authorize a mutation, and never applies a write by itself.
 
 ### Household
 
@@ -123,6 +122,8 @@ threshold. Counts must be non-negative integers and
 | Method   | Route                                | Purpose                                                          |
 | -------- | ------------------------------------ | ---------------------------------------------------------------- |
 | `POST`   | `/api/v1/grocery/items`              | Add with an unknown-product policy or return a successful decision branch. |
+| `POST`   | `/api/v1/grocery/items/confirm-new-product` | Apply approved product facts and complete the original grocery addition.   |
+| `POST`   | `/api/v1/grocery/items/confirm-product-alias` | Apply an approved alias to an exact product and complete the addition.      |
 | `GET`    | `/api/v1/grocery/items`              | List pending items or filter by `status`.                        |
 | `PATCH`  | `/api/v1/grocery/items/:id/quantity` | Set one pending item's absolute final quantity.                  |
 | `PATCH`  | `/api/v1/grocery/items/:id`          | Update selected fields on one pending item.                      |
@@ -172,8 +173,52 @@ An exact match continues to the normal grocery result. An unresolved phrase
 returns `product_resolution_required` as a successful 2xx result containing the
 request echo, deterministic candidates, optional non-authoritative proposal
 advice, and server-computed `allowedActions`. No product, alias, or grocery item
-is changed. A client must present the choices and wait for a new user decision;
-feature 31 will add confirmation writes.
+is changed. A client must present the choices and wait for a new user decision.
+
+After the user approves complete final product facts, call
+`POST /api/v1/grocery/items/confirm-new-product` with no proposal state:
+
+```json
+{
+  "product": {
+    "canonicalName": "3% Milk",
+    "aliases": ["Three Percent Milk"],
+    "category": "dairy",
+    "typicalUnit": "carton",
+    "productType": "fast_consumable",
+    "isPerishable": true
+  },
+  "groceryItem": {
+    "requestedQuantity": 2,
+    "unit": "cartons",
+    "note": "for the children"
+  }
+}
+```
+
+After the user approves that the original phrase is an alias for one exact
+candidate, call `POST /api/v1/grocery/items/confirm-product-alias`:
+
+```json
+{
+  "targetProductId": "product-uuid",
+  "alias": "Three Percent Milk",
+  "groceryItem": {
+    "requestedQuantity": 2,
+    "unit": "cartons"
+  }
+}
+```
+
+These confirmation routes are deterministic and never invoke the LLM. They
+accept the final approved payload, not a proposal ID or client-controlled
+`source`. They always use duplicate-aware pending detection and do not accept
+`ifPendingExists`: an existing line returns `confirmation_required` without a
+quantity change. New-product creation and the first grocery line are atomic.
+The alias route saves a same-owner-idempotent alias even when grocery quantity
+still needs confirmation. `PRODUCT_NAME_CONFLICT` and `PRODUCT_NOT_FOUND` are
+final for that decision; do not auto-retry stale decisions. A transport result
+whose outcome is unknown must also not be retried.
 
 `groceryItem` is required in both branches, even when empty. Its optional fields
 are a positive `requestedQuantity`, `unit`, `note`, and `ifPendingExists`. When a
@@ -221,8 +266,9 @@ mutation.
 - Status: `pending`, `purchased`, or `removed`
 - Source is server-owned: `api` for REST requests and `mcp` for MCP tool calls.
 
-Product names must match a canonical name or alias. The route does not create
-unknown products.
+Update and removal routes operate only on existing grocery-item IDs. Unknown
+product creation is available only through the explicit add and confirmed
+new-product contracts described above.
 
 `DELETE /api/v1/grocery/items/:id` changes only a pending item to `removed`.
 An unknown ID returns `404` with `Grocery list item <id> not found`; a purchased,
@@ -340,6 +386,8 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | Tool                        | Kind  | Purpose                                                                                          |
 | --------------------------- | ----- | ------------------------------------------------------------------------------------------------ |
 | `grocery_add`               | Write | Add through proposal or deterministic creation policy, or return a successful decision branch.  |
+| `grocery_confirm_new_product` | Write | Apply approved final product facts and complete the original grocery addition without LLM use.  |
+| `grocery_confirm_product_alias` | Write | Apply an approved alias to an exact product ID and complete the original grocery addition.       |
 | `grocery_set_quantity`      | Write | Set one pending line's absolute final quantity using its latest expected quantity.               |
 | `grocery_update`            | Write | Set unit, note, or intentional field combinations using matching expected old values.            |
 | `grocery_remove`            | Write | Change one pending item to removed by grocery-item UUID.                                         |
@@ -373,6 +421,17 @@ the client deliberately has every required product fact and sends
 `{ unknownProductPolicy, product, groceryItem }`; that path is deterministic and
 does not invoke an LLM.
 
+When the user approves a create decision, call
+`grocery_confirm_new_product` with the final `product` and original
+`groceryItem`; never pass proposal state. When the user explicitly confirms an
+alias relationship, call `grocery_confirm_product_alias` with the exact returned
+candidate ID, approved alias, and original `groceryItem`. Both tools are
+deterministic and force MCP-owned provenance. A cancellation makes no mutation.
+If either tool returns `confirmation_required`, the catalog decision succeeded
+but the existing grocery quantity did not change. Resolve that quantity as a
+separate user decision. Treat `PRODUCT_NAME_CONFLICT` and `PRODUCT_NOT_FOUND` as
+stale final decisions and do not auto-retry.
+
 When `grocery_add` returns `confirmation_required`, do not mutate again until
 the user selects the desired final state. Explain the current line and clarify
 how many items should be on it. An omitted request quantity remains `null` in the
@@ -390,12 +449,13 @@ latest state without retrying or recalculating automatically.
 
 1. Resolve exact names with `get_product`; use `search_products` for nearby or ambiguous catalog discovery.
 2. Present multiple search candidates in returned order and require the user's choice before using one ID.
-3. Call `grocery_list` before removing or completing grocery-item UUIDs.
-4. Never guess IDs, quantities, units, event types, or stock state.
-5. Write only when the mutation and target are unambiguous.
-6. Never retry a write after a transport failure with an uncertain outcome.
-7. Treat `uncertain` and empty recommendation lists as successful results.
-8. Never turn a recommendation into a list mutation without a separate request.
+3. Treat proposals as advisory; apply only a final user-approved create or alias payload.
+4. Call `grocery_list` before removing or completing grocery-item UUIDs.
+5. Never guess IDs, quantities, units, event types, or stock state.
+6. Write only when the mutation and target are unambiguous.
+7. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
+8. Treat `uncertain` and empty recommendation lists as successful results.
+9. Never turn a recommendation into a list mutation without a separate request.
 
 For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with only

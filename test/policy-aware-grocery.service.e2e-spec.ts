@@ -4,6 +4,8 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { GroceryItemSource, ProductType } from '../src/generated/prisma/enums';
 import { GroceryService } from '../src/grocery/grocery.service';
+import type { ConfirmNewProductGroceryAddition } from '../src/grocery/types/confirmed-grocery-catalog-decision';
+import type { ConfirmProductAliasGroceryAddition } from '../src/grocery/types/confirmed-grocery-catalog-decision';
 import {
   PendingGroceryItemPolicy,
   UnknownProductPolicy,
@@ -146,6 +148,139 @@ describe('Policy-aware deterministic grocery addition (e2e)', () => {
     expect(provider.generateStructured.mock.calls).toHaveLength(0);
   });
 
+  it('atomically applies a confirmed product decision without LLM use', async () => {
+    const canonicalName = `${prefix} confirmed atomic`;
+
+    await expect(
+      service.confirmNewProduct(confirmRequest(canonicalName)),
+    ).resolves.toMatchObject({
+      outcome: 'created',
+      createdItem: { productName: canonicalName, requestedQuantity: 1 },
+    });
+    await expect(domainCounts(canonicalName)).resolves.toEqual({
+      products: 1,
+      names: 1,
+      groceries: 1,
+    });
+    await expect(nameCount(`${canonicalName} alias`)).resolves.toBe(1);
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
+  });
+
+  it('rolls back a confirmed product when grocery persistence fails', async () => {
+    const canonicalName = `${prefix} confirmed rollback`;
+    const invalid = {
+      ...confirmRequest(canonicalName),
+      source: 'invalid_source',
+    } as unknown as ConfirmNewProductGroceryAddition;
+
+    await expect(service.confirmNewProduct(invalid)).rejects.toBeDefined();
+    await expect(domainCounts(canonicalName)).resolves.toEqual({
+      products: 0,
+      names: 0,
+      groceries: 0,
+    });
+  });
+
+  it('converges concurrent confirmed product retries', async () => {
+    const canonicalName = `${prefix} confirmed concurrent`;
+
+    const results = await Promise.all([
+      service.confirmNewProduct(confirmRequest(canonicalName)),
+      service.confirmNewProduct(confirmRequest(canonicalName)),
+    ]);
+
+    expect(results.map(({ outcome }) => outcome).sort()).toEqual([
+      'confirmation_required',
+      'created',
+    ]);
+    await expect(domainCounts(canonicalName)).resolves.toEqual({
+      products: 1,
+      names: 1,
+      groceries: 1,
+    });
+    await expect(nameCount(`${canonicalName} alias`)).resolves.toBe(1);
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
+  });
+
+  it('persists a confirmed alias and treats a same-target retry as idempotent', async () => {
+    const canonicalName = `${prefix} alias target`;
+    const alias = `${prefix} approved alias`;
+    const productId = await createTarget(canonicalName);
+
+    await expect(
+      service.confirmProductAlias(aliasRequest(productId, alias)),
+    ).resolves.toMatchObject({ outcome: 'created' });
+    await expect(
+      service.confirmProductAlias(aliasRequest(productId, alias)),
+    ).resolves.toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ productId }],
+    });
+    await expect(nameCount(alias)).resolves.toBe(1);
+    await expect(
+      prisma.groceryListItem.count({ where: { productId } }),
+    ).resolves.toBe(1);
+  });
+
+  it('commits the alias when a pending line requires quantity confirmation', async () => {
+    const canonicalName = `${prefix} alias pending`;
+    const alias = `${prefix} pending alias`;
+    const productId = await createTarget(canonicalName, true);
+
+    await expect(
+      service.confirmProductAlias(aliasRequest(productId, alias)),
+    ).resolves.toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ productId, requestedQuantity: 1 }],
+    });
+    await expect(nameCount(alias)).resolves.toBe(1);
+  });
+
+  it('rejects an alias owned by another product without a grocery write', async () => {
+    const firstName = `${prefix} alias first`;
+    const secondName = `${prefix} alias second`;
+    const targetProductId = await createTarget(firstName);
+    await createTarget(secondName);
+
+    await expect(
+      service.confirmProductAlias(aliasRequest(targetProductId, secondName)),
+    ).rejects.toMatchObject({ response: { code: 'PRODUCT_NAME_CONFLICT' } });
+    await expect(
+      prisma.groceryListItem.count({ where: { productId: targetProductId } }),
+    ).resolves.toBe(0);
+  });
+
+  it('returns a stable error when the confirmed alias target was deleted', async () => {
+    const productId = await createTarget(`${prefix} deleted alias target`);
+    await prisma.product.delete({ where: { id: productId } });
+
+    await expect(
+      service.confirmProductAlias(
+        aliasRequest(productId, `${prefix} deleted alias`),
+      ),
+    ).rejects.toMatchObject({ response: { code: 'PRODUCT_NOT_FOUND' } });
+  });
+
+  it('converges concurrent same-target alias confirmations', async () => {
+    const canonicalName = `${prefix} concurrent alias target`;
+    const alias = `${prefix} concurrent alias`;
+    const productId = await createTarget(canonicalName);
+
+    const results = await Promise.all([
+      service.confirmProductAlias(aliasRequest(productId, alias)),
+      service.confirmProductAlias(aliasRequest(productId, alias)),
+    ]);
+
+    expect(results.map(({ outcome }) => outcome).sort()).toEqual([
+      'confirmation_required',
+      'created',
+    ]);
+    await expect(nameCount(alias)).resolves.toBe(1);
+    await expect(
+      prisma.groceryListItem.count({ where: { productId } }),
+    ).resolves.toBe(1);
+  });
+
   function request(canonicalName: string): CreateIfMissingGroceryAddition {
     return {
       unknownProductPolicy: UnknownProductPolicy.create_if_missing,
@@ -175,6 +310,53 @@ describe('Policy-aware deterministic grocery addition (e2e)', () => {
     };
   }
 
+  function confirmRequest(
+    canonicalName: string,
+  ): ConfirmNewProductGroceryAddition {
+    return {
+      product: {
+        canonicalName,
+        aliases: [`${canonicalName} alias`],
+        category: 'test',
+        typicalUnit: null,
+        productType: ProductType.fast_consumable,
+        isPerishable: false,
+      },
+      groceryItem: {},
+      source: GroceryItemSource.api,
+    };
+  }
+
+  function aliasRequest(
+    targetProductId: string,
+    alias: string,
+  ): ConfirmProductAliasGroceryAddition {
+    return {
+      targetProductId,
+      alias,
+      groceryItem: {},
+      source: GroceryItemSource.api,
+    };
+  }
+
+  async function createTarget(
+    canonicalName: string,
+    keepPendingLine = false,
+  ): Promise<string> {
+    const result = await service.confirmNewProduct(
+      confirmRequest(canonicalName),
+    );
+    if (result.outcome !== 'created') {
+      throw new Error('Expected target setup to create a grocery line');
+    }
+    if (!keepPendingLine) {
+      await prisma.groceryListItem.delete({
+        where: { id: result.createdItem.id },
+      });
+    }
+    return result.createdItem.productId;
+  }
+
   async function domainCounts(canonicalName: string) {
     const normalizedName = normalizeProductName(canonicalName);
     const [products, names, groceries] = await Promise.all([
@@ -187,6 +369,12 @@ describe('Policy-aware deterministic grocery addition (e2e)', () => {
       }),
     ]);
     return { products, names, groceries };
+  }
+
+  function nameCount(name: string) {
+    return prisma.productName.count({
+      where: { normalizedName: normalizeProductName(name) },
+    });
   }
 
   async function allDomainCounts() {

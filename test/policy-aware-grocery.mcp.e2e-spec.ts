@@ -100,6 +100,34 @@ describe('Policy-aware grocery MCP contract (e2e)', () => {
     );
   });
 
+  it('publishes focused strict confirmation tools', async () => {
+    const tools = await client.listTools();
+    const createTool = tools.tools.find(
+      ({ name }) => name === 'grocery_confirm_new_product',
+    );
+    const aliasTool = tools.tools.find(
+      ({ name }) => name === 'grocery_confirm_product_alias',
+    );
+
+    expect(createTool?.description).toContain('without an LLM call');
+    expect(createTool).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['product', 'groceryItem'],
+      },
+    });
+    expect(aliasTool?.description).toContain('exact target product ID');
+    expect(aliasTool).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['targetProductId', 'alias', 'groceryItem'],
+      },
+    });
+    expect(JSON.stringify(createTool?.outputSchema)).not.toContain(
+      'product_resolution_required',
+    );
+  });
+
   it('defaults an uncertain name to a successful proposal outcome', async () => {
     const productName = `${prefix} unresolved`;
     provider.generateStructured.mockResolvedValue({ status: 'unavailable' });
@@ -139,6 +167,94 @@ describe('Policy-aware grocery MCP contract (e2e)', () => {
     expect(provider.generateStructured.mock.calls).toHaveLength(0);
   });
 
+  it('confirms a new product without LLM use and converges on retry', async () => {
+    const canonicalName = `${prefix} confirmed`;
+
+    const created = await confirmNewProduct(canonicalName, 2);
+    const retry = await confirmNewProduct(canonicalName, 2);
+
+    expect(created.isError).not.toBe(true);
+    expect(created.structuredContent).toMatchObject({
+      outcome: 'created',
+      createdItem: { source: 'mcp', requestedQuantity: 2 },
+    });
+    expect(retry.structuredContent).toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ requestedQuantity: 2 }],
+    });
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
+  });
+
+  it('confirms an alias and keeps it when grocery quantity needs confirmation', async () => {
+    const canonicalName = `${prefix} alias target`;
+    const alias = `${prefix} approved alias`;
+    const created = await confirmNewProduct(canonicalName, 3);
+    const productId = createdProductId(created.structuredContent);
+
+    const result = await client.callTool({
+      name: 'grocery_confirm_product_alias',
+      arguments: {
+        targetProductId: productId,
+        alias,
+        groceryItem: { requestedQuantity: 2 },
+      },
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      outcome: 'confirmation_required',
+      existingItems: [{ productId, requestedQuantity: 3 }],
+      requestedAddition: { productName: alias, requestedQuantity: 2 },
+    });
+    await expect(
+      prisma.productName.count({
+        where: { normalizedName: normalizeProductName(alias) },
+      }),
+    ).resolves.toBe(1);
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
+  });
+
+  it('preserves stable namespace conflict details', async () => {
+    const sharedName = `${prefix} shared`;
+    await confirmNewProduct(sharedName);
+
+    const result = await client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: {
+        product: {
+          ...productInput(`${prefix} conflicting`),
+          aliases: [sharedName],
+        },
+        groceryItem: {},
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(toolText(result)).toContain('PRODUCT_NAME_CONFLICT');
+  });
+
+  it.each([
+    ['proposal state', { proposalId: 'proposal-1' }],
+    ['caller source', { source: 'api' }],
+    [
+      'pending override',
+      { groceryItem: { ifPendingExists: 'create_separate' } },
+    ],
+  ])('rejects confirmation %s before mutation', async (_label, extra) => {
+    const before = await domainCounts();
+    const result = await client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: {
+        product: productInput(`${prefix} invalid`),
+        groceryItem: {},
+        ...extra,
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    await expect(domainCounts()).resolves.toEqual(before);
+  });
+
   it('rejects mixed policy inputs before mutation', async () => {
     const canonicalName = `${prefix} invalid`;
 
@@ -169,6 +285,62 @@ describe('Policy-aware grocery MCP contract (e2e)', () => {
       productType: ProductType.fast_consumable,
       isPerishable: false,
     };
+  }
+
+  function confirmNewProduct(
+    canonicalName: string,
+    requestedQuantity?: number,
+  ) {
+    return client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: {
+        product: {
+          ...productInput(canonicalName),
+          aliases: [`${canonicalName} alias`],
+        },
+        groceryItem: { requestedQuantity },
+      },
+    });
+  }
+
+  function createdProductId(structuredContent: unknown): string {
+    if (
+      !structuredContent ||
+      typeof structuredContent !== 'object' ||
+      !('createdItem' in structuredContent)
+    ) {
+      throw new Error('Expected a created confirmation result');
+    }
+    const createdItem = structuredContent.createdItem;
+    if (
+      !createdItem ||
+      typeof createdItem !== 'object' ||
+      !('productId' in createdItem) ||
+      typeof createdItem.productId !== 'string'
+    ) {
+      throw new Error('Expected a created confirmation item');
+    }
+    return createdItem.productId;
+  }
+
+  function toolText(result: { content: unknown }): string {
+    if (!Array.isArray(result.content)) {
+      return '';
+    }
+    const entries = result.content as unknown[];
+    return entries
+      .filter((entry): entry is { type: 'text'; text: string } =>
+        Boolean(
+          entry &&
+          typeof entry === 'object' &&
+          'type' in entry &&
+          entry.type === 'text' &&
+          'text' in entry &&
+          typeof entry.text === 'string',
+        ),
+      )
+      .map(({ text }) => text)
+      .join('\n');
   }
 
   async function domainCounts() {

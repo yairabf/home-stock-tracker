@@ -37,6 +37,8 @@ describe('McpController', () => {
   const authToken = 'mcp-service-token';
   const groceryService = {
     addItem: jest.fn(),
+    confirmNewProduct: jest.fn(),
+    confirmProductAlias: jest.fn(),
     removeItem: jest.fn(),
     listItems: jest.fn(),
   };
@@ -118,6 +120,8 @@ describe('McpController', () => {
       const tools = await client.listTools();
       expect(tools.tools.map(({ name }) => name)).toEqual([
         'grocery_add',
+        'grocery_confirm_new_product',
+        'grocery_confirm_product_alias',
         'grocery_set_quantity',
         'grocery_update',
         'grocery_remove',

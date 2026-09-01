@@ -17,6 +17,11 @@ import { GroceryItemSource } from '../generated/prisma/enums';
 import { UpdateGroceryItemDto } from './dto/update-grocery-item.dto';
 import { SetGroceryItemQuantityDto } from './dto/set-grocery-item-quantity.dto';
 import {
+  ConfirmNewProductGroceryItemDto,
+  ConfirmProductAliasGroceryItemDto,
+} from './dto/confirm-grocery-catalog-decision.dto';
+import type { GroceryCatalogConfirmationResult } from './types/confirmed-grocery-catalog-decision';
+import {
   UnknownProductPolicy,
   type PolicyAwareGroceryAddition,
   type PolicyAwareGroceryAdditionResult,
@@ -31,6 +36,26 @@ export class GroceryController {
     @Body() dto: PolicyAwareAddGroceryItemDto,
   ): Promise<PolicyAwareGroceryAdditionResult> {
     return this.groceryService.addPolicyAwareItem(this.policyAwareRequest(dto));
+  }
+
+  @Post('confirm-new-product')
+  confirmNewProduct(
+    @Body() dto: ConfirmNewProductGroceryItemDto,
+  ): Promise<GroceryCatalogConfirmationResult> {
+    return this.groceryService.confirmNewProduct({
+      ...dto,
+      source: GroceryItemSource.api,
+    });
+  }
+
+  @Post('confirm-product-alias')
+  confirmProductAlias(
+    @Body() dto: ConfirmProductAliasGroceryItemDto,
+  ): Promise<GroceryCatalogConfirmationResult> {
+    return this.groceryService.confirmProductAlias({
+      ...dto,
+      source: GroceryItemSource.api,
+    });
   }
 
   private policyAwareRequest(

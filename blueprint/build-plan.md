@@ -43,3 +43,4 @@
 - [x] 28. **Grocery quantity contract** - require a positive quantity on every grocery line and expose an absolute, concurrency-safe quantity-setting operation ✓ 2026-09-01
 - [x] 29. **Product search and resolution proposals** - provide deterministic read-only product discovery and optional non-mutating LLM advice ✓ 2026-09-01
 - [x] 30. **Policy-aware grocery additions** - make unknown-product handling explicit for deterministic and assisted clients ✓ 2026-09-01
+- [x] 31. **Confirmed grocery catalog decisions** - apply user-approved product creation or alias decisions and safely complete the original grocery addition ✓ 2026-09-01

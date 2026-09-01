@@ -8,8 +8,9 @@ tool-selection instructions. The NestJS service remains independent from Hermes.
 Configure Hermes separately with a trusted MCP connection to the Home Stock
 Tracker `/mcp` endpoint and confirm that these tools are discoverable:
 
-`grocery_add`, `grocery_set_quantity`, `grocery_update`, `grocery_remove`,
-`grocery_list`, `get_product`, `search_products`, `get_inventory`,
+`grocery_add`, `grocery_confirm_new_product`,
+`grocery_confirm_product_alias`, `grocery_set_quantity`, `grocery_update`,
+`grocery_remove`, `grocery_list`, `get_product`, `search_products`, `get_inventory`,
 `record_purchase`, `record_stock_signal`, `complete_grocery_purchase`, and
 `get_low_stock_predictions`.
 
@@ -52,6 +53,14 @@ or grocery mutation, present candidates and optional advice as non-authoritative
 and wait for the user's decision. It must not guess product facts to force
 `create_if_missing`. Deterministic creation is reserved for a direct client that
 deliberately supplies the complete `product` object.
+
+Continue the smoke check by explicitly approving either complete final product
+facts or one exact alias relationship. Hermes should call
+`grocery_confirm_new_product` or `grocery_confirm_product_alias` with the
+original grocery item and no proposal ID or source. It must not invoke the LLM
+again. A cancellation makes no call. If confirmation returns
+`confirmation_required`, the catalog decision stays applied while Hermes asks a
+separate quantity question and does not repeat the catalog confirmation.
 
 To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
