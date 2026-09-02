@@ -1,6 +1,6 @@
 ---
 name: try
-description: Generate a human manual try guide for the current or most recently completed Blueprint feature, fix, or rollback. Reads the spec, project commands, and available app context, then tells the user exactly what to start, where to go, what to click or run, what to expect, and what would count as wrong. Read-only. Use when the user runs /try, invokes $try, asks how to test manually, asks where to click, asks how to see the change, or wants a manual review path after /implement, /autopilot, /check, or /complete.
+description: Generate a read-only manual try guide for current or recent work with commands, locations, actions, expected results, and failure signs. Use for /try, how to test manually, where to click, how to see a change, or a human review path.
 ---
 
 # try - manual review guide
@@ -17,6 +17,10 @@ expect this result, and watch for these failure signs.
 
 It is always read-only. It does not edit files, install dependencies, commit,
 merge, push, or run destructive commands.
+
+The quality-gate config controls when another workflow generates this guide
+automatically. An explicit `/try` or `$try` request always runs. A generated guide
+never counts as evidence that the user performed the walkthrough.
 
 ## Input
 
@@ -37,6 +41,7 @@ wants to try instead of guessing.
 Read:
 
 - `AGENTS.md`
+- `blueprint/config.json`
 - `blueprint/context/current-feature.md`
 - `blueprint/context/project-overview.md`
 - `blueprint/context/coding-standards.md`

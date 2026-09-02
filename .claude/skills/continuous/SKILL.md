@@ -1,6 +1,6 @@
 ---
 name: continuous
-description: Explicit multi-feature Blueprint mode that builds every remaining planned feature serially, resuming or selecting the next unchecked build-plan item and repeating the human-style lifecycle through the configured limit or end of plan. It creates one local branch and one clean default-branch commit per feature, implements small steps, verifies, applies Continuous quality gates, archives and squash-merges each completed feature, deletes its branch, and continues. It stops on decisions, unsafe work, unresolved failures, or P0/P1 blockers. It never pushes, deploys, publishes, sends, or performs destructive actions. Use only when the user runs /continuous, invokes $continuous, or directly asks to run Continuous Mode.
+description: Build every remaining planned feature serially in explicit Continuous Mode, with one local branch, verification cycle, commit, archive, and local merge per feature. Stop on decisions or blockers and never push or deploy. Use only for /continuous, $continuous, or a direct Continuous Mode request.
 ---
 
 # continuous - complete the build plan one local feature at a time
@@ -165,6 +165,10 @@ Use `qualityGates.continuous`, not the regular or Autopilot gates:
   personal or user data, migrations, destructive operations, external side
   effects, security boundaries, or unusually broad changes; `always` audits
   every feature.
+- **Independent review:** `manual` skips automatic independent review;
+  `when-sensitive` requires a fresh reviewer for the same sensitive categories
+  as Audit; `always` requires a fresh reviewer for every feature. A passing
+  independent receipt satisfies the Audit gate for that feature.
 - **Check:** `manual` skips automatic `/check`; `when-behavioral` runs it
   when a done-when needs observed runtime behavior such as a click, request, CLI
   command, download, background job, or multi-screen flow; `always` checks
@@ -174,7 +178,8 @@ Use `qualityGates.continuous`, not the regular or Autopilot gates:
   another workflow a person directly uses; `always` generates one for every
   feature.
 
-Run required gates in this order: check, audit, then try guide. `manual` means
+Run required gates in this order: check, review, then try guide. Use independent
+review instead of a builder-session audit when both are selected. `manual` means
 the capability remains available later but is not automatic during this run.
 A try guide is instructions for human review, never proof it was performed.
 
@@ -198,6 +203,16 @@ feature and clearly required by project standards. Never mark a finding
 
 Any P0 or P1 left `open` or `fixed` stops the loop before completion.
 
+When independent review is selected, ensure the feature is in an approved clean
+checkpoint. First rerun final verification and the selected Check gate, set the
+spec status to `verified`, and include that exact spec in the checkpoint. Then
+prepare `/audit independent current`, set activity to `ready`, and stop with the
+selected adapter and model handoff. Continuous Mode never performs its own
+independent review. On `/continuous resume`, continue only with a current
+`passed` receipt. For `changes-requested`, repair within the configured attempt
+limit, obtain a new checkpoint, and prepare a new handoff. Review the whole new
+target again.
+
 ### 2.6 Complete locally like a human
 
 Apply the `/complete` safety, logging, and archive behavior without asking the
@@ -207,13 +222,13 @@ already authorized those local actions.
 For the finished feature:
 
 1. Run the final documented verification in the current session.
-2. Set the current spec's `**Status:**` to `verified` only after that
-   verification and every configured gate pass.
+2. Confirm the current spec's `**Status:**` is `verified`. When an independent
+   receipt exists, do not rewrite the reviewed spec before archival.
 3. Confirm all steps are checked, configured gates ran, no unrelated files are
    mixed in, adapters remain aligned, and no P0/P1 blocker remains.
 4. Archive the spec under `blueprint/history/features/`, archive resolved
-   findings, update the exact build-plan item and parent, and reset
-   `current-feature.md`.
+   findings and any passing independent-review receipt, update the exact
+   build-plan item and parent, and reset `current-feature.md` and `review.md`.
 5. If a try guide was generated, add a concise `## Manual try guide` section to
    that feature archive so the opt-in work survives the loop.
 6. Commit remaining branch work with one conventional feature-level message.
@@ -264,6 +279,7 @@ A blocked stop occurs immediately for:
 - failed verification or a gate that cannot run
 - the configured repair-attempt limit
 - an unresolved P0 or P1 finding
+- a pending, changes-requested, malformed, or stale independent review
 - merge conflict or default-branch integration drift
 
 On a mid-feature stop, preserve the feature branch, checked steps, commits, and
@@ -292,7 +308,8 @@ On any stop, report:
 - `workflow.stepReview` does not pause Continuous Mode.
 - `workflow.checkpointCommits` controls step checkpoints, not the required
   feature-level local history.
-- Continuous quality gates control automatic audit, check, and try-guide work.
+- Continuous quality gates control automatic audit, independent-review, check,
+  and try-guide work.
   They never weaken Verify, testing, UI evidence, or P0/P1 blockers.
 - Explicit Continuous invocation authorizes only the local Git lifecycle
   described here.

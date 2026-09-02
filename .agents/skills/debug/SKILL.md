@@ -1,9 +1,13 @@
 ---
 name: debug
-description: Diagnose a failing test, broken build, crash, error, regression, or unexpected behavior without editing source or Blueprint state. Reproduces the symptom with the smallest safe command, localizes the failing path, tests competing hypotheses, identifies the root cause when evidence supports one, and reports a repair handoff to /fix or /implement. Use when the user runs /debug, invokes $debug, asks why something is failing or broken, wants a root-cause investigation, or asks to diagnose before fixing.
+description: Diagnose a failing test, build, crash, regression, or unexpected behavior without editing source. Reproduce the symptom, test hypotheses, identify the supported root cause, and hand off a repair. Use for /debug, root-cause investigation, or questions about why something is broken.
 ---
 
 # debug - find the cause before changing the code
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 

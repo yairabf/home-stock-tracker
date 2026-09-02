@@ -1,9 +1,13 @@
 ---
 name: feature
-description: Turn a feature from build-plan.md into a buildable spec. With no argument, specs the next unchecked item in the build plan; given a number or name, specs that one. If a clearly new feature does not match the plan, proposes a reviewed plan addition, refreshes the overview after approval, then specs it. Sizes the feature and splits anything too big into smaller sub-features (4a, 4b, ...), writes small, reviewable build steps to blueprint/context/current-feature.md, then red-teams its own draft for gaps, oversized steps, and scope creep before stopping at a review gate. Use when the user runs /feature, names or numbers a feature, asks to add and start a new feature, or asks to spec out, break down, or start the next feature.
+description: Turn the next, named, or numbered build-plan feature into a buildable current-feature.md spec, splitting oversized work and critiquing scope, steps, contracts, and tests before review. Use for /feature, starting the next feature, adding a planned feature, or breaking work into a spec.
 ---
 
 # feature - turn a build-plan feature into a buildable spec
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -75,9 +79,13 @@ State which feature you're building before going further.
 
 ## Step 2 - size it, and split if too big
 
-Read the target line from `build-plan.md`, then pull full context from
-`blueprint/context/project-overview.md` (the data model, stack, and conventions). Decide
-how big the feature is:
+Read the target line from `build-plan.md`, then check the byte size of
+`blueprint/context/project-overview.md` before reading it. At or above 20,000
+bytes, stop and tell the user to run `/overview` to regenerate a compact
+consolidation. Do not pull the oversized file into the conversation again. If
+the overview is already present in project instructions or the current session,
+use that copy and do not read it again with a tool. Otherwise, read it once for
+the data model, stack, and conventions. Decide how big the feature is:
 
 - **Small enough to build and review as one unit** -> one spec. Continue to
   Step 3.
@@ -116,6 +124,12 @@ For the one (sub-)feature being built now, write a full spec to
 the build loop, small build steps as a checklist (`- [ ]`, each with an observable
 "done when" - `/implement` ticks them off and resumes from the first unchecked
 one), files/areas, data/contracts, testing, and notes for the AI.
+
+Read the Commands section of `AGENTS.md` while defining testing. When it declares
+`Browser tests: <command>`, include focused browser-test coverage for stable
+behavioral done-whens when that coverage is proportionate. Keep visual fidelity,
+real authenticated-profile behavior, browser chrome, and other harness gaps in
+the direct Check or Try path instead of pretending automation covers them.
 
 **Visual or replication features need a reference image.** If the feature is
 "make it look like X" - recreating an existing design, matching a mockup, or
@@ -165,8 +179,9 @@ code exists. Run the draft against these questions:
 - **Done-whens.** Is each one observable and checkable by `/check`, or is it a
   vague "it works"? Make it concrete.
 - **Testing.** Does the predicted coverage match the gate - in-scope logic gets a
-  test when a `test` command is declared in `AGENTS.md`, UI/integration rides on
-  screenshot + build?
+  test when a `test` command is declared in `AGENTS.md`; stable browser behavior
+  gets focused coverage when a `Browser tests` command is declared; remaining UI
+  and integration claims ride on direct browser evidence plus build?
 
 Apply the fixes to `current-feature.md`. Then stop and present the spec, leading
 with a short **"what the critique changed"** note - the splits, gaps, or scope

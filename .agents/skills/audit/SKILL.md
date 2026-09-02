@@ -1,9 +1,13 @@
 ---
 name: audit
-description: Read-only code audit for a Blueprint project, except for the findings ledger it maintains at blueprint/context/findings.md. Reviews the active feature, changed files, a selected path, or the full project through all concerns or a focused quality, security, performance, or tests lens. Use when the user runs /audit, invokes $audit, asks for a code or quality audit, security review, performance review, test quality review, dead-code or duplication check, vibe-coded project cleanup, or standards review.
+description: Audit current changes, a path, or the full project for quality, security, performance, or test problems and record durable findings. Independent mode prepares or completes a fresh-reviewer checkpoint handoff. Use for /audit, independent review, security review, code quality review, dead code, duplication, or standards drift.
 ---
 
 # audit - review code quality against the project standards
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -16,9 +20,20 @@ workflow health. This skill checks the code itself through either a broad review
 or one focused lens: quality, security, performance, or tests.
 
 It reviews code without changing it: it never edits source files, installs
-dependencies, commits, merges, pushes, or starts product work. Its one write is
-the findings ledger at `blueprint/context/findings.md` (Step 4), the durable
-record of findings and their status.
+dependencies, commits, merges, pushes, or starts product work. A normal audit's
+one write is the findings ledger at `blueprint/context/findings.md` (Step 4),
+the durable record of findings and their status. Independent mode may also
+write `blueprint/context/review.md` using the exact record contract in
+`reference/independent-review.md`.
+
+The quality-gate config controls when another workflow invokes this skill
+automatically. An explicit `/audit` or `$audit` request always selects the audit
+regardless of whether the applicable gate is `manual`, conditional, or `always`.
+A selected `independentReview` gate invokes independent mode instead of letting
+the builder satisfy its own review. When both audit and independent review are
+selected, one passing independent review satisfies the audit gate.
+A missing config means built-in defaults. If it exists but is invalid, stop and
+point to `/doctor` before writing the findings ledger.
 
 ## Input
 
@@ -58,15 +73,115 @@ the request names multiple lenses, review their union and report them separately
 If the requested scope is unclear, pick the smallest useful scope and state it.
 If the lens is unclear, use all lenses and state that choice.
 
+Optional review mode:
+
+- `independent`: prepare or complete an independent review of `current` across
+  all four lenses. It cannot be combined with `changed`, `full`, a path scope,
+  or a focused lens because a completion receipt must cover the whole active
+  work item.
+
+## Independent mode
+
+`/audit independent current` is a two-session workflow. The builder session
+prepares a request. The selected fresh reviewer session runs the same command
+to complete it. Blueprint verifies the exact target and later staleness. The
+adapter, model, and fresh-session identity remain declared metadata.
+
+Read `reference/independent-review.md` before either phase.
+
+### Phase A - prepare the handoff
+
+Use this phase when `blueprint/context/review.md` has no current `pending`
+request for `HEAD` and the current spec hash.
+
+1. Require an active spec with every build step checked and status `verified`, a
+   non-default work branch, a reliable merge base, and a clean working tree.
+   Independent mode accepts only a locally recorded remote default branch,
+   local `main`, or local `master` as its enforceable base ref. Stop when none
+   reliably covers the active work.
+   The current full `HEAD` must be the approved review checkpoint, including the
+   verified spec. Never create that commit inside Audit. If work is dirty, stop
+   and ask the user to approve a review checkpoint through `/implement`, even
+   when normal checkpoint commits are disabled.
+2. Read installed adapters from `blueprint/.state/manifest.json` when valid.
+   For older installs, detect `.agents/skills` as `codex` and `.claude/skills`
+   as `claude`. These files prove project support, not that the external runtime
+   is installed or authenticated.
+3. Ask which detected adapter and available model should review. Recommend an
+   equal-or-stronger coding model, a different model family when practical, and
+   high reasoning for sensitive work. Offer a fresh session in the current
+   adapter as the fallback. Do not invent available models or offer an adapter
+   that is not installed in the project.
+4. Record the full target SHA, full merge-base SHA, the exact local base ref
+   used to calculate it, exact spec SHA-256, current adapter and model,
+   requested reviewer adapter and model, workflow, and
+   whether the configured Check gate is required. Write the pending template
+   exactly. Copy the full model identifier exposed by the active runtime or
+   session metadata (for example, `gpt-5.6-sol`), never a generic family label
+   such as `GPT-5`. If the runtime does not expose an exact identifier, record
+   `unknown (runtime did not expose exact model)` instead of guessing. When the
+   reviewer runtime cannot select a specific model before opening the session,
+   record the exact runtime-default sentinel from the reference contract.
+5. Set dashboard activity to `ready` and give the exact handoff command for the
+   selected adapter. Claude Code uses `/audit independent current`; Codex uses
+   `$audit independent current`; Copilot and OpenCode receive the equivalent
+   plain-language instruction to run the Audit skill in independent mode. Tell
+   the user to open a fresh session with only the handoff, not the builder chat.
+
+Stop after the handoff. The builder never continues into Phase B in the same
+session.
+
+### Phase B - perform the review
+
+Use this phase when a current pending request exists.
+
+1. Confirm the current adapter matches `Requested reviewer`, the current model
+   matches `Requested model` unless the runtime-default sentinel was selected,
+   and a sentinel request now records the exact model exposed by the session,
+   `HEAD` matches `Target commit`, the recorded base ref still produces the
+   recorded merge base, the exact spec hash matches, and no path differs from
+   the target except `blueprint/context/review.md` and
+   `blueprint/context/findings.md`. Stop on any mismatch or stale state.
+2. Proceed only from the fresh reviewer handoff. Record `fresh session` as a
+   declaration, never as cryptographic proof. If the reviewer has the builder
+   conversation or is the builder continuing in place, stop and request a fresh
+   session.
+3. Run Steps 1 through 3 across `current` with quality, security, performance,
+   and tests together. Review the code fresh against the recorded
+   `Base commit` and `Target commit`; exclude the request and findings files
+   from the code scope. Existing findings are context, never the review
+   checklist.
+4. Run `/check` from the reviewer session when the request says Check is
+   required. Follow Check's server and evidence boundaries. A required check
+   that cannot run prevents a passing receipt.
+5. Update the findings ledger through Step 4, then replace the pending request
+   with a completed receipt. Use `passed` only when the whole target was
+   reviewed, required checks passed, and no P0 or P1 finding is `open` or
+   `fixed`. Copy the reviewer's full runtime model identifier using the same
+   rule as Phase A. Record `Check result` and keep all four receipt sections
+   non-empty, using an explicit `None` entry when appropriate. List every
+   unavailable verification command under Remaining risk, even when Check was
+   not required and the receipt may still pass. Otherwise use
+   `changes-requested` and name the exact blockers.
+6. Report the receipt target, reviewer adapter and model, commands, evidence,
+   findings, remaining risk, and whether the receipt passed. Never repair code
+   from the reviewer session.
+
+After changes are requested, the builder repairs through `/implement`, obtains
+approval for a new checkpoint, and prepares a new request. The next reviewer
+pass reviews the complete new delta, not only the old findings.
+
 ## Step 1 - gather context
 
 Read:
 
 - `AGENTS.md`
+- `blueprint/config.json`
 - `blueprint/context/project-overview.md`
 - `blueprint/context/coding-standards.md`
 - `blueprint/context/current-feature.md`
 - `blueprint/context/findings.md`, for existing IDs and statuses
+- `blueprint/context/review.md`, for independent request and receipt state
 - `blueprint/context/ai-interaction.md`
 - `blueprint/build-plan.md`, when feature order matters
 - git branch and working tree status
@@ -247,14 +362,19 @@ Then include:
 - skipped, focused, or placeholder tests found, when the tests lens was selected
 - checks that were unavailable or could not run
 - suggested repair order
+- independent receipt status and target, when independent mode ran
 
 For `full`, say whether coverage was complete or partial. Never label a partial
 review as a full-project audit.
 
 ## Rules
 
-- The findings ledger is the only file this skill writes. Never edit, format,
-  install, commit, merge, push, or delete anything else.
+- A normal audit writes only the findings ledger. Independent mode may also
+  write the exact review request or receipt. Never edit, format, install,
+  commit, merge, push, or delete anything else.
+- Never let a builder complete its own independent request in the same session.
+- Never silently substitute another reviewer adapter or model.
+- A stale receipt is no receipt. Re-review the complete new checkpoint.
 - A focused lens is not a broad audit. State what was not reviewed and never
   imply that omitted lenses passed.
 - The ledger reports status; it never defines what the review looks at. Do not

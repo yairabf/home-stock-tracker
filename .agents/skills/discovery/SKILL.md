@@ -1,9 +1,13 @@
 ---
 name: discovery
-description: "Optional deep, multi-turn project discovery that helps the user develop detailed Blueprint project-plan.md and build-plan.md files through an adaptive conversation, then drafts them only after the user says they are ready. Use when the user explicitly runs /discovery or $discovery, asks for a guided planning interview, wants to think through a new product before writing the plans, or wants help deepening existing plans. Do not use merely because planning files are empty, after /onboard, or before /overview; users may always write the plans directly or create them through any conversation they prefer."
+description: Run an optional guided product-discovery interview and draft project-plan.md and build-plan.md only after the user is ready. Use for /discovery, guided planning, thinking through a new product, or deepening plans. Never require it before /overview.
 ---
 
 # discovery - develop the plans through a deep conversation
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this can sit in the workflow:
 

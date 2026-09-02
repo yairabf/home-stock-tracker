@@ -1,6 +1,6 @@
 ---
 name: doctor
-description: "Run a read-only Blueprint health check for setup, onboarding, required files, tool adapters, commands, optional verification and CI, Blueprint visibility, ignore rules, planning readiness, overview freshness, and workflow drift. Use when the user runs /doctor, asks whether the Blueprint is installed correctly, wants a health check, setup check, doctor pass, or says something feels off before starting or resuming work."
+description: Run a read-only Blueprint health and context check covering setup, adapters, commands, visibility, plans, overview freshness, configuration, and workflow drift. Use for /doctor, installation checks, context overhead, setup problems, or when something feels wrong.
 ---
 
 # doctor - Blueprint health check
@@ -45,9 +45,22 @@ Gather these, then summarize. Do not dump file contents.
      `### <id> [<severity>] <status> - <title>` and warn on a malformed ledger.
      Report any P0 or P1 finding still `open` or `fixed` by ID, since it will
      block `/complete`. Never block on the ledger yourself.
+   - Check `blueprint/context/review.md`. Missing on a legacy installation is a
+     warning, not a blocker; `/audit independent current` and `/complete` create
+     it on first use. When present, validate the required request or receipt
+     fields and report pending, changes-requested, malformed, or stale state.
    - If `.gitignore` marks Blueprint workflow files as local-only, still require
      the files to exist on disk. Ignored but present is healthy; ignored and
      missing means the local workflow needs to be restored.
+   - Read `blueprint/config.json` when present. Missing is healthy and means
+     built-in defaults. When present, require a regular non-symbolic-link JSON
+     file with `schemaVersion: 1`. Reject unknown keys and unsupported values.
+     Report the effective workflow, git, verification, regular quality-gate,
+     Continuous quality-gate, and Continuous Mode settings. Confirm each audit,
+     independent-review, check, and try-guide gate uses its supported values and
+     defaults to `manual`.
+     An invalid config is a setup blocker for mutating workflow skills because
+     they must not guess which policy to follow.
 2. **Tool adapters**
    - Read `blueprint/.state/manifest.json` when present and report its exact
      logical adapters: Codex, Claude Code, GitHub Copilot, and OpenCode.
@@ -68,6 +81,14 @@ Gather these, then summarize. Do not dump file contents.
      treat extra adapters as an error.
    - If `CLAUDE.md` exists and still starts with `# Project Name`, flag that
      `/onboard` probably has not finished.
+   - When Claude Code is installed, report its startup-context shape. Confirm
+     `CLAUDE.md` imports `AGENTS.md`, `project-overview.md`, and
+     `current-feature.md`. If it directly imports `coding-standards.md` or
+     `ai-interaction.md`, warn that this is the legacy higher-context layout and
+     give the exact two import lines to remove. Count the imported files and
+     their total byte size, plus the total byte size of project skill
+     descriptions. Label these as file-size diagnostics, not token counts.
+     Recommend Claude Code's `/context all` for the live token breakdown.
 3. **Commands and project setup**
    - Check whether root `README.md` is still the copied Blueprint workflow doc
      by looking for `# AI Coding Blueprint` or opening text that describes the
@@ -118,6 +139,9 @@ Gather these, then summarize. Do not dump file contents.
 6. **Overview freshness**
    - Check whether `blueprint/context/project-overview.md` exists and looks
      generated from the current plans.
+   - Report its byte size. At or above 20,000 bytes, call it oversized and say
+     `/feature` should stop until `/overview` regenerates a compact
+     consolidation.
    - If either planning file appears newer than the overview by filesystem time,
      call the overview possibly stale and suggest `/overview` before feature work.
 7. **Current workflow state**
@@ -127,9 +151,9 @@ Gather these, then summarize. Do not dump file contents.
    - If `current-feature.md` is the reset stub but git has source or workflow
      changes, warn that work is happening without an active spec.
    - Flag active spec on `main`, all spec steps checked but no completion, or a
-     branch that does not match `feature/`, `fix/`, or `rollback/` for the spec
-     type. For a feature, also flag a mismatch with the next unchecked
-     build-plan item. For a rollback, confirm its target is a checked item and do
+     branch that does not match the configured feature, fix, or rollback prefix
+     for the spec type. For a feature, also flag a mismatch with the next
+     unchecked build-plan item. For a rollback, confirm its target is a checked item and do
      not compare it to the next unchecked item.
 8. **Git**
    - Report current branch, clean vs dirty working tree, rough changed-file count,
@@ -143,8 +167,10 @@ Print a compact health report with these labels:
 
     Health: Pass | Needs attention | Blocked
     Setup: ...
+    Configuration: ...
     Verification: ...
     Adapters: ...
+    Context: ...
     Visibility: ...
     Plans: ...
     Workflow: ...
@@ -159,9 +185,15 @@ Choose the repair order in this priority:
 
 - Required Blueprint files missing -> overlay the Blueprint again, or use
   `/adopt` for a brownfield app.
+- Invalid `blueprint/config.json` -> fix the named key or value, then rerun
+  `/doctor`. Do not mutate project work while configuration is ambiguous.
 - No git repo -> initialize git before using the build loop.
 - No tool adapter -> restore `.agents/skills/` or `.claude/skills/` for the
   selected tool. OpenCode can use either compatible tree.
+- Claude uses the legacy direct context imports -> remove the exact
+  `@blueprint/context/coding-standards.md` and
+  `@blueprint/context/ai-interaction.md` lines from `CLAUDE.md`, then rerun
+  `/doctor`. The files stay in the project and workflow skills still read them.
 - Onboarding incomplete -> run `/onboard`.
 - Root README is still the Blueprint workflow doc -> run `/onboard` to replace
   it with a project README before publishing.

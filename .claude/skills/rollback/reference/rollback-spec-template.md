@@ -1,10 +1,11 @@
 # Rollback: Feature NN - Name
 
 **Type:** Rollback
+**Status:** not started
 **Target feature:** NN - Name
 **Target archive:** `blueprint/history/features/NN-name.md`
-**Target commit:** `<full commit SHA>`
-**Target parent:** `<full parent SHA>`
+**Target commit:** `<full 40-character commit SHA>`
+**Target parent:** `<full 40-character parent SHA>`
 **Reason:** Why this completed feature must be removed
 
 ## Goal

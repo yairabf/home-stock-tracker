@@ -1,9 +1,13 @@
 ---
 name: tests
-description: Add or normalize unit testing for a Blueprint project. Detects the stack, reuses an existing test runner when present, or installs the stack-native unit test runner when missing, then adds one small example test, updates AGENTS.md commands, runs build and tests, and reports the diff. Use when the user runs /tests, invokes $tests, asks to add unit tests, set up unit testing, configure tests, or make tests part of the Blueprint workflow.
+description: Add or normalize stack-native unit testing, reuse or install the appropriate runner, add one example test, document commands, and verify the setup. Use for /tests, adding unit tests, configuring a test runner, or enabling the Blueprint logic-test gate.
 ---
 
 # tests - add unit testing to the project
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -13,7 +17,7 @@ Where this sits in the workflow:
 Testing is optional in the Blueprint until the project declares a real test
 command in `AGENTS.md`. This skill is the explicit setup path. It adds or
 normalizes **unit testing** only; browser automation and end-to-end testing are
-separate setup work.
+separate optional setup through `/browser-tests`.
 
 ## Input
 
@@ -109,7 +113,8 @@ Show the diff summary. Do not commit, merge, push, or start product feature work
 ## Rules
 
 - Unit testing only. Do not set up Playwright, Cypress, browser E2E, CI, or
-  coverage unless the user explicitly asks.
+  coverage here. Use `/browser-tests` for an explicitly requested browser
+  harness.
 - Reuse existing project conventions before adding new tools.
 - Preserve existing CI. This skill may update an existing verification command,
   but it never creates a GitHub workflow on its own.

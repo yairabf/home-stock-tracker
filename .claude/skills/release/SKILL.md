@@ -1,9 +1,13 @@
 ---
 name: release
-description: Prepare a Blueprint project for deployment to Render or Vercel. Reads the plans, project commands, app config, and current repo state; verifies build, start, output, env, health checks, and provider config; can create or update render.yaml or vercel.json when requested; and stops before any external deploy, service creation, remote env change, push, publish, or destructive action unless the user explicitly approves. Use when the user runs /release, invokes $release, asks for Render setup, Vercel setup, deploy readiness, deployment config, render.yaml, or vercel.json.
+description: Prepare local Render or Vercel deployment configuration and verify build, start, output, environment, and health-check readiness without deploying. Use for /release, Render setup, Vercel setup, deploy readiness, render.yaml, or vercel.json.
 ---
 
 # release - deployment readiness for Render and Vercel
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 

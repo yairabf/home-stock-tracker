@@ -1,9 +1,13 @@
 ---
 name: adopt
-description: Bring the blueprint into an existing (brownfield) codebase. Surveys the real repo, interviews for intent, generates the owned plans and coding standards, documents existing verification and CI, asks whether Blueprint workflow files should be committed or kept local-only, and points to the optional standalone CI setup. Use when the user runs /adopt, is overlaying the blueprint onto an app that already has meaningful code, or asks to adopt or bootstrap the workflow into an existing project. For freshly scaffolded or early projects, use onboard instead.
+description: Adopt Blueprint into an existing brownfield codebase by surveying shipped behavior and generating plans, standards, commands, adapter choices, and visibility setup. Use for /adopt or requests to bootstrap Blueprint into an established app. Use onboard for a fresh scaffold.
 ---
 
 # adopt - bootstrap the blueprint from an existing codebase
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 

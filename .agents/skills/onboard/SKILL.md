@@ -1,9 +1,13 @@
 ---
 name: onboard
-description: Set up the Blueprint after overlaying it onto a freshly scaffolded or early project. Detects the stack, tunes project files and adapters, documents real commands and existing checks, points to the optional standalone CI setup, and tells the user what to fill in before /overview or $overview. Use when the user runs /onboard, invokes $onboard, just copied the Blueprint into a new project, or asks what to do after overlaying the Blueprint. For an existing app with meaningful shipped features, use adopt instead.
+description: Onboard a fresh or early scaffold after Blueprint is overlaid by tuning commands, standards, adapters, visibility, and context loading. Use for /onboard, fresh installation setup, or what to do after installing Blueprint. Use adopt for an established app.
 ---
 
 # onboard - finish the Blueprint overlay setup
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -54,6 +58,7 @@ Read only enough to identify the setup:
 - which selected tools need `.agents/`, `.claude/`, or both
 - whether Blueprint workflow paths are already tracked by git
 - existing verification commands and `.github/workflows/`
+- `blueprint/config.json`, when present, and whether it parses cleanly
 - project name, from `package.json`, the folder name, existing docs, or the user
 
 Do not infer more than the files support. Mark uncertain items as `> TODO` in the
@@ -78,6 +83,10 @@ If the root `README.md` already looks like a real project README, leave it alone
 Never replace a project README with Blueprint documentation.
 
 Update the Commands section of `AGENTS.md` to match real scripts and commands.
+Remove the shipped `<!-- blueprint:onboarding-required -->` marker and the `For
+a standard Next.js project` instruction when replacing the placeholder
+commands. Status uses the dedicated marker, with the old sentence retained only
+as a migration fallback, to distinguish a fresh overlay from a tuned project.
 Include only commands that exist or are intentionally available:
 
 - dev server
@@ -91,9 +100,13 @@ If no test command exists, say so explicitly. Do not claim tests are a gate unti
 a real test command is configured.
 
 If `CLAUDE.md` exists and still has the placeholder `# Project Name`, replace it
-with the detected project name. Keep the `@AGENTS.md` and `@blueprint/...`
-imports intact. Do not move detailed app context into `CLAUDE.md`; that belongs
-in `AGENTS.md` and the generated project overview.
+with the detected project name. Keep `@AGENTS.md`,
+`@blueprint/context/project-overview.md`, and
+`@blueprint/context/current-feature.md`. Remove the legacy direct imports of
+`coding-standards.md` and `ai-interaction.md`; project instructions and workflow
+skills read those files only when relevant. Preserve any unrelated user imports.
+Do not move detailed app context into `CLAUDE.md`; that belongs in `AGENTS.md`
+and the generated project overview.
 
 ## Step 3 - tune coding standards
 
@@ -115,15 +128,51 @@ Cover the practical conventions the build loop needs:
 If the project is too new to reveal a convention, leave a concise `> TODO` rather
 than pretending a pattern exists.
 
-## Step 4 - check AI interaction rules
+## Step 4 - check project configuration and AI interaction rules
+
+Read `blueprint/config.json`. A missing file means built-in defaults and is not
+an error. If the file exists but is invalid, stop and show the exact invalid key
+or value before changing other setup files.
+
+Keep project configuration deterministic. Ask before changing preferences and
+edit only values the user actually chose, such as branch prefixes, UI evidence,
+logic-test strictness, regular or Continuous quality gates, or Continuous Mode
+limits. Audit, independent-review, check, and try-guide gates default to `manual`; do not enable
+automatic gates unless the user chooses them. Never put
+commands, product requirements, communication prose, secrets, or permission for
+commits, merges, pushes, deployments, publication, destructive actions, failed
+checks, or finding waivers into config.
+
+Unless the user already chose these values, ask one short **Implementation
+style** question using the current tool's selectable prompt when available:
+
+1. **Efficient (Recommended)** - one feature-level review packet and no step
+   checkpoint prompts. Write `workflow.stepReview: "feature"` and
+   `workflow.checkpointCommits: "disabled"`.
+2. **Guided** - pause for approval after every step and offer optional checkpoint
+   commits. Write `workflow.stepReview: "every"` and
+   `workflow.checkpointCommits: "enabled"`.
+3. **Custom** - ask separately when review should happen and whether checkpoint
+   commits should be offered, then write the selected low-level values.
+
+These are onboarding presets, not a third configuration field. Never write an
+`implementationStyle` key. Show the current two values before asking, preserve
+them if the user chooses not to change them, and explain that either value can be
+edited later. A later `/implement` run reads the current configuration.
 
 Read `blueprint/context/ai-interaction.md` and update only obvious mismatches.
 Usually the default review loop should stay intact. Flag preferences for the user
 instead of guessing, such as:
 
-- whether commits should be offered after every step
+- whether review should happen once per feature (the lower-context default) or
+  after every step for teaching, close pairing, or high-risk work
+- whether optional step checkpoint commits should be enabled. Explain that the
+  previous workflow requires per-step review and enabled checkpoints together;
+  changing only `stepReview` restores the approval pauses, not checkpoint prompts
 - whether branches should use a different naming pattern
 - whether `/check` should require browser evidence for UI work
+- whether audit, independent review, check, or try guides should stay manual, run only for their
+  documented conditional case, or run for every regular or Continuous work item
 
 If no changes are needed, say so.
 
@@ -192,6 +241,13 @@ Recommend option 1 by default. If the user chooses option 2:
 
 Then report which adapter folders are needed:
 
+- Treat Codex, GitHub Copilot, and OpenCode as separate tool selections that
+  share the same `.agents/` adapter tree. Claude Code uses `.claude/`.
+- If asking whether to remove unused adapters when all four tools are installed,
+  use these choices: `Keep all adapters`, `Claude Code only`, and
+  `Codex, GitHub Copilot, and OpenCode only`. Never call the first choice
+  `Keep both`, and never label the shared `.agents/` choice as only Codex or
+  Copilot.
 - Codex only: keep `AGENTS.md`, `.agents/`, and `blueprint/`; `CLAUDE.md` and
   `.claude/` can be deleted.
 - Claude Code only: keep `AGENTS.md`, `CLAUDE.md`, `.claude/`, and `blueprint/`;
@@ -216,6 +272,7 @@ Stop with a concise onboarding report:
 - Blueprint visibility choice
 - tracked-file warning if local-only mode was chosen after files were already tracked
 - files changed
+- project configuration state and any user-selected overrides
 - commands now available
 - testing gate status
 - verification command and GitHub checks status

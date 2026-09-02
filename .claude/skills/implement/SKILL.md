@@ -1,9 +1,13 @@
 ---
 name: implement
-description: "Build the feature, fix, or rollback spec'd in blueprint/context/current-feature.md, one small reviewable step at a time. Creates the matching branch, implements each step, shows the diff and explains it in plain English, tests, and iterates until it works. Type: Rollback specs use a guarded reverse patch that preserves Blueprint history. After each approved step it offers an optional commit checkpoint on the branch; the work-level commit, merge, and logging are /complete's job. Use when the user runs /implement, or asks to build, implement, or start the current feature, fix, or rollback once its spec is ready."
+description: Implement or start coding the active feature, fix, or rollback spec on its branch in small steps, running tests after each step and presenting the configured review handoff. Use for /implement or requests to build or resume an approved current-feature.md spec.
 ---
 
 # implement - build the current spec, one reviewed step at a time
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -15,12 +19,18 @@ Where this sits in the workflow:
 `blueprint/context/current-feature.md` and stopped.
 This skill turns that spec into code, following the build loop in
 `blueprint/context/ai-interaction.md`, without vibe coding: small steps, a visible diff plus
-a plain-English explanation for each, testing, and iteration until it works, all
-behind your approval. It builds on a branch and offers an optional commit
-checkpoint after each step; the work-level commit, merging, and logging are
-`/complete`'s job.
+a plain-English explanation for each, testing, and iteration until it works,
+using the project's configured review cadence. It builds on a branch and can
+offer optional commit checkpoints when enabled; the work-level commit, merging,
+and logging are `/complete`'s job.
 
 ## Before you start
+
+Read `blueprint/config.json` before changing code. A missing file means the
+built-in defaults apply. If the file exists but is invalid, stop and point the
+user to `/doctor`; a mutating workflow must not guess past invalid configuration.
+Configuration can change workflow behavior, but it never grants permission to
+commit, merge, push, deploy, publish, or take destructive action.
 
 Read `blueprint/context/current-feature.md`. If it has no real spec (still the stub, or its
 status is already complete), stop and tell the user to run `/feature` (for a
@@ -44,8 +54,9 @@ starting over. No separate save/load is needed - the project instructions load
 
 ## Step 1 - branch
 
-Create and check out a branch named from the spec: `feature/<name>` for a feature,
-`fix/<name>` for a fix, or `rollback/<name>` for a Type: Rollback spec. If the
+Create and check out a branch named from the spec, using the prefixes in
+`blueprint/config.json`. The defaults are `feature/<name>` for a feature,
+`fix/<name>` for a fix, and `rollback/<name>` for a Type: Rollback spec. If the
 project isn't a git repo yet, say so and ask the user to run `git init` first;
 the loop needs branches. On resume, the branch already exists - check it out
 instead of creating a new one.
@@ -59,17 +70,21 @@ spec. Reversing the whole commit would damage that state.
 
 Before the first rollback build step:
 
-1. Re-resolve the target archive's introducing commit and confirm it matches the
-   full Target commit SHA recorded in the approved spec.
-2. Confirm the target is an ancestor of `HEAD`, has the recorded single parent,
-   and the only dirty path before applying the patch is the approved rollback
-   spec. Stop on drift.
-3. Preview the target's product diff while excluding `.agents/**`, `.claude/**`,
+1. Read the approved spec's `Target commit` and `Target parent` fields. Stop
+   unless both values match `^[0-9a-f]{40}$`. Do not accept abbreviated,
+   uppercase, or otherwise malformed SHAs.
+2. Resolve the archive's introducing commit and verify it has exactly one parent.
+   Stop on a merge target. Resolve that single parent to a full SHA value.
+   Confirm the resolved commit exactly equals `Target commit` and the resolved
+   parent exactly equals `Target parent`. Stop on any mismatch.
+3. Confirm the resolved target is an ancestor of `HEAD` and the only dirty path
+   before applying the patch is the approved rollback spec. Stop on drift.
+4. Preview the resolved target's product diff while excluding `.agents/**`, `.claude/**`,
    `blueprint/**`, `AGENTS.md`, `CLAUDE.md`, and
    `prototypes/**`. Confirm the preview is non-empty and matches the Product
    paths in the spec.
-4. Apply that product diff in reverse with three-way conflict detection and
-   stage it. Substitute the two approved full SHAs before running:
+5. Apply that resolved product diff in reverse with three-way conflict detection
+   and stage it. Use only the resolved full SHA values before running:
 
        git diff --binary <target-parent> <target-commit> -- . \
          ':(exclude).agents/**' \
@@ -79,7 +94,7 @@ Before the first rollback build step:
          git apply --reverse --3way --index
 
    Never omit the protected pathspec exclusions for convenience.
-5. Show both `git diff --cached` and `git status`. Confirm no protected path is
+6. Show both `git diff --cached` and `git status`. Confirm no protected path is
    staged or modified before presenting the step for review.
 
 If the reverse patch conflicts, stop and report the exact paths and later commit
@@ -90,7 +105,18 @@ new rollback plan.
 
 ## Step 2 - build one step, review, iterate, checkpoint
 
+Before the first product edit in this run, set the spec's `**Status:**` to `in
+progress`. This invalidates any older verification state. Do the same whenever
+implementation resumes after a passing check and changes product code again.
+
 Work through the spec's build steps in order, one at a time. For each step:
+
+- With `workflow.stepReview: "every"`, use the review and approval gate below
+  after every step.
+- With `workflow.stepReview: "feature"`, still implement, explain, and verify
+  small steps, but collect them into one final review packet. Stop early for a
+  failed check, a decision, a conflict, unsafe work, or scope drift. Do not make
+  a checkpoint commit before the final review is approved.
 
 1. Implement just that step: the smallest change that satisfies its "done when."
 2. Show the **diff**, not whole files.
@@ -102,34 +128,53 @@ Work through the spec's build steps in order, one at a time. For each step:
    path: the command, URL, click, endpoint, or output the user can check.
 4. **Verify the step.** If `AGENTS.md` declares a `Verify` command, run that exact
    command as the automated gate. It is only an umbrella for checks the project
-   actually has, so do not invent tests or other checks to satisfy it. If no
+   actually has, so do not invent tests or other checks to satisfy it. With
+   `verification.logicTests: "required"`, a logic change without a configured
+   test runner stops and points to `/tests`; `when-configured` uses the existing
+   testing gate. If no
    `Verify` command exists, run the documented build command and the test command
    when the project declares one. A step that adds logic must ship a passing test
    in the same diff when the test gate is on, and the suite must be green before
    the step is approved (see the Testing gate in `coding-standards.md`). UI and
-   integration-only steps ride on screenshot plus build evidence. Run a focused
+   integration-only steps ride on screenshot plus build evidence. With
+   `verification.uiEvidence: "required"`, a UI done-when cannot pass on build
+   output alone. Run a focused
    test separately when it gives faster feedback, then use `Verify` as the final
-   automated gate. For UI or integration done-whens, prefer Playwright when it is
-   already installed or declared in `AGENTS.md`; do not add it silently for an
-   unrelated feature. Create focused test files next to the source they cover,
-   per `coding-standards.md`. Never install a runner mid-step unless the current
-   spec is explicitly the unit-testing setup itself (for example `/fix "add unit
-   testing"`). If a step surfaces non-trivial logic the spec did not foresee, add
-   a focused test then, or note why not. When a step's done-when is behavioral (a
-   click, a download, or a flow across screens), run `/check` to prove it against
-   the running app rather than eyeballing it.
+   automated gate. When `AGENTS.md` declares `Browser tests: <command>`, add and
+   run focused browser coverage for a stable behavioral done-when when it is
+   proportionate to the step. Use direct browser evidence for visual fidelity,
+   authenticated real-profile behavior, browser chrome, or another claim the
+   harness does not prove. If no Browser tests command is declared, do not add a
+   runner silently for an unrelated feature; point to `/browser-tests` when a
+   repeatable harness would materially improve the project. Create focused test
+   files next to the source they cover, per `coding-standards.md`. Never install
+   a runner mid-step unless the current spec explicitly sets up that runner. If a
+   step surfaces non-trivial logic the spec did not foresee, add a focused test
+   then, or note why not. Apply the regular check gate from
+   `qualityGates.regular`: `manual` runs `/check` only when explicitly requested,
+   `when-behavioral` runs it when a done-when needs observed runtime behavior,
+   and `always` runs it for every work item. A click, download, request, CLI
+   command, background job, or flow across screens is behavioral. When the gate
+   runs, prove it against the real app or command rather than eyeballing it.
 5. **Iterate until it works.** If it fails or the user wants changes, revise the
    step (re-prompt or hand-edit the code), show the updated diff, and re-test.
-   Repeat until it works and the user approves. Nothing is committed until the
-   user is happy with the step.
-6. **Mark it done, then prompt to move on.** Once the step is approved, check that
-   step off (`- [x]`) in `blueprint/context/current-feature.md` so progress survives a context
+   With per-step review, repeat until the user approves. With feature review,
+   repeat until the step passes self-review and hold all commit activity for the
+   final approval gate.
+6. **Mark it done, then prompt when required.** After the applicable gate is
+   satisfied, check the step off (`- [x]`) in
+   `blueprint/context/current-feature.md` so progress survives a context
    clear. If the step repaired a finding tracked in
    `blueprint/context/findings.md`, set that finding's status to `fixed` now too
    and note the repair in its **Resolution** line. Never set `closed`: a repair
    is re-reviewed by `/audit` before it clears, because a fix can introduce a
-   worse defect than the one it removed. Then offer a short choice, noting that checkpoints are optional since
-   `/complete` makes the real feature-level commit. Use the current tool's short
+   worse defect than the one it removed. With feature review, continue to the
+   next step without prompting. With
+   per-step review and `workflow.checkpointCommits: "disabled"`, continue
+   without offering or making
+   a checkpoint commit. With `enabled`, offer a short choice, noting that
+   checkpoints are optional since `/complete` makes the real feature-level
+   commit. Use the current tool's short
    user-input prompt when available; when you've just produced a long block to
    read (a deep explanation, a big
    walk-through), ask in plain text instead, so the prompt doesn't cover what the
@@ -154,7 +199,8 @@ pass before any commit.
 
 ## Step 3 - hand off to /complete
 
-Before handing off, check `blueprint/context/findings.md`. A P0 or P1 finding
+Before handing off, check `blueprint/context/findings.md` and
+`blueprint/context/review.md`. A P0 or P1 finding
 still `open` or `fixed` there means `/complete` will refuse the merge, so close
 the loop now:
 
@@ -164,7 +210,10 @@ the loop now:
   loop as Step 2: smallest change, diff, plain-English explanation, evidence.
   Check the step off and mark the finding `fixed` together.
 - Then run `/audit` so the repairs are re-reviewed and can move to `closed`.
-  A repair this skill made never closes itself.
+  When the finding came from an independent review, obtain approval for a new
+  review checkpoint and run `/audit independent current` instead. A repair this
+  skill made never closes itself, and any product or spec change makes the old
+  independent receipt stale.
 - If the user decides a finding should not be fixed, only they can set
   `accepted` (reason recorded). A finding that looks wrong goes back to
   `/audit` to invalidate with recorded evidence; this skill never sets
@@ -173,13 +222,22 @@ the loop now:
 When every step is built and `Verify`, or the fallback build and tests, passes
 (committed as checkpoints or not), stop with a compact review packet:
 
+Set the spec's `**Status:**` to `verified` immediately before that packet. This
+is durable workflow evidence for `/status` and the dashboard. Do not set it when
+a required command, observable done-when, or configured gate failed or could not
+run.
+
 - branch name
 - what changed, grouped by file or area
 - checks run, with the exact command or proof used
 - how to try it manually, or a pointer to `/try`
 - ledger state: any findings still `open` or `fixed`, by ID
+- independent-review state: none, pending, changes-requested, passed, or stale
 - known risks, skipped checks, or follow-up notes
 - next action, usually `/complete`
+
+Name the effective regular audit, independent-review, check, and try-guide policies in the packet so
+the user knows which gates `/complete` will run automatically.
 
 Then tell the user `/complete` makes the one work-level commit, logs it (archive,
 update the build plan for a feature or rollback, reset), and merges with
@@ -187,7 +245,8 @@ approval. This skill does not touch main.
 
 ## Rules
 
-- One small step per diff; the user reviews and approves each before any commit.
+- One small step per diff. Follow the configured review cadence, and never commit
+  before its current review gate is approved.
 - Explain every change in plain English. Understanding the code is the point.
 - Iterate on the branch until each step works; never commit code the user hasn't
   approved.
@@ -195,8 +254,8 @@ approval. This skill does not touch main.
   by the authenticated user id, validate inputs, and so on).
 - Build only what the spec says. If the spec is wrong or thin, stop and fix the
   spec first, do not improvise.
-- Per-step commits are optional checkpoints. The work-level commit, the merge,
-  and any push are `/complete`'s job.
+- Per-step commits are optional checkpoints only when enabled in project config.
+  The work-level commit, the merge, and any push are `/complete`'s job.
 - For Type: Rollback, reverse only the approved product diff and preserve all
   protected Blueprint paths.
 

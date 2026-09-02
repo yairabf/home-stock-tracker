@@ -1,9 +1,13 @@
 ---
 name: overview
-description: "Validate and, when needed, normalize the two planning docs before generating blueprint/context/project-overview.md from blueprint/project-plan.md and blueprint/build-plan.md. The overview is the single AI-facing source of truth that project instructions load every session. Use when the user runs /overview, invokes $overview, has just finished writing or editing the plans, asks to shape rough plans into the Blueprint format, or asks to regenerate the project overview."
+description: Validate and normalize project-plan.md and build-plan.md, then generate the durable project-overview.md used by agents. Use for /overview, plan cleanup, generating the first overview, or refreshing context after either plan changes.
 ---
 
 # overview - turn the two plans into the AI-facing source of truth
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
@@ -98,6 +102,18 @@ Write `blueprint/context/project-overview.md` (create `blueprint/context/` if ne
 `reference/project-overview-template.md`. The overview is a consolidation, not a
 copy:
 
+After the title, write a plan fingerprint in this exact form:
+
+```text
+<!-- blueprint:source-hash <sha256> -->
+```
+
+Compute `<sha256>` from the exact UTF-8 bytes of `project-plan.md`, one zero
+byte, then the exact UTF-8 bytes of `build-plan.md`. This lets `/status` detect
+real plan changes after cloning, copying, or updating without relying on file
+timestamps. Replace the previous marker every time this skill regenerates the
+overview.
+
 - **One source of truth.** Merge both plans into one coherent document. After
   this runs, the AI reads the overview, not the raw plans.
 - **Make the data model concrete.** Turn the plan's data list into actual
@@ -111,14 +127,86 @@ copy:
 - **Stay faithful.** Don't add features, data, or stack choices that aren't in
   the plans. If something is underspecified, leave a clearly marked `> TODO`
   rather than inventing an answer.
+- **Keep the overview compact.** Never copy long plan passages. The generated
+  overview must remain below 20,000 bytes. Measure it before the final handoff.
+  If a draft is larger, compact narrative and repeated lists while preserving
+  concrete contracts, build order, and constraints. If those distinct facts
+  cannot fit, stop and identify which plan section needs to be split or moved to
+  a focused reference instead of writing an oversized overview.
 
-Then stop. Report what you wrote and list any contradictions or gaps you found
-between the two plans, so the user can fix the plans and re-run.
+Report what you wrote and list any contradictions or gaps you found between the
+two plans, so the user can fix the plans and re-run. Then apply the initial
+planning baseline handoff below before giving the next-step guidance.
 
 In the next-step guidance, keep `/feature` as the main path. If the UI direction
 still feels unsettled, also mention that `/prototype` is available before
 `/feature`: it writes throwaway static HTML/CSS mockups to `prototypes/` and does
 not modify the main app code.
+
+## Step 4 - offer the initial planning baseline commit
+
+During the initial pre-feature overview phase, offer to commit the approved
+Blueprint setup and plans before Feature 1 starts. This keeps installation,
+onboarding, planning, and the generated overview out of the first feature
+commit. Never create this commit silently.
+
+Treat this as the initial pre-feature state only when all of these are true:
+
+- the project is a Git repository with an existing `HEAD` commit
+- the current branch is the default branch, resolving the remote default when
+  available and otherwise accepting `main` or `master`
+- the version of `blueprint/context/project-overview.md` in `HEAD` does not
+  already contain a `blueprint:source-hash` marker
+- `blueprint/context/current-feature.md` is still the canonical empty stub
+- `blueprint/history/features/`, `fixes/`, and `rollbacks/` contain no archived
+  work beyond their shipped `README.md` placeholders
+- `blueprint/build-plan.md` contains no checked feature items
+- the Blueprint workflow is meant to be committed, not kept local-only
+
+If there is no `HEAD` yet, stop and ask the user to commit the app scaffold by
+itself before rerunning `/overview`; never create a root commit that mixes the
+app and Blueprint. If the initial run is on a non-default branch, stop and ask
+the user to return to the default branch first. These are recoverable initial
+handoffs, not permission to offer another baseline after one is committed.
+
+Detect local-only mode with Git, not memory. Use `git check-ignore` on the
+present workflow paths. If `.agents/`, `.claude/`, `blueprint/`, or `CLAUDE.md`
+are ignored as part of the onboarding local-only choice, skip the offer and
+continue to the normal `/feature` guidance. `AGENTS.md` remaining public does not
+make a local-only setup eligible.
+
+Before asking:
+
+1. Read `git status`, the staged diff, the unstaged diff, and untracked paths.
+2. Build a candidate containing only Blueprint installation, adapter,
+   configuration, planning, context, and onboarding changes under `AGENTS.md`,
+   `CLAUDE.md`, `.agents/`, `.claude/`, and `blueprint/`. Include `.gitignore`
+   only when every changed hunk is clearly an onboarding or Blueprint ignore
+   entry.
+3. Exclude generated local state such as `blueprint/.state/`, secrets, logs,
+   caches, dependencies, build output, and application source.
+4. Stop if any staged change or dirty path falls outside the candidate, or if an
+   allowed file contains an unrelated hunk. Do not mix app scaffolding or other
+   user work into this commit. Tell the user exactly what must be committed,
+   moved, or restored first, then leave the repository unchanged.
+5. If the candidate is empty, skip the offer.
+6. Show the exact candidate paths and their diff before asking:
+   `Create the initial planning baseline commit now? (Recommended)`
+   State that accepting creates one local commit and never pushes it.
+
+If the user accepts, stage only the reviewed candidate, show the staged paths
+and diff summary, verify no other path is staged, and commit with this exact
+message:
+
+```text
+chore: establish Blueprint project baseline
+```
+
+Then confirm the working tree state and recommend `/feature`. If the user
+declines, leave the repository untouched and explain that these setup and
+planning changes will remain uncommitted until they create the baseline later.
+Do not offer this baseline on later overview reruns once `HEAD` already contains
+a generated overview or feature work has begun.
 
 ## Rules
 
@@ -141,6 +229,9 @@ not modify the main app code.
   restating the plan's one-liners.
 - **Surface conflicts.** Always end by reporting disagreements between the plans;
   silent reconciliation hides decisions the user should make.
+- **One reviewed baseline.** Offer the initial planning commit once, immediately
+  before Feature 1, and only after showing its exact scope. Never treat an
+  overview rerun as permission to commit.
 
 ## When to re-run
 

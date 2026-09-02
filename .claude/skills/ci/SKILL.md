@@ -1,9 +1,13 @@
 ---
 name: ci
-description: Set up or normalize automatic GitHub checks for a Blueprint project around one documented Verify command. Detects the real stack, package manager, existing checks, default branch, and workflows; preserves existing CI; combines only configured typecheck, test, and build commands; runs the command locally; and stops before push or remote ruleset changes. Use when the user runs /ci, invokes $ci, asks to add CI, set up GitHub Actions, add pull-request checks, or create automatic GitHub checks.
+description: Set up or normalize one project Verify command and matching GitHub Actions checks while preserving existing CI. Use for /ci, GitHub Actions setup, pull-request checks, automatic checks, or aligning typecheck, test, and build verification.
 ---
 
 # ci - set up automatic GitHub checks
+
+**First action:** Before project inspection, preflight, or any other tool call,
+publish `running` to `blueprint/.state/run.json` using the dashboard activity
+contract in `AGENTS.md`.
 
 Where this sits in the workflow:
 
