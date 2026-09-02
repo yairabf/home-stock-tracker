@@ -96,6 +96,20 @@ const productSearchOutputSchema = z.object({
   candidates: z.array(productSearchProductOutputSchema),
 });
 
+export const PUBLISHED_INVENTORY_EVENT_TYPES = [
+  InventoryEventType.GROCERY_ADDED,
+  InventoryEventType.GROCERY_REMOVED,
+  InventoryEventType.PURCHASED,
+  InventoryEventType.RESTOCKED,
+  InventoryEventType.STOCK_LOW,
+  InventoryEventType.STOCK_OUT,
+  InventoryEventType.STOCK_CONFIRMED,
+  InventoryEventType.STOCK_CORRECTED,
+  InventoryEventType.PREDICTION_ACCEPTED,
+  InventoryEventType.PREDICTION_REJECTED,
+  InventoryEventType.INFERRED_LOW_STOCK,
+] as const;
+
 const groceryAdditionItemInputSchema = z
   .object({
     requestedQuantity: z.number().positive().finite().optional(),
@@ -297,7 +311,7 @@ const estimationOutputSchema = z.object({
 const inventoryEventOutputSchema = z.object({
   id: z.string(),
   productId: z.string(),
-  eventType: z.enum(InventoryEventType),
+  eventType: z.enum(PUBLISHED_INVENTORY_EVENT_TYPES),
   quantity: z.number().nullable(),
   unit: z.string().nullable(),
   timestamp: z.string(),
@@ -309,7 +323,7 @@ const inventoryEventOutputSchema = z.object({
 const inventoryEventHistoryInputSchema = z
   .object({
     productId: z.uuid().optional(),
-    eventType: z.enum(InventoryEventType).optional(),
+    eventType: z.enum(PUBLISHED_INVENTORY_EVENT_TYPES).optional(),
     limit: z.number().int().min(1).max(100).default(20),
     offset: z.number().int().min(0).default(0),
   })

@@ -6,19 +6,23 @@ import { EstimationModule } from '../estimation/estimation.module';
 import { PredictionFeedbackService } from './prediction-feedback.service';
 import { HouseholdModule } from '../household/household.module';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
+import { StockLedgerService } from './stock-ledger.service';
+import { StatisticsModule } from '../statistics/statistics.module';
 
 @Module({
-  imports: [ProductModule, EstimationModule, HouseholdModule],
+  imports: [ProductModule, EstimationModule, HouseholdModule, StatisticsModule],
   controllers: [InventoryController],
   providers: [
     InventoryService,
     PredictionFeedbackService,
     LowStockRecommendationService,
+    StockLedgerService,
   ],
   exports: [
     InventoryService,
     PredictionFeedbackService,
     LowStockRecommendationService,
+    StockLedgerService,
   ],
 })
 export class InventoryModule {}

@@ -6,7 +6,8 @@ type InventoryAction =
   | 'record_event'
   | 'record_purchase'
   | 'complete_purchase'
-  | 'complete_partial_purchase';
+  | 'complete_partial_purchase'
+  | 'recalculate_statistics';
 
 type PredictionAction = 'estimate' | 'recommend';
 
@@ -17,11 +18,12 @@ type CatalogIntegrityAction = 'lookup' | 'direct_resolution' | 'alias_write';
 
 export interface InventoryActionLog {
   action: InventoryAction;
-  outcome: 'success';
+  outcome: 'success' | 'failure';
   productId?: string;
   inventoryEventId?: string;
   affectedCount?: number;
   skippedCount?: number;
+  errorType?: 'persistence_error';
 }
 
 export interface PredictionRunLog {
@@ -95,6 +97,7 @@ export class OperationalLogger {
       inventoryEventId,
       affectedCount,
       skippedCount,
+      errorType,
     } = input;
     this.write({
       event: 'inventory.action',
@@ -104,6 +107,7 @@ export class OperationalLogger {
       inventoryEventId,
       affectedCount,
       skippedCount,
+      errorType,
     });
   }
 

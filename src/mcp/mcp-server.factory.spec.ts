@@ -8,7 +8,10 @@ import {
   ProductNameKind,
 } from '../generated/prisma/enums';
 import { GroceryService } from '../grocery/grocery.service';
-import { McpServerFactory } from './mcp-server.factory';
+import {
+  McpServerFactory,
+  PUBLISHED_INVENTORY_EVENT_TYPES,
+} from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
 import { ProductSearchService } from '../product/product-search.service';
 import type { PredictionEngine } from '../estimation/prediction-engine';
@@ -363,7 +366,7 @@ describe('McpServerFactory grocery tools', () => {
         productId: { type: 'string', format: 'uuid' },
         eventType: {
           type: 'string',
-          enum: Object.values(InventoryEventType),
+          enum: PUBLISHED_INVENTORY_EVENT_TYPES,
         },
         limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
         offset: { type: 'integer', minimum: 0, default: 0 },

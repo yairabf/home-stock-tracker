@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "command": "adopt",
-  "status": "running",
-  "summary": "Adopting the Blueprint into the existing application",
-  "detail": "Surveying the codebase, tooling, shipped features, and workflow configuration.",
-  "boundary": "reviewed",
-  "startedAt": "2026-08-27T07:11:00Z",
-  "updatedAt": "2026-08-27T07:11:00Z",
-  "resumeCommand": "run adopt skill"
+  "command": "complete",
+  "status": "ready",
+  "summary": "Feature 33a is committed and ready to merge",
+  "detail": "Final tests and build passed; the verified spec is archived and the local feature work commit is ready for explicit squash-merge approval.",
+  "boundary": "merge_approval",
+  "startedAt": "2026-09-02T20:33:37Z",
+  "updatedAt": "2026-09-02T20:56:41Z",
+  "resumeCommand": "run complete skill"
 }

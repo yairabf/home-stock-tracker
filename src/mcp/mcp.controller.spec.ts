@@ -9,7 +9,10 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { GroceryService } from '../grocery/grocery.service';
 import { McpController } from './mcp.controller';
-import { McpServerFactory } from './mcp-server.factory';
+import {
+  McpServerFactory,
+  PUBLISHED_INVENTORY_EVENT_TYPES,
+} from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
 import { ProductSearchService } from '../product/product-search.service';
 import { PREDICTION_ENGINE } from '../estimation/prediction-engine';
@@ -19,7 +22,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from '../auth/service-auth.module';
 import { ServiceAuthGuard } from '../auth/service-auth.guard';
 import { OperationalLogger } from '../observability/operational-logger.service';
-import { InventoryEventType, ProductNameKind } from '../generated/prisma/enums';
+import { ProductNameKind } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 import { HouseholdService } from '../household/household.service';
@@ -196,7 +199,7 @@ describe('McpController', () => {
           productId: { type: 'string', format: 'uuid' },
           eventType: {
             type: 'string',
-            enum: Object.values(InventoryEventType),
+            enum: PUBLISHED_INVENTORY_EVENT_TYPES,
           },
           limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
           offset: { type: 'integer', minimum: 0, default: 0 },

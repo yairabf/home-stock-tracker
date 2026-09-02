@@ -48,6 +48,7 @@ describe('InventoryController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.stockProjection.deleteMany({ where: { productId } });
     await prisma.groceryListItem.deleteMany({ where: { productId } });
     await prisma.inventoryEvent.deleteMany({ where: { productId } });
     await prisma.product.delete({ where: { id: productId } });
@@ -114,22 +115,15 @@ describe('InventoryController (e2e)', () => {
     expect(response.body.timestamp).toBeDefined();
   });
 
-  it('records a restock with zero quantity', async () => {
-    const response = await request(app.getHttpServer())
+  it('rejects a restock with zero quantity', async () => {
+    await request(app.getHttpServer())
       .post('/api/v1/inventory/purchases')
       .send({
         productId,
         eventType: 'RESTOCKED',
         quantity: 0,
       })
-      .expect(201);
-
-    expect(response.body).toMatchObject({
-      productId,
-      eventType: 'RESTOCKED',
-      quantity: 0,
-      source: 'api',
-    });
+      .expect(400);
   });
 
   it('rejects unsupported purchase event types', () => {

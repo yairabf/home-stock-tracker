@@ -302,8 +302,11 @@ INFERRED_LOW_STOCK
 ```
 
 Every event requires `productId` and `eventType`. `quantity`, `unit`,
-`confidence`, and `metadata` are optional. Prefer the focused purchase and stock
-routes over directly creating internal prediction events.
+`confidence`, and `metadata` are optional. A focused purchase requires a finite
+positive quantity and defaults an omitted quantity to `1`. A purchase or
+restock replaces the materialized stock estimate rather than adding to it.
+Prefer the focused purchase and stock routes over directly creating internal
+prediction events.
 
 Prediction feedback shapes:
 
@@ -474,12 +477,15 @@ actual quantities are summed only when every selected row for that product has
 a quantity and all trimmed units match exactly, including every row omitting a
 unit. Partial measurements or conflicting units reject the entire operation;
 clients must ask for clarification and must not convert units. Rows without
-actual measurements create purchase events with omitted quantity and unit.
+actual measurements create purchase events using the selected rows' stored
+positive requested quantities and their shared grocery unit. If no grocery unit
+is stored, the ledger resolves the product's typical unit and then `item`.
 
 The legacy `{ "groceryItemIds": ["..."] }` shape remains supported for
-transitional clients and records no actual measurement. Supply exactly one of
-`items` or `groceryItemIds`. Completion preserves the all-or-nothing transaction
-and uncertain-write guidance described below.
+transitional clients. It records the selected rows' requested quantities and
+shared grocery unit because no actual measurement was supplied. Supply exactly
+one of `items` or `groceryItemIds`. Completion preserves the all-or-nothing
+transaction and uncertain-write guidance described below.
 
 `record_prediction_feedback` accepts one strict object with `predictionId` and
 `outcome`. The outcome is `accepted`, `rejected`, or `corrected`.

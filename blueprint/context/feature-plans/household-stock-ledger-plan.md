@@ -19,6 +19,8 @@ The feature ships end to end: persistence, REST, MCP, scheduled evaluation, reco
 - Extend `InventoryEvent` with explicit set and consumption event types.
 - Write explicit events and projection changes atomically.
 - Purchases and restocks reset stock to the purchased quantity rather than adding to the previous balance.
+- Accept an optional `purchasedAt` on purchase inputs. It defaults to the server receipt time, must not be in the future, and becomes both the inventory-event timestamp and the projection's last-recorded timestamp.
+- When a backdated purchase is recorded, immediately materialize its current estimate by applying the same deterministic shelf-life and consumption rules from `purchasedAt` through the server receipt time. Missing shelf-life policy uses the normal reduced-confidence fallback and never blocks the write.
 - Grocery completion uses explicit actual quantity/unit when supplied; otherwise it uses the positive requested quantity and grocery unit.
 - Direct purchases default an omitted quantity to `1`.
 - Absolute set overwrites stock. Decrement applies atomically to the current estimate, preserves uncertainty, and clamps at zero. Mark-out sets zero.
@@ -64,6 +66,13 @@ The feature ships end to end: persistence, REST, MCP, scheduled evaluation, reco
   - `set`: positive quantity and optional unit;
   - `decrement`: positive quantity and optional matching unit;
   - `mark_out`: no quantity or unit.
+- Add `POST /api/v1/inventory/purchases` and MCP `record_purchases` for reporting a recently purchased list in one request:
+  - require a non-empty `items` array whose entries identify a resolved product and may provide quantity, unit, and `purchasedAt`;
+  - allow one request-level `purchasedAt` inherited by items without an override;
+  - default a missing item quantity to `1` and resolve its unit using the normal purchase rules;
+  - reject future timestamps and duplicate product entries rather than applying an ambiguous order;
+  - write the purchase events and stock projections for the entire list atomically, so a validation or persistence failure leaves every item unchanged;
+  - return one result per input item with its recorded purchase fact and newly materialized current estimate.
 - Add MCP `list_inventory` with no pagination or filters in this release.
 - Make low-stock recommendations filter the materialized daily projections:
   - include only qualifying low/out states at the household confidence threshold;
@@ -83,24 +92,25 @@ The feature ships end to end: persistence, REST, MCP, scheduled evaluation, reco
 - Stock projection responses include product identity, canonical name, recorded fact, materialized estimate, provenance, confidence, reason, and evaluation time.
 - Add a typed shelf-life policy with finite days or a nonperishable result, LLM provenance, confidence, rationale, and evaluation timestamp.
 - Add explicit `STOCK_SET` and `STOCK_CONSUMED` inventory event types.
+- Add batch purchase request and result types with a request-level optional `purchasedAt` and optional per-item override, serialized as ISO 8601 timestamps.
 - Keep existing MCP and REST fields backward-compatible; all new read fields and tools are additive.
 
 ## Test Plan
 
-- Unit-test purchase reset, actual-versus-requested quantity precedence, default direct-purchase quantity, canonical-unit resolution, set, decrement, clamping, mark-out, and qualitative-signal behavior.
+- Unit-test purchase reset, actual-versus-requested quantity precedence, default direct-purchase quantity, canonical-unit resolution, historical timestamps, immediate forward estimation, set, decrement, clamping, mark-out, and qualitative-signal behavior.
 - Prove stock projection and explicit event history commit or roll back together under concurrent mutations.
 - Use fake timers to verify daily consumption decay, shelf-life expiration, nonperishable policy, missing-policy fallback, unit-aware precision, and absence of cumulative double-decrement errors.
 - Test the ordered workflow, retry eligibility, per-product failure isolation, disabled scheduling, configurable cron/timezone, and structured summaries.
 - PostgreSQL-backed tests cover no-backfill deployment, `untracked` reads, grocery completion creating stock, direct purchase reset, manual updates, current/uncertain list membership, and depleted-item exclusion.
-- REST and MCP contract tests cover `list_inventory`, additive `get_inventory`, strict `update_inventory` schemas, safe errors, authentication, and unchanged existing tools.
+- REST and MCP contract tests cover `list_inventory`, additive `get_inventory`, strict `update_inventory`, batch `record_purchases`, request-level and per-item purchase timestamps, future-timestamp and duplicate-product rejection, atomic rollback, safe errors, authentication, and unchanged existing tools.
 - Recommendation tests prove use of daily snapshots, confidence filtering, pending-list suppression, and low products appearing in both inventory and suggestions.
-- Agent scenarios verify combined list presentation, explicit suggestion confirmation, quantity clarification for "we still have milk," and no automatic grocery mutation.
+- Agent scenarios verify reporting a recently purchased item list, combined list presentation, explicit suggestion confirmation, quantity clarification for "we still have milk," and no automatic grocery mutation.
 - Final gates: `npm run test`, `npm run test:e2e`, `npm run build`, contract generation/probe checks, and `git diff --check`.
 
 ## Assumptions and Deferred Work
 
 - One household and one user-visible balance per product.
-- No batches, storage locations, individual expiration lots, unit conversion, historical backfill, policy-editing tool, distributed scheduler lock, or automatic suggestion insertion.
+- No per-lot inventory batches, storage locations, individual expiration lots, unit conversion, bulk historical backfill, policy-editing tool, distributed scheduler lock, or automatic suggestion insertion. The batch purchase endpoint is only a transactional request wrapper around one projection per product.
 - Shelf-life policy is intrinsic product metadata. Household composition affects consumption estimates, not shelf life.
 - Existing inventory history remains available but does not establish current stock after deployment.
 - User-facing inventory is explicitly an estimate: recorded facts remain visible separately from materialized current estimates.

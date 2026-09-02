@@ -4,9 +4,9 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
-  Min,
 } from 'class-validator';
 import { InventoryEventType } from '../../generated/prisma/enums';
 
@@ -27,7 +27,7 @@ export class RecordPurchaseDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @IsPositive()
   quantity?: number;
 
   @IsOptional()

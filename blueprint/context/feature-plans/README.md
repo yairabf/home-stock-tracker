@@ -1,8 +1,9 @@
 # Queued feature plans
 
-No detailed feature plan is currently queued. Completed plans are preserved as
-implemented specifications under `blueprint/history/features/`; they are not
-duplicated in active context.
+- [Household stock ledger and daily estimation](household-stock-ledger-plan.md) - detailed plan for build-plan item 33.
+
+Completed plans are preserved as implemented specifications under
+`blueprint/history/features/`; they are not duplicated in active context.
 
 To queue future work:
 

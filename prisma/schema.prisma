@@ -51,6 +51,8 @@ model Product {
   inventoryEvents  InventoryEvent[]
   predictions      Prediction[]
   statistics       ProductStatistics?
+  stockProjection  StockProjection?
+  shelfLifePolicy  ProductShelfLifePolicy?
 }
 
 model ProductName {
@@ -93,6 +95,13 @@ enum InventoryEventType {
   PREDICTION_ACCEPTED
   PREDICTION_REJECTED
   INFERRED_LOW_STOCK
+  STOCK_SET
+  STOCK_CONSUMED
+}
+
+enum ShelfLifePolicyKind {
+  finite
+  nonperishable
 }
 
 enum PredictedState {
@@ -120,7 +129,8 @@ model InventoryEvent {
   confidence Float?
   metadata   Json?
 
-  groceryListItems GroceryListItem[]
+  groceryListItems        GroceryListItem[]
+  recordedStockProjection StockProjection? @relation("RecordedStockEvent")
 
   @@index([productId])
   @@index([eventType])
@@ -152,6 +162,7 @@ model Prediction {
   modelProviderVersion String?
   feedbackStatus       FeedbackStatus    @default(pending)
   llmInferenceLogs     LlmInferenceLog[]
+  stockProjections     StockProjection[] @relation("StockProjectionPrediction")
 
   @@index([productId])
   @@index([predictedAt])
@@ -188,4 +199,44 @@ model ProductStatistics {
   updatedAt                        DateTime  @updatedAt
 
   @@index([productId])
+}
+
+model StockProjection {
+  id                String         @id @default(uuid())
+  productId         String         @unique
+  product           Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unit              String
+  recordedQuantity  Float?
+  recordedAt        DateTime
+  recordedSource    String
+  recordedEventId   String         @unique
+  recordedEvent     InventoryEvent @relation("RecordedStockEvent", fields: [recordedEventId], references: [id], onDelete: Restrict)
+  estimatedQuantity Float?
+  estimatedState    PredictedState
+  confidence        Float
+  reason            String
+  predictionId      String?
+  prediction        Prediction?    @relation("StockProjectionPrediction", fields: [predictionId], references: [id], onDelete: SetNull)
+  evaluatedAt       DateTime
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([estimatedState])
+  @@index([predictionId])
+}
+
+model ProductShelfLifePolicy {
+  id            String              @id @default(uuid())
+  productId     String              @unique
+  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kind          ShelfLifePolicyKind
+  shelfLifeDays Float?
+  modelProvider String?
+  modelVersion  String?
+  promptVersion String?
+  confidence    Float
+  rationale     String
+  evaluatedAt   DateTime
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 }

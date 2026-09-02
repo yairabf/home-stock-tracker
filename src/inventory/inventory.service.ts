@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
@@ -24,6 +28,7 @@ import { GroceryItemResponseDto } from '../grocery/dto/grocery-item-response.dto
 import {
   InventoryEventType,
   GroceryItemStatus,
+  PredictedState,
 } from '../generated/prisma/enums';
 import {
   CompleteGroceryPurchaseItemInput,
@@ -31,11 +36,14 @@ import {
   CompleteGroceryPurchaseResult,
 } from './types/complete-grocery-purchase';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { StockLedgerService } from './stock-ledger.service';
+import { StatisticsService } from '../statistics/statistics.service';
 
 interface PurchaseEventInput {
   productId: string;
-  quantity?: number;
+  quantity: number;
   unit?: string;
+  typicalUnit?: string;
 }
 
 @Injectable()
@@ -44,6 +52,8 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
     private readonly operationalLogger: OperationalLogger,
+    private readonly stockLedgerService: StockLedgerService,
+    private readonly statisticsService: StatisticsService,
   ) {}
 
   async recordPurchase(
@@ -55,19 +65,47 @@ export class InventoryService {
       );
     }
 
-    await this.productService.findOne(dto.productId);
-
-    const event = await this.prisma.inventoryEvent.create({
-      data: {
+    const quantity = dto.quantity ?? 1;
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new BadRequestException(
+        'Purchase quantity must be a finite positive number',
+      );
+    }
+    const occurredAt = new Date();
+    const event = await this.runStockTransaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: dto.productId },
+        select: { id: true, typicalUnit: true },
+      });
+      if (!product) {
+        throw new NotFoundException(`No product with id "${dto.productId}"`);
+      }
+      const createdEvent = await tx.inventoryEvent.create({
+        data: {
+          productId: dto.productId,
+          eventType: dto.eventType,
+          quantity,
+          unit: dto.unit,
+          timestamp: occurredAt,
+          source: dto.source,
+          confidence: dto.confidence,
+          metadata: dto.metadata as Prisma.InputJsonValue | undefined,
+        },
+      });
+      await this.stockLedgerService.resetWithinTransaction(tx, {
         productId: dto.productId,
-        eventType: dto.eventType,
-        quantity: dto.quantity,
-        unit: dto.unit,
+        eventId: createdEvent.id,
+        quantity,
+        occurredAt,
         source: dto.source,
-        confidence: dto.confidence,
-        metadata: dto.metadata as Prisma.InputJsonValue | undefined,
-      },
+        reason: 'purchase_recorded',
+        explicitUnit: dto.unit,
+        typicalUnit: product.typicalUnit,
+      });
+      return createdEvent;
     });
+
+    await this.recalculateStatisticsAfterCommit(event.productId);
 
     this.operationalLogger.inventoryAction({
       action: 'record_purchase',
@@ -79,9 +117,58 @@ export class InventoryService {
     return InventoryEventResponseDto.fromEntity(event);
   }
 
+  private async runStockTransaction<T>(
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(operation, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        });
+      } catch (error) {
+        if (
+          !this.isRetryableTransactionError(error) ||
+          attempt === maxAttempts
+        ) {
+          throw error;
+        }
+      }
+    }
+    throw new Error('Stock transaction retries exhausted');
+  }
+
+  private isRetryableTransactionError(error: unknown): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2034'
+    );
+  }
+
+  private async recalculateStatisticsAfterCommit(
+    productId: string,
+  ): Promise<void> {
+    try {
+      await this.statisticsService.calculateProductStatistics(productId);
+    } catch {
+      this.operationalLogger.inventoryAction({
+        action: 'recalculate_statistics',
+        outcome: 'failure',
+        productId,
+        errorType: 'persistence_error',
+      });
+    }
+  }
+
   async recordEvent(
     dto: RecordInventoryEventDto & { source: string },
   ): Promise<InventoryEventResponseDto> {
+    if (
+      dto.eventType === InventoryEventType.STOCK_LOW ||
+      dto.eventType === InventoryEventType.STOCK_OUT
+    ) {
+      return this.recordProjectionObservation(dto);
+    }
     await this.productService.findOne(dto.productId);
 
     const event = await this.prisma.inventoryEvent.create({
@@ -103,6 +190,53 @@ export class InventoryService {
       inventoryEventId: event.id,
     });
 
+    return InventoryEventResponseDto.fromEntity(event);
+  }
+
+  private async recordProjectionObservation(
+    dto: RecordInventoryEventDto & { source: string },
+  ): Promise<InventoryEventResponseDto> {
+    const occurredAt = new Date();
+    const event = await this.runStockTransaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: dto.productId },
+        select: { id: true, typicalUnit: true },
+      });
+      if (!product) {
+        throw new NotFoundException(`No product with id "${dto.productId}"`);
+      }
+      const createdEvent = await tx.inventoryEvent.create({
+        data: {
+          productId: dto.productId,
+          eventType: dto.eventType,
+          quantity: dto.quantity,
+          unit: dto.unit,
+          timestamp: occurredAt,
+          source: dto.source,
+          confidence: dto.confidence,
+          metadata: dto.metadata as Prisma.InputJsonValue | undefined,
+        },
+      });
+      await this.stockLedgerService.applyObservationWithinTransaction(tx, {
+        productId: dto.productId,
+        eventId: createdEvent.id,
+        state:
+          dto.eventType === InventoryEventType.STOCK_OUT
+            ? PredictedState.probably_out
+            : PredictedState.probably_low,
+        occurredAt,
+        source: dto.source,
+        reason:
+          dto.eventType === InventoryEventType.STOCK_OUT
+            ? 'stock_out_reported'
+            : 'stock_low_reported',
+        explicitUnit: dto.unit,
+        typicalUnit: product.typicalUnit,
+      });
+      return createdEvent;
+    });
+    await this.recalculateStatisticsAfterCommit(event.productId);
+    this.logInventoryEvent(event, 'record_event');
     return InventoryEventResponseDto.fromEntity(event);
   }
 
@@ -141,7 +275,7 @@ export class InventoryService {
     const uniqueIds = [...new Set(dto.groceryItemIds)];
 
     // Verify product exists
-    await this.productService.findOne(dto.productId);
+    const product = await this.productService.findOne(dto.productId);
 
     // Fetch all referenced grocery items
     const groceryItems = await this.prisma.groceryListItem.findMany({
@@ -184,17 +318,35 @@ export class InventoryService {
     }
 
     // Execute transaction: create event and update grocery items
-    const result = await this.prisma.$transaction(async (tx) => {
+    const measurement = this.resolveCompletionMeasurement(
+      groceryItems,
+      dto.quantity,
+      dto.unit,
+    );
+    const occurredAt = new Date();
+    const result = await this.runStockTransaction(async (tx) => {
       const event = await tx.inventoryEvent.create({
         data: {
           productId: dto.productId,
           eventType: InventoryEventType.PURCHASED,
-          quantity: dto.quantity,
-          unit: dto.unit,
+          quantity: measurement.quantity,
+          unit: measurement.unit,
+          timestamp: occurredAt,
           source: dto.source,
           confidence: dto.confidence,
           metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         },
+      });
+
+      await this.stockLedgerService.resetWithinTransaction(tx, {
+        productId: dto.productId,
+        eventId: event.id,
+        quantity: measurement.quantity,
+        occurredAt,
+        source: dto.source,
+        reason: 'grocery_purchase_completed',
+        explicitUnit: measurement.unit,
+        typicalUnit: product.typicalUnit,
       });
 
       const updatedItems = await Promise.all(
@@ -212,6 +364,8 @@ export class InventoryService {
 
       return { event, updatedItems };
     });
+
+    await this.recalculateStatisticsAfterCommit(result.event.productId);
 
     this.operationalLogger.inventoryAction({
       action: 'complete_purchase',
@@ -271,7 +425,8 @@ export class InventoryService {
       validItems,
       selectedItems,
     );
-    const result = await this.prisma.$transaction(async (tx) => {
+    const occurredAt = new Date();
+    const result = await this.runStockTransaction(async (tx) => {
       const events = await Promise.all(
         eventInputs.map((eventInput) =>
           tx.inventoryEvent.create({
@@ -279,13 +434,27 @@ export class InventoryService {
               productId: eventInput.productId,
               eventType: InventoryEventType.PURCHASED,
               source: input.source,
-              ...(eventInput.quantity !== undefined && {
-                quantity: eventInput.quantity,
-              }),
+              quantity: eventInput.quantity,
               ...(eventInput.unit !== undefined && { unit: eventInput.unit }),
+              timestamp: occurredAt,
             },
           }),
         ),
+      );
+      await Promise.all(
+        events.map((event, index) => {
+          const eventInput = eventInputs[index];
+          return this.stockLedgerService.resetWithinTransaction(tx, {
+            productId: event.productId,
+            eventId: event.id,
+            quantity: eventInput.quantity,
+            occurredAt,
+            source: input.source,
+            reason: 'grocery_purchase_completed',
+            explicitUnit: eventInput.unit,
+            typicalUnit: eventInput.typicalUnit,
+          });
+        }),
       );
       const eventIdsByProduct = new Map(
         events.map((event) => [event.productId, event.id]),
@@ -308,6 +477,12 @@ export class InventoryService {
       );
       return { events, completedItems };
     });
+
+    await Promise.all(
+      eventInputs.map((eventInput) =>
+        this.recalculateStatisticsAfterCommit(eventInput.productId),
+      ),
+    );
 
     this.operationalLogger.inventoryAction({
       action: 'complete_purchase',
@@ -396,7 +571,12 @@ export class InventoryService {
   }
 
   private buildPurchaseEventInputs(
-    items: Array<{ productId: string }>,
+    items: Array<{
+      productId: string;
+      requestedQuantity: number;
+      unit: string | null;
+      product: { typicalUnit: string | null };
+    }>,
     selectedItems: CompleteGroceryPurchaseItemInput[],
   ): PurchaseEventInput[] {
     const selectionsByProduct = new Map<
@@ -409,20 +589,49 @@ export class InventoryService {
       selectionsByProduct.set(item.productId, selections);
     });
 
+    const itemsByProduct = new Map<string, Array<(typeof items)[number]>>();
+    items.forEach((item) => {
+      const productItems = itemsByProduct.get(item.productId) ?? [];
+      productItems.push(item);
+      itemsByProduct.set(item.productId, productItems);
+    });
+
     return [...selectionsByProduct].map(([productId, selections]) =>
-      this.buildPurchaseEventInput(productId, selections),
+      this.buildPurchaseEventInput(
+        productId,
+        itemsByProduct.get(productId) ?? [],
+        selections,
+      ),
     );
   }
 
   private buildPurchaseEventInput(
     productId: string,
+    items: Array<{
+      requestedQuantity: number;
+      unit: string | null;
+      product: { typicalUnit: string | null };
+    }>,
     selections: CompleteGroceryPurchaseItemInput[],
   ): PurchaseEventInput {
     const measured = selections.filter(
       (selection) => selection.actualQuantity !== undefined,
     );
     if (measured.length === 0) {
-      return { productId };
+      const groceryUnits = new Set(
+        items.flatMap((item) => (item.unit === null ? [] : [item.unit.trim()])),
+      );
+      if (groceryUnits.has('') || groceryUnits.size > 1) {
+        throw new BadRequestException(
+          `Grocery units for product ${productId} must match exactly`,
+        );
+      }
+      return {
+        productId,
+        quantity: items.reduce((sum, item) => sum + item.requestedQuantity, 0),
+        unit: [...groceryUnits][0],
+        typicalUnit: items[0]?.product.typicalUnit ?? undefined,
+      };
     }
     if (measured.length !== selections.length) {
       throw new BadRequestException(
@@ -446,13 +655,18 @@ export class InventoryService {
       );
     }
 
-    return { productId, quantity, unit: measured[0].actualUnit };
+    return {
+      productId,
+      quantity,
+      unit: measured[0].actualUnit,
+      typicalUnit: items[0]?.product.typicalUnit ?? undefined,
+    };
   }
 
   async completePartialPurchase(
     dto: CompletePartialPurchaseDto & { source: string },
   ): Promise<CompletePartialPurchaseResponseDto> {
-    await this.productService.findOne(dto.productId);
+    const product = await this.productService.findOne(dto.productId);
 
     // Determine mode and target item IDs
     const isInclusiveMode = !!dto.completeItemIds;
@@ -462,15 +676,19 @@ export class InventoryService {
 
     // In exclusive mode, fetch all pending items for this product first
     let pendingItemIds: string[] = [];
+    let pendingItems: Array<{
+      id: string;
+      requestedQuantity: number;
+      unit: string | null;
+    }> = [];
     if (!isInclusiveMode) {
-      const allPending = await this.prisma.groceryListItem.findMany({
+      pendingItems = await this.prisma.groceryListItem.findMany({
         where: {
           productId: dto.productId,
           status: GroceryItemStatus.pending,
         },
-        select: { id: true },
       });
-      pendingItemIds = allPending.map((item) => item.id);
+      pendingItemIds = pendingItems.map((item) => item.id);
     }
 
     // Fetch all referenced grocery items (inputItemIds in inclusive mode, omitItemIds in exclusive)
@@ -543,17 +761,38 @@ export class InventoryService {
     }
 
     // Execute transaction: create event and update grocery items
-    const result = await this.prisma.$transaction(async (tx) => {
+    const completedItems = (
+      isInclusiveMode ? referencedItems : pendingItems
+    ).filter((item) => validatedIds.includes(item.id));
+    const measurement = this.resolveCompletionMeasurement(
+      completedItems,
+      dto.quantity,
+      dto.unit,
+    );
+    const occurredAt = new Date();
+    const result = await this.runStockTransaction(async (tx) => {
       const event = await tx.inventoryEvent.create({
         data: {
           productId: dto.productId,
           eventType: InventoryEventType.PURCHASED,
-          quantity: dto.quantity,
-          unit: dto.unit,
+          quantity: measurement.quantity,
+          unit: measurement.unit,
+          timestamp: occurredAt,
           source: dto.source,
           confidence: dto.confidence,
           metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         },
+      });
+
+      await this.stockLedgerService.resetWithinTransaction(tx, {
+        productId: dto.productId,
+        eventId: event.id,
+        quantity: measurement.quantity,
+        occurredAt,
+        source: dto.source,
+        reason: 'grocery_purchase_completed',
+        explicitUnit: measurement.unit,
+        typicalUnit: product.typicalUnit,
       });
 
       const updatedItems = await Promise.all(
@@ -571,6 +810,8 @@ export class InventoryService {
 
       return { event, updatedItems };
     });
+
+    await this.recalculateStatisticsAfterCommit(result.event.productId);
 
     this.operationalLogger.inventoryAction({
       action: 'complete_partial_purchase',
@@ -596,5 +837,45 @@ export class InventoryService {
       skipped,
       pending,
     };
+  }
+
+  private resolveCompletionMeasurement(
+    items: Array<{ requestedQuantity: number; unit: string | null }>,
+    explicitQuantity?: number,
+    explicitUnit?: string,
+  ): { quantity: number; unit?: string } {
+    if (
+      explicitQuantity !== undefined &&
+      (!Number.isFinite(explicitQuantity) || explicitQuantity <= 0)
+    ) {
+      throw new BadRequestException(
+        'Purchase quantity must be a finite positive number',
+      );
+    }
+    if (explicitQuantity !== undefined) {
+      return { quantity: explicitQuantity, unit: explicitUnit };
+    }
+    const units = new Set(
+      items.flatMap((item) => (item.unit == null ? [] : [item.unit.trim()])),
+    );
+    if (units.has('') || units.size > 1) {
+      throw new BadRequestException('Completed grocery item units must match');
+    }
+    return {
+      quantity: items.reduce((sum, item) => sum + item.requestedQuantity, 0),
+      unit: explicitUnit ?? [...units][0],
+    };
+  }
+
+  private logInventoryEvent(
+    event: { id: string; productId: string },
+    action: 'record_event' | 'record_purchase',
+  ): void {
+    this.operationalLogger.inventoryAction({
+      action,
+      outcome: 'success',
+      productId: event.productId,
+      inventoryEventId: event.id,
+    });
   }
 }

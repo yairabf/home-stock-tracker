@@ -56,6 +56,9 @@ describe('Purchase completion MCP API (e2e)', () => {
   });
 
   afterEach(async () => {
+    await prisma.stockProjection.deleteMany({
+      where: { productId: { in: productIds } },
+    });
     await prisma.groceryListItem.deleteMany({
       where: { productId: { in: productIds } },
     });
@@ -76,7 +79,7 @@ describe('Purchase completion MCP API (e2e)', () => {
     }
   });
 
-  it('preserves legacy ID-only completion with null measurements', async () => {
+  it('uses requested measurements for legacy ID-only completion', async () => {
     const rice = await createProduct('legacy rice');
     const milk = await createProduct('legacy milk');
     const riceItem = await createItem(rice.id, 2, 'bags');
@@ -98,14 +101,14 @@ describe('Purchase completion MCP API (e2e)', () => {
     expect(content.events).toEqual([
       expect.objectContaining({
         productId: rice.id,
-        quantity: null,
-        unit: null,
+        quantity: 2,
+        unit: 'bags',
         source: 'mcp',
       }),
       expect.objectContaining({
         productId: milk.id,
-        quantity: null,
-        unit: null,
+        quantity: 4,
+        unit: 'bottles',
         source: 'mcp',
       }),
     ]);
@@ -115,15 +118,36 @@ describe('Purchase completion MCP API (e2e)', () => {
       status: GroceryItemStatus.purchased,
       requestedQuantity: 2,
       unit: 'bags',
-      relatedInventoryEvent: { quantity: null, unit: null },
+      relatedInventoryEvent: { quantity: 2, unit: 'bags' },
     });
     expect(stored[1]).toMatchObject({
       id: milkItem.id,
       status: GroceryItemStatus.purchased,
       requestedQuantity: 4,
       unit: 'bottles',
-      relatedInventoryEvent: { quantity: null, unit: null },
+      relatedInventoryEvent: { quantity: 4, unit: 'bottles' },
     });
+    const projections = await prisma.stockProjection.findMany({
+      where: { productId: { in: [rice.id, milk.id] } },
+      orderBy: { productId: 'asc' },
+    });
+    expect(projections).toHaveLength(2);
+    expect(projections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          productId: rice.id,
+          recordedQuantity: 2,
+          estimatedQuantity: 2,
+          unit: 'bags',
+        }),
+        expect.objectContaining({
+          productId: milk.id,
+          recordedQuantity: 4,
+          estimatedQuantity: 4,
+          unit: 'bottles',
+        }),
+      ]),
+    );
   });
 
   it('aggregates same-unit rows and keeps different products separate', async () => {
