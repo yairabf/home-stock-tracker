@@ -917,6 +917,79 @@
       ]
     },
     {
+      "id": "household-identification",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-household-context-request"],
+      "calls": [
+        {
+          "tool": "get_household_context",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "context-read-only-when-requested",
+        "no-fact-invention",
+        "no-mutation-from-read"
+      ],
+      "row": [
+        "Household identification",
+        "\"Which household is this connected to?\"",
+        "`get_household_context({})` exactly once.",
+        "Identify the returned household ID and composition without exposing unrelated fields or mutating setup."
+      ]
+    },
+    {
+      "id": "household-configuration-explanation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-household-context-request"],
+      "calls": [
+        {
+          "tool": "get_household_context",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "context-read-only-when-requested",
+        "no-fact-invention",
+        "no-mutation-from-read"
+      ],
+      "row": [
+        "Household configuration explanation",
+        "\"What confidence threshold and household settings affect predictions?\"",
+        "`get_household_context({})` exactly once.",
+        "Preserve the returned threshold and relevant settings exactly; do not infer omitted configuration or change it."
+      ]
+    },
+    {
+      "id": "missing-household-configuration",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-household-context-request"],
+      "calls": [
+        {
+          "tool": "get_household_context",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": [
+        "context-read-only-when-requested",
+        "no-mutation-from-read",
+        "no-success-claim-on-error",
+        "operator-fixes-configuration"
+      ],
+      "row": [
+        "Missing household configuration",
+        "`get_household_context` reports `Household is not configured`.",
+        "State that household setup is incomplete and stop. Do not create defaults or call another tool.",
+        "The missing setup remains unchanged for an operator to configure."
+      ]
+    },
+    {
       "id": "inventory-estimate",
       "platforms": ["hermes", "openclaw"],
       "prerequisites": [],
@@ -936,12 +1009,13 @@
       "safetyInvariants": [
         "read-before-write",
         "trusted-ids-only",
-        "no-inventory-count-invention"
+        "no-inventory-count-invention",
+        "context-read-only-when-requested"
       ],
       "row": [
         "Inventory estimate",
         "\"Did we probably run out of milk?\"",
-        "`get_product({ productName: \"milk\" })`, then `get_inventory({ id: <resolved product id> })`.",
+        "`get_product({ productName: \"milk\" })`, then `get_inventory({ id: <resolved product id> })`; do not call `get_household_context`.",
         "State the returned predicted state, confidence, and reason without inventing a count."
       ]
     },

@@ -47,6 +47,7 @@ import {
   confirmProductAliasInputSchema,
 } from './schemas/grocery-confirmation.schema';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
+import { HouseholdService } from '../household/household.service';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -251,6 +252,18 @@ const householdContextSchema = z.object({
   childAgeGroups: z.array(z.string()),
   predictionPreferences: z.record(z.string(), z.unknown()).nullable(),
 });
+
+const householdContextOutputSchema = z
+  .object({
+    id: z.uuid(),
+    adultsCount: z.number().int().nonnegative(),
+    childrenCount: z.number().int().nonnegative(),
+    childAgeGroups: z.array(z.string()),
+    predictionPreferences: z.record(z.string(), z.unknown()).nullable(),
+    suggestionConfidenceThreshold: z.number().min(0).max(1),
+    productPolicies: z.record(z.string(), z.unknown()).nullable(),
+  })
+  .strict();
 
 const estimationOutputSchema = z.object({
   predictionId: z.string().nullable(),
@@ -457,6 +470,7 @@ export class McpServerFactory {
     private readonly inventoryService: InventoryService,
     private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
+    private readonly householdService: HouseholdService,
     private readonly operationalLogger: OperationalLogger,
   ) {}
 
@@ -613,6 +627,20 @@ export class McpServerFactory {
   }
 
   private registerReadTools(server: McpServer): void {
+    server.registerTool(
+      'get_household_context',
+      {
+        description:
+          'Read the configured household context for explicit setup, configuration, or prediction-explanation questions. Do not call before routine predictions or recommendations.',
+        inputSchema: z.object({}).strict(),
+        outputSchema: householdContextOutputSchema,
+      },
+      () =>
+        this.runTool('get_household_context', async () =>
+          this.toolResult(await this.householdService.getContext()),
+        ),
+    );
+
     server.registerTool(
       'get_product',
       {

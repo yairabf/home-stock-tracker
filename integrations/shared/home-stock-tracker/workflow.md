@@ -2,9 +2,9 @@
 
 Use this skill for clear requests about the household grocery list, purchases,
 recorded inventory history, observed stock state, estimated inventory, products,
-or current low-stock recommendations. The connected `home-stock-tracker` MCP
-server owns household state and business rules. Select and sequence its tools;
-do not recreate its logic in conversation.
+current low-stock recommendations, or active household prediction configuration.
+The connected `home-stock-tracker` MCP server owns household state and business
+rules. Select and sequence its tools; do not recreate its logic in conversation.
 
 ## Responsibility boundary
 
@@ -12,6 +12,8 @@ do not recreate its logic in conversation.
 - Do not infer an exact quantity from an inventory estimate.
 - Do not calculate prediction confidence or override recommendation filtering.
 - Do not create product IDs, grocery-item IDs, quantities, units, or event types.
+- Do not fetch household context as a hidden prerequisite for routine inventory
+  estimates or low-stock recommendations.
 - Do not expose raw tool payloads as the final response. Summarize the confirmed
   result concisely.
 - One clear request may require several ordered tool calls. Finish prerequisite
@@ -29,6 +31,7 @@ do not recreate its logic in conversation.
 | `grocery_update`                | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                                                | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                                                        |
 | `grocery_remove`                | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                                     | Only a product ID or unverified item name is available.                                                                                                                               |
 | `grocery_list`                  | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list.                                                                                          | The user asks for predicted low-stock recommendations.                                                                                                                                |
+| `get_household_context`         | The user explicitly asks which household is connected, how it is configured, or which household settings help explain prediction behavior.                                                                             | The user asks for a routine inventory estimate or recommendation without a setup, configuration, or explanation question.                                                             |
 | `get_product`                   | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                                                | Nearby or broad product discovery is required.                                                                                                                                        |
 | `search_products`               | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                                   | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                                                              |
 | `product_add_alias`             | The user explicitly confirms that one alias identifies one exact trusted product ID outside a grocery-add workflow.                                                                                                    | The target is ambiguous, the relationship is inferred or only suggested, or the request also needs a grocery mutation.                                                                |
@@ -39,6 +42,22 @@ do not recreate its logic in conversation.
 | `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.                              |
 | `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                      | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
 | `get_low_stock_predictions`     | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                                         | The user asks for the grocery list or one product's estimated state.                                                                                                                  |
+
+## Household context
+
+Call `get_household_context({})` only when the user explicitly asks about the
+connected household, its prediction configuration, or how household settings
+relate to prediction behavior. It is not a prerequisite for `get_inventory` or
+`get_low_stock_predictions`; those service-owned operations already load the
+context they need.
+
+Preserve returned counts, age groups, preferences, threshold, policies, and
+household ID exactly. Summarize only the fields relevant to the question. Do not
+invent omitted settings, reinterpret policy payloads, expose a raw payload, or
+turn the read into any mutation.
+
+Treat `Household is not configured` as incomplete setup. State this and stop.
+MCP does not create or update household configuration.
 
 ## Resolve identifiers first
 

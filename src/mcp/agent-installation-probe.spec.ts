@@ -28,8 +28,19 @@ interface ProbeServerState {
   serverInfo: Implementation;
   tools: Tool[];
   safeReadError: boolean;
+  householdContext: Record<string, unknown>;
   calledTools: string[];
 }
+
+const householdContext = {
+  id: '00000000-0000-4000-8000-000000000010',
+  adultsCount: 2,
+  childrenCount: 3,
+  childAgeGroups: ['child', 'teen'],
+  predictionPreferences: { diagnosticSecret: 'do-not-print-preferences' },
+  suggestionConfidenceThreshold: 0.8,
+  productPolicies: { diagnosticSecret: 'do-not-print-policies' },
+};
 
 describe('read-only agent installation probe', () => {
   const projectRoot = process.cwd();
@@ -38,7 +49,7 @@ describe('read-only agent installation probe', () => {
     readFileSync(
       join(
         projectRoot,
-        'integrations/shared/home-stock-tracker/contracts/1.1.0/tools-list.json',
+        'integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
       ),
       'utf8',
     ),
@@ -51,6 +62,7 @@ describe('read-only agent installation probe', () => {
     serverInfo: canonicalFixture.serverInfo,
     tools: canonicalFixture.tools,
     safeReadError: false,
+    householdContext,
     calledTools: [],
   };
   let server: HttpServer;
@@ -98,6 +110,7 @@ describe('read-only agent installation probe', () => {
     state.serverInfo = canonicalFixture.serverInfo;
     state.tools = canonicalFixture.tools;
     state.safeReadError = false;
+    state.householdContext = householdContext;
     state.calledTools = [];
   });
 
@@ -144,9 +157,12 @@ describe('read-only agent installation probe', () => {
       expect(result.status).toBe(0);
       expect(result.stderr).toBe('');
       expect(result.stdout).toContain(`PROBE_OK code=OK platform=${platform}`);
-      expect(state.calledTools).toEqual(['grocery_list']);
+      expect(result.stdout).toContain(`household ${householdContext.id}`);
+      expect(state.calledTools).toEqual(['get_household_context']);
       expect(result.args).not.toContain('probe-test-credential');
       expect(result.stdout).not.toContain('probe-test-credential');
+      expect(result.stdout).not.toContain('do-not-print-preferences');
+      expect(result.stdout).not.toContain('do-not-print-policies');
     },
   );
 
@@ -233,14 +249,25 @@ describe('read-only agent installation probe', () => {
     expect(drift.stderr).toContain('code=SCHEMA_DRIFT');
   });
 
-  it('fails closed when the safe grocery read fails without trying a mutation', async () => {
+  it('fails closed when the safe household read fails without trying a mutation', async () => {
     state.safeReadError = true;
 
     const result = await runProbe();
 
     expect(result.status).toBe(29);
     expect(result.stderr).toContain('code=SAFE_READ_FAILED');
-    expect(state.calledTools).toEqual(['grocery_list']);
+    expect(state.calledTools).toEqual(['get_household_context']);
+  });
+
+  it('rejects an incomplete household context response', async () => {
+    state.householdContext = { ...householdContext };
+    delete state.householdContext.productPolicies;
+
+    const result = await runProbe();
+
+    expect(result.status).toBe(29);
+    expect(result.stderr).toContain('code=SAFE_READ_FAILED');
+    expect(state.calledTools).toEqual(['get_household_context']);
   });
 });
 
@@ -266,15 +293,15 @@ async function handleMcpRequest(
   }));
   mcpServer.setRequestHandler(CallToolRequestSchema, ({ params }) => {
     state.calledTools.push(params.name);
-    if (params.name !== 'grocery_list' || state.safeReadError) {
+    if (params.name !== 'get_household_context' || state.safeReadError) {
       return {
         isError: true,
         content: [{ type: 'text', text: 'safe read failed' }],
       };
     }
     return {
-      content: [{ type: 'text', text: '{"items":[]}' }],
-      structuredContent: { items: [] },
+      content: [{ type: 'text', text: JSON.stringify(state.householdContext) }],
+      structuredContent: state.householdContext,
     };
   });
   const transport = new StreamableHTTPServerTransport({

@@ -32,6 +32,7 @@ const RESULT_CLASSES = [
 const PREREQUISITES = [
   'complete-product-facts',
   'active-prediction-id',
+  'explicit-household-context-request',
   'explicit-actual-measurement',
   'exact-catalog-match',
   'existing-grocery-line',
@@ -51,6 +52,7 @@ const INVARIANTS = [
   'actual-measurements-user-supplied',
   'all-or-nothing-batch',
   'at-most-one-delivery',
+  'context-read-only-when-requested',
   'expected-old-values',
   'exact-silent-sentinel',
   'explicit-separate-line-only',
@@ -216,6 +218,14 @@ function validateCallOrder(scenario, path) {
     !hasPrerequisite('active-prediction-id')
   ) {
     throw new Error(`${path} must require an active prediction ID`);
+  }
+  if (
+    calls.includes('get_household_context') &&
+    !hasPrerequisite('explicit-household-context-request')
+  ) {
+    throw new Error(
+      `${path} must require an explicit household context request`,
+    );
   }
   for (const confirmationTool of [
     'grocery_confirm_new_product',

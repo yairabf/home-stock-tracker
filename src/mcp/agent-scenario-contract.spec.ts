@@ -40,14 +40,14 @@ describe('executable agent scenario contract', () => {
     });
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Validated 90 executable agent scenarios.');
+    expect(result.stdout).toContain('Validated 93 executable agent scenarios.');
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(90);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(90);
+    expect(fixture.scenarios).toHaveLength(93);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(93);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -162,6 +162,63 @@ describe('executable agent scenario contract', () => {
     ]);
   });
 
+  it('gates household context reads behind explicit requests', () => {
+    for (const id of [
+      'household-identification',
+      'household-configuration-explanation',
+      'missing-household-configuration',
+    ]) {
+      const scenario = scenarios.get(id);
+      expect(scenario?.prerequisites).toContain(
+        'explicit-household-context-request',
+      );
+      expect(scenario?.calls.map(({ tool }) => tool)).toEqual([
+        'get_household_context',
+      ]);
+      expect(scenario?.safetyInvariants).toContain(
+        'context-read-only-when-requested',
+      );
+      expect(scenario?.safetyInvariants).toContain('no-mutation-from-read');
+    }
+
+    expect(
+      scenarios.get('inventory-estimate')?.calls.map(({ tool }) => tool),
+    ).toEqual(['get_product', 'get_inventory']);
+    expect(scenarios.get('inventory-estimate')?.safetyInvariants).toContain(
+      'context-read-only-when-requested',
+    );
+  });
+
+  it('rejects a household context scenario without an explicit request', () => {
+    const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json',
+        'utf8',
+      ));
+      const tools = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
+        'utf8',
+      ));
+      const scenario = contract.scenarios.find(
+        ({ id }) => id === 'household-identification',
+      );
+      scenario.prerequisites = [];
+      validateScenarioContract(contract, tools);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', script],
+      { cwd: root, encoding: 'utf8' },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      'must require an explicit household context request',
+    );
+  });
+
   it.each([
     ['explicit-user-confirmation', 'must require confirmation'],
     ['trusted-product-id', 'must require a trusted product ID'],
@@ -176,7 +233,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.1.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(

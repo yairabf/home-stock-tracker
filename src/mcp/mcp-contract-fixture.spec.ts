@@ -11,6 +11,7 @@ import type { PredictionFeedbackService } from '../inventory/prediction-feedback
 import type { OperationalLogger } from '../observability/operational-logger.service';
 import type { ProductSearchService } from '../product/product-search.service';
 import type { ProductService } from '../product/product.service';
+import type { HouseholdService } from '../household/household.service';
 import { AGENT_RELEASE_CONTRACT } from './agent-release-contract.generated';
 import {
   discoverMcpContractSnapshot,
@@ -41,6 +42,7 @@ describe('MCP contract fixture', () => {
       {} as InventoryService,
       {} as PredictionFeedbackService,
       {} as LowStockRecommendationService,
+      {} as HouseholdService,
       {} as OperationalLogger,
     );
     const server = factory.create();

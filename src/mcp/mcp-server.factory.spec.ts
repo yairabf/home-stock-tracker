@@ -25,6 +25,7 @@ import {
   UnknownProductPolicy,
 } from '../grocery/types/policy-aware-grocery-addition';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
+import { HouseholdService } from '../household/household.service';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -75,6 +76,7 @@ describe('McpServerFactory grocery tools', () => {
     Pick<PredictionFeedbackService, 'submitFeedback'>
   >;
   let operationalLogger: jest.Mocked<Pick<OperationalLogger, 'mcpIntegration'>>;
+  let householdService: jest.Mocked<Pick<HouseholdService, 'getContext'>>;
 
   beforeEach(async () => {
     groceryService = {
@@ -101,6 +103,7 @@ describe('McpServerFactory grocery tools', () => {
     };
     recommendationService = { getRecommendations: jest.fn() };
     predictionFeedbackService = { submitFeedback: jest.fn() };
+    householdService = { getContext: jest.fn() };
     operationalLogger = { mcpIntegration: jest.fn() };
     const factory = new McpServerFactory(
       groceryService as GroceryService,
@@ -110,6 +113,7 @@ describe('McpServerFactory grocery tools', () => {
       inventoryService as InventoryService,
       predictionFeedbackService as PredictionFeedbackService,
       recommendationService as LowStockRecommendationService,
+      householdService as HouseholdService,
       operationalLogger as OperationalLogger,
     );
     const server = factory.create();
@@ -138,6 +142,7 @@ describe('McpServerFactory grocery tools', () => {
       'grocery_update',
       'grocery_remove',
       'grocery_list',
+      'get_household_context',
       'get_product',
       'search_products',
       'get_inventory',
@@ -281,6 +286,46 @@ describe('McpServerFactory grocery tools', () => {
     ).toMatchObject({
       additionalProperties: false,
       required: ['id'],
+    });
+    const householdContextTool = result.tools.find(
+      ({ name }) => name === 'get_household_context',
+    );
+    expect(householdContextTool?.description).toContain(
+      'explicit setup, configuration, or prediction-explanation questions',
+    );
+    expect(householdContextTool?.description).toContain(
+      'Do not call before routine predictions or recommendations',
+    );
+    expect(householdContextTool).toMatchObject({
+      inputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {},
+      },
+      outputSchema: {
+        type: 'object',
+        additionalProperties: false,
+        required: [
+          'id',
+          'adultsCount',
+          'childrenCount',
+          'childAgeGroups',
+          'predictionPreferences',
+          'suggestionConfidenceThreshold',
+          'productPolicies',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          adultsCount: { type: 'integer', minimum: 0 },
+          childrenCount: { type: 'integer', minimum: 0 },
+          childAgeGroups: { type: 'array' },
+          suggestionConfidenceThreshold: {
+            type: 'number',
+            minimum: 0,
+            maximum: 1,
+          },
+        },
+      },
     });
     expect(
       result.tools.find(({ name }) => name === 'get_product')?.inputSchema,
@@ -785,6 +830,85 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(groceryService.listItems).toHaveBeenCalledWith(undefined);
     expect(result.structuredContent).toEqual({ items: [] });
+  });
+
+  it('returns the configured household context without extra fields', async () => {
+    const context = {
+      id: '00000000-0000-4000-8000-000000000010',
+      adultsCount: 2,
+      childrenCount: 3,
+      childAgeGroups: ['child', 'teen'],
+      predictionPreferences: { preferRecentSignals: true },
+      suggestionConfidenceThreshold: 0.8,
+      productPolicies: null,
+    };
+    householdService.getContext.mockResolvedValue(context);
+
+    const result = await client.callTool({
+      name: 'get_household_context',
+      arguments: {},
+    });
+
+    expect(householdService.getContext).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent).toEqual(context);
+  });
+
+  it('rejects household context arguments without reading', async () => {
+    const result = await client.callTool({
+      name: 'get_household_context',
+      arguments: { householdId: item.productId },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(householdService.getContext).not.toHaveBeenCalled();
+  });
+
+  it('returns a safe missing-household error', async () => {
+    householdService.getContext.mockRejectedValue(
+      new NotFoundException('Household is not configured'),
+    );
+
+    const result = await client.callTool({
+      name: 'get_household_context',
+      arguments: {},
+    });
+
+    expect(result).toMatchObject({
+      isError: true,
+      content: [{ type: 'text', text: 'Household is not configured' }],
+    });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'get_household_context',
+      errorType: 'domain_error',
+    });
+  });
+
+  it('sanitizes unexpected household context failures', async () => {
+    householdService.getContext.mockRejectedValue(
+      new Error('database credential leaked'),
+    );
+
+    const result = await client.callTool({
+      name: 'get_household_context',
+      arguments: {},
+    });
+
+    expect(result).toMatchObject({
+      isError: true,
+      content: [
+        {
+          type: 'text',
+          text: 'The inventory operation could not be completed',
+        },
+      ],
+    });
+    expect(JSON.stringify(result)).not.toContain('database credential leaked');
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'get_household_context',
+      errorType: 'unexpected_error',
+    });
   });
 
   it('removes an item and returns expected domain errors as tool errors', async () => {

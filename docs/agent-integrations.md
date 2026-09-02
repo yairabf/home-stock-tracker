@@ -22,6 +22,9 @@ of copying tool counts or release versions into deployment notes.
 5. Keep the token outside this repository and use HTTPS or private networking
    when traffic leaves the machine.
 
+Configure the single household before running the bundle probe. The probe fails
+closed when household setup is missing and never creates defaults.
+
 `localhost` works only when the agent and service share a network namespace. A
 containerized agent normally needs a Compose service name, private DNS name, or
 host gateway address.
@@ -80,11 +83,12 @@ Restart Hermes or reload skills, then confirm `home-stock-tracker` appears in
 the skill list. Start with a read-only prompt:
 
 ```text
-What is on the grocery list?
+Which household is this connected to?
 ```
 
-Hermes should call `grocery_list` and summarize the structured result. Test
-writes only after confirming the target service and household.
+Hermes should call `get_household_context` once and summarize the returned ID
+and composition. Test writes only after confirming the target service and
+household. Routine prediction questions must not add this context read.
 
 ### Verify the Hermes bundle
 
@@ -98,9 +102,11 @@ npm run agent:probe -- --platform hermes
 
 The probe checks health, readiness, authentication, server identity and
 compatibility, the exact published schemas and required tools, and one
-read-only `grocery_list` call. It does not invoke a mutation. Keep the token in
-the process environment or an operator-owned secret store; never pass it as a
-command argument.
+read-only `get_household_context` call. A successful diagnostic prints only the
+agent-safe household ID so the operator can verify the target. It does not print
+preferences, policies, credentials, or raw payloads, and it never invokes a
+mutation. Keep the token in the process environment or an operator-owned secret
+store; never pass it as a command argument.
 
 ### WhatsApp and scheduled checks
 
@@ -220,7 +226,7 @@ For a generic client, select the Hermes or OpenClaw manifest as the portable
 contract (their shared MCP requirements are generated from the same source),
 then initialize Streamable HTTP, compare server identity/version and
 `tools/list` with that manifest and its `mcp.toolsFixture`, and call only
-`grocery_list`. The repository probe can perform that generic MCP preflight
+`get_household_context`. The repository probe can perform that generic MCP preflight
 without installing either agent skill:
 
 ```bash
@@ -240,12 +246,12 @@ resolution and uncertain-write handling.
 The repository probe emits one symbolic diagnostic and stable exit code. It
 never prints the configured URL, token, request headers, or raw transport error.
 
-|  Exit | Diagnostic                                                                                           | Operator action                                                                              |
-| ----: | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 10–12 | `MISSING_CONFIGURATION`, `INVALID_CONFIGURATION`, `BUNDLE_INVALID`                                   | Correct the two environment variables or regenerate the complete selected bundle.            |
-| 20–24 | `ENDPOINT_UNREACHABLE`, `HEALTH_FAILED`, `READINESS_FAILED`, `AUTHENTICATION_FAILED`, `MCP_DISABLED` | Restore service/network readiness, credentials, or MCP enablement before installing.         |
-| 25–28 | `SERVER_IDENTITY_MISMATCH`, `SERVER_VERSION_MISMATCH`, `SCHEMA_DRIFT`, `HIDDEN_TOOLS`                | Select a compatible complete bundle or correct the client/tool policy; do not enable writes. |
-| 29–31 | `SAFE_READ_FAILED`, `MCP_CONNECTION_FAILED`, `INTERNAL_FAILURE`                                      | Diagnose the read path or regenerate the bundle; do not retry a mutation.                    |
+|  Exit | Diagnostic                                                                                           | Operator action                                                                                  |
+| ----: | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 10–12 | `MISSING_CONFIGURATION`, `INVALID_CONFIGURATION`, `BUNDLE_INVALID`                                   | Correct the two environment variables or regenerate the complete selected bundle.                |
+| 20–24 | `ENDPOINT_UNREACHABLE`, `HEALTH_FAILED`, `READINESS_FAILED`, `AUTHENTICATION_FAILED`, `MCP_DISABLED` | Restore service/network readiness, credentials, or MCP enablement before installing.             |
+| 25–28 | `SERVER_IDENTITY_MISMATCH`, `SERVER_VERSION_MISMATCH`, `SCHEMA_DRIFT`, `HIDDEN_TOOLS`                | Select a compatible complete bundle or correct the client/tool policy; do not enable writes.     |
+| 29–31 | `SAFE_READ_FAILED`, `MCP_CONNECTION_FAILED`, `INTERNAL_FAILURE`                                      | Confirm household setup, diagnose the read path, or regenerate the bundle; do not enable writes. |
 
 ### The client receives `401`
 

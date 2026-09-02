@@ -50,7 +50,10 @@ tool result, never from the model.
 | Unknown product | `search_products({ query: "unknown phrase" })` returns no exact match or candidates. | Ask for another name or more detail. Do not call a write tool. | No product is created. |
 | Prediction-disabled discovery | Search returns a product with `predictionEnabled: false`. | Present it as a valid catalog identity and preserve the metadata. | Search does not hide or enable the product. |
 | Search is read-only | A search result or future advisory proposal recommends an identity action. | Explain that it is advice only. Do not create a product, add an alias, or treat it as authorization for a write. | Catalog, grocery, and inventory state remain unchanged. |
-| Inventory estimate | "Did we probably run out of milk?" | `get_product({ productName: "milk" })`, then `get_inventory({ id: <resolved product id> })`. | State the returned predicted state, confidence, and reason without inventing a count. |
+| Household identification | "Which household is this connected to?" | `get_household_context({})` exactly once. | Identify the returned household ID and composition without exposing unrelated fields or mutating setup. |
+| Household configuration explanation | "What confidence threshold and household settings affect predictions?" | `get_household_context({})` exactly once. | Preserve the returned threshold and relevant settings exactly; do not infer omitted configuration or change it. |
+| Missing household configuration | `get_household_context` reports `Household is not configured`. | State that household setup is incomplete and stop. Do not create defaults or call another tool. | The missing setup remains unchanged for an operator to configure. |
+| Inventory estimate | "Did we probably run out of milk?" | `get_product({ productName: "milk" })`, then `get_inventory({ id: <resolved product id> })`; do not call `get_household_context`. | State the returned predicted state, confidence, and reason without inventing a count. |
 | Uncertain inventory | `get_inventory` returns `predictedState: "uncertain"`. | Do not call `grocery_add` or record a stock event. | Explain that there is not enough confidence to tell. |
 | Named product history | "What has been recorded about milk?" | `get_product({ productName: "milk" })`, then `list_inventory_events({ productId: <resolved product id> })`. | Summarize returned events newest first as recorded history, not current stock. |
 | Filtered purchase history | "When did we last buy milk?" | `get_product({ productName: "milk" })`, then `list_inventory_events({ productId: <resolved product id>, eventType: "PURCHASED", limit: 1 })`. | Report the newest matching timestamp without claiming what remains now. |
@@ -112,6 +115,11 @@ For each row, verify:
 - duplicate-product actual measurements are complete with exactly matching
   trimmed units, or the agent asks before mutation and never converts units;
 - no optional quantity, unit, note, confidence, or metadata is invented;
+- household context is read only for an explicit setup, configuration, or
+  explanation question, never as a prerequisite for a routine prediction or
+  recommendation;
+- household context values are preserved without invention or mutation, and a
+  missing configuration remains an operator setup result;
 - every named history lookup resolves a product ID before
   `list_inventory_events`;
 - history pagination preserves filters and advances `offset` by the prior

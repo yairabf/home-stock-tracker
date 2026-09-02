@@ -82,7 +82,7 @@ const DIAGNOSTICS = Object.freeze({
   ],
   SAFE_READ_FAILED: [
     EXIT_CODES.safeReadFailed,
-    'The read-only grocery_list verification call failed; do not enable writes.',
+    'The read-only get_household_context verification call failed; confirm household setup before enabling writes.',
   ],
   MCP_CONNECTION_FAILED: [
     EXIT_CODES.mcpConnectionFailed,
@@ -161,6 +161,50 @@ function normalizeSnapshot(serverInfo, tools) {
       left.name.localeCompare(right.name),
     ),
   });
+}
+
+const HOUSEHOLD_CONTEXT_KEYS = [
+  'adultsCount',
+  'childAgeGroups',
+  'childrenCount',
+  'id',
+  'predictionPreferences',
+  'productPolicies',
+  'suggestionConfidenceThreshold',
+];
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isNullableRecord(value) {
+  return value === null || isRecord(value);
+}
+
+function isHouseholdContext(value) {
+  if (!isRecord(value)) return false;
+  const keys = Object.keys(value).sort();
+  if (JSON.stringify(keys) !== JSON.stringify(HOUSEHOLD_CONTEXT_KEYS)) {
+    return false;
+  }
+  return (
+    typeof value.id === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value.id,
+    ) &&
+    Number.isInteger(value.adultsCount) &&
+    value.adultsCount >= 0 &&
+    Number.isInteger(value.childrenCount) &&
+    value.childrenCount >= 0 &&
+    Array.isArray(value.childAgeGroups) &&
+    value.childAgeGroups.every((group) => typeof group === 'string') &&
+    isNullableRecord(value.predictionPreferences) &&
+    typeof value.suggestionConfidenceThreshold === 'number' &&
+    Number.isFinite(value.suggestionConfidenceThreshold) &&
+    value.suggestionConfidenceThreshold >= 0 &&
+    value.suggestionConfidenceThreshold <= 1 &&
+    isNullableRecord(value.productPolicies)
+  );
 }
 
 function parseVersion(version) {
@@ -332,19 +376,16 @@ export async function runInstallationProbe({
       return diagnostic('SCHEMA_DRIFT');
     }
 
+    let householdId;
     try {
       const result = await client.callTool({
-        name: 'grocery_list',
+        name: 'get_household_context',
         arguments: {},
       });
-      if (
-        result.isError ||
-        result.structuredContent === null ||
-        typeof result.structuredContent !== 'object' ||
-        !Array.isArray(result.structuredContent.items)
-      ) {
+      if (result.isError || !isHouseholdContext(result.structuredContent)) {
         return diagnostic('SAFE_READ_FAILED');
       }
+      householdId = result.structuredContent.id;
     } catch {
       return diagnostic('SAFE_READ_FAILED');
     }
@@ -353,8 +394,7 @@ export async function runInstallationProbe({
       ok: true,
       code: 'OK',
       exitCode: EXIT_CODES.success,
-      message:
-        'Health, readiness, MCP contract, required tools, and grocery_list read verified.',
+      message: `Health, readiness, MCP contract, required tools, and household ${householdId} context read verified.`,
     };
   } finally {
     try {

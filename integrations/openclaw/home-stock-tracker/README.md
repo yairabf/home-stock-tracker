@@ -67,15 +67,19 @@ npm run agent:probe -- --platform openclaw
 ```
 
 The repository probe is read-only and complements `openclaw mcp doctor`: it
-checks the exact bundle contract, while the OpenClaw command checks runtime tool
-visibility. Follow `release/README.md` for compatibility and complete-bundle
-rollback, and do not enable writes until both checks succeed.
+checks the exact bundle contract and reports the configured household ID without
+printing preferences or policies, while the OpenClaw command checks runtime
+tool visibility. Follow `release/README.md` for compatibility and
+complete-bundle rollback, and do not enable writes until both checks succeed.
 
 ## Smoke check
 
-In a trusted test household, start with "What is on the grocery list?" The agent
-should call `grocery_list` and summarize the structured result. Test mutations
-only after confirming the MCP endpoint and target household.
+In a trusted test household, start with "Which household is this connected to?"
+The agent should call `get_household_context` once and summarize the returned ID
+and composition without exposing a raw payload. A missing setup result must not
+create defaults. Then ask a routine inventory question and verify the agent does
+not add a household-context call. Test mutations only after confirming the MCP
+endpoint and target household.
 
 For product discovery, ask "Which milk products exist?" The agent should call
 `search_products`, preserve returned order, and ask for a choice when several

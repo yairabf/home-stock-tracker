@@ -141,7 +141,8 @@ ${verificationCommand}
 
 This verifies health, readiness, authentication, MCP identity and compatibility,
 the exact normalized tool schemas, the required tool set, and one read-only
-\`grocery_list\` call. It never invokes a mutation. Run \`npm run contract:check\`
+\`get_household_context\` call that identifies the configured household. It never
+invokes a mutation. Run \`npm run contract:check\`
 before publishing from a project checkout to reject stale generated artifacts.
 
 ## Rollback

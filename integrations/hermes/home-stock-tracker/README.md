@@ -40,7 +40,8 @@ checkout:
 npm run agent:probe -- --platform hermes
 ```
 
-The probe is read-only. Follow `release/README.md` for compatibility and
+The probe is read-only and reports the configured household ID without printing
+preferences or policies. Follow `release/README.md` for compatibility and
 complete-bundle rollback, and do not enable writes until it succeeds.
 
 Hermes also supports project skill discovery, external skill directories, and
@@ -49,10 +50,12 @@ Hermes operator rather than encoded in this repository.
 
 ## Smoke check
 
-In a trusted test household, ask Hermes to use the skill for one read-only
-request such as "What is on the grocery list?" Verify that it selects
-`grocery_list` and summarizes the structured result. Test mutations only after
-the MCP connection and target household are confirmed.
+In a trusted test household, ask Hermes "Which household is this connected to?"
+Verify that it calls `get_household_context` once and summarizes the returned ID
+and composition without exposing a raw payload. A missing setup result must not
+create defaults. Then ask a routine inventory question and verify Hermes does
+not add a household-context call. Test mutations only after the MCP connection
+and target household are confirmed.
 
 For a product-discovery smoke check, ask "Which milk products exist?" Hermes
 should call `search_products`, present every plausible candidate in returned

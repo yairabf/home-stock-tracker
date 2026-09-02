@@ -27,6 +27,11 @@ For each row, verify:
 - duplicate-product actual measurements are complete with exactly matching
   trimmed units, or the agent asks before mutation and never converts units;
 - no optional quantity, unit, note, confidence, or metadata is invented;
+- household context is read only for an explicit setup, configuration, or
+  explanation question, never as a prerequisite for a routine prediction or
+  recommendation;
+- household context values are preserved without invention or mutation, and a
+  missing configuration remains an operator setup result;
 - every named history lookup resolves a product ID before
   `list_inventory_events`;
 - history pagination preserves filters and advances `offset` by the prior

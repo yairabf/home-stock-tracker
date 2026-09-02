@@ -7,10 +7,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateHouseholdDto } from './dto/create-household.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
 import { HouseholdResponseDto } from './dto/household-response.dto';
+import { HouseholdContextResponseDto } from './dto/household-context-response.dto';
 
 @Injectable()
 export class HouseholdService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getContext(): Promise<HouseholdContextResponseDto> {
+    const household = await this.prisma.household.findFirst();
+
+    if (!household) {
+      throw new NotFoundException('Household is not configured');
+    }
+
+    return HouseholdContextResponseDto.fromEntity(household);
+  }
 
   async getOrCreate(): Promise<HouseholdResponseDto> {
     const existing = await this.prisma.household.findFirst();

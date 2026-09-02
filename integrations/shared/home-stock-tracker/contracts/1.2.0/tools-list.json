@@ -1,0 +1,3471 @@
+{
+  "serverInfo": {
+    "name": "home-stock-tracker",
+    "version": "1.2.0"
+  },
+  "tools": [
+    {
+      "description": "Complete selected pending grocery items from one shopping trip. Prefer items with only user-supplied actual measurements; groceryItemIds is the legacy ID-only form.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "groceryItemIds": {
+            "description": "Legacy ID-only selection retained during transition",
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "items": {
+            "description": "Preferred selection with optional actual measurements",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "actualQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "actualUnit": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "groceryItemId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "groceryItemId"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "name": "complete_grocery_purchase",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "definitions": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "completedItems": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dateAdded": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "relatedInventoryEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "requestedQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": [
+                    "hermes_whatsapp",
+                    "api",
+                    "mcp"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "purchased",
+                    "removed"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "productName",
+                "requestedQuantity",
+                "unit",
+                "dateAdded",
+                "status",
+                "note",
+                "source",
+                "relatedInventoryEventId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "events": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eventType": {
+                  "enum": [
+                    "GROCERY_ADDED",
+                    "GROCERY_REMOVED",
+                    "PURCHASED",
+                    "RESTOCKED",
+                    "STOCK_LOW",
+                    "STOCK_OUT",
+                    "STOCK_CONFIRMED",
+                    "STOCK_CORRECTED",
+                    "PREDICTION_ACCEPTED",
+                    "PREDICTION_REJECTED",
+                    "INFERRED_LOW_STOCK"
+                  ],
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/__schema0"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "source": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "eventType",
+                "quantity",
+                "unit",
+                "timestamp",
+                "source",
+                "confidence",
+                "metadata"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "events",
+          "completedItems"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Read the configured household context for explicit setup, configuration, or prediction-explanation questions. Do not call before routine predictions or recommendations.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_household_context",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "adultsCount": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "childAgeGroups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "childrenCount": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "predictionPreferences": {
+            "anyOf": [
+              {
+                "additionalProperties": {},
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productPolicies": {
+            "anyOf": [
+              {
+                "additionalProperties": {},
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suggestionConfidenceThreshold": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "adultsCount",
+          "childrenCount",
+          "childAgeGroups",
+          "predictionPreferences",
+          "suggestionConfidenceThreshold",
+          "productPolicies"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Estimate the current inventory state for one product.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "get_inventory",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "confidenceScore": {
+            "type": "number"
+          },
+          "deterministicSignals": {
+            "additionalProperties": false,
+            "properties": {
+              "authoritativeDirectSignal": {
+                "type": "boolean"
+              },
+              "avgNeedIntervalDays": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "avgPurchaseIntervalDays": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "coldStart": {
+                "type": "boolean"
+              },
+              "daysSinceLastLowSignal": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "daysSinceLastPurchase": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "estimatedConsumptionIntervalDays": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "eventCount": {
+                "type": "number"
+              },
+              "hasLearnedStatistics": {
+                "type": "boolean"
+              },
+              "householdContext": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "adultsCount": {
+                        "type": "number"
+                      },
+                      "childAgeGroups": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "childrenCount": {
+                        "type": "number"
+                      },
+                      "predictionPreferences": {
+                        "anyOf": [
+                          {
+                            "additionalProperties": {},
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "type": "object"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "adultsCount",
+                      "childrenCount",
+                      "childAgeGroups",
+                      "predictionPreferences"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "isPerishable": {
+                "type": "boolean"
+              },
+              "lastLowStockSignalAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lastPurchaseAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lastStockConfirmationAt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observationCount": {
+                "type": "number"
+              },
+              "predictionStrategy": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "productType": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "lastPurchaseAt",
+              "lastLowStockSignalAt",
+              "lastStockConfirmationAt",
+              "daysSinceLastPurchase",
+              "daysSinceLastLowSignal",
+              "productType",
+              "eventCount",
+              "coldStart",
+              "hasLearnedStatistics",
+              "avgPurchaseIntervalDays",
+              "avgNeedIntervalDays",
+              "estimatedConsumptionIntervalDays",
+              "observationCount",
+              "isPerishable",
+              "predictionStrategy",
+              "householdContext",
+              "authoritativeDirectSignal"
+            ],
+            "type": "object"
+          },
+          "llmContributed": {
+            "type": "boolean"
+          },
+          "predictedState": {
+            "enum": [
+              "likely_available",
+              "probably_low",
+              "probably_out",
+              "uncertain"
+            ],
+            "type": "string"
+          },
+          "predictionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "recommendedAction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "predictionId",
+          "productId",
+          "predictedState",
+          "confidenceScore",
+          "reason",
+          "recommendedAction",
+          "llmContributed",
+          "deterministicSignals"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Get actionable high-confidence low-stock recommendations.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_low_stock_predictions",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "recommendations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidenceScore": {
+                  "type": "number"
+                },
+                "predictedState": {
+                  "enum": [
+                    "probably_low",
+                    "probably_out"
+                  ],
+                  "type": "string"
+                },
+                "predictionId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "recommendedAction": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "productId",
+                "productName",
+                "predictionId",
+                "predictedState",
+                "confidenceScore",
+                "reason",
+                "recommendedAction"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "recommendations"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Get one canonical product by its ID or exact name/alias.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "productName": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "get_product",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "definitions": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "canonicalName": {
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/__schema0"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "isPerishable": {
+            "type": "boolean"
+          },
+          "predictionEnabled": {
+            "type": "boolean"
+          },
+          "predictionStrategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productType": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fast_consumable",
+                  "pantry_staple",
+                  "household_consumable",
+                  "discrete_consumable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "typicalUnit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "canonicalName",
+          "aliases",
+          "category",
+          "typicalUnit",
+          "productType",
+          "isPerishable",
+          "predictionStrategy",
+          "predictionEnabled",
+          "config"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Add a product to the household grocery list. Omitted unknownProductPolicy uses propose_if_missing: begin uncertain names there and present product_resolution_required candidates or advice without mutation. Use explicit create_if_missing only with complete deterministic product facts. An omitted grocery quantity defaults to 1 only for a new line; confirmation_required never changes an existing quantity.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "groceryItem": {
+            "additionalProperties": false,
+            "properties": {
+              "ifPendingExists": {
+                "default": "return_existing",
+                "enum": [
+                  "return_existing",
+                  "create_separate"
+                ],
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "unit": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "product": {
+            "additionalProperties": false,
+            "properties": {
+              "aliases": {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "canonicalName": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "category": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "isPerishable": {
+                "type": "boolean"
+              },
+              "productType": {
+                "enum": [
+                  "fast_consumable",
+                  "pantry_staple",
+                  "household_consumable",
+                  "discrete_consumable"
+                ],
+                "type": "string"
+              },
+              "typicalUnit": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "canonicalName",
+              "aliases",
+              "category",
+              "typicalUnit",
+              "productType",
+              "isPerishable"
+            ],
+            "type": "object"
+          },
+          "productName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unknownProductPolicy": {
+            "default": "propose_if_missing",
+            "enum": [
+              "create_if_missing",
+              "propose_if_missing"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "groceryItem"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_add",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "allowedActions": {
+            "items": {
+              "enum": [
+                "use_existing_product",
+                "add_alias",
+                "create_product",
+                "cancel"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "candidates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "aliases": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "canonicalName": {
+                  "type": "string"
+                },
+                "category": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "isPerishable": {
+                  "type": "boolean"
+                },
+                "predictionEnabled": {
+                  "type": "boolean"
+                },
+                "productType": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "fast_consumable",
+                        "pantry_staple",
+                        "household_consumable",
+                        "discrete_consumable"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "typicalUnit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "canonicalName",
+                "aliases",
+                "category",
+                "typicalUnit",
+                "productType",
+                "isPerishable",
+                "predictionEnabled"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "createdItem": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "dateAdded": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "productId": {
+                    "type": "string"
+                  },
+                  "productName": {
+                    "type": "string"
+                  },
+                  "relatedInventoryEventId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requestedQuantity": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "source": {
+                    "enum": [
+                      "hermes_whatsapp",
+                      "api",
+                      "mcp"
+                    ],
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": [
+                      "pending",
+                      "purchased",
+                      "removed"
+                    ],
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "productId",
+                  "productName",
+                  "requestedQuantity",
+                  "unit",
+                  "dateAdded",
+                  "status",
+                  "note",
+                  "source",
+                  "relatedInventoryEventId"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "existingItems": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dateAdded": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "relatedInventoryEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "requestedQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": [
+                    "hermes_whatsapp",
+                    "api",
+                    "mcp"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "purchased",
+                    "removed"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "productName",
+                "requestedQuantity",
+                "unit",
+                "dateAdded",
+                "status",
+                "note",
+                "source",
+                "relatedInventoryEventId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "created",
+              "confirmation_required",
+              "product_resolution_required"
+            ],
+            "type": "string"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "confidence": {
+                        "maximum": 1,
+                        "minimum": 0,
+                        "type": "number"
+                      },
+                      "newProduct": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "aliases": {
+                            "items": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "maxItems": 10,
+                            "type": "array"
+                          },
+                          "canonicalName": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "category": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "isPerishable": {
+                            "type": "boolean"
+                          },
+                          "productType": {
+                            "enum": [
+                              "fast_consumable",
+                              "pantry_staple",
+                              "household_consumable",
+                              "discrete_consumable"
+                            ],
+                            "type": "string"
+                          },
+                          "typicalUnit": {
+                            "anyOf": [
+                              {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "canonicalName",
+                          "aliases",
+                          "category",
+                          "typicalUnit",
+                          "productType",
+                          "isPerishable"
+                        ],
+                        "type": "object"
+                      },
+                      "reason": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "recommendation": {
+                        "const": "create_product",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "recommendation",
+                      "newProduct",
+                      "confidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "alias": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "confidence": {
+                        "maximum": 1,
+                        "minimum": 0,
+                        "type": "number"
+                      },
+                      "reason": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "recommendation": {
+                        "const": "add_alias",
+                        "type": "string"
+                      },
+                      "targetProductId": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "recommendation",
+                      "targetProductId",
+                      "alias",
+                      "confidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "candidateProductIds": {
+                        "items": {
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "maxItems": 20,
+                        "minItems": 2,
+                        "type": "array"
+                      },
+                      "confidence": {
+                        "maximum": 1,
+                        "minimum": 0,
+                        "type": "number"
+                      },
+                      "reason": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "recommendation": {
+                        "const": "ask_user_to_choose",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "recommendation",
+                      "candidateProductIds",
+                      "confidence",
+                      "reason"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestedAddition": {
+            "additionalProperties": false,
+            "properties": {
+              "ifPendingExists": {
+                "enum": [
+                  "return_existing",
+                  "create_separate"
+                ],
+                "type": "string"
+              },
+              "note": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "productName": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "productName",
+              "requestedQuantity",
+              "unit",
+              "note",
+              "ifPendingExists"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "outcome",
+          "requestedAddition"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Apply a user-approved final product-creation payload and complete the original grocery addition without an LLM call. Do not send proposal state or source. An omitted quantity defaults to 1 only for a new line. confirmation_required means an existing pending quantity was not changed; handle that as a separate user decision. PRODUCT_NAME_CONFLICT is final for this decision and must not be auto-retried.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "groceryItem": {
+            "additionalProperties": false,
+            "properties": {
+              "note": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "unit": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "product": {
+            "additionalProperties": false,
+            "properties": {
+              "aliases": {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "canonicalName": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "category": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "isPerishable": {
+                "type": "boolean"
+              },
+              "productType": {
+                "enum": [
+                  "fast_consumable",
+                  "pantry_staple",
+                  "household_consumable",
+                  "discrete_consumable"
+                ],
+                "type": "string"
+              },
+              "typicalUnit": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "canonicalName",
+              "aliases",
+              "category",
+              "typicalUnit",
+              "productType",
+              "isPerishable"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "product",
+          "groceryItem"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_confirm_new_product",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "createdItem": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "dateAdded": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "productId": {
+                    "type": "string"
+                  },
+                  "productName": {
+                    "type": "string"
+                  },
+                  "relatedInventoryEventId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requestedQuantity": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "source": {
+                    "enum": [
+                      "hermes_whatsapp",
+                      "api",
+                      "mcp"
+                    ],
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": [
+                      "pending",
+                      "purchased",
+                      "removed"
+                    ],
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "productId",
+                  "productName",
+                  "requestedQuantity",
+                  "unit",
+                  "dateAdded",
+                  "status",
+                  "note",
+                  "source",
+                  "relatedInventoryEventId"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "existingItems": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dateAdded": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "relatedInventoryEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "requestedQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": [
+                    "hermes_whatsapp",
+                    "api",
+                    "mcp"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "purchased",
+                    "removed"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "productName",
+                "requestedQuantity",
+                "unit",
+                "dateAdded",
+                "status",
+                "note",
+                "source",
+                "relatedInventoryEventId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "created",
+              "confirmation_required"
+            ],
+            "type": "string"
+          },
+          "requestedAddition": {
+            "additionalProperties": false,
+            "properties": {
+              "ifPendingExists": {
+                "enum": [
+                  "return_existing",
+                  "create_separate"
+                ],
+                "type": "string"
+              },
+              "note": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "productName": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "productName",
+              "requestedQuantity",
+              "unit",
+              "note",
+              "ifPendingExists"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "outcome",
+          "createdItem",
+          "existingItems",
+          "requestedAddition"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Apply a user-approved alias to one exact target product ID and complete the original grocery addition without an LLM call. Do not infer the target, send proposal state, or send source. The alias stays saved if confirmation_required reports an existing pending line; quantity remains a separate user decision. PRODUCT_NOT_FOUND and PRODUCT_NAME_CONFLICT are final for this decision and must not be auto-retried.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "groceryItem": {
+            "additionalProperties": false,
+            "properties": {
+              "note": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "unit": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "targetProductId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "targetProductId",
+          "alias",
+          "groceryItem"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_confirm_product_alias",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "createdItem": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "dateAdded": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "productId": {
+                    "type": "string"
+                  },
+                  "productName": {
+                    "type": "string"
+                  },
+                  "relatedInventoryEventId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "requestedQuantity": {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                  },
+                  "source": {
+                    "enum": [
+                      "hermes_whatsapp",
+                      "api",
+                      "mcp"
+                    ],
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": [
+                      "pending",
+                      "purchased",
+                      "removed"
+                    ],
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "productId",
+                  "productName",
+                  "requestedQuantity",
+                  "unit",
+                  "dateAdded",
+                  "status",
+                  "note",
+                  "source",
+                  "relatedInventoryEventId"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "existingItems": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dateAdded": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "relatedInventoryEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "requestedQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": [
+                    "hermes_whatsapp",
+                    "api",
+                    "mcp"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "purchased",
+                    "removed"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "productName",
+                "requestedQuantity",
+                "unit",
+                "dateAdded",
+                "status",
+                "note",
+                "source",
+                "relatedInventoryEventId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "created",
+              "confirmation_required"
+            ],
+            "type": "string"
+          },
+          "requestedAddition": {
+            "additionalProperties": false,
+            "properties": {
+              "ifPendingExists": {
+                "enum": [
+                  "return_existing",
+                  "create_separate"
+                ],
+                "type": "string"
+              },
+              "note": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "productName": {
+                "type": "string"
+              },
+              "requestedQuantity": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "productName",
+              "requestedQuantity",
+              "unit",
+              "note",
+              "ifPendingExists"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "outcome",
+          "createdItem",
+          "existingItems",
+          "requestedAddition"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "List grocery items, pending by default.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "pending",
+              "purchased",
+              "removed"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "grocery_list",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "dateAdded": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "relatedInventoryEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "requestedQuantity": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "source": {
+                  "enum": [
+                    "hermes_whatsapp",
+                    "api",
+                    "mcp"
+                  ],
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "purchased",
+                    "removed"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "productName",
+                "requestedQuantity",
+                "unit",
+                "dateAdded",
+                "status",
+                "note",
+                "source",
+                "relatedInventoryEventId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Remove one grocery-list item by its ID.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_remove",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "dateAdded": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "relatedInventoryEventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "source": {
+            "enum": [
+              "hermes_whatsapp",
+              "api",
+              "mcp"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "purchased",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "productName",
+          "requestedQuantity",
+          "unit",
+          "dateAdded",
+          "status",
+          "note",
+          "source",
+          "relatedInventoryEventId"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Set one pending grocery item to an absolute final quantity. Calculate relative requests before calling and copy expectedRequestedQuantity from the latest grocery_list result. GROCERY_ITEM_CHANGED requires a fresh user decision: do not retry or recalculate automatically. Make no call when the chosen final quantity is unchanged.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "expectedRequestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "itemId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "itemId",
+          "requestedQuantity",
+          "expectedRequestedQuantity"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_set_quantity",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "dateAdded": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "relatedInventoryEventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "source": {
+            "enum": [
+              "hermes_whatsapp",
+              "api",
+              "mcp"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "purchased",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "productName",
+          "requestedQuantity",
+          "unit",
+          "dateAdded",
+          "status",
+          "note",
+          "source",
+          "relatedInventoryEventId"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Update unit, note, or intentional combinations of fields on one pending grocery item using expected old values. Prefer grocery_set_quantity for quantity-only changes.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "expectedNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedRequestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "expectedUnit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "grocery_update",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "dateAdded": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "relatedInventoryEventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "source": {
+            "enum": [
+              "hermes_whatsapp",
+              "api",
+              "mcp"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "purchased",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "productName",
+          "requestedQuantity",
+          "unit",
+          "dateAdded",
+          "status",
+          "note",
+          "source",
+          "relatedInventoryEventId"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "List recorded inventory events newest first. This is history, not an estimate of current stock.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "eventType": {
+            "enum": [
+              "GROCERY_ADDED",
+              "GROCERY_REMOVED",
+              "PURCHASED",
+              "RESTOCKED",
+              "STOCK_LOW",
+              "STOCK_OUT",
+              "STOCK_CONFIRMED",
+              "STOCK_CORRECTED",
+              "PREDICTION_ACCEPTED",
+              "PREDICTION_REJECTED",
+              "INFERRED_LOW_STOCK"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "productId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "list_inventory_events",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "eventType": {
+                  "enum": [
+                    "GROCERY_ADDED",
+                    "GROCERY_REMOVED",
+                    "PURCHASED",
+                    "RESTOCKED",
+                    "STOCK_LOW",
+                    "STOCK_OUT",
+                    "STOCK_CONFIRMED",
+                    "STOCK_CORRECTED",
+                    "PREDICTION_ACCEPTED",
+                    "PREDICTION_REJECTED",
+                    "INFERRED_LOW_STOCK"
+                  ],
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "source": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "productId",
+                "eventType",
+                "quantity",
+                "unit",
+                "timestamp",
+                "source",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Add a user-confirmed alias to one exact product ID outside a grocery workflow. Resolve ambiguity and obtain explicit confirmation before calling. Do not infer the target, send source, or retry automatically after an uncertain result.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "productId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "productId",
+          "alias"
+        ],
+        "type": "object"
+      },
+      "name": "product_add_alias",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "definitions": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "canonicalName": {
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/__schema0"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "isPerishable": {
+            "type": "boolean"
+          },
+          "predictionEnabled": {
+            "type": "boolean"
+          },
+          "predictionStrategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productType": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fast_consumable",
+                  "pantry_staple",
+                  "household_consumable",
+                  "discrete_consumable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "typicalUnit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "canonicalName",
+          "aliases",
+          "category",
+          "typicalUnit",
+          "productType",
+          "isPerishable",
+          "predictionStrategy",
+          "predictionEnabled",
+          "config"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Accept, reject, or correct one exact prediction using a non-null prediction ID from the active interaction or a fresh prediction read. Do not guess or reuse an unrelated prediction ID.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "correctedState": {
+            "enum": [
+              "likely_available",
+              "probably_low",
+              "probably_out"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "accepted",
+              "rejected",
+              "corrected"
+            ],
+            "type": "string"
+          },
+          "predictionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "predictionId",
+          "outcome"
+        ],
+        "type": "object"
+      },
+      "name": "record_prediction_feedback",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "correctedState": {
+            "anyOf": [
+              {
+                "enum": [
+                  "likely_available",
+                  "probably_low",
+                  "probably_out"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "feedbackEventId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "feedbackStatus": {
+            "enum": [
+              "accepted",
+              "rejected"
+            ],
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "accepted",
+              "rejected",
+              "corrected"
+            ],
+            "type": "string"
+          },
+          "predictionAccuracy": {
+            "type": "number"
+          },
+          "predictionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "productId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "predictionId",
+          "productId",
+          "feedbackStatus",
+          "outcome",
+          "correctedState",
+          "feedbackEventId",
+          "predictionAccuracy"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Record a household purchase or restock event.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "type": "number"
+          },
+          "eventType": {
+            "enum": [
+              "PURCHASED",
+              "RESTOCKED"
+            ],
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "productId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "quantity": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "productId",
+          "eventType"
+        ],
+        "type": "object"
+      },
+      "name": "record_purchase",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "definitions": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eventType": {
+            "enum": [
+              "GROCERY_ADDED",
+              "GROCERY_REMOVED",
+              "PURCHASED",
+              "RESTOCKED",
+              "STOCK_LOW",
+              "STOCK_OUT",
+              "STOCK_CONFIRMED",
+              "STOCK_CORRECTED",
+              "PREDICTION_ACCEPTED",
+              "PREDICTION_REJECTED",
+              "INFERRED_LOW_STOCK"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/__schema0"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "eventType",
+          "quantity",
+          "unit",
+          "timestamp",
+          "source",
+          "confidence",
+          "metadata"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Record a direct observation of household stock state.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "type": "number"
+          },
+          "eventType": {
+            "enum": [
+              "STOCK_LOW",
+              "STOCK_OUT",
+              "STOCK_CONFIRMED",
+              "STOCK_CORRECTED"
+            ],
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "productId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string"
+          },
+          "quantity": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "productId",
+          "eventType"
+        ],
+        "type": "object"
+      },
+      "name": "record_stock_signal",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "definitions": {
+          "__schema0": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "items": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "propertyNames": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eventType": {
+            "enum": [
+              "GROCERY_ADDED",
+              "GROCERY_REMOVED",
+              "PURCHASED",
+              "RESTOCKED",
+              "STOCK_LOW",
+              "STOCK_OUT",
+              "STOCK_CONFIRMED",
+              "STOCK_CORRECTED",
+              "PREDICTION_ACCEPTED",
+              "PREDICTION_REJECTED",
+              "INFERRED_LOW_STOCK"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/__schema0"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productId",
+          "eventType",
+          "quantity",
+          "unit",
+          "timestamp",
+          "source",
+          "confidence",
+          "metadata"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "description": "Deterministically search the read-only product catalog. Present multiple plausible candidates to the user instead of silently choosing one.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "type": "object"
+      },
+      "name": "search_products",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "aliases": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "canonicalName": {
+                  "type": "string"
+                },
+                "category": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "isPerishable": {
+                  "type": "boolean"
+                },
+                "predictionEnabled": {
+                  "type": "boolean"
+                },
+                "productType": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "fast_consumable",
+                        "pantry_staple",
+                        "household_consumable",
+                        "discrete_consumable"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "typicalUnit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "canonicalName",
+                "aliases",
+                "category",
+                "typicalUnit",
+                "productType",
+                "isPerishable",
+                "predictionEnabled"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "exactMatch": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "aliases": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "canonicalName": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "isPerishable": {
+                    "type": "boolean"
+                  },
+                  "predictionEnabled": {
+                    "type": "boolean"
+                  },
+                  "productType": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "fast_consumable",
+                          "pantry_staple",
+                          "household_consumable",
+                          "discrete_consumable"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "typicalUnit": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "canonicalName",
+                  "aliases",
+                  "category",
+                  "typicalUnit",
+                  "productType",
+                  "isPerishable",
+                  "predictionEnabled"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "exactMatch",
+          "candidates"
+        ],
+        "type": "object"
+      }
+    }
+  ]
+}

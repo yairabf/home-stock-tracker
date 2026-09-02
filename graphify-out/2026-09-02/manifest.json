@@ -42,8 +42,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1788332905.9256768,
-    "seen": 1788333498.136554,
+    "mtime": 1788356645.4521925,
+    "seen": 1788356673.8850188,
     "ast_hash": "a3fe006b43c3be75139e5c66aa654e3d",
     "semantic_hash": ""
   },
@@ -402,15 +402,15 @@
     "semantic_hash": ""
   },
   "src/household/household.service.spec.ts": {
-    "mtime": 1787755636.8684971,
-    "seen": 1788299348.622568,
-    "ast_hash": "4e02856fe3b6cdd39799073a7156e1fd",
+    "mtime": 1788355621.3398557,
+    "seen": 1788356190.946037,
+    "ast_hash": "33e07b2008764803f08bec17c52508b6",
     "semantic_hash": ""
   },
   "src/household/household.service.ts": {
-    "mtime": 1788332918.1775794,
-    "seen": 1788333498.1374779,
-    "ast_hash": "21a0a0b9974701e6bd29263cf9253ff4",
+    "mtime": 1788355621.3392217,
+    "seen": 1788356190.946038,
+    "ast_hash": "f4edc5f8adb1991b5d8f4a3a47e416d5",
     "semantic_hash": ""
   },
   "src/inventory/dto/complete-partial-purchase-response.dto.ts": {
@@ -630,33 +630,33 @@
     "semantic_hash": ""
   },
   "src/mcp/agent-skill-contract.spec.ts": {
-    "mtime": 1788332905.9277406,
-    "seen": 1788333498.138088,
-    "ast_hash": "10737bfa76c3c5edc010e91005179fda",
+    "mtime": 1788356597.5560634,
+    "seen": 1788356673.88685,
+    "ast_hash": "1576105db7e8a64fcc7af1cee029e0c4",
     "semantic_hash": ""
   },
   "src/mcp/agent-skill-generator.spec.ts": {
-    "mtime": 1788332905.9279296,
-    "seen": 1788333498.138088,
-    "ast_hash": "752e881d4325f7250f8c67d6ecf2fc2f",
+    "mtime": 1788356148.7242408,
+    "seen": 1788356190.946698,
+    "ast_hash": "b9bf3d5d5997eb06d881d338b57f1708",
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.spec.ts": {
-    "mtime": 1788332905.9288611,
-    "seen": 1788333498.138089,
-    "ast_hash": "5b68ecf1645a73d6fa69b6623037a0d9",
+    "mtime": 1788355877.023019,
+    "seen": 1788356190.9467158,
+    "ast_hash": "53e2f0d13328a31bc5ff1f75655e487c",
     "semantic_hash": ""
   },
   "src/mcp/mcp-server.factory.ts": {
-    "mtime": 1788332905.9291325,
-    "seen": 1788333498.13809,
-    "ast_hash": "77e963c78f29c9f1cd95fd0e04cc90a7",
+    "mtime": 1788355877.0217412,
+    "seen": 1788356190.9467158,
+    "ast_hash": "6916d3917638b1401afc911571e657a4",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.spec.ts": {
-    "mtime": 1788332905.9296079,
-    "seen": 1788333498.13809,
-    "ast_hash": "acefb9c34bf7f04d971c9e7c808f8507",
+    "mtime": 1788355877.0235302,
+    "seen": 1788356190.946717,
+    "ast_hash": "22ba7ec87fdca6fc5ab59e3351ca3721",
     "semantic_hash": ""
   },
   "src/mcp/mcp.controller.ts": {
@@ -666,9 +666,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp.module.ts": {
-    "mtime": 1788164328.7909029,
-    "seen": 1788299348.6225832,
-    "ast_hash": "ea86a5b94deed19caa48e4bf17017e0f",
+    "mtime": 1788355877.0210342,
+    "seen": 1788356190.9467342,
+    "ast_hash": "17d2f2d2c95c072dd7c7a3dcf3a0c9c2",
     "semantic_hash": ""
   },
   "src/mcp/schemas/grocery-confirmation.schema.spec.ts": {
@@ -2142,15 +2142,15 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/README.md": {
-    "mtime": 1788342398.3466933,
-    "seen": 1788342504.7446342,
+    "mtime": 1788355080.2962434,
+    "seen": 1788356190.9511302,
     "ast_hash": "cd34906c758e6bbcb0f918b61d099728",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-05-no-controlled-alias-management-tool.md": {
-    "mtime": 1788290921.4691048,
-    "seen": 1788299348.622667,
-    "ast_hash": "e25a3c9d4ed6cf9ba5aa405ea5bfe519",
+    "mtime": 1788355080.296479,
+    "seen": 1788356190.9511302,
+    "ast_hash": "54fe473bd431d721926ba61cfcb32665",
     "semantic_hash": ""
   },
   "blueprint/context/bugs/mcp-10-no-read-only-household-context-tool.md": {
@@ -2160,8 +2160,8 @@
     "semantic_hash": ""
   },
   "blueprint/context/bugs/triage.md": {
-    "mtime": 1788342411.385972,
-    "seen": 1788342504.7446709,
+    "mtime": 1788355080.2967055,
+    "seen": 1788356190.951149,
     "ast_hash": "6d921bbb6afb6288a12484663a2c13e4",
     "semantic_hash": ""
   },
@@ -2172,14 +2172,14 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788332758.9759114,
-    "seen": 1788332782.99038,
-    "ast_hash": "188cd292770cded0d619f72ae07ae649",
+    "mtime": 1788356483.885298,
+    "seen": 1788356673.891635,
+    "ast_hash": "8686b82094962d59e4761edb6c9c836b",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/README.md": {
-    "mtime": 1788342462.727453,
-    "seen": 1788342504.744704,
+    "mtime": 1788355080.2969124,
+    "seen": 1788356190.9511669,
     "ast_hash": "2f24b920fdf1ff2ef7c4ecadd3777e60",
     "semantic_hash": ""
   },
@@ -2190,9 +2190,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/project-overview.md": {
-    "mtime": 1788332905.8989203,
-    "seen": 1788333498.143042,
-    "ast_hash": "68c941c8262202a90ba8ff36cc83c944",
+    "mtime": 1788355080.2973015,
+    "seen": 1788356190.9511838,
+    "ast_hash": "773ea0437f65d3b3f0deaa3892bacc33",
     "semantic_hash": ""
   },
   "blueprint/history/features/01-grocery-list-management.md": {
@@ -2424,9 +2424,9 @@
     "semantic_hash": ""
   },
   "docs/api-reference.md": {
-    "mtime": 1788299689.7241817,
-    "seen": 1788302380.118728,
-    "ast_hash": "362a26753179bb1679397d14591b6b66",
+    "mtime": 1788355080.2977622,
+    "seen": 1788356190.951905,
+    "ast_hash": "bf1d5a38711dd63119089f8ac3e7dc4d",
     "semantic_hash": ""
   },
   "docs/deployment.md": {
@@ -2466,39 +2466,39 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/README.md": {
-    "mtime": 1788332905.921111,
-    "seen": 1788333498.143858,
-    "ast_hash": "ab0a0e4bbdf2c29a7bb565f1d48ac704",
+    "mtime": 1788355080.313284,
+    "seen": 1788356190.952003,
+    "ast_hash": "adb7505f72aca5da1ebe3749abfed7ee",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/SKILL.md": {
-    "mtime": 1788330722.5788548,
-    "seen": 1788330873.509388,
-    "ast_hash": "a7c8cc738c2d13ac3620007739e11df6",
+    "mtime": 1788356645.4504633,
+    "seen": 1788356673.8925781,
+    "ast_hash": "54de079987eb766c4881498f251f4b87",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/scenarios.md": {
-    "mtime": 1788332905.9222448,
-    "seen": 1788333498.143878,
-    "ast_hash": "d5fbe5eb07385f247a0e9ca81cea6bd7",
+    "mtime": 1788356645.4513679,
+    "seen": 1788356673.892579,
+    "ast_hash": "4cf753eb16f96e215103ac09d1871c59",
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/README.md": {
-    "mtime": 1788332905.922502,
-    "seen": 1788333498.143879,
-    "ast_hash": "adf62930a079620d22978c6e8fa4593d",
+    "mtime": 1788355080.314731,
+    "seen": 1788356190.9520051,
+    "ast_hash": "f16d08d10784f955647eabc7b95839d3",
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/SKILL.md": {
-    "mtime": 1788330722.5797806,
-    "seen": 1788330873.509391,
-    "ast_hash": "53721ec498e4f3ed1e95cc137e78d37e",
+    "mtime": 1788356645.4517605,
+    "seen": 1788356673.892599,
+    "ast_hash": "d8aadd32c3d2432ebacd199e2d4327dc",
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/scenarios.md": {
-    "mtime": 1788332905.923606,
-    "seen": 1788333498.143899,
-    "ast_hash": "f12f2e5aa5e9634d6734efe54a4ea86b",
+    "mtime": 1788356645.451849,
+    "seen": 1788356673.8926,
+    "ast_hash": "c86a9aeb0285979fbfe69266b145bb42",
     "semantic_hash": ""
   },
   "integrations/shared/home-stock-tracker/platforms/hermes/scenarios.md": {
@@ -2538,15 +2538,15 @@
     "semantic_hash": ""
   },
   "integrations/shared/home-stock-tracker/scenarios.md": {
-    "mtime": 1788332905.925166,
-    "seen": 1788333498.143966,
-    "ast_hash": "4449d4cf85dd849c5d95b155a46dd4de",
+    "mtime": 1788356516.811058,
+    "seen": 1788356673.89273,
+    "ast_hash": "d35978a28439465379dc0d5d1ade20ab",
     "semantic_hash": ""
   },
   "integrations/shared/home-stock-tracker/workflow.md": {
-    "mtime": 1788299689.7581217,
-    "seen": 1788302380.118927,
-    "ast_hash": "cfd4b12c6986b46c27f31e85e3de6c3b",
+    "mtime": 1788356636.970015,
+    "seen": 1788356673.892731,
+    "ast_hash": "82bfcdd8da74971516e656ebb5de821d",
     "semantic_hash": ""
   },
   "blueprint/history/fixes/mcp-06-no-inventory-event-history-tool.md": {
@@ -2568,9 +2568,9 @@
     "semantic_hash": ""
   },
   "integrations/shared/home-stock-tracker/release-contract.json": {
-    "mtime": 1788332905.9249547,
-    "seen": 1788333498.136538,
-    "ast_hash": "4505f9b3c20341e858f19f0caf140e4c",
+    "mtime": 1788356516.811657,
+    "seen": 1788356673.885003,
+    "ast_hash": "7224b19f0037e40410807331b5161553",
     "semantic_hash": ""
   },
   "scripts/agent-release-contract.mjs": {
@@ -2580,9 +2580,9 @@
     "semantic_hash": ""
   },
   "src/mcp/agent-release-contract.generated.ts": {
-    "mtime": 1788332905.9271564,
-    "seen": 1788333498.1380858,
-    "ast_hash": "d09a88475dfad30c393c127728dc4acf",
+    "mtime": 1788356645.452476,
+    "seen": 1788356673.8868322,
+    "ast_hash": "99f74fa9efc2096f54dbb6fec6842582",
     "semantic_hash": ""
   },
   "src/mcp/agent-release-contract.spec.ts": {
@@ -2604,9 +2604,9 @@
     "semantic_hash": ""
   },
   "src/mcp/mcp-contract-fixture.spec.ts": {
-    "mtime": 1788332905.9280882,
-    "seen": 1788333498.138089,
-    "ast_hash": "fc6e4c2ee8c95989e17e1c8c91e25161",
+    "mtime": 1788355877.022145,
+    "seen": 1788356190.946698,
+    "ast_hash": "85c7f2381217d6829ea896c1726a1740",
     "semantic_hash": ""
   },
   "src/mcp/mcp-contract-fixture.ts": {
@@ -2616,21 +2616,21 @@
     "semantic_hash": ""
   },
   "integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json": {
-    "mtime": 1788332905.9254267,
-    "seen": 1788333498.136539,
-    "ast_hash": "1ed21f29394a7d4d5ba87c602a1f771a",
+    "mtime": 1788356554.6718626,
+    "seen": 1788356673.885004,
+    "ast_hash": "16af57e7b498601f468944439cdc8811",
     "semantic_hash": ""
   },
   "scripts/agent-scenarios.mjs": {
-    "mtime": 1788332905.9263525,
-    "seen": 1788333498.1365702,
-    "ast_hash": "3098ad03ffcebde08e5f51a3889bc831",
+    "mtime": 1788356516.8121567,
+    "seen": 1788356673.885083,
+    "ast_hash": "793cd28555d54026138af9a691fd1851",
     "semantic_hash": ""
   },
   "src/mcp/agent-scenario-contract.spec.ts": {
-    "mtime": 1788332905.92751,
-    "seen": 1788333498.1380868,
-    "ast_hash": "0e649df5f9e82efb80445aa7e4bc804b",
+    "mtime": 1788356617.3110902,
+    "seen": 1788356673.88685,
+    "ast_hash": "356e2fa1024485f0e50db5c0352b3ceb",
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/contracts/1.0.0/tools-list.json": {
@@ -2640,9 +2640,9 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/manifest.json": {
-    "mtime": 1788332905.9216082,
-    "seen": 1788333498.136535,
-    "ast_hash": "6bebfa157f988ddec58b78936ad33f91",
+    "mtime": 1788356645.4514594,
+    "seen": 1788356673.8848808,
+    "ast_hash": "54cb5167b363fb9cf23fbddb99173dbb",
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/contracts/1.0.0/tools-list.json": {
@@ -2652,9 +2652,9 @@
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/manifest.json": {
-    "mtime": 1788332905.9231653,
-    "seen": 1788333498.136537,
-    "ast_hash": "d24aa8b003ee5f250dbb936c2605b3fd",
+    "mtime": 1788356645.451921,
+    "seen": 1788356673.8849301,
+    "ast_hash": "ddce108c31fe958ae5b57c85369b2f9f",
     "semantic_hash": ""
   },
   "src/mcp/agent-bundle-manifest.spec.ts": {
@@ -2664,15 +2664,15 @@
     "semantic_hash": ""
   },
   "integrations/hermes/home-stock-tracker/release/README.md": {
-    "mtime": 1788332905.9220219,
-    "seen": 1788333498.143878,
-    "ast_hash": "1893cf92ede06afbcdfaf890d4aefb40",
+    "mtime": 1788356645.4515452,
+    "seen": 1788356673.892579,
+    "ast_hash": "172588d1cedcfaf08d9157fea42f0aa8",
     "semantic_hash": ""
   },
   "integrations/openclaw/home-stock-tracker/release/README.md": {
-    "mtime": 1788332905.9233828,
-    "seen": 1788333498.143898,
-    "ast_hash": "1c0ed85a902e9da02314245562d53fb5",
+    "mtime": 1788356645.452,
+    "seen": 1788356673.892599,
+    "ast_hash": "8f565057d688b74daf9f09a55d17262b",
     "semantic_hash": ""
   },
   "scripts/agent-installation-probe.mjs": {
@@ -2682,9 +2682,9 @@
     "semantic_hash": ""
   },
   "src/mcp/agent-installation-probe.spec.ts": {
-    "mtime": 1788332905.9270043,
-    "seen": 1788333498.1380858,
-    "ast_hash": "87ce7ce786a88a6dd430de85ff1943be",
+    "mtime": 1788356148.7232635,
+    "seen": 1788356190.946679,
+    "ast_hash": "951d9f098162f179afa2be4166874b3d",
     "semantic_hash": ""
   },
   "scripts/agent-documentation-contract.mjs": {
@@ -2697,6 +2697,66 @@
     "mtime": 1788332905.8991628,
     "seen": 1788333498.143473,
     "ast_hash": "c49d0300754964bbab852fe9d263b593",
+    "semantic_hash": ""
+  },
+  "integrations/hermes/home-stock-tracker/contracts/1.1.0/tools-list.json": {
+    "mtime": 1788355080.3137794,
+    "seen": 1788356190.944896,
+    "ast_hash": "37261995f0032ef7159b72d968b0a611",
+    "semantic_hash": ""
+  },
+  "integrations/openclaw/home-stock-tracker/contracts/1.1.0/tools-list.json": {
+    "mtime": 1788355080.315409,
+    "seen": 1788356190.9449239,
+    "ast_hash": "37261995f0032ef7159b72d968b0a611",
+    "semantic_hash": ""
+  },
+  "integrations/shared/home-stock-tracker/contracts/1.1.0/tools-list.json": {
+    "mtime": 1788355080.316378,
+    "seen": 1788356190.944949,
+    "ast_hash": "37261995f0032ef7159b72d968b0a611",
+    "semantic_hash": ""
+  },
+  "test/product-alias.mcp.e2e-spec.ts": {
+    "mtime": 1788355080.3204954,
+    "seen": 1788356190.947872,
+    "ast_hash": "d058a4a658bb3a9d5f774e6b5b8ee308",
+    "semantic_hash": ""
+  },
+  "integrations/hermes/home-stock-tracker/contracts/1.2.0/tools-list.json": {
+    "mtime": 1788356645.4516637,
+    "seen": 1788356673.8848798,
+    "ast_hash": "97f2ed06019e30ae925959828f0f855e",
+    "semantic_hash": ""
+  },
+  "integrations/openclaw/home-stock-tracker/contracts/1.2.0/tools-list.json": {
+    "mtime": 1788356645.4521127,
+    "seen": 1788356673.884929,
+    "ast_hash": "97f2ed06019e30ae925959828f0f855e",
+    "semantic_hash": ""
+  },
+  "integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json": {
+    "mtime": 1788355985.8783479,
+    "seen": 1788356190.94495,
+    "ast_hash": "97f2ed06019e30ae925959828f0f855e",
+    "semantic_hash": ""
+  },
+  "src/household/dto/household-context-response.dto.ts": {
+    "mtime": 1788355621.3382232,
+    "seen": 1788356190.9459672,
+    "ast_hash": "31e5634bbc3b4e4940c963434c5e53db",
+    "semantic_hash": ""
+  },
+  "test/household-context.mcp.e2e-spec.ts": {
+    "mtime": 1788356045.0210056,
+    "seen": 1788356190.947752,
+    "ast_hash": "887a88eb473dd59afdd4079f2c59ab1d",
+    "semantic_hash": ""
+  },
+  "blueprint/history/fixes/mcp-05-standalone-alias-administration.md": {
+    "mtime": 1788355080.297516,
+    "seen": 1788356190.9517372,
+    "ast_hash": "1e614a981778ad7ddd436b3fc01f4207",
     "semantic_hash": ""
   }
 }

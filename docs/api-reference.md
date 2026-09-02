@@ -392,6 +392,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `grocery_update`                | Write | Set unit, note, or intentional field combinations using matching expected old values.          |
 | `grocery_remove`                | Write | Change one pending item to removed by grocery-item UUID.                                       |
 | `grocery_list`                  | Read  | List pending items by default or filter by status.                                             |
+| `get_household_context`         | Read  | Return the configured household's agent-safe prediction context without creating defaults.     |
 | `get_product`                   | Read  | Resolve an exact product name/alias or known UUID.                                             |
 | `search_products`               | Read  | Deterministically discover exact or nearby products without mutation or LLM use.               |
 | `product_add_alias`             | Write | Add an explicitly confirmed alias to one exact product outside a grocery workflow.             |
@@ -409,6 +410,15 @@ the same exact normalized canonical-name and alias lookup as REST and returns th
 same approved display spelling. `PRODUCT_NAME_CONFLICT` is the stable namespace
 conflict for MCP and internal callers; it is final and should not be retried as a
 name lookup or write without changing the requested ownership.
+
+`get_household_context` accepts only `{}` and returns `id`, `adultsCount`,
+`childrenCount`, `childAgeGroups`, `predictionPreferences`,
+`suggestionConfidenceThreshold`, and `productPolicies`. Creation/update
+timestamps and unrelated operator data are excluded by an explicit projection.
+The read never creates a default household. When setup is absent it returns the
+safe tool error `Household is not configured`. Use it for explicit household
+identity, setup, configuration, or prediction-explanation questions, not as a
+prerequisite for routine `get_inventory` or `get_low_stock_predictions` calls.
 
 `product_add_alias` accepts only `{ productId, alias }`. Resolve one exact target
 first and obtain explicit user confirmation that the alias identifies that
@@ -529,6 +539,8 @@ latest state without retrying or recalculating automatically.
 9. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
 10. Treat `uncertain`, empty history, and empty recommendation lists as successful results.
 11. Never turn a recommendation into a list mutation without a separate request.
+12. Read household context only for an explicit setup, configuration, identity,
+    or explanation question; never create defaults or call it before every prediction.
 
 For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with

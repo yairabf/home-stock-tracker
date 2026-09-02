@@ -123,7 +123,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.11.0');
+      expect(skill).toContain('version: 1.12.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -135,6 +135,28 @@ describe('agent inventory skill contract', () => {
       expect(scenarios).toContain('| Empty inventory history');
       expect(scenarios).toContain('| Inventory history pagination');
       expect(scenarios).toContain('| Correction history review');
+    },
+  );
+
+  it.each(bundles)(
+    '$platform limits household context reads to explicit questions',
+    ({ skill, scenarios }) => {
+      expect(skill).toContain('version: 1.12.0');
+      expect(skill).toMatch(/\| `get_household_context`\s+\|/);
+      expect(skill).toContain(
+        'Do not fetch household context as a hidden prerequisite',
+      );
+      expect(skill).toContain(
+        'Call `get_household_context({})` only when the user explicitly asks',
+      );
+      expect(skill).toContain('It is not a prerequisite for `get_inventory`');
+      expect(skill).toContain('`Household is not configured`');
+      expect(scenarios).toContain('| Household identification');
+      expect(scenarios).toContain('| Household configuration explanation');
+      expect(scenarios).toContain('| Missing household configuration');
+      expect(scenarios).toMatch(
+        /\| Inventory estimate[\s\S]*do not call `get_household_context`/,
+      );
     },
   );
 
@@ -200,7 +222,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.11.0');
+      expect(skill).toContain('version: 1.12.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -227,7 +249,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents actual purchase completion without invention',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.11.0');
+      expect(skill).toContain('version: 1.12.0');
       expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
       expect(skill).toContain('preferred inclusive `items` array');
       expect(skill).toContain('`actualQuantity`');

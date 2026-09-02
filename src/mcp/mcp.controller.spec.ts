@@ -22,6 +22,7 @@ import { OperationalLogger } from '../observability/operational-logger.service';
 import { InventoryEventType, ProductNameKind } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
+import { HouseholdService } from '../household/household.service';
 
 @Controller()
 class TestRestController {
@@ -55,6 +56,7 @@ describe('McpController', () => {
     completeGroceryPurchase: jest.fn(),
   };
   const predictionFeedbackService = { submitFeedback: jest.fn() };
+  const householdService = { getContext: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -89,6 +91,10 @@ describe('McpController', () => {
         {
           provide: LowStockRecommendationService,
           useValue: recommendationService,
+        },
+        {
+          provide: HouseholdService,
+          useValue: householdService,
         },
         {
           provide: OperationalLogger,
@@ -137,6 +143,7 @@ describe('McpController', () => {
         'grocery_update',
         'grocery_remove',
         'grocery_list',
+        'get_household_context',
         'get_product',
         'search_products',
         'get_inventory',
@@ -158,6 +165,19 @@ describe('McpController', () => {
         },
         type: 'object',
       });
+      const householdContext = {
+        id: '00000000-0000-4000-8000-000000000010',
+        adultsCount: 2,
+        childrenCount: 3,
+        childAgeGroups: ['child', 'teen'],
+        predictionPreferences: null,
+        suggestionConfidenceThreshold: 0.7,
+        productPolicies: null,
+      };
+      householdService.getContext.mockResolvedValue(householdContext);
+      await expect(
+        client.callTool({ name: 'get_household_context', arguments: {} }),
+      ).resolves.toMatchObject({ structuredContent: householdContext });
       expect(
         tools.tools.find(({ name }) => name === 'search_products')?.inputSchema,
       ).toMatchObject({

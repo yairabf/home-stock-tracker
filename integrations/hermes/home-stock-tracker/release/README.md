@@ -1,14 +1,14 @@
 # Home Stock Tracker Hermes release contract
 
 This generated release metadata belongs to the `hermes` bundle. Keep
-`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/1.1.0/tools-list.json`
+`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/1.2.0/tools-list.json`
 fixture from the same generated release.
 
 ## Compatibility
 
-- Skill version: `1.11.0`
+- Skill version: `1.12.0`
 - MCP server: `home-stock-tracker`
-- MCP contract: `1.1.0`
+- MCP contract: `1.2.0`
 - Compatible MCP range: `>=1.0.0 <2.0.0`
 
 ## Prerequisites
@@ -31,6 +31,7 @@ fixture from the same generated release.
 - `grocery_update`
 - `grocery_remove`
 - `grocery_list`
+- `get_household_context`
 - `get_product`
 - `search_products`
 - `get_inventory`
@@ -52,7 +53,8 @@ npm run agent:probe -- --platform hermes
 
 This verifies health, readiness, authentication, MCP identity and compatibility,
 the exact normalized tool schemas, the required tool set, and one read-only
-`grocery_list` call. It never invokes a mutation. Run `npm run contract:check`
+`get_household_context` call that identifies the configured household. It never
+invokes a mutation. Run `npm run contract:check`
 before publishing from a project checkout to reject stale generated artifacts.
 
 ## Rollback

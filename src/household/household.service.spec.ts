@@ -33,6 +33,45 @@ describe('HouseholdService', () => {
     jest.clearAllMocks();
   });
 
+  describe('getContext', () => {
+    it('returns only the configured prediction context without writing', async () => {
+      const household = {
+        id: 'configured-household-id',
+        adultsCount: 2,
+        childrenCount: 3,
+        childAgeGroups: ['child', 'teen'],
+        predictionPreferences: { preferRecentSignals: true },
+        suggestionConfidenceThreshold: 0.8,
+        productPolicies: { milk: { predictionEnabled: true } },
+        createdAt: new Date('2026-08-01T10:00:00.000Z'),
+        updatedAt: new Date('2026-09-01T10:00:00.000Z'),
+      };
+      prisma.household.findFirst.mockResolvedValue(household);
+
+      await expect(service.getContext()).resolves.toEqual({
+        id: 'configured-household-id',
+        adultsCount: 2,
+        childrenCount: 3,
+        childAgeGroups: ['child', 'teen'],
+        predictionPreferences: { preferRecentSignals: true },
+        suggestionConfidenceThreshold: 0.8,
+        productPolicies: { milk: { predictionEnabled: true } },
+      });
+      expect(prisma.household.create).not.toHaveBeenCalled();
+      expect(prisma.household.update).not.toHaveBeenCalled();
+    });
+
+    it('fails without creating defaults when no household is configured', async () => {
+      prisma.household.findFirst.mockResolvedValue(null);
+
+      await expect(service.getContext()).rejects.toThrow(
+        new NotFoundException('Household is not configured'),
+      );
+      expect(prisma.household.create).not.toHaveBeenCalled();
+      expect(prisma.household.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getOrCreate', () => {
     it('should return existing household if one exists', async () => {
       const mockHousehold = {

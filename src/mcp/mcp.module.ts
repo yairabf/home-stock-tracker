@@ -7,6 +7,7 @@ import { ProductModule } from '../product/product.module';
 import { EstimationModule } from '../estimation/estimation.module';
 import { InventoryModule } from '../inventory/inventory.module';
 import { ObservabilityModule } from '../observability/observability.module';
+import { HouseholdModule } from '../household/household.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ObservabilityModule } from '../observability/observability.module';
     EstimationModule,
     InventoryModule,
     ObservabilityModule,
+    HouseholdModule,
   ],
   controllers: [McpController],
   providers: [McpServerFactory],
