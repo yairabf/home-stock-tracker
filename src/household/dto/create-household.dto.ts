@@ -1,4 +1,12 @@
-import { IsInt, IsOptional, IsArray, IsNumber, Min, Max, IsString } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsArray,
+  IsNumber,
+  Min,
+  Max,
+  IsString,
+} from 'class-validator';
 
 export class CreateHouseholdDto {
   @IsInt()

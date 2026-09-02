@@ -97,7 +97,7 @@ describe('ProductClassifier', () => {
       value: {
         ...validResult,
         productType: 'unknown',
-      } as ProductClassificationResult,
+      },
     });
 
     await expect(classifier.classify({ rawName: 'milk' })).resolves.toEqual({

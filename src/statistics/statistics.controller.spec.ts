@@ -52,7 +52,9 @@ describe('StatisticsController', () => {
       expect(result.productId).toBe(productId);
       expect(result.avgPurchaseIntervalDays).toBe(7.5);
       expect(result.observationCount).toBe(12);
-      expect(service.calculateProductStatistics).toHaveBeenCalledWith(productId);
+      expect(service.calculateProductStatistics).toHaveBeenCalledWith(
+        productId,
+      );
     });
 
     it('should throw NotFoundException for unknown product', async () => {

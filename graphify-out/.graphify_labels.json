@@ -345,7 +345,7 @@
   "343": "product.controller.ts",
   "344": "InventoryController",
   "345": "Recommended execution order",
-  "346": "LLM_PROVIDER",
+  "346": "confirmed-grocery-catalog.rest.e2e-spec.ts",
   "347": "purchase-completion.mcp.e2e-spec.ts",
   "348": "GroceryController",
   "349": ".listItems",
@@ -353,5 +353,6 @@
   "351": "agent-installation-probe.spec.ts",
   "352": "@nestjs/platform-express",
   "353": "rxjs",
-  "354": "ProductSearchQueryLengthConstraint"
+  "354": "ProductSearchQueryLengthConstraint",
+  "355": "policy-aware-grocery.mcp.e2e-spec.ts"
 }

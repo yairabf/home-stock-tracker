@@ -37,9 +37,7 @@ export const predictionReasoningInputSchema = z
             adultsCount: z.number().int().nonnegative(),
             childrenCount: z.number().int().nonnegative(),
             childAgeGroups: z.array(nonBlankString),
-            predictionPreferences: z
-              .record(z.string(), z.unknown())
-              .nullable(),
+            predictionPreferences: z.record(z.string(), z.unknown()).nullable(),
           })
           .strict()
           .nullable(),

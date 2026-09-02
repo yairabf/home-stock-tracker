@@ -47,16 +47,10 @@ export class StatisticsService {
     let lastStockConfirmationAt: Date | null = null;
 
     for (const event of events) {
-      if (
-        PURCHASE_EVENT_TYPES.includes(event.eventType) &&
-        !lastPurchaseAt
-      ) {
+      if (PURCHASE_EVENT_TYPES.includes(event.eventType) && !lastPurchaseAt) {
         lastPurchaseAt = event.timestamp;
       }
-      if (
-        NEED_EVENT_TYPES.includes(event.eventType) &&
-        !lastLowStockSignalAt
-      ) {
+      if (NEED_EVENT_TYPES.includes(event.eventType) && !lastLowStockSignalAt) {
         lastLowStockSignalAt = event.timestamp;
       }
       if (
@@ -88,7 +82,7 @@ export class StatisticsService {
       InventoryEventType.STOCK_CONFIRMED,
     ]);
     const observationCount = events.filter((e) =>
-      relevantEventTypes.has(e.eventType as InventoryEventType),
+      relevantEventTypes.has(e.eventType),
     ).length;
 
     // Persist and return results
@@ -231,9 +225,7 @@ export class StatisticsService {
       const household = await this.householdService.getOrCreate();
       return household.adultsCount + household.childrenCount;
     } catch (error) {
-      this.logger.warn(
-        `Failed to fetch household, using defaults: ${error}`,
-      );
+      this.logger.warn(`Failed to fetch household, using defaults: ${error}`);
       return DEFAULT_ADULTS + DEFAULT_CHILDREN;
     }
   }

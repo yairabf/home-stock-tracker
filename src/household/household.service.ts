@@ -47,7 +47,10 @@ export class HouseholdService {
     return HouseholdResponseDto.fromEntity(household);
   }
 
-  async update(id: string, dto: UpdateHouseholdDto): Promise<HouseholdResponseDto> {
+  async update(
+    id: string,
+    dto: UpdateHouseholdDto,
+  ): Promise<HouseholdResponseDto> {
     const existing = await this.prisma.household.findUnique({
       where: { id },
     });

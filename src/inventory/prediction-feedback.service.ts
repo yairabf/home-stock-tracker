@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client';
 import {
   FeedbackStatus,
   InventoryEventType,
@@ -58,7 +57,7 @@ export class PredictionFeedbackService {
             ...(dto.correctedState && {
               correctedState: dto.correctedState,
             }),
-          } as Prisma.InputJsonValue,
+          },
         },
       });
 

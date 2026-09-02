@@ -46,8 +46,12 @@ const validResult = {
 
 describe('prediction reasoning contracts', () => {
   it('accepts the bounded input and output contracts', () => {
-    expect(predictionReasoningInputSchema.parse(validInput)).toEqual(validInput);
-    expect(predictionReasoningResultSchema.parse(validResult)).toEqual(validResult);
+    expect(predictionReasoningInputSchema.parse(validInput)).toEqual(
+      validInput,
+    );
+    expect(predictionReasoningResultSchema.parse(validResult)).toEqual(
+      validResult,
+    );
   });
 
   it.each([
@@ -57,7 +61,9 @@ describe('prediction reasoning contracts', () => {
     { ...validResult, confidence: -0.01 },
     { ...validResult, confidence: 1.01 },
   ])('rejects invalid output: %p', (result) => {
-    expect(predictionReasoningResultSchema.safeParse(result).success).toBe(false);
+    expect(predictionReasoningResultSchema.safeParse(result).success).toBe(
+      false,
+    );
   });
 
   it('rejects unknown nested input fields', () => {

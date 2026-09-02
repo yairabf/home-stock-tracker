@@ -1,16 +1,16 @@
 # Graph Report - home-stock-tracker  (2026-09-02)
 
 ## Corpus Check
-- 476 files · ~348,458 words
+- 476 files · ~348,453 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4433 nodes · 6039 edges · 355 communities (326 shown, 29 thin omitted)
+- 4433 nodes · 6039 edges · 356 communities (326 shown, 30 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 91 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fb9136a0`
+- Built from commit: `440ed50d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -349,7 +349,7 @@
 - product.controller.ts
 - InventoryController
 - Recommended execution order
-- LLM_PROVIDER
+- confirmed-grocery-catalog.rest.e2e-spec.ts
 - purchase-completion.mcp.e2e-spec.ts
 - GroceryController
 - .listItems
@@ -358,6 +358,7 @@
 - @nestjs/platform-express
 - rxjs
 - ProductSearchQueryLengthConstraint
+- policy-aware-grocery.mcp.e2e-spec.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `PrismaService` - 67 edges
@@ -386,7 +387,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (355 total, 29 thin omitted)
+## Communities (356 total, 30 thin omitted)
 
 ### Community 0 - "managedFiles"
 Cohesion: 0.04
@@ -413,8 +414,8 @@ Cohesion: 0.12
 Nodes (13): PredictionReasoner, candidate, Inject, Injectable, LlmProvider, LlmProviderRegistry, Injectable, OpenAiLlmProvider (+5 more)
 
 ### Community 6 - "prisma.service.ts"
-Cohesion: 0.09
-Nodes (19): AppModule, Module, ServiceAuthGuard, Injectable, productId(), AUTH_TEST_BYPASS, baseResult, pendingCount() (+11 more)
+Cohesion: 0.08
+Nodes (20): AppModule, Module, ServiceAuthGuard, Injectable, LLM_PROVIDER, productId(), AUTH_TEST_BYPASS, baseResult (+12 more)
 
 ### Community 7 - "8. Deployment - Where and how will this ship?"
 Cohesion: 0.05
@@ -441,8 +442,8 @@ Cohesion: 0.06
 Nodes (36): EstimationService, HouseholdPredictionContext, HybridReasoningResult, LearnedStatistics, PRODUCT_TYPE_THRESHOLDS, ProductPredictionContext, RELEVANT_EVENT_TYPES, Injectable (+28 more)
 
 ### Community 13 - "PolicyAwareAddGroceryItemDto"
-Cohesion: 0.09
-Nodes (27): IsBoolean, GroceryAdditionItemDto, GroceryAdditionProductDto, PolicyAwareAddGroceryItemDto, PolicyAwareGroceryAdditionShape, product, validateDto(), IsArray (+19 more)
+Cohesion: 0.08
+Nodes (30): IsBoolean, GroceryAdditionItemDto, GroceryAdditionProductDto, PolicyAwareAddGroceryItemDto, PolicyAwareGroceryAdditionShape, product, validateDto(), IsArray (+22 more)
 
 ### Community 14 - "statistics.service.ts"
 Cohesion: 0.13
@@ -525,8 +526,8 @@ Cohesion: 0.09
 Nodes (22): Accidental Prisma Postgres Provisioning, Auth Fails, Bun Entrypoint Missing, Compute Config Invalid, `create-prisma --yes` Did Not Deploy, Database Wiring or Schema Did Not Apply, Env Changes Did Not Apply, First Checks (+14 more)
 
 ### Community 34 - "grocery.service.ts"
-Cohesion: 0.11
-Nodes (20): SetGroceryItemQuantityDto, IsDefined, IsNumber, IsPositive, IsDefined, IsNotEmpty, IsNumber, IsOptional (+12 more)
+Cohesion: 0.13
+Nodes (17): SetGroceryItemQuantityDto, IsDefined, IsNumber, IsPositive, IsDefined, IsNotEmpty, IsNumber, IsOptional (+9 more)
 
 ### Community 35 - "Client Methods"
 Cohesion: 0.10
@@ -1620,9 +1621,9 @@ Nodes (7): EstimationResponseDto, InventoryController, Body, Controller, HttpCod
 Cohesion: 0.25
 Nodes (8): Home Stock Tracker — Gap Fix Briefs, How to use these briefs, Phase 1 — Make the current MCP trustworthy, Phase 2 — Complete grocery-list conversation, Phase 3 — Product discovery and learning loop, Phase 4 — Make third-party installation reliable, Recommended execution order, Working rules
 
-### Community 346 - "LLM_PROVIDER"
-Cohesion: 0.15
-Nodes (6): LLM_PROVIDER, confirmNew(), postNew(), productInput(), confirmNewProduct(), productInput()
+### Community 346 - "confirmed-grocery-catalog.rest.e2e-spec.ts"
+Cohesion: 0.47
+Nodes (3): confirmNew(), postNew(), productInput()
 
 ### Community 347 - "purchase-completion.mcp.e2e-spec.ts"
 Cohesion: 0.25
@@ -1647,7 +1648,7 @@ Nodes (4): ProductSearchQueryLengthConstraint, transform(), validateQuery(), Val
 ## Knowledge Gaps
 - **2614 isolated node(s):** `schemaVersion`, `version`, `claude`, `codex`, `copilot` (+2609 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Work-memory lessons
 
@@ -1659,7 +1660,7 @@ Nodes (4): ProductSearchQueryLengthConstraint, transform(), validateQuery(), Val
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PrismaService` connect `PrismaService` to `product-resolution.ts`, `prisma.service.ts`, `product-classifier.service.ts`, `inventory.service.ts`, `estimation.service.ts`, `statistics.service.ts`, `app.module.ts`, `health.controller.ts`, `product-search.service.ts`, `prediction-feedback.service.ts`, `product.service.spec.ts`, `AppService`, `grocery.service.ts`, `inventory.service.spec.ts`, `policy-aware-grocery-addition.ts`, `OperationalLogger`, `LLM_PROVIDER`, `purchase-completion.mcp.e2e-spec.ts`, `ProductResolutionService`, `mcp.controller.spec.ts`, `product.service.ts`?**
+- **Why does `PrismaService` connect `PrismaService` to `product-resolution.ts`, `prisma.service.ts`, `product-classifier.service.ts`, `inventory.service.ts`, `estimation.service.ts`, `statistics.service.ts`, `app.module.ts`, `health.controller.ts`, `product-search.service.ts`, `prediction-feedback.service.ts`, `product.service.spec.ts`, `AppService`, `grocery.service.ts`, `inventory.service.spec.ts`, `policy-aware-grocery-addition.ts`, `OperationalLogger`, `confirmed-grocery-catalog.rest.e2e-spec.ts`, `purchase-completion.mcp.e2e-spec.ts`, `ProductResolutionService`, `policy-aware-grocery.mcp.e2e-spec.ts`, `mcp.controller.spec.ts`, `product.service.ts`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **Why does `GroceryService` connect `GroceryService` to `grocery.service.ts`, `mcp.controller.spec.ts`, `prisma.service.ts`, `mcp-server.factory.ts`, `ProductResolutionService`, `app.module.ts`, `policy-aware-grocery-addition.ts`, `.addExplicitProductItem`, `GroceryController`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._

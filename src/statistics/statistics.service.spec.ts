@@ -6,7 +6,6 @@ import { HouseholdService } from '../household/household.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { MS_PER_DAY } from '../common/constants';
 
-
 describe('StatisticsService', () => {
   let service: StatisticsService;
 

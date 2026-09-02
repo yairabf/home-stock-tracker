@@ -300,7 +300,7 @@
       "file_type": "code",
       "norm_label": "predictionreasoninginput",
       "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L61"
+      "source_location": "L59"
     },
     {
       "id": "src_estimation_types_prediction_reasoning_predictionreasoningresult",
@@ -313,7 +313,7 @@
       "file_type": "code",
       "norm_label": "predictionreasoningresult",
       "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L65"
+      "source_location": "L63"
     },
     {
       "id": "src_estimation_types_prediction_result_deterministicpredictioncandidate",
@@ -587,6 +587,19 @@
       "norm_label": "policyawaregroceryadditionshape",
       "source_file": "src/grocery/dto/policy-aware-add-grocery-item.dto.ts",
       "source_location": "L74"
+    },
+    {
+      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy",
+      "label": "PendingGroceryItemPolicy",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "PolicyAwareAddGroceryItemDto",
+      "file_type": "code",
+      "norm_label": "pendinggroceryitempolicy",
+      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
+      "source_location": "L19"
     },
     {
       "id": "src_grocery_types_policy_aware_grocery_addition_productresolutionaction",
@@ -1275,7 +1288,7 @@
       "file_type": "code",
       "norm_label": "predictionfeedbackservice",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L21"
+      "source_location": "L20"
     },
     {
       "id": "src_product_product_search_service_productsearchservice",
@@ -1626,7 +1639,7 @@
       "file_type": "code",
       "norm_label": "createhouseholddto",
       "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L3"
+      "source_location": "L11"
     },
     {
       "id": "src_household_dto_household_response_dto_householdresponsedto",
@@ -1692,19 +1705,6 @@
       "norm_label": "updategroceryitemdto",
       "source_file": "src/grocery/dto/update-grocery-item.dto.ts",
       "source_location": "L12"
-    },
-    {
-      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy",
-      "label": "PendingGroceryItemPolicy",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "grocery.service.ts",
-      "file_type": "code",
-      "norm_label": "pendinggroceryitempolicy",
-      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
-      "source_location": "L19"
     },
     {
       "id": "src_grocery_types_policy_aware_grocery_addition_unknownproductpolicy",
@@ -3197,7 +3197,7 @@
       "file_type": "code",
       "norm_label": ".calculateneedinterval()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L144"
+      "source_location": "L138"
     },
     {
       "id": "src_statistics_statistics_service_statisticsservice_calculateproductstatistics",
@@ -3221,7 +3221,7 @@
       "file_type": "code",
       "norm_label": ".calculatepurchaseinterval()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L112"
+      "source_location": "L106"
     },
     {
       "id": "src_statistics_statistics_service_statisticsservice_calculatetypicalpurchasequantity",
@@ -3233,7 +3233,7 @@
       "file_type": "code",
       "norm_label": ".calculatetypicalpurchasequantity()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L176"
+      "source_location": "L170"
     },
     {
       "id": "src_statistics_statistics_service_statisticsservice_estimateconsumptioninterval",
@@ -3245,7 +3245,7 @@
       "file_type": "code",
       "norm_label": ".estimateconsumptioninterval()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L206"
+      "source_location": "L200"
     },
     {
       "id": "src_statistics_statistics_service_statisticsservice_gethouseholdsize",
@@ -3257,7 +3257,7 @@
       "file_type": "code",
       "norm_label": ".gethouseholdsize()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L226"
+      "source_location": "L220"
     },
     {
       "id": "src_statistics_statistics_service_statisticsservice_persiststatistics",
@@ -3269,7 +3269,7 @@
       "file_type": "code",
       "norm_label": ".persiststatistics()",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L246"
+      "source_location": "L238"
     },
     {
       "id": "src_product_product_name_exception_productnameconflict",
@@ -4985,7 +4985,7 @@
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L22"
+      "source_location": "L21"
     },
     {
       "id": "src_inventory_prediction_feedback_service_predictionfeedbackservice_eventtypefor",
@@ -4997,7 +4997,7 @@
       "file_type": "code",
       "norm_label": ".eventtypefor()",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L113"
+      "source_location": "L112"
     },
     {
       "id": "src_inventory_prediction_feedback_service_predictionfeedbackservice_submitfeedback",
@@ -5009,7 +5009,7 @@
       "file_type": "code",
       "norm_label": ".submitfeedback()",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L24"
+      "source_location": "L23"
     },
     {
       "id": "src_inventory_prediction_feedback_service_predictionfeedbackservice_validatecorrection",
@@ -5021,7 +5021,7 @@
       "file_type": "code",
       "norm_label": ".validatecorrection()",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L99"
+      "source_location": "L98"
     },
     {
       "id": "src_product_product_controller_productcontroller_constructor",
@@ -5977,7 +5977,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "confirmalias()",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
@@ -5989,7 +5989,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "confirmnew()",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
@@ -6001,7 +6001,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "createditemfrom()",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
@@ -6013,7 +6013,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "postnew()",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
@@ -6025,95 +6025,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "productinput()",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
       "source_location": "L224"
-    },
-    {
-      "id": "test_policy_aware_grocery_mcp_e2e_spec_confirmnewproduct",
-      "label": "confirmNewProduct()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "confirmnewproduct()",
-      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_location": "L290"
-    },
-    {
-      "id": "test_policy_aware_grocery_mcp_e2e_spec_createdproductid",
-      "label": "createdProductId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "createdproductid()",
-      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_location": "L306"
-    },
-    {
-      "id": "test_policy_aware_grocery_mcp_e2e_spec_productinput",
-      "label": "productInput()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "productinput()",
-      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_location": "L279"
-    },
-    {
-      "id": "test_policy_aware_grocery_mcp_e2e_spec_tooltext",
-      "label": "toolText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "tooltext()",
-      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_location": "L326"
-    },
-    {
-      "id": "test_policy_aware_grocery_rest_e2e_spec_domaincounts",
-      "label": "domainCounts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "domaincounts()",
-      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
-      "source_location": "L178"
-    },
-    {
-      "id": "test_policy_aware_grocery_rest_e2e_spec_post",
-      "label": "post()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "post()",
-      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
-      "source_location": "L160"
-    },
-    {
-      "id": "test_policy_aware_grocery_rest_e2e_spec_productinput",
-      "label": "productInput()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "productinput()",
-      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
-      "source_location": "L167"
     },
     {
       "id": "test_purchase_completion_mcp_e2e_spec_callcompletion",
@@ -6426,6 +6342,54 @@
       "norm_label": "validatequery()",
       "source_file": "src/product/dto/search-products-query.dto.spec.ts",
       "source_location": "L9"
+    },
+    {
+      "id": "test_policy_aware_grocery_mcp_e2e_spec_confirmnewproduct",
+      "label": "confirmNewProduct()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 355,
+      "community_name": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "file_type": "code",
+      "norm_label": "confirmnewproduct()",
+      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_location": "L290"
+    },
+    {
+      "id": "test_policy_aware_grocery_mcp_e2e_spec_createdproductid",
+      "label": "createdProductId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 355,
+      "community_name": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "file_type": "code",
+      "norm_label": "createdproductid()",
+      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_location": "L306"
+    },
+    {
+      "id": "test_policy_aware_grocery_mcp_e2e_spec_productinput",
+      "label": "productInput()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 355,
+      "community_name": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "file_type": "code",
+      "norm_label": "productinput()",
+      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_location": "L279"
+    },
+    {
+      "id": "test_policy_aware_grocery_mcp_e2e_spec_tooltext",
+      "label": "toolText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 355,
+      "community_name": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "file_type": "code",
+      "norm_label": "tooltext()",
+      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_location": "L326"
     },
     {
       "id": "src_grocery_dto_add_grocery_item_dto_spec_validatedto",
@@ -7110,6 +7074,42 @@
       "norm_label": "sideeffectcounts()",
       "source_file": "test/low-stock-recommendations.e2e-spec.ts",
       "source_location": "L182"
+    },
+    {
+      "id": "test_policy_aware_grocery_rest_e2e_spec_domaincounts",
+      "label": "domainCounts()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "prisma.service.ts",
+      "file_type": "code",
+      "norm_label": "domaincounts()",
+      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
+      "source_location": "L178"
+    },
+    {
+      "id": "test_policy_aware_grocery_rest_e2e_spec_post",
+      "label": "post()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "prisma.service.ts",
+      "file_type": "code",
+      "norm_label": "post()",
+      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
+      "source_location": "L160"
+    },
+    {
+      "id": "test_policy_aware_grocery_rest_e2e_spec_productinput",
+      "label": "productInput()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "prisma.service.ts",
+      "file_type": "code",
+      "norm_label": "productinput()",
+      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
+      "source_location": "L167"
     },
     {
       "id": "test_prediction_feedback_mcp_e2e_spec_callfeedback",
@@ -12233,7 +12233,7 @@
       "file_type": "code",
       "norm_label": "predictionreasoningresultschema",
       "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L52"
+      "source_location": "L50"
     },
     {
       "id": "src_estimation_types_prediction_reasoning_spec",
@@ -13931,6 +13931,28 @@
       "norm_label": "validatorconstraint",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy_create_separate",
+      "label": "create_separate",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "PolicyAwareAddGroceryItemDto",
+      "file_type": "code",
+      "norm_label": "create_separate",
+      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy_return_existing",
+      "label": "return_existing",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "PolicyAwareAddGroceryItemDto",
+      "file_type": "code",
+      "norm_label": "return_existing",
+      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
+      "source_location": "L20"
     },
     {
       "id": "src_grocery_types_policy_aware_grocery_addition_productresolutionaction_add_alias",
@@ -38202,28 +38224,6 @@
       "source_location": "L19"
     },
     {
-      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy_create_separate",
-      "label": "create_separate",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "grocery.service.ts",
-      "file_type": "code",
-      "norm_label": "create_separate",
-      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_grocery_types_policy_aware_grocery_addition_pendinggroceryitempolicy_return_existing",
-      "label": "return_existing",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "grocery.service.ts",
-      "file_type": "code",
-      "norm_label": "return_existing",
-      "source_file": "src/grocery/types/policy-aware-grocery-addition.ts",
-      "source_location": "L20"
-    },
-    {
       "id": "src_grocery_types_policy_aware_grocery_addition_unknownproductpolicy_create_if_missing",
       "label": "create_if_missing",
       "_origin": "ast",
@@ -38818,47 +38818,14 @@
       "source_location": "L51"
     },
     {
-      "id": "src_llm_llm_provider_llm_provider",
-      "label": "LLM_PROVIDER",
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "llm_provider",
-      "source_file": "src/llm/llm-provider.ts",
-      "source_location": "L6"
-    },
-    {
       "id": "test_confirmed_grocery_catalog_rest_e2e_spec",
       "label": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "_origin": "ast",
       "community": 346,
-      "community_name": "LLM_PROVIDER",
+      "community_name": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "file_type": "code",
       "norm_label": "confirmed-grocery-catalog.rest.e2e-spec.ts",
       "source_file": "test/confirmed-grocery-catalog.rest.e2e-spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "test_policy_aware_grocery_mcp_e2e_spec",
-      "label": "policy-aware-grocery.mcp.e2e-spec.ts",
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "test_policy_aware_grocery_rest_e2e_spec",
-      "label": "policy-aware-grocery.rest.e2e-spec.ts",
-      "_origin": "ast",
-      "community": 346,
-      "community_name": "LLM_PROVIDER",
-      "file_type": "code",
-      "norm_label": "policy-aware-grocery.rest.e2e-spec.ts",
-      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
       "source_location": "L1"
     },
     {
@@ -39332,6 +39299,17 @@
       "norm_label": "validatorconstraint",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "test_policy_aware_grocery_mcp_e2e_spec",
+      "label": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "_origin": "ast",
+      "community": 355,
+      "community_name": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "file_type": "code",
+      "norm_label": "policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_file": "test/policy-aware-grocery.mcp.e2e-spec.ts",
+      "source_location": "L1"
     },
     {
       "id": "agents_skills_prisma_client_api_references_filters",
@@ -44890,6 +44868,17 @@
       "source_location": ""
     },
     {
+      "id": "src_llm_llm_provider_llm_provider",
+      "label": "LLM_PROVIDER",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "prisma.service.ts",
+      "file_type": "code",
+      "norm_label": "llm_provider",
+      "source_file": "src/llm/llm-provider.ts",
+      "source_location": "L6"
+    },
+    {
       "id": "src_prisma_prisma_service",
       "label": "prisma.service.ts",
       "_origin": "ast",
@@ -45030,6 +45019,17 @@
       "file_type": "code",
       "norm_label": "low-stock-recommendations.e2e-spec.ts",
       "source_file": "test/low-stock-recommendations.e2e-spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "test_policy_aware_grocery_rest_e2e_spec",
+      "label": "policy-aware-grocery.rest.e2e-spec.ts",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "prisma.service.ts",
+      "file_type": "code",
+      "norm_label": "policy-aware-grocery.rest.e2e-spec.ts",
+      "source_file": "test/policy-aware-grocery.rest.e2e-spec.ts",
       "source_location": "L1"
     },
     {
@@ -54479,7 +54479,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/household/household.service.ts",
-      "source_location": "L71",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -54731,7 +54731,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L36",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -54743,7 +54743,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L52",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -56303,7 +56303,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L71",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -56315,7 +56315,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L72",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -56327,7 +56327,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L74",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -56339,7 +56339,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L77",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -56351,7 +56351,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L78",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -56363,7 +56363,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L95",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -57760,31 +57760,19 @@
     },
     {
       "source": "src_household_dto_create_household_dto_createhouseholddto",
+      "target": "src_household_dto_create_household_dto_ts_isint",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "src/household/dto/create-household.dto.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "src_household_dto_create_household_dto_createhouseholddto",
       "target": "src_household_dto_create_household_dto_ts_isarray",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L14",
-      "weight": 1.0
-    },
-    {
-      "source": "src_household_dto_create_household_dto_createhouseholddto",
-      "target": "src_household_dto_create_household_dto_ts_isstring",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L15",
-      "weight": 1.0
-    },
-    {
-      "source": "src_household_dto_create_household_dto_createhouseholddto",
-      "target": "src_household_dto_create_household_dto_ts_isnumber",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -57796,7 +57784,7 @@
     },
     {
       "source": "src_household_dto_create_household_dto_createhouseholddto",
-      "target": "src_household_dto_create_household_dto_ts_min",
+      "target": "src_household_dto_create_household_dto_ts_isstring",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -57808,6 +57796,30 @@
     },
     {
       "source": "src_household_dto_create_household_dto_createhouseholddto",
+      "target": "src_household_dto_create_household_dto_ts_isnumber",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "src/household/dto/create-household.dto.ts",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "src_household_dto_create_household_dto_createhouseholddto",
+      "target": "src_household_dto_create_household_dto_ts_min",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "decorator",
+      "source_file": "src/household/dto/create-household.dto.ts",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "src_household_dto_create_household_dto_createhouseholddto",
       "target": "src_household_dto_create_household_dto_ts_max",
       "relation": "references",
       "_origin": "ast",
@@ -57815,7 +57827,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L24",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -57827,19 +57839,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L28",
-      "weight": 1.0
-    },
-    {
-      "source": "src_household_dto_create_household_dto_createhouseholddto",
-      "target": "src_household_dto_create_household_dto_ts_isint",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "decorator",
-      "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L9",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -58835,7 +58835,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L20",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -60551,7 +60551,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L24",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -60995,7 +60995,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L246",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -65543,7 +65543,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -65555,7 +65555,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -65567,7 +65567,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -65579,7 +65579,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -73355,7 +73355,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L13",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -73367,7 +73367,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L14",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -73379,7 +73379,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -78467,7 +78467,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L22",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -78479,7 +78479,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L113",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -78491,7 +78491,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L24",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -78503,7 +78503,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L99",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -112238,7 +112238,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L52",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "src_estimation_types_prediction_reasoning",
+      "target": "src_estimation_types_prediction_reasoning_predictionreasoninginput",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/estimation/types/prediction-reasoning.ts",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -112254,24 +112265,13 @@
     },
     {
       "source": "src_estimation_types_prediction_reasoning",
-      "target": "src_estimation_types_prediction_reasoning_predictionreasoninginput",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L61",
-      "weight": 1.0
-    },
-    {
-      "source": "src_estimation_types_prediction_reasoning",
       "target": "src_estimation_types_prediction_reasoning_predictionreasoningresult",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/estimation/types/prediction-reasoning.ts",
-      "source_location": "L65",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -112986,7 +112986,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/household/dto/create-household.dto.ts",
-      "source_location": "L3",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -113382,7 +113382,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L21",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -118640,7 +118640,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L113",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -118651,7 +118651,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L22",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -118662,7 +118662,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L24",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -118673,7 +118673,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/inventory/prediction-feedback.service.ts",
-      "source_location": "L99",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -119663,7 +119663,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L112",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -119674,7 +119674,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L144",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -119685,7 +119685,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L176",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -119696,7 +119696,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L206",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -119707,7 +119707,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L226",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -119718,7 +119718,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L246",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -121298,7 +121298,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "src/statistics/statistics.service.ts",
-      "source_location": "L231",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -121519,5 +121519,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "fb9136a0c291dfbbebba58f2d40161f29cf0e2a3"
+  "built_at_commit": "440ed50dbd2f6191a49b56f7e9c0700ff5fcf5da"
 }
