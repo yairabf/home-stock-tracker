@@ -55,7 +55,7 @@ describe('McpServerFactory grocery tools', () => {
   let client: Client;
   let closeServer: () => Promise<void>;
   let productService: jest.Mocked<
-    Pick<ProductService, 'findOne' | 'findByExactOrAliasName'>
+    Pick<ProductService, 'addAlias' | 'findOne' | 'findByExactOrAliasName'>
   >;
   let productSearchService: jest.Mocked<Pick<ProductSearchService, 'search'>>;
   let predictionEngine: jest.Mocked<PredictionEngine>;
@@ -87,6 +87,7 @@ describe('McpServerFactory grocery tools', () => {
       listItems: jest.fn(),
     };
     productService = {
+      addAlias: jest.fn(),
       findOne: jest.fn(),
       findByExactOrAliasName: jest.fn(),
     };
@@ -141,6 +142,7 @@ describe('McpServerFactory grocery tools', () => {
       'search_products',
       'get_inventory',
       'list_inventory_events',
+      'product_add_alias',
       'record_purchase',
       'record_stock_signal',
       'record_prediction_feedback',
@@ -344,6 +346,30 @@ describe('McpServerFactory grocery tools', () => {
     expect(JSON.stringify(eventHistoryTool?.outputSchema)).not.toContain(
       '"metadata"',
     );
+    const productAddAliasTool = result.tools.find(
+      ({ name }) => name === 'product_add_alias',
+    );
+    expect(productAddAliasTool?.description).toContain('explicit confirmation');
+    expect(productAddAliasTool?.description).toContain(
+      'Do not infer the target',
+    );
+    expect(productAddAliasTool).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['productId', 'alias'],
+        properties: {
+          productId: { type: 'string', format: 'uuid' },
+          alias: { type: 'string', minLength: 1 },
+        },
+      },
+      outputSchema: {
+        properties: {
+          id: { type: 'string' },
+          canonicalName: { type: 'string' },
+          aliases: { type: 'array' },
+        },
+      },
+    });
     const purchaseCompletionTool = result.tools.find(
       ({ name }) => name === 'complete_grocery_purchase',
     );
@@ -376,6 +402,7 @@ describe('McpServerFactory grocery tools', () => {
       'grocery_add',
       'grocery_confirm_new_product',
       'grocery_confirm_product_alias',
+      'product_add_alias',
       'record_purchase',
       'record_stock_signal',
       'complete_grocery_purchase',
@@ -1011,6 +1038,125 @@ describe('McpServerFactory grocery tools', () => {
       canonicalName: 'milk',
     });
     expect(productService.findOne).not.toHaveBeenCalled();
+  });
+
+  it('adds a confirmed standalone alias through the shared product service', async () => {
+    productService.addAlias.mockResolvedValue({
+      id: item.productId,
+      names: [
+        {
+          id: 'name-canonical',
+          productId: item.productId,
+          displayName: 'Milk',
+          normalizedName: 'milk',
+          kind: ProductNameKind.canonical,
+        },
+        {
+          id: 'name-alias',
+          productId: item.productId,
+          displayName: 'Whole Milk',
+          normalizedName: 'whole milk',
+          kind: ProductNameKind.alias,
+        },
+      ],
+      category: 'dairy',
+      typicalUnit: 'liter',
+      productType: null,
+      isPerishable: true,
+      predictionStrategy: null,
+      predictionEnabled: true,
+      config: null,
+      createdAt: new Date('2026-08-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-08-01T00:00:00.000Z'),
+    });
+
+    const result = await client.callTool({
+      name: 'product_add_alias',
+      arguments: { productId: item.productId, alias: '  Whole Milk  ' },
+    });
+
+    expect(productService.addAlias).toHaveBeenCalledWith(item.productId, {
+      alias: 'Whole Milk',
+    });
+    expect(productService.addAlias).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent).toMatchObject({
+      id: item.productId,
+      canonicalName: 'Milk',
+      aliases: ['Whole Milk'],
+    });
+    expect(groceryService.confirmProductAlias).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['missing product ID', { alias: 'Whole Milk' }],
+    ['malformed product ID', { productId: 'not-a-uuid', alias: 'Whole Milk' }],
+    ['missing alias', { productId: item.productId }],
+    ['blank alias', { productId: item.productId, alias: '   ' }],
+    [
+      'unknown field',
+      { productId: item.productId, alias: 'Whole Milk', source: 'api' },
+    ],
+  ])('rejects standalone alias %s before mutation', async (_case, args) => {
+    const result = await client.callTool({
+      name: 'product_add_alias',
+      arguments: args,
+    });
+
+    expect(result.isError).toBe(true);
+    expect(productService.addAlias).not.toHaveBeenCalled();
+  });
+
+  it('returns standalone alias domain conflicts as safe tool errors', async () => {
+    productService.addAlias.mockRejectedValue(
+      new ConflictException({
+        code: 'PRODUCT_NAME_CONFLICT',
+        message: 'A product name is already assigned to another product',
+      }),
+    );
+
+    const result = await client.callTool({
+      name: 'product_add_alias',
+      arguments: { productId: item.productId, alias: 'Whole Milk' },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content).toEqual([
+      {
+        type: 'text',
+        text: 'PRODUCT_NAME_CONFLICT: A product name is already assigned to another product',
+      },
+    ]);
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'product_add_alias',
+      errorType: 'domain_error',
+    });
+  });
+
+  it('sanitizes unexpected standalone alias failures', async () => {
+    productService.addAlias.mockRejectedValue(
+      new Error('database password leaked here'),
+    );
+
+    const result = await client.callTool({
+      name: 'product_add_alias',
+      arguments: { productId: item.productId, alias: 'Whole Milk' },
+    });
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'The inventory operation could not be completed',
+        },
+      ],
+      isError: true,
+    });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'product_add_alias',
+      errorType: 'unexpected_error',
+    });
   });
 
   it('returns one stable validation failure for missing or ambiguous selectors', async () => {

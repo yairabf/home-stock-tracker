@@ -12,6 +12,11 @@ tool result, never from the model.
 | Unknown product proposal | "Add za'atar yogurt," and the phrase has no exact match. | `grocery_add({ productName: "za'atar yogurt", groceryItem: {} })`; present `product_resolution_required` candidates, optional advice, and allowed actions. | No catalog or grocery mutation occurs before a new user decision. |
 | Proposal is non-authoritative | `product_resolution_required.proposal` recommends an alias or creation. | Explain the advice and server-computed actions, but do not select or apply an action. | Provider output never authorizes a write. |
 | Candidate choice | Resolution returns several candidates. | Present plausible candidates in returned order and ask the user to choose, create, or cancel. | No product identity is guessed. |
+| Standalone product alias | The user explicitly confirms that "whole milk" identifies one exact resolved milk product outside a grocery request. | `product_add_alias({ productId: <trusted product id>, alias: "whole milk" })` once, with no source or proposal state. | Return the updated canonical product and aliases without changing groceries or invoking the LLM. |
+| Standalone alias with ambiguous target | Several milk products could own the requested alias. | Present every plausible candidate in returned order and ask the user to choose and confirm the relationship. | Do not call `product_add_alias` until one exact product ID is selected. |
+| Standalone alias ownership conflict | The confirmed alias already belongs to another canonical product. | Report `PRODUCT_NAME_CONFLICT` as final for this decision. | Do not select another owner, overwrite the alias, or retry automatically. |
+| Standalone alias target was deleted | The exact confirmed product ID no longer exists when the alias write runs. | Report the safe not-found result as final for this decision. | Do not search for a replacement owner or retry automatically. |
+| Standalone alias transport uncertainty | The alias call ends without a reliable result. | Stop and report uncertainty; use a fresh read before asking about another write. | Do not retry automatically or claim that the alias was saved. |
 | Confirmed product creation | The user approves complete final facts for a proposed new product. | `grocery_confirm_new_product({ product: <approved final facts>, groceryItem: <original grocery item> })`; send no proposal ID or source and make no second LLM request. | Product and first grocery line commit atomically, or a stable conflict is returned. |
 | Confirmed product alias | The user confirms that "three percent milk" is an alias for one exact returned candidate. | `grocery_confirm_product_alias({ targetProductId: <chosen product id>, alias: "three percent milk", groceryItem: <original grocery item> })`. | The alias and new grocery line commit through one shared use case. |
 | Confirmed alias with quantity ambiguity | Alias confirmation finds an existing pending line with quantity 2. | Keep the successful alias, explain `confirmation_required`, and ask for the final grocery quantity. Do not repeat the alias confirmation. | Catalog identity is saved while the existing grocery quantity remains 2. |
@@ -119,6 +124,8 @@ For each row, verify:
 - `product_resolution_required` never causes a product, alias, or grocery write;
 - proposal advice remains non-authoritative and every product choice comes from
   the user;
+- standalone alias writes use one exact trusted product ID and explicit user
+  confirmation, never an inferred or merely suggested relationship;
 - confirmed create and alias calls contain only the final approved payload and
   original grocery item, never proposal state or client-owned source;
 - confirmation never invokes the LLM again or auto-retries a stale catalog result;

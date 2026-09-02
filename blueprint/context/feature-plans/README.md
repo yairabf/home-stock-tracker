@@ -1,34 +1,18 @@
-# Queued Feature Plans
+# Queued feature plans
 
-These files capture the agreed product-catalog and grocery-list design as a
-reviewable implementation queue. They are design inputs, not active Blueprint
-specs.
+No detailed feature plan is currently queued. Completed plans are preserved as
+implemented specifications under `blueprint/history/features/`; they are not
+duplicated in active context.
 
-Only one feature may be active at a time. To begin one:
+To queue future work:
 
-1. Select the next uncompleted plan whose dependencies are complete.
-2. Reconcile it with the current repository state.
-3. Copy it into `blueprint/context/current-feature.md` through `/feature`.
-4. Implement and complete it through the normal Blueprint workflow.
+1. Confirm that the item still belongs in `blueprint/build-plan.md`.
+2. Create one reviewed plan in this directory only when it adds implementation
+   detail beyond the build-plan item.
+3. Load that plan through `/feature` when its dependencies are complete.
+4. Remove the queued copy after `/complete` archives the implemented spec.
 
-Do not implement directly from several files in this directory at once.
-
-## Recommended order
-
-| Order | Plan | Depends on | Intended history filename |
-|---|---|---|---|
-| 27 | [Product name namespace](27-product-name-namespace.md) | None | `27-product-name-namespace.md` |
-| 28 | [Grocery quantity contract](28-grocery-quantity-contract.md) | None | `28-grocery-quantity-contract.md` |
-| 29 | [Product search and resolution proposals](29-product-search-and-resolution-proposals.md) | 27 | `29-product-search-and-resolution-proposals.md` |
-| 30 | [Policy-aware grocery additions](30-policy-aware-grocery-additions.md) | 27, 28, 29 | `30-policy-aware-grocery-additions.md` |
-| 31 | [Confirmed grocery catalog decisions](31-confirmed-grocery-catalog-decisions.md) | 30 | `31-confirmed-grocery-catalog-decisions.md` |
-
-The sequential implementation order is `27 -> 28 -> 29 -> 30 -> 31`.
-
-## Deferred work
-
-The design discussion identified these later capabilities, but they are not
-implementation-ready plans in this queue:
+## Ideas that are not implementation-ready
 
 - Merge multiple pending grocery lines.
 - Rename a canonical product name.
@@ -38,21 +22,5 @@ implementation-ready plans in this queue:
 - LLM tool calling or a two-call catalog retrieval flow.
 - Typo-tolerant, trigram, vector, or semantic product search.
 
-## Shared decisions
-
-- `ProductService` owns catalog identity and metadata.
-- `GroceryService` owns grocery-list behavior and coordinates catalog work when
-  adding an item is the primary use case.
-- Canonical names and aliases are strict identity terms. Similar products remain
-  separate products.
-- The application, not the LLM, owns all database access.
-- The LLM receives only allowlisted catalog context and returns advisory,
-  structured proposals. It never writes or queries the database directly.
-- User-approved confirmation payloads are deterministic and do not invoke the
-  LLM again.
-- REST, MCP, and future clients use shared application services. MCP descriptions
-  contain correctness-critical protocol rules; an agent-specific skill adds only
-  conversational guidance.
-- Existing pending grocery items are never incremented or replaced implicitly.
-  The service returns `confirmation_required`, and clients resolve quantity intent
-  before sending a final absolute value.
+These are product ideas, not approved feature plans. Promote one only after a
+concrete workflow justifies it.

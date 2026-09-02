@@ -6,8 +6,8 @@ export const AGENT_RELEASE_CONTRACT = {
   },
   mcp: {
     serverName: 'home-stock-tracker',
-    contractVersion: '1.0.0',
-    toolsFixture: 'contracts/1.0.0/tools-list.json',
+    contractVersion: '1.1.0',
+    toolsFixture: 'contracts/1.1.0/tools-list.json',
     versionPolicy: {
       breaking: 'major',
       additive: 'minor',
@@ -17,7 +17,7 @@ export const AGENT_RELEASE_CONTRACT = {
   skill: {
     name: 'home-stock-tracker',
     description: 'Use the household grocery and inventory MCP tools',
-    version: '1.10.0',
+    version: '1.11.0',
     compatibleMcpRange: '>=1.0.0 <2.0.0',
     author: 'Home Stock Tracker',
     tags: ['household', 'grocery', 'inventory', 'mcp'],
@@ -33,6 +33,7 @@ export const AGENT_RELEASE_CONTRACT = {
     'inventory-event-history',
     'low-stock-recommendations',
     'prediction-feedback',
+    'product-alias-management',
     'product-lookup',
     'product-search',
     'purchase-recording',
@@ -50,6 +51,7 @@ export const AGENT_RELEASE_CONTRACT = {
     'search_products',
     'get_inventory',
     'list_inventory_events',
+    'product_add_alias',
     'record_purchase',
     'record_stock_signal',
     'record_prediction_feedback',

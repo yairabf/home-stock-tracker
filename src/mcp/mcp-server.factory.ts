@@ -78,6 +78,13 @@ const productOutputSchema = z.object({
   config: z.json().nullable(),
 });
 
+const productAddAliasInputSchema = z
+  .object({
+    productId: z.uuid(),
+    alias: z.string().trim().min(1),
+  })
+  .strict();
+
 const productSearchProductOutputSchema = productOutputSchema.omit({
   predictionStrategy: true,
   config: true,
@@ -458,10 +465,31 @@ export class McpServerFactory {
 
     this.registerGroceryTools(server);
     this.registerReadTools(server);
+    this.registerProductWriteTool(server);
     this.registerInventoryWriteTools(server);
     this.registerGroceryPurchaseCompletionTool(server);
     this.registerRecommendationTool(server);
     return server;
+  }
+
+  private registerProductWriteTool(server: McpServer): void {
+    server.registerTool(
+      'product_add_alias',
+      {
+        description:
+          'Add a user-confirmed alias to one exact product ID outside a grocery workflow. Resolve ambiguity and obtain explicit confirmation before calling. Do not infer the target, send source, or retry automatically after an uncertain result.',
+        inputSchema: productAddAliasInputSchema,
+        outputSchema: productOutputSchema,
+      },
+      ({ productId, alias }) =>
+        this.runTool('product_add_alias', async () =>
+          this.toolResult(
+            ProductResponseDto.fromEntity(
+              await this.productService.addAlias(productId, { alias }),
+            ),
+          ),
+        ),
+    );
   }
 
   private registerGroceryPurchaseCompletionTool(server: McpServer): void {

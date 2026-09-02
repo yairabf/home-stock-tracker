@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.10.0
+version: 1.11.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -30,29 +30,31 @@ do not recreate its logic in conversation.
 
 ## Tool selection
 
-| Tool                            | Use when                                                                                                                                                                                                               | Do not use when                                                                                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `grocery_add`                   | The user explicitly asks to add one named product. Begin uncertain names in proposal mode with `productName` and nested `groceryItem`; branch on `created`, `confirmation_required`, or `product_resolution_required`. | The user only reports low stock, asks what is needed, gives an invalid quantity, or has not supplied every product fact required for deterministic creation. |
-| `grocery_confirm_new_product`   | The user explicitly approves complete final product facts from a resolution conversation. Send those facts and the original `groceryItem`; no proposal ID or source.                                                   | Any product fact is guessed, the user chose an existing product, cancelled, or has not approved the final payload.                                           |
-| `grocery_confirm_product_alias` | The user explicitly confirms that the original phrase is an alias for one exact returned product ID. Send the approved alias and original `groceryItem`.                                                               | The target is ambiguous, the relationship was not explicitly approved, or generic catalog maintenance is requested outside a grocery addition.               |
-| `grocery_set_quantity`          | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                                                  | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                                   |
-| `grocery_update`                | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                                                | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                               |
-| `grocery_remove`                | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                                     | Only a product ID or unverified item name is available.                                                                                                      |
-| `grocery_list`                  | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list.                                                                                          | The user asks for predicted low-stock recommendations.                                                                                                       |
-| `get_product`                   | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                                                | Nearby or broad product discovery is required.                                                                                                               |
-| `search_products`               | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                                   | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                                     |
-| `get_inventory`                 | The user asks whether one known product is probably available, low, or out. Resolve its product ID first.                                                                                                              | The user asks for an exact physical count or for all recommendations.                                                                                        |
-| `list_inventory_events`         | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                 |
-| `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                           |
-| `record_stock_signal`           | The user directly reports one resolved product as low, out, confirmed available, or corrects an earlier stock record without referring to a prediction.                                                               | The statement is feedback about one specific prediction or is too vague to map to an allowed event type.                                                     |
-| `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.    |
-| `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                       | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
-| `get_low_stock_predictions`     | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                                         | The user asks for the grocery list or one product's estimated state.                                                                                         |
+| Tool                            | Use when                                                                                                                                                                                                               | Do not use when                                                                                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `grocery_add`                   | The user explicitly asks to add one named product. Begin uncertain names in proposal mode with `productName` and nested `groceryItem`; branch on `created`, `confirmation_required`, or `product_resolution_required`. | The user only reports low stock, asks what is needed, gives an invalid quantity, or has not supplied every product fact required for deterministic creation.                          |
+| `grocery_confirm_new_product`   | The user explicitly approves complete final product facts from a resolution conversation. Send those facts and the original `groceryItem`; no proposal ID or source.                                                   | Any product fact is guessed, the user chose an existing product, cancelled, or has not approved the final payload.                                                                    |
+| `grocery_confirm_product_alias` | The user explicitly confirms that the original phrase is an alias for one exact returned product ID. Send the approved alias and original `groceryItem`.                                                               | The target is ambiguous, the relationship was not explicitly approved, or generic catalog maintenance is requested outside a grocery addition.                                        |
+| `grocery_set_quantity`          | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                                                  | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                                                            |
+| `grocery_update`                | The user selects unit, note, or an intentional combination of fields for one exact pending line. Pair every selected field with its returned old value.                                                                | Only quantity changes, the line is ambiguous, or the user has not confirmed every final value.                                                                                        |
+| `grocery_remove`                | The user explicitly asks to remove one item and an exact grocery-item ID has been resolved through `grocery_list`.                                                                                                     | Only a product ID or unverified item name is available.                                                                                                                               |
+| `grocery_list`                  | The user asks what is on the grocery list, or an item ID must be resolved before removal. Omit `status` for the pending list.                                                                                          | The user asks for predicted low-stock recommendations.                                                                                                                                |
+| `get_product`                   | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                                                | Nearby or broad product discovery is required.                                                                                                                                        |
+| `search_products`               | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                                   | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                                                              |
+| `product_add_alias`             | The user explicitly confirms that one alias identifies one exact trusted product ID outside a grocery-add workflow.                                                                                                    | The target is ambiguous, the relationship is inferred or only suggested, or the request also needs a grocery mutation.                                                                |
+| `get_inventory`                 | The user asks whether one known product is probably available, low, or out. Resolve its product ID first.                                                                                                              | The user asks for an exact physical count or for all recommendations.                                                                                                                 |
+| `list_inventory_events`         | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                                          |
+| `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                                                    |
+| `record_stock_signal`           | The user directly reports one resolved product as low, out, confirmed available, or corrects an earlier stock record without referring to a prediction.                                                                | The statement is feedback about one specific prediction or is too vague to map to an allowed event type.                                                                              |
+| `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.                              |
+| `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                      | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
+| `get_low_stock_predictions`     | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                                         | The user asks for the grocery list or one product's estimated state.                                                                                                                  |
 
 ## Resolve identifiers first
 
 Spoken product names are not IDs. Before `get_inventory`,
-`list_inventory_events`, `record_purchase`, or `record_stock_signal`, call:
+`list_inventory_events`, `product_add_alias`, `record_purchase`, or
+`record_stock_signal`, call:
 
 ```json
 { "tool": "get_product", "arguments": { "productName": "milk" } }
@@ -102,6 +104,29 @@ defaults. The service defaults omitted quantity to `1` only when it persists a
 new grocery line. Every persisted grocery quantity returned by the service is a
 finite positive number. One explicit request may produce its prerequisite lookup
 followed by one mutation; that is still one intent.
+
+`product_add_alias` always requires explicit confirmation that the approved
+alias identifies the exact resolved product. A direct request such as "teach the
+system that whole milk means milk" can supply that confirmation when `milk`
+resolves uniquely. A search result or LLM suggestion alone never supplies it.
+
+## Standalone product alias workflow
+
+Use `product_add_alias` only for catalog teaching outside a grocery-add request:
+
+1. Resolve the target with `get_product`, or use an already trusted product ID
+   returned in the active interaction.
+2. If exact lookup fails, use `search_products`, present every plausible
+   candidate in returned order, and wait for the user to choose one.
+3. Repeat the exact target and alias relationship when it is not already an
+   explicit part of the user's request. Do not mutate until the user confirms.
+4. Call `product_add_alias` once with only `productId` and `alias`.
+5. Summarize the returned canonical product and saved aliases.
+
+Treat `PRODUCT_NAME_CONFLICT` and a missing target as final for that decision.
+Do not choose another product or retry automatically. After an uncertain
+transport result, stop and report uncertainty; verify product state through a
+fresh read before asking the user about any new write.
 
 ## Grocery conversation workflows
 
@@ -375,6 +400,13 @@ Call `get_product` with `productName: "milk"`, then call
 `list_inventory_events` with the returned `productId`, `eventType: "PURCHASED"`,
 and `limit: 1`. Report the returned timestamp as recorded purchase history, not
 as evidence of the current quantity.
+
+**"Teach the system that whole milk means milk."**
+
+Resolve `milk` with `get_product`. If the result is exact and the user's request
+clearly confirms the relationship, call `product_add_alias` with the returned
+`productId` and `alias: "whole milk"`. Otherwise present candidates or ask for
+confirmation without mutating.
 
 **"Yes, that prediction was right."**
 

@@ -38,7 +38,7 @@ describe('read-only agent installation probe', () => {
     readFileSync(
       join(
         projectRoot,
-        'integrations/shared/home-stock-tracker/contracts/1.0.0/tools-list.json',
+        'integrations/shared/home-stock-tracker/contracts/1.1.0/tools-list.json',
       ),
       'utf8',
     ),

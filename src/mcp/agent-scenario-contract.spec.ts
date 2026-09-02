@@ -40,14 +40,14 @@ describe('executable agent scenario contract', () => {
     });
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Validated 85 executable agent scenarios.');
+    expect(result.stdout).toContain('Validated 90 executable agent scenarios.');
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(85);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(85);
+    expect(fixture.scenarios).toHaveLength(90);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(90);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -149,7 +149,54 @@ describe('executable agent scenario contract', () => {
     expect(choice?.resultClass).toBe('confirmation-required');
     expect(choice?.calls).toEqual([]);
     expect(choice?.safetyInvariants).toContain('no-identity-guess');
+
+    const standaloneAlias = scenarios.get('standalone-product-alias');
+    expect(standaloneAlias?.prerequisites).toEqual(
+      expect.arrayContaining([
+        'explicit-user-confirmation',
+        'trusted-product-id',
+      ]),
+    );
+    expect(standaloneAlias?.calls.map(({ tool }) => tool)).toEqual([
+      'product_add_alias',
+    ]);
   });
+
+  it.each([
+    ['explicit-user-confirmation', 'must require confirmation'],
+    ['trusted-product-id', 'must require a trusted product ID'],
+  ])(
+    'rejects standalone alias scenarios without %s',
+    (prerequisite, expectedError) => {
+      const script = `
+        import { readFileSync } from 'node:fs';
+        import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+        const contract = JSON.parse(readFileSync(
+          './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json',
+          'utf8',
+        ));
+        const tools = JSON.parse(readFileSync(
+          './integrations/shared/home-stock-tracker/contracts/1.1.0/tools-list.json',
+          'utf8',
+        ));
+        const scenario = contract.scenarios.find(
+          ({ id }) => id === 'standalone-product-alias',
+        );
+        scenario.prerequisites = scenario.prerequisites.filter(
+          (value) => value !== ${JSON.stringify(prerequisite)},
+        );
+        validateScenarioContract(contract, tools);
+      `;
+      const result = spawnSync(
+        process.execPath,
+        ['--input-type=module', '--eval', script],
+        { cwd: root, encoding: 'utf8' },
+      );
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(expectedError);
+    },
+  );
 
   it('encodes duplicate, update, alias, stale, cancellation, and uncertainty cases', () => {
     expect(

@@ -39,6 +39,8 @@ For each row, verify:
 - `product_resolution_required` never causes a product, alias, or grocery write;
 - proposal advice remains non-authoritative and every product choice comes from
   the user;
+- standalone alias writes use one exact trusted product ID and explicit user
+  confirmation, never an inferred or merely suggested relationship;
 - confirmed create and alias calls contain only the final approved payload and
   original grocery item, never proposal state or client-owned source;
 - confirmation never invokes the LLM again or auto-retries a stale catalog result;

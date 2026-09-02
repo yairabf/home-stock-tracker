@@ -7,13 +7,13 @@
   },
   "skill": {
     "name": "home-stock-tracker",
-    "version": "1.10.0"
+    "version": "1.11.0"
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "1.0.0",
+    "contractVersion": "1.1.0",
     "compatibleRange": ">=1.0.0 <2.0.0",
-    "toolsFixture": "contracts/1.0.0/tools-list.json",
+    "toolsFixture": "contracts/1.1.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -31,6 +31,7 @@
     "inventory-event-history",
     "low-stock-recommendations",
     "prediction-feedback",
+    "product-alias-management",
     "product-lookup",
     "product-search",
     "purchase-recording",
@@ -48,6 +49,7 @@
     "search_products",
     "get_inventory",
     "list_inventory_events",
+    "product_add_alias",
     "record_purchase",
     "record_stock_signal",
     "record_prediction_feedback",

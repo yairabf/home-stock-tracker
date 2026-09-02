@@ -220,6 +220,7 @@ function validateCallOrder(scenario, path) {
   for (const confirmationTool of [
     'grocery_confirm_new_product',
     'grocery_confirm_product_alias',
+    'product_add_alias',
   ]) {
     if (
       calls.includes(confirmationTool) &&
@@ -229,6 +230,14 @@ function validateCallOrder(scenario, path) {
         `${path} must require confirmation before ${confirmationTool}`,
       );
     }
+  }
+  if (
+    calls.includes('product_add_alias') &&
+    !hasPrerequisite('trusted-product-id')
+  ) {
+    throw new Error(
+      `${path} must require a trusted product ID before product_add_alias`,
+    );
   }
 }
 
@@ -314,6 +323,7 @@ export function validateScenarioContract(contract, toolsFixture) {
           'grocery_set_quantity',
           'grocery_update',
           'complete_grocery_purchase',
+          'product_add_alias',
           'record_purchase',
           'record_prediction_feedback',
           'record_stock_signal',

@@ -394,6 +394,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `grocery_list`                  | Read  | List pending items by default or filter by status.                                             |
 | `get_product`                   | Read  | Resolve an exact product name/alias or known UUID.                                             |
 | `search_products`               | Read  | Deterministically discover exact or nearby products without mutation or LLM use.               |
+| `product_add_alias`             | Write | Add an explicitly confirmed alias to one exact product outside a grocery workflow.             |
 | `get_inventory`                 | Read  | Estimate one product's stock state.                                                            |
 | `list_inventory_events`         | Read  | List recorded inventory events with filters and bounded pagination.                            |
 | `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
@@ -408,6 +409,14 @@ the same exact normalized canonical-name and alias lookup as REST and returns th
 same approved display spelling. `PRODUCT_NAME_CONFLICT` is the stable namespace
 conflict for MCP and internal callers; it is final and should not be retried as a
 name lookup or write without changing the requested ownership.
+
+`product_add_alias` accepts only `{ productId, alias }`. Resolve one exact target
+first and obtain explicit user confirmation that the alias identifies that
+product. The tool delegates to the same namespace write as
+`POST /api/v1/products/:id/aliases`, returns the updated canonical product, and
+does not invoke the LLM or change the grocery list. Ambiguous targets make no
+call. Treat `PRODUCT_NAME_CONFLICT`, a missing target, and uncertain transport
+results as final for the current decision rather than retrying automatically.
 
 `list_inventory_events` accepts optional UUID `productId` and
 `InventoryEventType` `eventType` filters. `limit` defaults to `20` and accepts

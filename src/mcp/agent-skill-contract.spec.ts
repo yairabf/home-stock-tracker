@@ -123,7 +123,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.10.0');
+      expect(skill).toContain('version: 1.11.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -180,9 +180,27 @@ describe('agent inventory skill contract', () => {
   );
 
   it.each(bundles)(
+    '$platform requires a confirmed exact target for standalone aliases',
+    ({ skill, scenarios, readme }) => {
+      expect(skill).toMatch(/\| `product_add_alias`\s+\|/);
+      expect(skill).toContain(
+        '`product_add_alias` always requires explicit confirmation',
+      );
+      expect(skill).toContain('one exact trusted product ID');
+      expect(skill).toContain('retry automatically');
+      expect(readme).toContain('`product_add_alias`');
+      expect(scenarios).toContain('| Standalone product alias');
+      expect(scenarios).toContain('| Standalone alias with ambiguous target');
+      expect(scenarios).toContain('| Standalone alias ownership conflict');
+      expect(scenarios).toContain('| Standalone alias target was deleted');
+      expect(scenarios).toContain('| Standalone alias transport uncertainty');
+    },
+  );
+
+  it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.10.0');
+      expect(skill).toContain('version: 1.11.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -209,7 +227,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents actual purchase completion without invention',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.10.0');
+      expect(skill).toContain('version: 1.11.0');
       expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
       expect(skill).toContain('preferred inclusive `items` array');
       expect(skill).toContain('`actualQuantity`');

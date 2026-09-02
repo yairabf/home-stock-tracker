@@ -19,7 +19,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServiceAuthModule } from '../auth/service-auth.module';
 import { ServiceAuthGuard } from '../auth/service-auth.guard';
 import { OperationalLogger } from '../observability/operational-logger.service';
-import { InventoryEventType } from '../generated/prisma/enums';
+import { InventoryEventType, ProductNameKind } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 
@@ -46,6 +46,7 @@ describe('McpController', () => {
     listItems: jest.fn(),
   };
   const recommendationService = { getRecommendations: jest.fn() };
+  const productService = { addAlias: jest.fn(), findOne: jest.fn() };
   const productSearchService = { search: jest.fn() };
   const inventoryService = {
     recordPurchase: jest.fn(),
@@ -71,7 +72,7 @@ describe('McpController', () => {
           provide: GroceryService,
           useValue: groceryService,
         },
-        { provide: ProductService, useValue: { findOne: jest.fn() } },
+        { provide: ProductService, useValue: productService },
         { provide: ProductSearchService, useValue: productSearchService },
         {
           provide: PREDICTION_ENGINE,
@@ -140,6 +141,7 @@ describe('McpController', () => {
         'search_products',
         'get_inventory',
         'list_inventory_events',
+        'product_add_alias',
         'record_purchase',
         'record_stock_signal',
         'record_prediction_feedback',
@@ -271,6 +273,50 @@ describe('McpController', () => {
           },
         ],
         source: 'mcp',
+      });
+      const productId = '00000000-0000-4000-8000-000000000002';
+      productService.addAlias.mockResolvedValue({
+        id: productId,
+        names: [
+          {
+            id: 'name-canonical',
+            productId,
+            displayName: 'Milk',
+            normalizedName: 'milk',
+            kind: ProductNameKind.canonical,
+          },
+          {
+            id: 'name-alias',
+            productId,
+            displayName: 'Whole Milk',
+            normalizedName: 'whole milk',
+            kind: ProductNameKind.alias,
+          },
+        ],
+        category: 'dairy',
+        typicalUnit: 'liter',
+        productType: null,
+        isPerishable: true,
+        predictionStrategy: null,
+        predictionEnabled: true,
+        config: null,
+        createdAt: new Date('2026-08-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-08-01T00:00:00.000Z'),
+      });
+      await expect(
+        client.callTool({
+          name: 'product_add_alias',
+          arguments: { productId, alias: 'Whole Milk' },
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: {
+          id: productId,
+          canonicalName: 'Milk',
+          aliases: ['Whole Milk'],
+        },
+      });
+      expect(productService.addAlias).toHaveBeenCalledWith(productId, {
+        alias: 'Whole Milk',
       });
       await expect(
         client.callTool({

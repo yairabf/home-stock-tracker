@@ -104,6 +104,108 @@
       ]
     },
     {
+      "id": "standalone-product-alias",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation", "trusted-product-id"],
+      "calls": [
+        {
+          "tool": "product_add_alias",
+          "argumentKeys": ["productId", "alias"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "trusted-ids-only",
+        "no-identity-guess",
+        "no-llm-on-confirmation"
+      ],
+      "row": [
+        "Standalone product alias",
+        "The user explicitly confirms that \"whole milk\" identifies one exact resolved milk product outside a grocery request.",
+        "`product_add_alias({ productId: <trusted product id>, alias: \"whole milk\" })` once, with no source or proposal state.",
+        "Return the updated canonical product and aliases without changing groceries or invoking the LLM."
+      ]
+    },
+    {
+      "id": "standalone-alias-ambiguous-target",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-identity-guess",
+        "no-mutation-on-ambiguity",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Standalone alias with ambiguous target",
+        "Several milk products could own the requested alias.",
+        "Present every plausible candidate in returned order and ask the user to choose and confirm the relationship.",
+        "Do not call `product_add_alias` until one exact product ID is selected."
+      ]
+    },
+    {
+      "id": "standalone-alias-conflict",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation", "trusted-product-id"],
+      "calls": [
+        {
+          "tool": "product_add_alias",
+          "argumentKeys": ["productId", "alias"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-automatic-retry", "no-success-claim-on-error"],
+      "row": [
+        "Standalone alias ownership conflict",
+        "The confirmed alias already belongs to another canonical product.",
+        "Report `PRODUCT_NAME_CONFLICT` as final for this decision.",
+        "Do not select another owner, overwrite the alias, or retry automatically."
+      ]
+    },
+    {
+      "id": "standalone-alias-deleted-target",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation", "trusted-product-id"],
+      "calls": [
+        {
+          "tool": "product_add_alias",
+          "argumentKeys": ["productId", "alias"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-automatic-retry", "no-success-claim-on-error"],
+      "row": [
+        "Standalone alias target was deleted",
+        "The exact confirmed product ID no longer exists when the alias write runs.",
+        "Report the safe not-found result as final for this decision.",
+        "Do not search for a replacement owner or retry automatically."
+      ]
+    },
+    {
+      "id": "standalone-alias-transport-uncertainty",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation", "trusted-product-id"],
+      "calls": [
+        {
+          "tool": "product_add_alias",
+          "argumentKeys": ["productId", "alias"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": ["no-automatic-retry", "stop-on-uncertain-mutation"],
+      "row": [
+        "Standalone alias transport uncertainty",
+        "The alias call ends without a reliable result.",
+        "Stop and report uncertainty; use a fresh read before asking about another write.",
+        "Do not retry automatically or claim that the alias was saved."
+      ]
+    },
+    {
       "id": "confirmed-product-creation",
       "platforms": ["hermes", "openclaw"],
       "prerequisites": [

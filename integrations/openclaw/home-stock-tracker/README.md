@@ -81,6 +81,12 @@ For product discovery, ask "Which milk products exist?" The agent should call
 `search_products`, preserve returned order, and ask for a choice when several
 candidates remain. Search is read-only and never creates or aliases a product.
 
+For a standalone alias smoke check, ask the agent to teach one new test alias
+for one exact test product. It should resolve the target, repeat the relationship
+when confirmation is not already explicit, and call `product_add_alias` once
+with only the trusted `productId` and approved `alias`. An ambiguous target makes
+no write, and an uncertain mutation result is never retried automatically.
+
 For a history smoke check, ask "When did we last buy milk?" The agent should
 resolve milk with `get_product`, then call `list_inventory_events` with the
 returned product ID, `eventType: "PURCHASED"`, and `limit: 1`. It should describe

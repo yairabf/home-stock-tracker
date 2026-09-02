@@ -59,6 +59,12 @@ should call `search_products`, present every plausible candidate in returned
 order, and ask for a choice when several remain. It must not silently select a
 candidate or claim that search creates, aliases, or updates anything.
 
+For a standalone alias smoke check, ask Hermes to teach one new test alias for
+one exact test product. It should resolve the target, repeat the relationship
+when confirmation is not already explicit, and call `product_add_alias` once
+with only the trusted `productId` and approved `alias`. An ambiguous target makes
+no write, and an uncertain mutation result is never retried automatically.
+
 For a history smoke check, ask "When did we last buy milk?" Hermes should
 resolve milk with `get_product`, then call `list_inventory_events` with the
 returned product ID, `eventType: "PURCHASED"`, and `limit: 1`. It should describe
