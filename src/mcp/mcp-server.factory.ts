@@ -46,6 +46,7 @@ import {
   confirmNewProductInputSchema,
   confirmProductAliasInputSchema,
 } from './schemas/grocery-confirmation.schema';
+import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -453,10 +454,7 @@ export class McpServerFactory {
   ) {}
 
   create(): McpServer {
-    const server = new McpServer({
-      name: 'home-stock-tracker',
-      version: '1.0.0',
-    });
+    const server = new McpServer(MCP_SERVER_INFO);
 
     this.registerGroceryTools(server);
     this.registerReadTools(server);

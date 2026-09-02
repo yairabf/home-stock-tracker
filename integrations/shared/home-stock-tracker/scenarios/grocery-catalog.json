@@ -1,0 +1,1981 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "add-grocery-item",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["exact-catalog-match"],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": [
+            "productName",
+            "groceryItem.requestedQuantity",
+            "groceryItem.unit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-fact-invention"],
+      "row": [
+        "Add grocery item",
+        "\"Add two liters of milk,\" and the name resolves exactly.",
+        "`grocery_add({ productName: \"milk\", groceryItem: { requestedQuantity: 2, unit: \"liters\" } })` in default proposal mode.",
+        "Summarize `createdItem` with its positive persisted quantity."
+      ]
+    },
+    {
+      "id": "omitted-new-line-quantity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["exact-catalog-match"],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-fact-invention"],
+      "row": [
+        "Omitted new-line quantity",
+        "\"Add milk,\" no pending line exists for an exactly resolved product.",
+        "`grocery_add({ productName: \"milk\", groceryItem: {} })` in default proposal mode.",
+        "The created line has persisted `requestedQuantity: 1`."
+      ]
+    },
+    {
+      "id": "unknown-product-proposal",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "resolution-required",
+      "safetyInvariants": [
+        "no-mutation-before-confirmation",
+        "user-selects-product-identity"
+      ],
+      "row": [
+        "Unknown product proposal",
+        "\"Add za'atar yogurt,\" and the phrase has no exact match.",
+        "`grocery_add({ productName: \"za'atar yogurt\", groceryItem: {} })`; present `product_resolution_required` candidates, optional advice, and allowed actions.",
+        "No catalog or grocery mutation occurs before a new user decision."
+      ]
+    },
+    {
+      "id": "proposal-is-non-authoritative",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["product-resolution-result"],
+      "calls": [],
+      "resultClass": "no-action",
+      "safetyInvariants": [
+        "no-mutation-before-confirmation",
+        "user-selects-product-identity"
+      ],
+      "row": [
+        "Proposal is non-authoritative",
+        "`product_resolution_required.proposal` recommends an alias or creation.",
+        "Explain the advice and server-computed actions, but do not select or apply an action.",
+        "Provider output never authorizes a write."
+      ]
+    },
+    {
+      "id": "candidate-choice",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["product-resolution-result"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-identity-guess",
+        "preserve-returned-order",
+        "user-selects-product-identity"
+      ],
+      "row": [
+        "Candidate choice",
+        "Resolution returns several candidates.",
+        "Present plausible candidates in returned order and ask the user to choose, create, or cancel.",
+        "No product identity is guessed."
+      ]
+    },
+    {
+      "id": "confirmed-product-creation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "product-resolution-result",
+        "explicit-user-confirmation",
+        "complete-product-facts"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_confirm_new_product",
+          "argumentKeys": [
+            "product.canonicalName",
+            "product.aliases",
+            "product.category",
+            "product.typicalUnit",
+            "product.productType",
+            "product.isPerishable",
+            "groceryItem"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "atomic-catalog-and-grocery-write",
+        "no-llm-on-confirmation"
+      ],
+      "row": [
+        "Confirmed product creation",
+        "The user approves complete final facts for a proposed new product.",
+        "`grocery_confirm_new_product({ product: <approved final facts>, groceryItem: <original grocery item> })`; send no proposal ID or source and make no second LLM request.",
+        "Product and first grocery line commit atomically, or a stable conflict is returned."
+      ]
+    },
+    {
+      "id": "confirmed-product-alias",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "product-resolution-result",
+        "explicit-user-confirmation",
+        "user-selected-product"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_confirm_product_alias",
+          "argumentKeys": ["targetProductId", "alias", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "atomic-catalog-and-grocery-write",
+        "no-llm-on-confirmation"
+      ],
+      "row": [
+        "Confirmed product alias",
+        "The user confirms that \"three percent milk\" is an alias for one exact returned candidate.",
+        "`grocery_confirm_product_alias({ targetProductId: <chosen product id>, alias: \"three percent milk\", groceryItem: <original grocery item> })`.",
+        "The alias and new grocery line commit through one shared use case."
+      ]
+    },
+    {
+      "id": "confirmed-alias-with-quantity-ambiguity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "product-resolution-result",
+        "explicit-user-confirmation",
+        "user-selected-product",
+        "existing-grocery-line"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_confirm_product_alias",
+          "argumentKeys": ["targetProductId", "alias", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-catalog-confirmation-repeat",
+        "no-mutation-before-confirmation"
+      ],
+      "row": [
+        "Confirmed alias with quantity ambiguity",
+        "Alias confirmation finds an existing pending line with quantity 2.",
+        "Keep the successful alias, explain `confirmation_required`, and ask for the final grocery quantity. Do not repeat the alias confirmation.",
+        "Catalog identity is saved while the existing grocery quantity remains 2."
+      ]
+    },
+    {
+      "id": "confirmed-relative-quantity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "explicit-user-confirmation",
+        "trusted-grocery-item-id",
+        "existing-grocery-line"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_set_quantity",
+          "argumentKeys": [
+            "itemId",
+            "requestedQuantity",
+            "expectedRequestedQuantity"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "expected-old-values",
+        "no-catalog-confirmation-repeat",
+        "no-service-side-arithmetic"
+      ],
+      "row": [
+        "Confirmed relative quantity",
+        "Alias confirmation requested 1, found quantity 2, and the user says \"add that one.\"",
+        "Calculate final quantity 3, then call `grocery_set_quantity` with the exact line ID and `expectedRequestedQuantity: 2`.",
+        "Quantity changes separately to 3; no catalog confirmation is repeated."
+      ]
+    },
+    {
+      "id": "stale-confirmed-catalog-decision",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "product-resolution-result",
+        "explicit-user-confirmation"
+      ],
+      "calls": [],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-automatic-retry", "no-identity-guess"],
+      "row": [
+        "Stale confirmed catalog decision",
+        "Confirmation returns `PRODUCT_NAME_CONFLICT` or `PRODUCT_NOT_FOUND`.",
+        "Explain that the catalog changed and ask for a fresh choice. Do not retry, regenerate a proposal, or choose another target.",
+        "The stale decision causes no implicit grocery or catalog mutation."
+      ]
+    },
+    {
+      "id": "resolution-cancellation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["product-resolution-result"],
+      "calls": [],
+      "resultClass": "cancelled",
+      "safetyInvariants": ["no-mutation-on-cancellation"],
+      "row": [
+        "Resolution cancellation",
+        "The user cancels after `product_resolution_required`.",
+        "Call no tool and confirm cancellation.",
+        "Catalog and grocery state remain unchanged."
+      ]
+    },
+    {
+      "id": "deterministic-direct-creation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["complete-product-facts"],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": [
+            "productName",
+            "unknownProductPolicy",
+            "product.canonicalName",
+            "product.aliases",
+            "product.category",
+            "product.typicalUnit",
+            "product.productType",
+            "product.isPerishable",
+            "groceryItem"
+          ],
+          "enumValues": [
+            { "path": "unknownProductPolicy", "value": "create_if_missing" }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "atomic-catalog-and-grocery-write",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Deterministic direct creation",
+        "A direct client deliberately has every required product fact.",
+        "Use explicit `create_if_missing` with complete `product` and nested `groceryItem`; do not invoke proposal mode.",
+        "Product and first grocery line commit atomically, or neither does."
+      ]
+    },
+    {
+      "id": "duplicate-cancellation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line"],
+      "calls": [],
+      "resultClass": "cancelled",
+      "safetyInvariants": ["no-mutation-on-cancellation"],
+      "row": [
+        "Duplicate cancellation",
+        "\"Add one milk,\" and `grocery_add` returns one existing line with quantity 2; the user chooses no change.",
+        "Explain that 2 are already pending, ask for the desired final total, then call no tool after the decline.",
+        "No quantity or row changes."
+      ]
+    },
+    {
+      "id": "duplicate-with-final-quantity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "existing-grocery-line",
+        "explicit-user-confirmation",
+        "trusted-grocery-item-id"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_set_quantity",
+          "argumentKeys": [
+            "itemId",
+            "requestedQuantity",
+            "expectedRequestedQuantity"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["expected-old-values", "no-service-side-arithmetic"],
+      "row": [
+        "Duplicate with final quantity",
+        "\"Add one milk,\" and `grocery_add` returns one existing line with quantity 2; the user says to add one more.",
+        "Calculate the final total as 3, then call `grocery_set_quantity({ itemId: <existing item id>, requestedQuantity: 3, expectedRequestedQuantity: 2 })`.",
+        "The existing line becomes quantity 3; no separate row is created."
+      ]
+    },
+    {
+      "id": "duplicate-with-larger-addition",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "existing-grocery-line",
+        "explicit-user-confirmation",
+        "trusted-grocery-item-id"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_set_quantity",
+          "argumentKeys": [
+            "itemId",
+            "requestedQuantity",
+            "expectedRequestedQuantity"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["expected-old-values", "no-service-side-arithmetic"],
+      "row": [
+        "Duplicate with larger addition",
+        "\"Add two milk,\" and `grocery_add` returns one existing line with quantity 2; the user says to add both.",
+        "Calculate the final total as 4, then call `grocery_set_quantity({ itemId: <existing item id>, requestedQuantity: 4, expectedRequestedQuantity: 2 })`.",
+        "The existing line becomes quantity 4; no service-side arithmetic or separate row is used."
+      ]
+    },
+    {
+      "id": "missing-requested-quantity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-mutation-on-ambiguity", "no-fact-invention"],
+      "row": [
+        "Missing requested quantity",
+        "\"Add milk,\" and `grocery_add` returns `requestedAddition.requestedQuantity: null` with an existing line.",
+        "Treat omission as ambiguous, not an increment. Explain the current positive quantity and ask for the desired final total or cancellation.",
+        "No mutation occurs before a final quantity is supplied."
+      ]
+    },
+    {
+      "id": "multiple-duplicate-lines",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-identity-guess", "no-mutation-on-ambiguity"],
+      "row": [
+        "Multiple duplicate lines",
+        "`grocery_add` returns two `existingItems`.",
+        "Describe the distinguishing returned fields and ask which line to update.",
+        "Do not choose an ID or mutate until the user selects one."
+      ]
+    },
+    {
+      "id": "conflicting-duplicate-units",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-mutation-on-ambiguity", "no-unit-conversion"],
+      "row": [
+        "Conflicting duplicate units",
+        "The requested addition uses liters while the existing line uses cartons.",
+        "Explain the mismatch and ask for a compatible quantity and unit. Do not convert or mutate.",
+        "No quantity is guessed or converted."
+      ]
+    },
+    {
+      "id": "quantity-plus-note-update",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "existing-grocery-line",
+        "explicit-user-confirmation",
+        "trusted-grocery-item-id"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_update",
+          "argumentKeys": [
+            "id",
+            "requestedQuantity",
+            "note",
+            "expectedRequestedQuantity",
+            "expectedNote"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["expected-old-values"],
+      "row": [
+        "Quantity plus note update",
+        "The user confirms both a final quantity and a new note for one exact line.",
+        "Call `grocery_update` once with the final quantity, note, and both exact expected old values.",
+        "Both selected fields change atomically; quantity-only guidance is not used."
+      ]
+    },
+    {
+      "id": "explicit-separate-line",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem.ifPendingExists"],
+          "enumValues": [
+            {
+              "path": "groceryItem.ifPendingExists",
+              "value": "create_separate"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["explicit-separate-line-only"],
+      "row": [
+        "Explicit separate line",
+        "\"Add milk as a separate line.\"",
+        "`grocery_add({ productName: \"milk\", groceryItem: { ifPendingExists: \"create_separate\" } })`",
+        "One intentional additional pending row is created, defaulting quantity to 1 if omitted."
+      ]
+    },
+    {
+      "id": "stale-quantity-decision",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line", "explicit-user-confirmation"],
+      "calls": [],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-automatic-retry"],
+      "row": [
+        "Stale quantity decision",
+        "`grocery_set_quantity` returns `GROCERY_ITEM_CHANGED` with current state.",
+        "Show the changed state and ask for a fresh decision. Do not retry or recalculate.",
+        "The stale confirmation causes no additional mutation."
+      ]
+    },
+    {
+      "id": "quantity-update-transport-uncertainty",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line", "explicit-user-confirmation"],
+      "calls": [],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": ["no-automatic-retry", "stop-on-uncertain-mutation"],
+      "row": [
+        "Quantity update transport uncertainty",
+        "`grocery_set_quantity` ends without a reliable result.",
+        "Stop and report uncertainty. Do not retry `grocery_set_quantity` or fall back to another mutation.",
+        "A possible duplicate mutation is avoided."
+      ]
+    },
+    {
+      "id": "invalid-grocery-quantity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-fact-invention", "no-mutation-on-ambiguity"],
+      "row": [
+        "Invalid grocery quantity",
+        "\"Add minus two milks.\"",
+        "Ask for a valid positive quantity. Do not call a tool.",
+        "No mutation occurs."
+      ]
+    },
+    {
+      "id": "add-several-grocery-items",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        },
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["preserve-item-boundaries"],
+      "row": [
+        "Add several grocery items",
+        "\"Add milk and eggs.\"",
+        "Call `grocery_add({ productName: \"milk\", groceryItem: {} })`, then `grocery_add({ productName: \"eggs\", groceryItem: {} })`.",
+        "Summarize both confirmed additions in the user's order."
+      ]
+    },
+    {
+      "id": "item-specific-measurements",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": [
+            "productName",
+            "groceryItem.requestedQuantity",
+            "groceryItem.unit"
+          ],
+          "enumValues": []
+        },
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-fact-invention", "preserve-item-boundaries"],
+      "row": [
+        "Item-specific measurements",
+        "\"Add two liters of milk and eggs.\"",
+        "Call `grocery_add({ productName: \"milk\", groceryItem: { requestedQuantity: 2, unit: \"liters\" } })`, then `grocery_add({ productName: \"eggs\", groceryItem: {} })`.",
+        "Do not copy milk's quantity or unit to eggs."
+      ]
+    },
+    {
+      "id": "multi-add-uncertain-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        },
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "preserve-item-boundaries",
+        "stop-on-uncertain-mutation"
+      ],
+      "row": [
+        "Multi-add uncertain failure",
+        "The milk addition is confirmed, but the eggs mutation has an uncertain transport result.",
+        "Stop after the eggs result. Do not retry or attempt later additions.",
+        "Report milk as confirmed and eggs as uncertain."
+      ]
+    },
+    {
+      "id": "list-groceries",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        { "tool": "grocery_list", "argumentKeys": [], "enumValues": [] }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["search-is-read-only"],
+      "row": [
+        "List groceries",
+        "\"What's on the grocery list?\"",
+        "`grocery_list({})`",
+        "Summarize pending items."
+      ]
+    },
+    {
+      "id": "empty-grocery-list",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        { "tool": "grocery_list", "argumentKeys": [], "enumValues": [] }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": ["search-is-read-only"],
+      "row": [
+        "Empty grocery list",
+        "`grocery_list` returns `{ items: [] }`.",
+        "Do not call another tool.",
+        "Say the pending grocery list is empty."
+      ]
+    },
+    {
+      "id": "remove-one-grocery-item",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        { "tool": "grocery_list", "argumentKeys": [], "enumValues": [] },
+        { "tool": "grocery_remove", "argumentKeys": ["id"], "enumValues": [] }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["read-before-write", "no-identity-guess"],
+      "row": [
+        "Remove one grocery item",
+        "\"Remove milk from the list.\"",
+        "`grocery_list({})`, select one exact pending `productName`, then `grocery_remove({ id: <listed item id> })`.",
+        "Summarize the removed item."
+      ]
+    },
+    {
+      "id": "ambiguous-grocery-removal",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["existing-grocery-line"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-identity-guess", "no-mutation-on-ambiguity"],
+      "row": [
+        "Ambiguous grocery removal",
+        "Two pending items exactly match the requested name.",
+        "Ask which item to remove. Do not call `grocery_remove`.",
+        "No mutation occurs."
+      ]
+    },
+    {
+      "id": "product-lookup",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["search-is-read-only"],
+      "row": [
+        "Product lookup",
+        "\"Which product is whole milk?\"",
+        "`get_product({ productName: \"whole milk\" })`",
+        "Summarize the canonical product and aliases."
+      ]
+    },
+    {
+      "id": "product-lookup-by-known-id",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id"],
+      "calls": [
+        { "tool": "get_product", "argumentKeys": ["id"], "enumValues": [] }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-identity-guess", "search-is-read-only"],
+      "row": [
+        "Product lookup by known ID",
+        "The active context already contains a trusted product UUID and the user asks for that product.",
+        "`get_product({ id: <known product id> })`",
+        "Summarize the returned product."
+      ]
+    },
+    {
+      "id": "exact-product-search",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["search-is-read-only"],
+      "row": [
+        "Exact product search",
+        "\"Find the product called whole milk.\"",
+        "`search_products({ query: \"whole milk\" })`; if `exactMatch` is present, present that exact identity.",
+        "No LLM or mutation is invoked."
+      ]
+    },
+    {
+      "id": "one-nearby-product-candidate",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-identity-guess",
+        "search-is-read-only",
+        "user-selects-product-identity"
+      ],
+      "row": [
+        "One nearby product candidate",
+        "Exact lookup fails and `search_products({ query: \"oat\" })` returns one candidate.",
+        "Present the candidate and ask whether it is the intended product before any mutation.",
+        "No candidate is silently selected."
+      ]
+    },
+    {
+      "id": "multiple-product-candidates",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-identity-guess",
+        "preserve-returned-order",
+        "search-is-read-only",
+        "user-selects-product-identity"
+      ],
+      "row": [
+        "Multiple product candidates",
+        "`search_products({ query: \"milk\" })` returns several candidates.",
+        "List every candidate in returned order and ask the user to choose one. Do not call a mutation yet.",
+        "The user, not the agent, selects the identity."
+      ]
+    },
+    {
+      "id": "unknown-product",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": ["no-fact-invention", "search-is-read-only"],
+      "row": [
+        "Unknown product",
+        "`search_products({ query: \"unknown phrase\" })` returns no exact match or candidates.",
+        "Ask for another name or more detail. Do not call a write tool.",
+        "No product is created."
+      ]
+    },
+    {
+      "id": "prediction-disabled-discovery",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-fact-invention", "search-is-read-only"],
+      "row": [
+        "Prediction-disabled discovery",
+        "Search returns a product with `predictionEnabled: false`.",
+        "Present it as a valid catalog identity and preserve the metadata.",
+        "Search does not hide or enable the product."
+      ]
+    },
+    {
+      "id": "search-is-read-only",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "search_products",
+          "argumentKeys": ["query"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "no-action",
+      "safetyInvariants": [
+        "no-mutation-before-confirmation",
+        "search-is-read-only"
+      ],
+      "row": [
+        "Search is read-only",
+        "A search result or future advisory proposal recommends an identity action.",
+        "Explain that it is advice only. Do not create a product, add an alias, or treat it as authorization for a write.",
+        "Catalog, grocery, and inventory state remain unchanged."
+      ]
+    },
+    {
+      "id": "inventory-estimate",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "get_inventory",
+          "argumentKeys": ["id"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-inventory-count-invention"
+      ],
+      "row": [
+        "Inventory estimate",
+        "\"Did we probably run out of milk?\"",
+        "`get_product({ productName: \"milk\" })`, then `get_inventory({ id: <resolved product id> })`.",
+        "State the returned predicted state, confidence, and reason without inventing a count."
+      ]
+    },
+    {
+      "id": "uncertain-inventory",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id"],
+      "calls": [
+        {
+          "tool": "get_inventory",
+          "argumentKeys": ["id"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "no-action",
+      "safetyInvariants": [
+        "no-mutation-from-read",
+        "no-inventory-count-invention"
+      ],
+      "row": [
+        "Uncertain inventory",
+        "`get_inventory` returns `predictedState: \"uncertain\"`.",
+        "Do not call `grocery_add` or record a stock event.",
+        "Explain that there is not enough confidence to tell."
+      ]
+    },
+    {
+      "id": "named-product-history",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "list_inventory_events",
+          "argumentKeys": ["productId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "history-is-not-current-stock"
+      ],
+      "row": [
+        "Named product history",
+        "\"What has been recorded about milk?\"",
+        "`get_product({ productName: \"milk\" })`, then `list_inventory_events({ productId: <resolved product id> })`.",
+        "Summarize returned events newest first as recorded history, not current stock."
+      ]
+    },
+    {
+      "id": "filtered-purchase-history",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "list_inventory_events",
+          "argumentKeys": ["productId", "eventType", "limit"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "PURCHASED"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "history-is-not-current-stock"
+      ],
+      "row": [
+        "Filtered purchase history",
+        "\"When did we last buy milk?\"",
+        "`get_product({ productName: \"milk\" })`, then `list_inventory_events({ productId: <resolved product id>, eventType: \"PURCHASED\", limit: 1 })`.",
+        "Report the newest matching timestamp without claiming what remains now."
+      ]
+    },
+    {
+      "id": "empty-inventory-history",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "list_inventory_events",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": [
+        "history-is-not-current-stock",
+        "no-mutation-from-read"
+      ],
+      "row": [
+        "Empty inventory history",
+        "`list_inventory_events` returns `{ items: [], total: 0, limit: 20, offset: 0 }`.",
+        "Do not call another inventory tool or mutation unless the user separately asks about current stock or requests a write.",
+        "Say there are no matching recorded events, not that the product is out or unavailable."
+      ]
+    },
+    {
+      "id": "inventory-history-pagination",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-history-page"],
+      "calls": [
+        {
+          "tool": "list_inventory_events",
+          "argumentKeys": ["limit", "offset"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "preserve-filters-and-pagination",
+        "history-is-not-current-stock"
+      ],
+      "row": [
+        "Inventory history pagination",
+        "The first history page returns `total: 45`, `limit: 20`, `offset: 0`, and the user asks for more.",
+        "Call `list_inventory_events` again with the same filters, `limit: 20`, and `offset: 20`; preserve newest-first page order.",
+        "Present the next page and do not claim completeness while more results remain."
+      ]
+    },
+    {
+      "id": "correction-history-review",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "list_inventory_events",
+          "argumentKeys": ["productId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-mutation-from-read",
+        "history-is-not-current-stock"
+      ],
+      "row": [
+        "Correction history review",
+        "\"Before I correct the milk record, what did I previously tell you?\"",
+        "Resolve milk, call `list_inventory_events({ productId: <resolved product id> })`, summarize the events, and wait for an explicit correction decision.",
+        "No correction or other mutation is recorded from the review request alone."
+      ]
+    },
+    {
+      "id": "purchase",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_purchase",
+          "argumentKeys": ["productId", "eventType", "quantity", "unit"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "PURCHASED"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Purchase",
+        "\"I bought three cartons of milk.\"",
+        "`get_product({ productName: \"milk\" })`, then `record_purchase({ productId: <resolved product id>, eventType: \"PURCHASED\", quantity: 3, unit: \"cartons\" })`.",
+        "Summarize the recorded purchase."
+      ]
+    },
+    {
+      "id": "explicit-restock",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_purchase",
+          "argumentKeys": ["productId", "eventType"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "RESTOCKED"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Explicit restock",
+        "\"I restocked rice.\"",
+        "`get_product({ productName: \"rice\" })`, then `record_purchase({ productId: <resolved product id>, eventType: \"RESTOCKED\" })`.",
+        "Summarize the recorded restock without adding a quantity."
+      ]
+    },
+    {
+      "id": "future-purchase",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "no-action",
+      "safetyInvariants": ["no-write-from-future-intent"],
+      "row": [
+        "Future purchase",
+        "\"I'll buy milk tomorrow.\"",
+        "Do not call `record_purchase`.",
+        "Treat it as a plan, not a completed event."
+      ]
+    },
+    {
+      "id": "low-stock-signal",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_stock_signal",
+          "argumentKeys": ["productId", "eventType"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "STOCK_LOW"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Low stock signal",
+        "\"We're almost out of cereal.\"",
+        "`get_product({ productName: \"cereal\" })`, then `record_stock_signal({ productId: <resolved product id>, eventType: \"STOCK_LOW\" })`.",
+        "Summarize the recorded low-stock observation."
+      ]
+    },
+    {
+      "id": "out-of-stock-signal",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_stock_signal",
+          "argumentKeys": ["productId", "eventType"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "STOCK_OUT"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Out-of-stock signal",
+        "\"There is no rice left.\"",
+        "`get_product({ productName: \"rice\" })`, then `record_stock_signal({ productId: <resolved product id>, eventType: \"STOCK_OUT\" })`.",
+        "Summarize the recorded out-of-stock observation."
+      ]
+    },
+    {
+      "id": "available-stock-signal",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_stock_signal",
+          "argumentKeys": ["productId", "eventType"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "STOCK_CONFIRMED"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-fact-invention"
+      ],
+      "row": [
+        "Available-stock signal",
+        "\"We still have plenty of rice.\"",
+        "`get_product({ productName: \"rice\" })`, then `record_stock_signal({ productId: <resolved product id>, eventType: \"STOCK_CONFIRMED\" })`.",
+        "Summarize the availability confirmation."
+      ]
+    },
+    {
+      "id": "general-stock-correction",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_product",
+          "argumentKeys": ["productName"],
+          "enumValues": []
+        },
+        {
+          "tool": "record_stock_signal",
+          "argumentKeys": ["productId", "eventType"],
+          "enumValues": [
+            {
+              "path": "eventType",
+              "value": "STOCK_CORRECTED"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "single-linked-correction"
+      ],
+      "row": [
+        "General stock correction",
+        "\"Correction to my earlier stock report: we do still have milk,\" with no prediction referenced.",
+        "`get_product({ productName: \"milk\" })`, then `record_stock_signal({ productId: <resolved product id>, eventType: \"STOCK_CORRECTED\" })`.",
+        "Record one general stock correction without prediction feedback."
+      ]
+    },
+    {
+      "id": "accepted-prediction-feedback",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["active-prediction-id", "explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "record_prediction_feedback",
+          "argumentKeys": ["predictionId", "outcome"],
+          "enumValues": [
+            {
+              "path": "outcome",
+              "value": "accepted"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-prediction-id-guess", "trusted-ids-only"],
+      "row": [
+        "Accepted prediction feedback",
+        "After one active prediction, the user says, \"Yes, that was right.\"",
+        "`record_prediction_feedback({ predictionId: <active prediction id>, outcome: \"accepted\" })`.",
+        "Mark only that prediction accepted."
+      ]
+    },
+    {
+      "id": "rejected-prediction-feedback",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["active-prediction-id", "explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "record_prediction_feedback",
+          "argumentKeys": ["predictionId", "outcome"],
+          "enumValues": [
+            {
+              "path": "outcome",
+              "value": "rejected"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-prediction-id-guess", "trusted-ids-only"],
+      "row": [
+        "Rejected prediction feedback",
+        "After one active prediction, the user says, \"No, that prediction was wrong,\" without a corrected state.",
+        "`record_prediction_feedback({ predictionId: <active prediction id>, outcome: \"rejected\" })`.",
+        "Mark only that prediction rejected."
+      ]
+    },
+    {
+      "id": "corrected-prediction-feedback",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["active-prediction-id", "explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "record_prediction_feedback",
+          "argumentKeys": ["predictionId", "outcome", "correctedState"],
+          "enumValues": [
+            {
+              "path": "outcome",
+              "value": "corrected"
+            },
+            {
+              "path": "correctedState",
+              "value": "likely_available"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "no-prediction-id-guess",
+        "trusted-ids-only",
+        "single-linked-correction"
+      ],
+      "row": [
+        "Corrected prediction feedback",
+        "After a milk prediction, the user says, \"No, we still have milk.\"",
+        "`record_prediction_feedback({ predictionId: <active prediction id>, outcome: \"corrected\", correctedState: \"likely_available\" })`; do not call `record_stock_signal`.",
+        "Reject the prediction and record one linked stock correction in the same operation."
+      ]
+    },
+    {
+      "id": "ambiguous-prediction-feedback",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-prediction-id-guess",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Ambiguous prediction feedback",
+        "Several predictions are active and the user says, \"That was wrong.\"",
+        "Ask which prediction they mean. Do not call a mutation.",
+        "No prediction ID or outcome is guessed."
+      ]
+    },
+    {
+      "id": "null-prediction-id",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-prediction-id-guess",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Null prediction ID",
+        "The referenced prediction read returned `predictionId: null`.",
+        "Make a fresh prediction read when the product is known, or explain that feedback cannot yet be attached. Do not mutate with a guessed ID.",
+        "Feedback waits for one non-null trusted prediction ID."
+      ]
+    },
+    {
+      "id": "repeated-prediction-feedback",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-automatic-retry", "no-success-claim-on-error"],
+      "row": [
+        "Repeated prediction feedback",
+        "`record_prediction_feedback` returns `Prediction feedback was already recorded`.",
+        "Treat the conflict as final. Do not retry or switch the outcome.",
+        "No duplicate event is created."
+      ]
+    },
+    {
+      "id": "prediction-feedback-transport-uncertainty",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "stop-on-uncertain-mutation",
+        "single-linked-correction"
+      ],
+      "row": [
+        "Prediction feedback transport uncertainty",
+        "`record_prediction_feedback` ends without a reliable result.",
+        "Stop and report uncertainty. Do not retry or fall back to `record_stock_signal`.",
+        "A possible duplicate feedback event is avoided."
+      ]
+    },
+    {
+      "id": "ambiguous-stock-wording",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": ["no-event-type-guess", "no-mutation-on-ambiguity"],
+      "row": [
+        "Ambiguous stock wording",
+        "\"Milk situation changed.\"",
+        "Ask whether milk is low, out, available, or correcting an earlier record. Do not call a write tool.",
+        "No event type is guessed."
+      ]
+    },
+    {
+      "id": "low-stock-recommendations",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["no-mutation-from-read", "no-fact-invention"],
+      "row": [
+        "Low-stock recommendations",
+        "\"What do we need?\"",
+        "`get_low_stock_predictions({})`",
+        "Report only returned recommendations."
+      ]
+    },
+    {
+      "id": "empty-recommendations",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": ["no-mutation-from-read", "no-fact-invention"],
+      "row": [
+        "Empty recommendations",
+        "`get_low_stock_predictions` returns `{ recommendations: [] }`.",
+        "Do not add products or call another prediction tool.",
+        "Say there are no actionable recommendations now."
+      ]
+    },
+    {
+      "id": "domain-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-success-claim-on-error", "no-fact-invention"],
+      "row": [
+        "Domain failure",
+        "A mutation returns a validation or not-found tool error.",
+        "Report the safe error and correct only from known facts or ask a focused question.",
+        "Do not claim success."
+      ]
+    },
+    {
+      "id": "uncertain-transport-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": ["no-automatic-retry", "stop-on-uncertain-mutation"],
+      "row": [
+        "Uncertain transport failure",
+        "A mutation call ends without a reliable result.",
+        "Report that the outcome is uncertain. Do not retry automatically.",
+        "Avoid a possible duplicate mutation."
+      ]
+    },
+    {
+      "id": "complete-everything",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": ["items", "items[].groceryItemId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "unique-nonempty-purchase-items",
+        "no-requested-measurement-copy",
+        "all-or-nothing-batch"
+      ],
+      "row": [
+        "Complete everything",
+        "\"I bought everything.\"",
+        "`grocery_list({})`, then `complete_grocery_purchase({ items: [{ groceryItemId: <returned id> }, ...] })` for all pending items. Do not copy requested quantities or units.",
+        "Summarize only the completed items returned by the mutation."
+      ]
+    },
+    {
+      "id": "complete-selected-items",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": ["items", "items[].groceryItemId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "unique-nonempty-purchase-items",
+        "no-omitted-item-completion",
+        "all-or-nothing-batch"
+      ],
+      "row": [
+        "Complete selected items",
+        "\"I bought milk and eggs.\"",
+        "`grocery_list({})`; require one exact pending match for each name; call `complete_grocery_purchase` once with preferred `items` in user order.",
+        "Unmentioned pending items remain pending."
+      ]
+    },
+    {
+      "id": "complete-with-actual-measurement",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "explicit-user-confirmation",
+        "explicit-actual-measurement"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": [
+            "items",
+            "items[].groceryItemId",
+            "items[].actualQuantity",
+            "items[].actualUnit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "actual-measurements-user-supplied",
+        "unique-nonempty-purchase-items",
+        "all-or-nothing-batch"
+      ],
+      "row": [
+        "Complete with actual measurement",
+        "\"I bought two cartons of milk.\"",
+        "`grocery_list({})`; resolve one exact pending milk row; call `complete_grocery_purchase({ items: [{ groceryItemId: <returned id>, actualQuantity: 2, actualUnit: \"cartons\" }] })`.",
+        "The purchase event records the explicit actual measurement."
+      ]
+    },
+    {
+      "id": "complete-without-actual-measurement",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "explicit-user-confirmation",
+        "fresh-grocery-snapshot",
+        "trusted-grocery-item-id"
+      ],
+      "calls": [
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": ["items", "items[].groceryItemId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "trusted-ids-only",
+        "no-requested-measurement-copy",
+        "unique-nonempty-purchase-items"
+      ],
+      "row": [
+        "Complete without actual measurement",
+        "\"I bought the milk.\"",
+        "Call the preferred form with `items: [{ groceryItemId: <returned id> }]`. Do not copy its requested quantity, requested unit, or typical unit.",
+        "The purchase event omits quantity and unit."
+      ]
+    },
+    {
+      "id": "duplicate-product-measured-consistently",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [
+        "explicit-user-confirmation",
+        "explicit-actual-measurement",
+        "fresh-grocery-snapshot"
+      ],
+      "calls": [
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": [
+            "items",
+            "items[].groceryItemId",
+            "items[].actualQuantity",
+            "items[].actualUnit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "actual-measurements-user-supplied",
+        "unique-nonempty-purchase-items",
+        "all-or-nothing-batch"
+      ],
+      "row": [
+        "Duplicate product measured consistently",
+        "Two selected milk rows were actually bought as two and three cartons.",
+        "Send both preferred item objects with their explicit actual quantities and exact `cartons` unit in one call.",
+        "The service records one five-carton purchase event for milk."
+      ]
+    },
+    {
+      "id": "duplicate-product-measurement-ambiguity",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["fresh-grocery-snapshot"],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-partial-measurements",
+        "no-unit-conversion",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Duplicate product measurement ambiguity",
+        "Two selected milk rows exist, but only one actual quantity is known or their actual units conflict.",
+        "Ask a focused question for compatible actual facts, or proceed only after the user chooses to omit measurements from every row. Do not mutate yet and never convert units.",
+        "No partial or conflicting measurement is guessed."
+      ]
+    },
+    {
+      "id": "complete-everything-except-one-item",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": ["items", "items[].groceryItemId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-omitted-item-completion",
+        "unique-nonempty-purchase-items"
+      ],
+      "row": [
+        "Complete everything except one item",
+        "\"I bought everything except toilet paper.\"",
+        "`grocery_list({})`; require one exact `productName` match for toilet paper; call `complete_grocery_purchase` once with preferred `items` for every other pending row.",
+        "Toilet paper remains pending; summarize confirmed completed items."
+      ]
+    },
+    {
+      "id": "complete-everything-except-several-items",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "complete_grocery_purchase",
+          "argumentKeys": ["items", "items[].groceryItemId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "read-before-write",
+        "trusted-ids-only",
+        "no-omitted-item-completion",
+        "unique-nonempty-purchase-items"
+      ],
+      "row": [
+        "Complete everything except several items",
+        "\"I bought everything except toilet paper and milk.\"",
+        "`grocery_list({})`; require one exact pending match for each exception; call `complete_grocery_purchase` once with preferred `items` for all remaining rows.",
+        "Both named exceptions remain pending."
+      ]
+    },
+    {
+      "id": "empty-list-completion",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": ["read-before-write", "no-mutation-from-read"],
+      "row": [
+        "Empty list completion",
+        "\"I bought everything,\" then `grocery_list` returns no pending items.",
+        "Do not call `complete_grocery_purchase`.",
+        "Say the pending list was already empty."
+      ]
+    },
+    {
+      "id": "unmatched-purchase-name",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "read-before-write",
+        "no-identity-guess",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Unmatched purchase name",
+        "\"I bought everything except oat milk,\" but no pending `productName` is exactly `oat milk`.",
+        "Ask which pending item the user means. Do not mutate.",
+        "No item is guessed or completed."
+      ]
+    },
+    {
+      "id": "duplicate-pending-name",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "read-before-write",
+        "no-identity-guess",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Duplicate pending name",
+        "\"I bought everything except milk,\" but two pending items have `productName: \"milk\"`.",
+        "Ask which milk item should remain pending. Do not mutate.",
+        "No arbitrary duplicate is selected."
+      ]
+    },
+    {
+      "id": "all-items-omitted",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["fresh-grocery-snapshot"],
+      "calls": [],
+      "resultClass": "no-action",
+      "safetyInvariants": [
+        "no-omitted-item-completion",
+        "no-mutation-from-read"
+      ],
+      "row": [
+        "All items omitted",
+        "Every pending item is named as an exception.",
+        "Do not call `complete_grocery_purchase`.",
+        "Explain that nothing was recorded as purchased."
+      ]
+    },
+    {
+      "id": "list-changes-before-completion",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "read-before-write",
+        "no-mutation-before-confirmation"
+      ],
+      "row": [
+        "List changes before completion",
+        "`complete_grocery_purchase` rejects because a selected item is no longer pending.",
+        "Read `grocery_list` again, explain the changed snapshot, and ask for fresh confirmation.",
+        "Do not retry the mutation automatically."
+      ]
+    },
+    {
+      "id": "compound-domain-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["all-or-nothing-batch", "no-success-claim-on-error"],
+      "row": [
+        "Compound domain failure",
+        "`complete_grocery_purchase` returns a validation or not-found tool error.",
+        "Report the safe error and do not claim any item was completed.",
+        "The all-or-nothing service leaves the batch uncommitted."
+      ]
+    },
+    {
+      "id": "compound-uncertain-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
+      "calls": [],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "stop-on-uncertain-mutation",
+        "all-or-nothing-batch"
+      ],
+      "row": [
+        "Compound uncertain failure",
+        "`complete_grocery_purchase` ends without a reliable result.",
+        "Report that the entire outcome is uncertain. Do not retry or issue per-item mutations.",
+        "Avoid duplicate purchase events and item completion."
+      ]
+    },
+    {
+      "id": "one-recommendation",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger", "hermes-runtime-configured"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "delivered",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "preserve-scheduled-facts",
+        "one-consolidated-message",
+        "at-most-one-delivery"
+      ],
+      "row": [
+        "One recommendation",
+        "`get_low_stock_predictions({})` returns one recommendation.",
+        "Call the tool exactly once, preserve the returned product name, state, confidence, reason, and non-null recommended action, and call no mutation.",
+        "Deliver one concise WhatsApp-ready message about that recommendation."
+      ]
+    },
+    {
+      "id": "several-recommendations",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger", "hermes-runtime-configured"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "delivered",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "preserve-scheduled-facts",
+        "preserve-returned-order",
+        "one-consolidated-message",
+        "at-most-one-delivery"
+      ],
+      "row": [
+        "Several recommendations",
+        "The tool returns several recommendations in service-defined order.",
+        "Call the tool exactly once, retain the returned order and facts, and consolidate every recommendation without reprioritizing or adding items.",
+        "Deliver one concise WhatsApp-ready message covering the full returned list."
+      ]
+    },
+    {
+      "id": "empty-scheduled-result",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger", "hermes-runtime-configured"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "silent",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "exact-silent-sentinel",
+        "successful-empty-only-silent",
+        "at-most-one-delivery"
+      ],
+      "row": [
+        "Empty scheduled result",
+        "The tool returns `{ recommendations: [] }`.",
+        "Call no other tool and respond with exactly `[SILENT]`.",
+        "Record a successful local cron result and suppress WhatsApp delivery."
+      ]
+    },
+    {
+      "id": "sanitized-mcp-failure",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger", "hermes-runtime-configured"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "no-silent-on-failure",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Sanitized MCP failure",
+        "`get_low_stock_predictions` returns a safe tool error or its result is unavailable.",
+        "Do not retry, mutate, return `[SILENT]`, or claim that nothing is needed. Briefly state that the scheduled stock check could not be completed.",
+        "Deliver the failure notice and retain the failed run in Hermes cron history."
+      ]
+    },
+    {
+      "id": "blocked-configuration",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger"],
+      "calls": [],
+      "resultClass": "blocked",
+      "safetyInvariants": [
+        "operator-fixes-configuration",
+        "no-silent-on-failure"
+      ],
+      "row": [
+        "Blocked configuration",
+        "Hermes preflight rejects the job because the skill, authenticated MCP connection, provider credentials, or WhatsApp target is unavailable.",
+        "Do not invoke the recommendation tool or reinterpret the block as an empty result. Correct the operator-owned configuration before a later run.",
+        "Keep the job's blocked status and alert visible to the operator."
+      ]
+    },
+    {
+      "id": "later-repeated-run",
+      "platforms": ["hermes"],
+      "prerequisites": ["scheduled-trigger", "hermes-runtime-configured"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "delivered",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-cross-run-deduplication",
+        "one-consolidated-message",
+        "at-most-one-delivery"
+      ],
+      "row": [
+        "Later repeated run",
+        "A later tick returns a recommendation that was also returned previously.",
+        "Treat the tick as a fresh read, call the tool exactly once, and produce one consolidated message. Do not infer delivery history or silently deduplicate.",
+        "Deliver at most one message for the run; cadence is the MVP repeat-notification control."
+      ]
+    }
+  ]
+}

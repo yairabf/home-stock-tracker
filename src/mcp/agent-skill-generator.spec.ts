@@ -37,7 +37,13 @@ describe('agent skill generator', () => {
     expect(openClawSkill).not.toMatch(/Hermes|WhatsApp|\[SILENT\]|hermes cron/);
   });
 
-  it('fails closed when a generated bundle was hand-edited', () => {
+  it.each([
+    'SKILL.md',
+    'scenarios.md',
+    'manifest.json',
+    'release/README.md',
+    'contracts/1.0.0/tools-list.json',
+  ])('fails closed when generated %s was hand-edited', (artifact) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-skills-'));
 
     try {
@@ -46,11 +52,25 @@ describe('agent skill generator', () => {
         join(temporaryRoot, 'integrations'),
         { recursive: true },
       );
-      const generatedSkill = join(
-        temporaryRoot,
-        'integrations/openclaw/home-stock-tracker/SKILL.md',
+      cpSync(
+        join(projectRoot, 'package.json'),
+        join(temporaryRoot, 'package.json'),
       );
-      appendFileSync(generatedSkill, '\nHand-edited drift.\n');
+      cpSync(
+        join(projectRoot, 'package-lock.json'),
+        join(temporaryRoot, 'package-lock.json'),
+      );
+      cpSync(
+        join(projectRoot, 'src/mcp/agent-release-contract.generated.ts'),
+        join(temporaryRoot, 'src/mcp/agent-release-contract.generated.ts'),
+        { recursive: true },
+      );
+      const generatedArtifact = join(
+        temporaryRoot,
+        'integrations/openclaw/home-stock-tracker',
+        artifact,
+      );
+      appendFileSync(generatedArtifact, '\nHand-edited drift.\n');
 
       const result = spawnSync(
         process.execPath,
@@ -64,9 +84,11 @@ describe('agent skill generator', () => {
       );
 
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain('Generated agent skill files are stale');
       expect(result.stderr).toContain(
-        'integrations/openclaw/home-stock-tracker/SKILL.md',
+        'Generated agent release files are stale',
+      );
+      expect(result.stderr).toContain(
+        `integrations/openclaw/home-stock-tracker/${artifact}`,
       );
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });

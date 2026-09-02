@@ -4,8 +4,9 @@ This directory is a portable OpenClaw skill bundle. Its generated `SKILL.md`
 contains the platform-neutral Home Stock Tracker workflow without scheduling or
 delivery conventions. The NestJS service remains independent from OpenClaw.
 
-Do not edit `SKILL.md` or `scenarios.md` directly. Update the canonical sources
-under `integrations/shared/home-stock-tracker/`, then run
+Do not edit `SKILL.md`, `scenarios.md`, `manifest.json`, `release/README.md`, or
+the bundled contract fixture directly. Update the canonical sources under
+`integrations/shared/home-stock-tracker/`, then run
 `npm run skills:generate`. Use `npm run skills:check` to detect drift.
 
 ## Prerequisite
@@ -15,16 +16,18 @@ the live connection and tool discovery:
 
 ```bash
 openclaw mcp set home-stock-tracker \
-  '{"url":"http://localhost:3000/mcp","transport":"streamable-http","headers":{"Authorization":"Bearer <API_AUTH_TOKEN>"}}'
+  '{"url":"<HOME_STOCK_TRACKER_BASE_URL>/mcp","transport":"streamable-http","headers":{"Authorization":"Bearer <HOME_STOCK_TRACKER_API_AUTH_TOKEN>"}}'
 
 openclaw mcp status --verbose
 openclaw mcp doctor home-stock-tracker --probe
 openclaw mcp show home-stock-tracker --json
 ```
 
-Confirm all sixteen tools are discoverable before enabling writes. Keep the
-token outside this repository, screenshots, and shared logs. Prefer the secret
-mechanism supported by the deployment over a literal sensitive header.
+Confirm every tool in `manifest.json.requiredTools` is discoverable before
+enabling writes. The generated `release/README.md` lists the same required set
+for human review. Keep the token outside this repository, screenshots, and
+shared logs. Prefer the secret mechanism supported by the deployment over a
+literal sensitive header.
 
 The MCP server must be enabled for the runtime that will use the skill. Normal
 `coding` and `messaging` tool profiles expose configured MCP tools. A `minimal`
@@ -55,6 +58,18 @@ The skills watcher normally notices the installation on the next agent turn.
 Start a fresh session when the active runtime still holds an older skill or MCP
 catalog. Reload the MCP registry or restart the owning process when its cached
 tool catalog remains stale.
+
+With the service base URL and bearer token set in the environment variables
+named by `manifest.json`, verify the live bundle from the project checkout:
+
+```bash
+npm run agent:probe -- --platform openclaw
+```
+
+The repository probe is read-only and complements `openclaw mcp doctor`: it
+checks the exact bundle contract, while the OpenClaw command checks runtime tool
+visibility. Follow `release/README.md` for compatibility and complete-bundle
+rollback, and do not enable writes until both checks succeed.
 
 ## Smoke check
 

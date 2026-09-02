@@ -1,9 +1,9 @@
 ---
-name: home-stock-tracker
-description: Use the household grocery and inventory MCP tools
-version: 1.10.0
-author: Home Stock Tracker
+name: {{SKILL_NAME}}
+description: {{SKILL_DESCRIPTION}}
+version: {{SKILL_VERSION}}
+author: {{SKILL_AUTHOR}}
 metadata:
   hermes:
-    tags: [household, grocery, inventory, mcp]
+    tags: [{{SKILL_TAGS}}]
 ---

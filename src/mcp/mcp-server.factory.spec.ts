@@ -24,6 +24,7 @@ import {
   ProductResolutionAction,
   UnknownProductPolicy,
 } from '../grocery/types/policy-aware-grocery-addition';
+import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -125,6 +126,7 @@ describe('McpServerFactory grocery tools', () => {
   afterEach(async () => closeServer());
 
   it('discovers the grocery tools with strict schemas', async () => {
+    expect(client.getServerVersion()).toMatchObject(MCP_SERVER_INFO);
     const result = await client.listTools();
 
     expect(result.tools.map(({ name }) => name)).toEqual([
@@ -339,9 +341,9 @@ describe('McpServerFactory grocery tools', () => {
         offset: { type: 'integer', minimum: 0 },
       },
     });
-    expect(
-      eventHistoryTool?.outputSchema?.properties?.items.items.properties,
-    ).not.toHaveProperty('metadata');
+    expect(JSON.stringify(eventHistoryTool?.outputSchema)).not.toContain(
+      '"metadata"',
+    );
     const purchaseCompletionTool = result.tools.find(
       ({ name }) => name === 'complete_grocery_purchase',
     );

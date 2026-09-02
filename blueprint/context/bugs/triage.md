@@ -1,6 +1,6 @@
 # MCP and skill gaps - current triage
 
-Reviewed against the repository on 2026-09-01. The 20 briefs in this directory
+Reviewed against the repository on 2026-09-02. The 20 briefs in this directory
 are useful source hypotheses, but they are not 20 independent bugs. They mix
 completed fixes, missing MCP adapters, product choices, documentation drift, and
 release hardening.
@@ -11,12 +11,11 @@ change again.
 
 ## Decision summary
 
-| Decision | Count | Briefs |
-| --- | ---: | --- |
-| Resolved | 7 | MCP-01, MCP-02, MCP-03, MCP-04, MCP-12, MCP-X01, SKILL-01 |
-| Fix next | 4 | MCP-06, MCP-07, MCP-09, SKILL-03 |
-| Wait or combine | 7 | MCP-05 remainder, MCP-10, MCP-11, SKILL-04, SKILL-05, SKILL-06, SKILL-07 |
-| Reject as a separate bug | 2 | MCP-08, SKILL-02 |
+| Decision                 | Count | Briefs                                                                                                                                      |
+| ------------------------ | ----: | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resolved                 |    16 | MCP-01, MCP-02, MCP-03, MCP-04, MCP-06, MCP-07, MCP-09, MCP-11, MCP-12, MCP-X01, SKILL-01, SKILL-03, SKILL-04, SKILL-05, SKILL-06, SKILL-07 |
+| Wait                     |     2 | MCP-05 remainder, MCP-10                                                                                                                    |
+| Reject as a separate bug |     2 | MCP-08, SKILL-02                                                                                                                            |
 
 ## Resolved
 
@@ -72,51 +71,39 @@ successful, non-mutating `product_resolution_required` branch, and the skill no
 longer invents missing product facts. The feature is archived in
 [`blueprint/history/features/30-policy-aware-grocery-additions.md`](../../history/features/30-policy-aware-grocery-additions.md).
 
-## Fix next
+## Resolved by Waves 1 and 2
 
-These are the remaining gaps that affect truthful documentation or implemented
-MVP behavior. They should be handled one at a time through the normal Blueprint
-workflow.
+These four fixes landed before the combined Wave 3 release-contract feature.
 
 ### SKILL-03 - correct the OpenClaw integration claim
 
-Confirmed documentation defect. The repository contains only
-`integrations/hermes/home-stock-tracker/`, and its skill includes Hermes cron,
-WhatsApp, and `[SILENT]` behavior. `docs/agent-integrations.md` nevertheless says
-the same body is agent-neutral and tells OpenClaw to install it directly.
-
-The immediate fix is to make the documentation truthful. Either describe
-OpenClaw as a manual adaptation target or add a real platform-specific adapter.
-Do not claim that the Hermes bundle is portable unchanged. A broader portable
-manifest belongs with the later contract and release effort.
+Resolved by the archived
+[`separate-hermes-openclaw-skill-instructions`](../../history/fixes/separate-hermes-openclaw-skill-instructions.md)
+fix. Shared workflow sources now generate distinct Hermes and OpenClaw bundles;
+Hermes cron, WhatsApp, and `[SILENT]` behavior cannot drift into OpenClaw.
 
 ### MCP-07 - prediction feedback MCP adapter
 
-Confirmed missing MCP capability and an explicit MVP gap. REST already exposes
-accepted, rejected, and corrected prediction feedback through the shared
-`PredictionFeedbackService`, while predictions return stable IDs. Add a thin MCP
-adapter over the existing service, define repeated-feedback conflict behavior,
-and teach the skill to distinguish feedback about a specific prediction from a
-general stock correction.
+Resolved by the archived
+[`mcp-07-prediction-feedback-tool`](../../history/fixes/mcp-07-prediction-feedback-tool.md)
+fix. MCP now delegates accepted, rejected, and corrected feedback to the shared
+service with stable repeated-feedback behavior and matching skill guidance.
 
 ### MCP-06 - inventory-event history MCP adapter
 
-Confirmed missing MCP capability. `InventoryService.listEvents()` already
-provides bounded, paginated, newest-first history with product and event filters.
-The remaining work is a read-only MCP adapter, a privacy review that omits or
-allowlists metadata, real discovery coverage, and skill guidance that separates
-recorded history from estimated current state.
+Resolved by the archived
+[`mcp-06-no-inventory-event-history-tool`](../../history/fixes/mcp-06-no-inventory-event-history-tool.md)
+fix. The bounded, read-only MCP adapter omits metadata and the generated skills
+separate recorded history from estimated current state.
 
 ### MCP-09 - actual purchase measurements during grocery completion
 
-Confirmed data-quality defect. `complete_grocery_purchase` still accepts only
-grocery-item IDs and creates `PURCHASED` events without actual quantity or unit.
-Evolve the shared domain contract before the MCP schema. Preserve an explicit
-transition for existing ID-only callers, keep completion and event creation
-atomic, and never copy requested measurements into actual measurements unless
-the user supplied them as actual values.
+Resolved by the archived
+[`mcp-09-purchase-completion-actual-quantity-details`](../../history/fixes/mcp-09-purchase-completion-actual-quantity-details.md)
+fix. Purchase completion accepts explicit actual measurements while preserving
+the ID-only transition, atomicity, and the rule against copying requested values.
 
-## Wait or combine
+## Wait
 
 ### MCP-05 - standalone alias administration
 
@@ -133,20 +120,39 @@ Reasonable but low priority. It mainly supports setup verification and detailed
 prediction explanations. Add it only when those workflows demonstrate that
 existing prediction responses and operator checks are insufficient.
 
-### MCP-11, SKILL-04, SKILL-05, SKILL-06, and SKILL-07 - one contract and release feature
+## Resolved by Wave 3
 
-Do not implement these as five separate fixes. Together they describe the lack
-of one authoritative, machine-verifiable integration contract. After MCP-06,
-MCP-07, and MCP-09 settle the intended tool surface, create one feature that
-owns:
+### Wave 3 contract and release evidence
 
-- one source for service, MCP contract, and compatible skill versions;
-- a real `tools/list` schema snapshot or equivalent contract fixture;
-- drift checks for tool tables, arguments, enums, documentation, and bundles;
-- machine-readable workflow scenarios and safety invariants;
-- a read-only installation and compatibility probe;
-- platform-specific manifests, prerequisites, verification, and rollback;
-- no secrets or deployment-specific household identifiers.
+MCP-11 and SKILL-04 through SKILL-07 were intentionally implemented together by
+feature 32 because they described one authoritative, machine-verifiable
+integration contract. The delivered evidence is:
+
+- **MCP-11:** `release-contract.json`, generated runtime server metadata, each
+  bundle's `manifest.json`, and `agent:probe` reject incompatible server names,
+  versions, required tools, and schemas before writes are enabled.
+- **SKILL-04:** `scripts/agent-installation-probe.mjs` checks health, readiness,
+  authentication, standard MCP initialization, exact `tools/list` schemas, tool
+  visibility, and one read-only `grocery_list` call. Its tests cover both
+  platforms, stable failures, redaction, and absence of mutation calls.
+- **SKILL-05:** the shared release contract owns service, MCP, skill, feature,
+  compatibility, and tool metadata. The immutable normalized fixture plus
+  `skills:check`, scenario validation, documentation validation, and
+  `contract:check` reject runtime, generated-bundle, instruction, version, and
+  tool-contract drift.
+- **SKILL-06:** the generator maps shared metadata into platform-supported skill
+  frontmatter and complete Hermes/OpenClaw manifests. Generated release guides
+  carry prerequisites, compatibility, the live probe command, and whole-bundle
+  rollback without secrets or deployment identifiers.
+- **SKILL-07:** `scenarios/grocery-catalog.json` is the executable source for the
+  generated platform scenario matrices. Validation proves tool, argument, enum,
+  ordering, confirmation, stale-state, domain-failure, uncertain-write, and
+  platform-isolation invariants.
+
+Operator installation, generic-client verification, diagnosis, version-bump,
+and rollback procedures are published in `docs/agent-integrations.md`. The
+publisher gate is `npm run contract:check`; live platform commands are generated
+into each manifest and release guide.
 
 Standard MCP initialization metadata and `tools/list` may be sufficient. Add a
 custom `get_capabilities` tool only if a real client or installer cannot verify

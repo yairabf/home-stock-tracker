@@ -46,12 +46,18 @@ describe('agent inventory skill contract', () => {
       )) {
         expect(bundle.skill).toContain(fragment);
       }
-      for (const fragment of sharedFragments(
-        'scenarios.md',
-        '<!-- PLATFORM_SCENARIOS -->',
-      )) {
-        expect(bundle.scenarios).toContain(fragment);
-      }
+      const sharedScenarios = readFileSync(
+        join(
+          projectRoot,
+          'integrations/shared/home-stock-tracker/scenarios.md',
+        ),
+        'utf8',
+      );
+      const remainingSharedScenarios = sharedScenarios
+        .split('<!-- EXECUTABLE_GROCERY_CATALOG_SCENARIOS -->')[1]
+        .split('<!-- PLATFORM_SCENARIOS -->')[0]
+        .trim();
+      expect(bundle.scenarios).toContain(remainingSharedScenarios);
     },
   );
 

@@ -5,6 +5,14 @@ Home Stock Tracker is an authenticated remote MCP server. This guide covers
 [other MCP clients](#other-mcp-clients). Tool contracts are documented in the
 [API and MCP reference](api-reference.md#mcp-server).
 
+The generated bundle manifests are the install contract:
+
+- [Hermes manifest](../integrations/hermes/home-stock-tracker/manifest.json)
+- [OpenClaw manifest](../integrations/openclaw/home-stock-tracker/manifest.json)
+
+Use their `requiredTools`, `mcp`, `verification`, and `rollback` fields instead
+of copying tool counts or release versions into deployment notes.
+
 ## Shared prerequisites
 
 1. Start Home Stock Tracker and confirm `/health` and `/ready` succeed.
@@ -55,7 +63,7 @@ hermes mcp list
 hermes mcp test home-stock-tracker
 ```
 
-Confirm all sixteen tools from the [MCP reference](api-reference.md#tools) are
+Confirm every tool in the installed bundle's `manifest.json.requiredTools` is
 discoverable before enabling writes.
 
 ### Install the Home Stock Tracker skill
@@ -77,6 +85,22 @@ What is on the grocery list?
 
 Hermes should call `grocery_list` and summarize the structured result. Test
 writes only after confirming the target service and household.
+
+### Verify the Hermes bundle
+
+From this project checkout, place the service base URL and bearer token in the
+two environment variables named by the manifest, then run its generated
+verification command:
+
+```bash
+npm run agent:probe -- --platform hermes
+```
+
+The probe checks health, readiness, authentication, server identity and
+compatibility, the exact published schemas and required tools, and one
+read-only `grocery_list` call. It does not invoke a mutation. Keep the token in
+the process environment or an operator-owned secret store; never pass it as a
+command argument.
 
 ### WhatsApp and scheduled checks
 
@@ -150,6 +174,20 @@ The OpenClaw bundle intentionally contains no recurring automation or quiet
 delivery convention. Configure those separately against the target gateway's
 current automation and delivery contracts.
 
+### Verify the OpenClaw bundle
+
+From this project checkout, place the service base URL and bearer token in the
+two environment variables named by the manifest, then run its generated
+verification command:
+
+```bash
+npm run agent:probe -- --platform openclaw
+```
+
+Run this repository probe as well as OpenClaw's own doctor command. The former
+proves the live server matches the checked-in bundle; the latter proves the
+OpenClaw runtime can expose that connection under its sandbox and tool policy.
+
 ## Other MCP clients
 
 Any client can integrate when it supports:
@@ -178,12 +216,36 @@ A typical definition is:
 Wrapper property names vary. Follow the client's documentation; the endpoint,
 transport, and authorization header remain the same.
 
+For a generic client, select the Hermes or OpenClaw manifest as the portable
+contract (their shared MCP requirements are generated from the same source),
+then initialize Streamable HTTP, compare server identity/version and
+`tools/list` with that manifest and its `mcp.toolsFixture`, and call only
+`grocery_list`. The repository probe can perform that generic MCP preflight
+without installing either agent skill:
+
+```bash
+npm run agent:probe -- --platform hermes
+```
+
+Here `--platform` selects a checked-in contract bundle; it does not require the
+Hermes application. Do not enable client writes until this preflight succeeds.
+
 If the client supports skills or system instructions, adapt
 `integrations/shared/home-stock-tracker/workflow.md`. At minimum retain the
 [safe tool workflow](api-reference.md#safe-tool-workflow), especially ID
 resolution and uncertain-write handling.
 
 ## Integration troubleshooting
+
+The repository probe emits one symbolic diagnostic and stable exit code. It
+never prints the configured URL, token, request headers, or raw transport error.
+
+|  Exit | Diagnostic                                                                                           | Operator action                                                                              |
+| ----: | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 10–12 | `MISSING_CONFIGURATION`, `INVALID_CONFIGURATION`, `BUNDLE_INVALID`                                   | Correct the two environment variables or regenerate the complete selected bundle.            |
+| 20–24 | `ENDPOINT_UNREACHABLE`, `HEALTH_FAILED`, `READINESS_FAILED`, `AUTHENTICATION_FAILED`, `MCP_DISABLED` | Restore service/network readiness, credentials, or MCP enablement before installing.         |
+| 25–28 | `SERVER_IDENTITY_MISMATCH`, `SERVER_VERSION_MISMATCH`, `SCHEMA_DRIFT`, `HIDDEN_TOOLS`                | Select a compatible complete bundle or correct the client/tool policy; do not enable writes. |
+| 29–31 | `SAFE_READ_FAILED`, `MCP_CONNECTION_FAILED`, `INTERNAL_FAILURE`                                      | Diagnose the read path or regenerate the bundle; do not retry a mutation.                    |
 
 ### The client receives `401`
 
@@ -209,4 +271,29 @@ receives `401` before the enablement check.
 - Check client tool filters and allowlists.
 - Check OpenClaw sandbox/plugin policy when applicable.
 - Reload MCP connections or start a fresh session.
-- Confirm all sixteen tools are returned.
+- Compare discovery with `manifest.json.requiredTools` and the bundled fixture.
+
+## Release, version, and rollback policy
+
+`integrations/shared/home-stock-tracker/release-contract.json` is the only
+authored source for service, MCP-contract, skill, compatibility, feature, and
+required-tool release metadata. Run `npm run skills:generate` after changing it
+and `npm run contract:check` before publishing. Generated manifests, release
+guides, skill frontmatter, runtime constants, package versions, schema fixtures,
+and scenario guides must be committed together.
+
+Apply the manifest's `mcp.versionPolicy`: increment the MCP contract major for
+breaking tool/schema changes, minor for additive contract changes, and patch
+for non-contract corrections. A released versioned tool fixture is immutable;
+capture contract changes under a new contract version. Adjust the skill version
+and compatible MCP range in the same canonical contract whenever instructions
+or compatibility change.
+
+To roll back, select a previously committed release or tag whose manifest range
+accepts the deployed MCP contract. Restore the entire platform bundle—including
+`SKILL.md`, `scenarios.md`, `manifest.json`, `release/README.md`, and the
+versioned fixture—then run the manifest's probe command before making it active.
+Never combine files from different bundle versions, rewrite a released fixture,
+or downgrade only the service or skill side. If no compatible pair is
+available, restore the previous service release and its complete bundle as one
+deployment change.

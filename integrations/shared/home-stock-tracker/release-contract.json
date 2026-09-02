@@ -1,0 +1,78 @@
+{
+  "service": {
+    "name": "home-stock-tracker",
+    "version": "0.0.1"
+  },
+  "mcp": {
+    "serverName": "home-stock-tracker",
+    "contractVersion": "1.0.0",
+    "toolsFixture": "contracts/1.0.0/tools-list.json",
+    "versionPolicy": {
+      "breaking": "major",
+      "additive": "minor",
+      "nonContract": "patch"
+    }
+  },
+  "skill": {
+    "name": "home-stock-tracker",
+    "description": "Use the household grocery and inventory MCP tools",
+    "version": "1.10.0",
+    "compatibleMcpRange": ">=1.0.0 <2.0.0",
+    "author": "Home Stock Tracker",
+    "tags": ["household", "grocery", "inventory", "mcp"]
+  },
+  "features": [
+    "grocery-add",
+    "grocery-catalog-confirmation",
+    "grocery-list",
+    "grocery-purchase-completion",
+    "grocery-remove",
+    "grocery-update",
+    "inventory-estimation",
+    "inventory-event-history",
+    "low-stock-recommendations",
+    "prediction-feedback",
+    "product-lookup",
+    "product-search",
+    "purchase-recording",
+    "stock-signals"
+  ],
+  "requiredTools": [
+    "grocery_add",
+    "grocery_confirm_new_product",
+    "grocery_confirm_product_alias",
+    "grocery_set_quantity",
+    "grocery_update",
+    "grocery_remove",
+    "grocery_list",
+    "get_product",
+    "search_products",
+    "get_inventory",
+    "list_inventory_events",
+    "record_purchase",
+    "record_stock_signal",
+    "record_prediction_feedback",
+    "complete_grocery_purchase",
+    "get_low_stock_predictions"
+  ],
+  "platforms": ["hermes", "openclaw"],
+  "bundle": {
+    "schemaVersion": 1,
+    "authentication": {
+      "scheme": "bearer",
+      "environmentVariable": "HOME_STOCK_TRACKER_API_AUTH_TOKEN"
+    },
+    "network": {
+      "baseUrlEnvironmentVariable": "HOME_STOCK_TRACKER_BASE_URL",
+      "healthPath": "/health",
+      "readinessPath": "/ready",
+      "mcpPath": "/mcp",
+      "transport": "streamable-http"
+    },
+    "verificationCommand": "npm run agent:probe -- --platform {{PLATFORM}}",
+    "rollback": {
+      "strategy": "replace-complete-bundle",
+      "guidance": "Restore the previous verified bundle as a complete directory; do not mix generated files from different versions."
+    }
+  }
+}

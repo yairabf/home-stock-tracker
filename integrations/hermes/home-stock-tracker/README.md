@@ -4,21 +4,17 @@ This directory is a portable Hermes Agent skill bundle. Its generated `SKILL.md`
 combines the platform-neutral tool workflow with Hermes-specific scheduled-check
 rules. The NestJS service remains independent from Hermes.
 
-Do not edit `SKILL.md` or `scenarios.md` directly. Update the canonical sources
-under `integrations/shared/home-stock-tracker/`, then run
+Do not edit `SKILL.md`, `scenarios.md`, `manifest.json`, `release/README.md`, or
+the bundled contract fixture directly. Update the canonical sources under
+`integrations/shared/home-stock-tracker/`, then run
 `npm run skills:generate`. Use `npm run skills:check` to detect drift.
 
 ## Prerequisite
 
 Configure Hermes separately with a trusted MCP connection to the Home Stock
-Tracker `/mcp` endpoint and confirm that these tools are discoverable:
-
-`grocery_add`, `grocery_confirm_new_product`,
-`grocery_confirm_product_alias`, `grocery_set_quantity`, `grocery_update`,
-`grocery_remove`, `grocery_list`, `get_product`, `search_products`,
-`get_inventory`, `list_inventory_events`, `record_purchase`,
-`record_stock_signal`, `record_prediction_feedback`, `complete_grocery_purchase`, and
-`get_low_stock_predictions`.
+Tracker `/mcp` endpoint and confirm that every tool in
+`manifest.json.requiredTools` is discoverable. The generated
+`release/README.md` lists the same required set for human review.
 
 MCP endpoint configuration, authentication, and credentials do not belong in
 this skill bundle. Do not store service tokens here.
@@ -35,6 +31,17 @@ active Hermes profile's skills directory:
 Restart or reload Hermes skills, then confirm `home-stock-tracker` appears in
 the skills list. The checked-in generated bundle is the installable artifact;
 repeat the review and copy when it changes.
+
+With the service base URL and bearer token set in the environment variables
+named by `manifest.json`, verify the live installation from the project
+checkout:
+
+```bash
+npm run agent:probe -- --platform hermes
+```
+
+The probe is read-only. Follow `release/README.md` for compatibility and
+complete-bundle rollback, and do not enable writes until it succeeds.
 
 Hermes also supports project skill discovery, external skill directories, and
 GitHub/URL installation. Those deployment choices are intentionally left to the

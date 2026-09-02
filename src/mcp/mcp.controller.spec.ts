@@ -21,6 +21,7 @@ import { ServiceAuthGuard } from '../auth/service-auth.guard';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
+import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 
 @Controller()
 class TestRestController {
@@ -125,6 +126,7 @@ describe('McpController', () => {
 
     try {
       await client.connect(transport);
+      expect(client.getServerVersion()).toMatchObject(MCP_SERVER_INFO);
       const tools = await client.listTools();
       expect(tools.tools.map(({ name }) => name)).toEqual([
         'grocery_add',

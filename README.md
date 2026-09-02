@@ -15,7 +15,7 @@ and low-stock recommendations.
 
 | Guide                                                                  | Contents                                                                                                                  |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, all sixteen tools, and safe tool workflows.                    |
+| [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, the manifest-backed tool contract, and safe tool workflows.    |
 | [Agent integrations](docs/agent-integrations.md)                       | Complete Hermes, OpenClaw, and generic MCP-client setup with official references.                                         |
 | [Operations guide](docs/operations.md)                                 | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
 | [Deployment guide](docs/deployment.md)                                 | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery.                             |

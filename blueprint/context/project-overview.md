@@ -51,6 +51,7 @@ Post-MVP:
 29. **Product search and resolution proposals** - provide deterministic read-only product discovery and optional non-mutating LLM advice.
 30. **Policy-aware grocery additions** - make unknown-product handling explicit for deterministic and assisted clients.
 31. **Confirmed grocery catalog decisions** - apply user-approved product creation or alias decisions and safely complete the original grocery addition.
+32. **Verifiable agent integration contract** - establish one versioned MCP-and-skill compatibility contract with schema fixtures, drift checks, executable safety scenarios, installation verification, and platform-specific release manifests.
 
 **Explicit MVP exclusions:** no web UI, no mobile app, no exact real-time inventory requirement, no barcode scanner, no receipt OCR, no supermarket integration, no automatic online purchasing, no computer vision, no Home Assistant integration, no expiration-date tracking (unless trivial), no advanced ML training pipeline, no dedicated Python prediction microservice, no multi-tenant architecture, no Redis unless a concrete need appears, and no automatic grocery-list mutation from predictions alone (predictions recommend; they don't silently modify the list).
 
