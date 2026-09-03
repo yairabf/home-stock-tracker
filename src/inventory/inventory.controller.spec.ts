@@ -2,7 +2,6 @@ import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PredictedState } from '../generated/prisma/enums';
-import { PREDICTION_ENGINE } from '../estimation/prediction-engine';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
@@ -26,7 +25,6 @@ describe('InventoryController low-stock recommendations', () => {
           provide: LowStockRecommendationService,
           useValue: recommendationService,
         },
-        { provide: PREDICTION_ENGINE, useValue: {} },
       ],
     }).compile();
 
@@ -87,16 +85,38 @@ describe('InventoryController provenance', () => {
     updateStock: jest.fn(),
     completePurchase: jest.fn(),
     completePartialPurchase: jest.fn(),
+    getInventory: jest.fn(),
+    listInventory: jest.fn(),
   };
   const predictionFeedbackService = { submitFeedback: jest.fn() };
   const controller = new InventoryController(
     inventoryService as unknown as InventoryService,
     predictionFeedbackService as unknown as PredictionFeedbackService,
     {} as LowStockRecommendationService,
-    {} as never,
   );
 
   beforeEach(() => jest.clearAllMocks());
+
+  it('delegates product inventory reads to the materialized service', async () => {
+    const productId = '00000000-0000-4000-8000-000000000001';
+
+    await controller.estimateInventory(productId);
+
+    expect(inventoryService.getInventory).toHaveBeenCalledWith(productId);
+  });
+
+  it('delegates the household inventory view to the materialized service', async () => {
+    inventoryService.listInventory.mockResolvedValue({
+      current: [],
+      uncertain: [],
+    });
+
+    await expect(controller.listInventory()).resolves.toEqual({
+      current: [],
+      uncertain: [],
+    });
+    expect(inventoryService.listInventory).toHaveBeenCalledTimes(1);
+  });
 
   it('supplies api provenance to inventory event writes', async () => {
     await controller.recordEvent({

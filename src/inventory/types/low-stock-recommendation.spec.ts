@@ -1,48 +1,21 @@
 import { PredictedState } from '../../generated/prisma/enums';
-import type { PredictionResult } from '../../estimation/types/prediction-result';
 import {
   selectLowStockRecommendations,
   type RecommendationCandidate,
 } from './low-stock-recommendation';
-
-const prediction = (
-  productId: string,
-  predictedState: PredictedState,
-  confidenceScore: number,
-): PredictionResult => ({
-  predictionId: `prediction-${productId}`,
-  productId,
-  predictedState,
-  confidenceScore,
-  reason: `Reason for ${productId}`,
-  deterministicSignals: {
-    lastEventType: null,
-    lastEventAt: null,
-    daysSinceLastEvent: null,
-    eventCount: 0,
-    avgPurchaseIntervalDays: null,
-    avgNeedIntervalDays: null,
-    estimatedConsumptionIntervalDays: null,
-    observationCount: 0,
-    productType: null,
-    isPerishable: false,
-    predictionStrategy: null,
-    householdAdultsCount: 2,
-    householdChildrenCount: 3,
-    householdPredictionPreferences: null,
-  },
-  recommendedAction: null,
-  llmContributed: false,
-  llmAttempt: null,
-});
 
 const candidate = (
   productName: string,
   predictedState: PredictedState,
   confidenceScore: number,
 ): RecommendationCandidate => ({
+  productId: productName,
   productName,
-  prediction: prediction(productName, predictedState, confidenceScore),
+  predictionId: `prediction-${productName}`,
+  predictedState,
+  confidenceScore,
+  reason: `Reason for ${productName}`,
+  recommendedAction: null,
 });
 
 describe('selectLowStockRecommendations', () => {

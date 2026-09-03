@@ -8,14 +8,8 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
-  Inject,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
-import {
-  PREDICTION_ENGINE,
-  type PredictionEngine,
-} from '../estimation/prediction-engine';
-import { EstimationResponseDto } from './dto/estimation-response.dto';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
 import { InventoryEventResponseDto } from './dto/inventory-event-response.dto';
@@ -37,6 +31,10 @@ import {
   StockMutationResponseDto,
 } from './dto/stock-mutation-response.dto';
 import { StockMutationOperation } from './types/stock-mutation';
+import {
+  HouseholdInventoryResponseDto,
+  InventoryEstimateResponseDto,
+} from './dto/inventory-read-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -44,9 +42,12 @@ export class InventoryController {
     private readonly inventoryService: InventoryService,
     private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
-    @Inject(PREDICTION_ENGINE)
-    private readonly predictionEngine: PredictionEngine,
   ) {}
+
+  @Get()
+  listInventory(): Promise<HouseholdInventoryResponseDto> {
+    return this.inventoryService.listInventory();
+  }
 
   @Get('predictions/low-stock')
   async getLowStockRecommendations(): Promise<LowStockRecommendationListResponseDto> {
@@ -154,8 +155,7 @@ export class InventoryController {
   @Get('estimate/:productId')
   async estimateInventory(
     @Param('productId') productId: string,
-  ): Promise<EstimationResponseDto> {
-    const result = await this.predictionEngine.predictProduct(productId);
-    return EstimationResponseDto.fromEstimationResult(result);
+  ): Promise<InventoryEstimateResponseDto> {
+    return this.inventoryService.getInventory(productId);
   }
 }

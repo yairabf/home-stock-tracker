@@ -1,6 +1,8 @@
 # Home Stock Tracker - Project Overview
 
-> A NestJS backend service that tracks household grocery and inventory state, and estimates stock levels without requiring exact manual counts, so an AI agent (Hermes) can manage groceries and stock through natural WhatsApp conversation.
+<!-- blueprint:source-hash 9311d0d13c21e4bf4475d1029de5aca74215316ea44017a5d80e9d41b16f71d5 -->
+
+> A NestJS service that tracks household groceries and estimates stock so Hermes can manage them through natural WhatsApp conversation.
 
 ## Problem
 
@@ -113,7 +115,7 @@ The append-only source of truth. All meaningful state changes are stored as even
 
 - `id` (string, UUID) - primary key.
 - `productId` (FK -> Product).
-- `eventType` (enum: `GROCERY_ADDED` | `GROCERY_REMOVED` | `PURCHASED` | `RESTOCKED` | `STOCK_LOW` | `STOCK_OUT` | `STOCK_CONFIRMED` | `STOCK_CORRECTED` | `PREDICTION_ACCEPTED` | `PREDICTION_REJECTED` | `INFERRED_LOW_STOCK`).
+- `eventType` (enum) - includes grocery, purchase, qualitative stock, prediction feedback, `STOCK_SET`, and `STOCK_CONSUMED` events.
 - `quantity` (number, optional).
 - `unit` (string, optional).
 - `timestamp` (datetime).
@@ -136,6 +138,22 @@ Reproducible from `InventoryEvent` history; may be materialized for performance 
 - `lastStockConfirmationAt` (datetime, optional).
 - `estimatedConsumptionIntervalDays` (number, optional).
 - `observationCount` (number).
+
+### StockProjection
+
+One materialized balance per tracked product. Existing products remain untracked until a purchase or explicit stock update creates this row.
+
+- `productId` (unique FK -> Product), `unit` (string) - canonical stock identity.
+- `recordedQuantity` (number, optional), `recordedAt` (datetime), `recordedSource` (string), `recordedEventId` (unique FK -> InventoryEvent) - the last explicit fact.
+- `estimatedQuantity` (number, optional), `estimatedState` (`likely_available` | `probably_low` | `probably_out` | `uncertain`), `confidence` (number), `reason` (string), `evaluatedAt` (datetime) - the latest materialized estimate.
+- `predictionId` (optional FK -> Prediction) - provenance for daily evaluation.
+
+Purchases and absolute sets reset the recorded balance. Decrements clamp at zero. Daily evaluation updates only estimate fields and never rewrites the recorded fact.
+
+### ProductShelfLifePolicy
+
+- `productId` (unique FK -> Product), `kind` (`finite` | `nonperishable`), `shelfLifeDays` (positive number for finite, null for nonperishable).
+- `modelProvider`, `modelVersion`, `promptVersion` (optional strings), `confidence` (number), `rationale` (string), `evaluatedAt` (datetime) - inference provenance.
 
 ### Prediction
 
@@ -169,7 +187,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **PostgreSQL** - source of truth for products, grocery list, household config, inventory events, prediction history, and derived statistics.
 - **Prisma** (preferred ORM; TypeORM only if a NestJS-specific constraint forces it) - schema and migrations.
 - **REST API via NestJS controllers** - JSON contracts, OpenAPI/Swagger docs, versioned routes (e.g. `/api/v1/grocery/items`, `/api/v1/inventory/events`, `/api/v1/inventory`, `/api/v1/predictions/low-stock`).
-- **MCP tools** (service-exposed or via a thin adapter) - `grocery_add`, `grocery_confirm_new_product`, `grocery_confirm_product_alias`, `grocery_set_quantity`, `grocery_update`, `grocery_remove`, `grocery_list`, `record_purchase`, `record_stock_signal`, `record_prediction_feedback`, `complete_grocery_purchase`, `get_inventory`, `list_inventory_events`, `get_product`, `search_products`, `product_add_alias`, `get_low_stock_predictions`. Purchase completion prefers per-row `items` and records actual quantity and unit only when the user explicitly provides them; the legacy ID-only shape remains transitional. Standalone alias writes require an exact trusted product ID and explicit user confirmation. Hermes learns tool usage via a dedicated skill; business rules stay in the service, not in Hermes.
+- **MCP tools** - expose grocery, product, purchase, inventory, prediction, and feedback capabilities through a thin service adapter. Current stock mutations include `update_inventory` and `record_purchases`; materialized reads add `list_inventory` and enrich `get_inventory`. Hermes learns tool usage through generated skills while business rules stay in the service.
 - **Provider-neutral LLM layer** (`LlmProvider`, `PredictionEngine`, `ProductClassifier`) - domain services depend only on a structured-generation interface selected through dependency injection and `LLM_PROVIDER`. OpenAI Responses API is the first adapter, using structured outputs and a configurable model defaulting to `gpt-5.6-sol`; future OpenRouter or Anthropic adapters can be added without changing domain logic. Each adapter owns authentication, provider request mapping, structured-output handling, and error translation. The LLM never writes to the database directly, and all state changes go through domain services.
 - **Hybrid prediction architecture** - historical events + time-since-signal + household profile + product metadata + deterministic heuristics + optional LLM inference, behind a `PredictionEngine` interface so a future Python service could replace/augment it without touching the rest of the app.
 - **Jest + NestJS testing utilities** - integration tests against PostgreSQL, API contract tests, prediction-engine unit tests, MCP/tool integration tests. Critical business flows require automated coverage.
@@ -178,7 +196,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 
 ## Monetization
 
-Not in v1. This is a private household tool with no monetization-related complexity in the MVP architecture. If the project later becomes a product, possible directions include a household subscription, a limited free tier, paid AI-powered prediction, family plans, or premium integrations - advertising is explicitly disfavored given the sensitivity of household consumption data. None of this should shape the MVP design.
+Not in v1. This is a private household tool. Possible later subscriptions or premium integrations must not shape the MVP, and advertising is disfavored because household consumption data is sensitive.
 
 ## UI/UX
 

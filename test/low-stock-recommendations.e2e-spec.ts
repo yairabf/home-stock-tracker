@@ -5,12 +5,8 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import {
-  PREDICTION_ENGINE,
-  type PredictionEngine,
-} from '../src/estimation/prediction-engine';
-import type { PredictionResult } from '../src/estimation/types/prediction-result';
-import {
   GroceryItemSource,
+  InventoryEventType,
   PredictedState,
 } from '../src/generated/prisma/enums';
 import type { HouseholdModel } from '../src/generated/prisma/models';
@@ -22,17 +18,13 @@ import { createProductFixture } from './product-fixture';
 describe('Low-stock recommendations (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
-  let predictionEngine: jest.Mocked<PredictionEngine>;
   let originalHousehold: HouseholdModel | null;
   let householdId: string;
   const productIds: string[] = [];
   const products = new Map<string, string>();
 
   beforeAll(async () => {
-    predictionEngine = { predictProduct: jest.fn() };
     const module = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(PREDICTION_ENGINE)
-      .useValue(predictionEngine)
       .overrideProvider(ServiceAuthGuard)
       .useValue(AUTH_TEST_BYPASS)
       .compile();
@@ -66,24 +58,26 @@ describe('Low-stock recommendations (e2e)', () => {
     });
   });
 
-  beforeEach(() => {
-    predictionEngine.predictProduct.mockReset();
-    predictionEngine.predictProduct.mockImplementation(async (productId) => {
-      if (productId === products.get('out')) {
-        return prediction(productId, PredictedState.probably_out, 0.9);
-      }
-      if (productId === products.get('low')) {
-        return prediction(productId, PredictedState.probably_low, 0.7);
-      }
-      if (productId === products.get('weak')) {
-        return prediction(productId, PredictedState.probably_low, 0.69);
-      }
-      return prediction(productId, PredictedState.likely_available, 0.95);
+  beforeEach(async () => {
+    await prisma.household.update({
+      where: { id: householdId },
+      data: { suggestionConfidenceThreshold: 0.7 },
     });
+    await Promise.all(
+      [...products].map(([name, productId]) =>
+        prisma.stockProjection.update({
+          where: { productId },
+          data: projectionEstimate(name),
+        }),
+      ),
+    );
   });
 
   afterAll(async () => {
     await prisma.groceryListItem.deleteMany({
+      where: { productId: { in: productIds } },
+    });
+    await prisma.stockProjection.deleteMany({
       where: { productId: { in: productIds } },
     });
     await prisma.prediction.deleteMany({
@@ -134,12 +128,6 @@ describe('Low-stock recommendations (e2e)', () => {
         confidenceScore: 0.7,
       }),
     ]);
-    expect(predictionEngine.predictProduct).not.toHaveBeenCalledWith(
-      products.get('pending'),
-    );
-    expect(predictionEngine.predictProduct).not.toHaveBeenCalledWith(
-      products.get('disabled'),
-    );
     await expect(sideEffectCounts()).resolves.toEqual(beforeCounts);
   });
 
@@ -159,9 +147,10 @@ describe('Low-stock recommendations (e2e)', () => {
   });
 
   it('returns an empty recommendation list when nothing qualifies', async () => {
-    predictionEngine.predictProduct.mockImplementation(async (productId) =>
-      prediction(productId, PredictedState.uncertain, 0.95),
-    );
+    await prisma.stockProjection.updateMany({
+      where: { productId: { in: productIds } },
+      data: { estimatedState: PredictedState.uncertain, confidence: 0.95 },
+    });
 
     const response = await request(app.getHttpServer())
       .get('/api/v1/inventory/predictions/low-stock')
@@ -177,50 +166,63 @@ describe('Low-stock recommendations (e2e)', () => {
     });
     products.set(name, product.id);
     productIds.push(product.id);
+    const event = await prisma.inventoryEvent.create({
+      data: {
+        productId: product.id,
+        eventType: InventoryEventType.STOCK_SET,
+        quantity: 1,
+        unit: 'item',
+        source: 'test',
+      },
+    });
+    await prisma.stockProjection.create({
+      data: {
+        productId: product.id,
+        unit: 'item',
+        recordedQuantity: 1,
+        recordedAt: event.timestamp,
+        recordedSource: 'test',
+        recordedEventId: event.id,
+        estimatedQuantity: 1,
+        ...projectionEstimate(name),
+        reason: `Reason for ${product.id}`,
+        evaluatedAt: event.timestamp,
+      },
+    });
   }
 
   async function sideEffectCounts() {
-    const [groceryItems, inventoryEvents] = await Promise.all([
-      prisma.groceryListItem.count({
-        where: { productId: { in: productIds } },
-      }),
-      prisma.inventoryEvent.count({
-        where: { productId: { in: productIds } },
-      }),
-    ]);
-    return { groceryItems, inventoryEvents };
+    const [groceryItems, inventoryEvents, predictions, projections] =
+      await Promise.all([
+        prisma.groceryListItem.count({
+          where: { productId: { in: productIds } },
+        }),
+        prisma.inventoryEvent.count({
+          where: { productId: { in: productIds } },
+        }),
+        prisma.prediction.count({
+          where: { productId: { in: productIds } },
+        }),
+        prisma.stockProjection.count({
+          where: { productId: { in: productIds } },
+        }),
+      ]);
+    return { groceryItems, inventoryEvents, predictions, projections };
   }
 });
 
-function prediction(
-  productId: string,
-  predictedState: PredictedState,
-  confidenceScore: number,
-): PredictionResult {
-  return {
-    predictionId: `prediction-${productId}`,
-    productId,
-    predictedState,
-    confidenceScore,
-    reason: `Reason for ${productId}`,
-    deterministicSignals: {
-      lastEventType: null,
-      lastEventAt: null,
-      daysSinceLastEvent: null,
-      eventCount: 0,
-      avgPurchaseIntervalDays: null,
-      avgNeedIntervalDays: null,
-      estimatedConsumptionIntervalDays: null,
-      observationCount: 0,
-      productType: null,
-      isPerishable: false,
-      predictionStrategy: null,
-      householdAdultsCount: 2,
-      householdChildrenCount: 3,
-      householdPredictionPreferences: null,
-    },
-    recommendedAction: null,
-    llmContributed: false,
-    llmAttempt: null,
-  };
+function projectionEstimate(name: string): {
+  estimatedState: PredictedState;
+  confidence: number;
+} {
+  if (name === 'out') {
+    return { estimatedState: PredictedState.probably_out, confidence: 0.9 };
+  }
+  if (name === 'low') {
+    return { estimatedState: PredictedState.probably_low, confidence: 0.7 };
+  }
+  if (name === 'weak') {
+    return { estimatedState: PredictedState.probably_low, confidence: 0.69 };
+  }
+  return { estimatedState: PredictedState.likely_available, confidence: 0.95 };
 }

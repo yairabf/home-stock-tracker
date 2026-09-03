@@ -39,6 +39,7 @@ describe('Estimation (e2e)', () => {
     prisma = app.get(PrismaService);
 
     // Clean up any existing test data
+    await prisma.stockProjection.deleteMany({});
     await prisma.prediction.deleteMany({});
     await prisma.inventoryEvent.deleteMany({});
     await prisma.groceryListItem.deleteMany({});
@@ -46,6 +47,7 @@ describe('Estimation (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.stockProjection.deleteMany({});
     await prisma.prediction.deleteMany({});
     await prisma.inventoryEvent.deleteMany({});
     await prisma.groceryListItem.deleteMany({});
@@ -65,12 +67,13 @@ describe('Estimation (e2e)', () => {
     });
 
     afterEach(async () => {
+      await prisma.stockProjection.deleteMany({ where: { productId } });
       await prisma.prediction.deleteMany({ where: { productId } });
       await prisma.inventoryEvent.deleteMany({ where: { productId } });
       await prisma.product.delete({ where: { id: productId } });
     });
 
-    it('should return uncertain for cold-start (no events)', async () => {
+    it('returns an additive untracked response for cold-start', async () => {
       const response = await request(app.getHttpServer())
         .get(`/api/v1/inventory/estimate/${productId}`)
         .expect(200);
@@ -78,27 +81,23 @@ describe('Estimation (e2e)', () => {
       expect(response.body).toMatchObject({
         productId,
         predictedState: PredictedState.uncertain,
+        trackingStatus: 'untracked',
+        estimatedState: null,
+        confidenceScore: 0,
       });
       expect(response.body.deterministicSignals.coldStart).toBe(true);
     });
 
-    it('should persist the prediction to the database', async () => {
-      // Call the endpoint
-      const response = await request(app.getHttpServer())
+    it('does not persist a prediction during a read', async () => {
+      await request(app.getHttpServer())
         .get(`/api/v1/inventory/estimate/${productId}`)
         .expect(200);
 
-      // Verify prediction was persisted
       const predictions = await prisma.prediction.findMany({
         where: { productId },
       });
 
-      expect(predictions.length).toBeGreaterThan(0);
-      expect(predictions[0]).toMatchObject({
-        id: response.body.predictionId,
-        productId,
-        predictedState: PredictedState.uncertain,
-      });
+      expect(predictions).toEqual([]);
     });
 
     it('should return 404 for unknown product', async () => {
@@ -107,40 +106,27 @@ describe('Estimation (e2e)', () => {
         .expect(404);
     });
 
-    it('should return probably_out when most recent event is STOCK_OUT', async () => {
-      const now = new Date();
-      const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-
-      await prisma.inventoryEvent.create({
-        data: {
-          productId,
-          eventType: InventoryEventType.PURCHASED,
-          timestamp: fiveDaysAgo,
-          source: 'test',
-        },
-      });
-
-      await prisma.inventoryEvent.create({
-        data: {
-          productId,
-          eventType: InventoryEventType.STOCK_OUT,
-          timestamp: now,
-          source: 'test',
-        },
-      });
+    it('returns a materialized out projection without creating a prediction', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/inventory/events')
+        .send({ productId, eventType: InventoryEventType.STOCK_OUT })
+        .expect(201);
 
       const response = await request(app.getHttpServer())
         .get(`/api/v1/inventory/estimate/${productId}`)
         .expect(200);
 
-      expect(response.body.predictedState).toBe(PredictedState.probably_out);
-
-      // Verify persistence
-      const prediction = await prisma.prediction.findFirst({
-        where: { productId },
-        orderBy: { predictedAt: 'desc' },
+      expect(response.body).toMatchObject({
+        trackingStatus: 'tracked',
+        predictedState: PredictedState.probably_out,
+        estimatedState: PredictedState.probably_out,
+        estimatedQuantity: 0,
       });
-      expect(prediction?.predictedState).toBe(PredictedState.probably_out);
+
+      const predictions = await prisma.prediction.findMany({
+        where: { productId },
+      });
+      expect(predictions).toEqual([]);
     });
 
     it('should return uncertain when prediction disabled', async () => {

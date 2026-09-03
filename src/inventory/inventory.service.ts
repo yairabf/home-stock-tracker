@@ -33,6 +33,7 @@ import {
   InventoryEventType,
   GroceryItemStatus,
   PredictedState,
+  ProductNameKind,
 } from '../generated/prisma/enums';
 import {
   CompleteGroceryPurchaseItemInput,
@@ -56,6 +57,11 @@ import {
   StockProjectionResponseDto,
 } from './dto/stock-mutation-response.dto';
 import { RecordPurchaseBatchItemDto } from './dto/record-purchases.dto';
+import {
+  HouseholdInventoryResponseDto,
+  InventoryEstimateResponseDto,
+  InventoryItemResponseDto,
+} from './dto/inventory-read-response.dto';
 
 interface PurchaseEventInput {
   productId: string;
@@ -74,6 +80,113 @@ export class InventoryService {
     private readonly statisticsService: StatisticsService,
     private readonly stockMaterializationService: StockMaterializationService,
   ) {}
+
+  async getInventory(productId: string): Promise<InventoryEstimateResponseDto> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        names: {
+          where: { kind: ProductNameKind.canonical },
+          select: { displayName: true },
+        },
+        stockProjection: {
+          select: {
+            unit: true,
+            recordedQuantity: true,
+            recordedAt: true,
+            recordedSource: true,
+            recordedEventId: true,
+            estimatedQuantity: true,
+            estimatedState: true,
+            confidence: true,
+            reason: true,
+            predictionId: true,
+            evaluatedAt: true,
+            prediction: {
+              select: {
+                recommendedAction: true,
+                deterministicSignals: true,
+                llmResult: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!product) {
+      throw new NotFoundException(`No product with id "${productId}"`);
+    }
+    return InventoryEstimateResponseDto.fromEntity(product);
+  }
+
+  async listInventory(): Promise<HouseholdInventoryResponseDto> {
+    const products = await this.prisma.product.findMany({
+      where: { stockProjection: { isNot: null } },
+      select: {
+        id: true,
+        names: {
+          where: { kind: ProductNameKind.canonical },
+          select: { displayName: true },
+        },
+        stockProjection: {
+          select: {
+            unit: true,
+            recordedQuantity: true,
+            recordedAt: true,
+            recordedSource: true,
+            recordedEventId: true,
+            estimatedQuantity: true,
+            estimatedState: true,
+            confidence: true,
+            reason: true,
+            predictionId: true,
+            evaluatedAt: true,
+          },
+        },
+      },
+    });
+    const result: HouseholdInventoryResponseDto = {
+      current: [],
+      uncertain: [],
+    };
+    for (const product of products) {
+      const projection = product.stockProjection;
+      if (!projection || this.isDepletedProjection(projection)) {
+        continue;
+      }
+      const item = InventoryItemResponseDto.fromEntity(product);
+      if (projection.estimatedState === PredictedState.uncertain) {
+        result.uncertain.push(item);
+      } else {
+        result.current.push(item);
+      }
+    }
+    result.current.sort(this.compareInventoryItems);
+    result.uncertain.sort(this.compareInventoryItems);
+    return result;
+  }
+
+  private isDepletedProjection(projection: {
+    estimatedQuantity: number | null;
+    estimatedState: PredictedState;
+  }): boolean {
+    return (
+      projection.estimatedState === PredictedState.probably_out ||
+      (projection.estimatedQuantity !== null &&
+        projection.estimatedQuantity <= 0)
+    );
+  }
+
+  private compareInventoryItems(
+    left: InventoryItemResponseDto,
+    right: InventoryItemResponseDto,
+  ): number {
+    return (
+      left.productName.localeCompare(right.productName) ||
+      left.productId.localeCompare(right.productId)
+    );
+  }
 
   async recordPurchase(
     dto: RecordPurchaseDto & { source: string },

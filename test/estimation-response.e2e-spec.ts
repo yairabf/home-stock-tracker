@@ -63,6 +63,13 @@ describe('Estimation response (e2e)', () => {
       .useValue({
         $connect: () => Promise.resolve(),
         $disconnect: () => Promise.resolve(),
+        product: {
+          findUnique: jest.fn().mockResolvedValue({
+            id: 'product-1',
+            names: [{ displayName: 'Milk' }],
+            stockProjection: null,
+          }),
+        },
       })
       .overrideProvider(ServiceAuthGuard)
       .useValue(AUTH_TEST_BYPASS)
@@ -77,7 +84,7 @@ describe('Estimation response (e2e)', () => {
     await app.close();
   });
 
-  it('returns the stable deterministic response shape', async () => {
+  it('returns the additive untracked response shape', async () => {
     predictionEngine.predictProduct.mockResolvedValue(baseResult);
 
     const response = await request(app.getHttpServer())
@@ -85,22 +92,26 @@ describe('Estimation response (e2e)', () => {
       .expect(200);
 
     expect(response.body).toMatchObject({
-      predictionId: 'prediction-1',
+      predictionId: null,
       productId: 'product-1',
       predictedState: PredictedState.uncertain,
+      trackingStatus: 'untracked',
+      estimatedState: null,
+      confidenceScore: 0,
       recommendedAction: null,
       llmContributed: false,
       deterministicSignals: {
         estimatedConsumptionIntervalDays: null,
         observationCount: 0,
-        isPerishable: true,
-        householdContext: { adultsCount: 2, childrenCount: 3 },
+        isPerishable: false,
+        householdContext: null,
         authoritativeDirectSignal: false,
       },
     });
+    expect(predictionEngine.predictProduct).not.toHaveBeenCalled();
   });
 
-  it('returns hybrid fields without exposing internal LLM metadata', async () => {
+  it('does not invoke or expose on-demand LLM metadata', async () => {
     predictionEngine.predictProduct.mockResolvedValue({
       ...baseResult,
       predictedState: PredictedState.probably_low,
@@ -126,13 +137,14 @@ describe('Estimation response (e2e)', () => {
       .expect(200);
 
     expect(response.body).toMatchObject({
-      predictedState: PredictedState.probably_low,
-      recommendedAction: 'Check the pantry',
-      llmContributed: true,
+      predictedState: PredictedState.uncertain,
+      recommendedAction: null,
+      llmContributed: false,
     });
     expect(response.body.llmAttempt).toBeUndefined();
     expect(JSON.stringify(response.body)).not.toContain('private-provider');
     expect(JSON.stringify(response.body)).not.toContain('private-model');
+    expect(predictionEngine.predictProduct).not.toHaveBeenCalled();
   });
 
   it('returns the deterministic shape after LLM fallback', async () => {
@@ -151,5 +163,6 @@ describe('Estimation response (e2e)', () => {
       llmContributed: false,
     });
     expect(JSON.stringify(response.body)).not.toContain('provider');
+    expect(predictionEngine.predictProduct).not.toHaveBeenCalled();
   });
 });

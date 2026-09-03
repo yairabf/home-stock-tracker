@@ -132,6 +132,144 @@ describe('InventoryService', () => {
     service = module.get(InventoryService);
   });
 
+  describe('getInventory', () => {
+    it('returns a materialized tracked projection selected with its canonical name', async () => {
+      const product = {
+        id: PRODUCT_ID,
+        ...PRODUCT_NAMES,
+        stockProjection: {
+          unit: 'liter',
+          recordedQuantity: 2,
+          recordedAt: new Date('2026-09-01T08:00:00.000Z'),
+          recordedSource: 'api',
+          recordedEventId: 'event-1',
+          estimatedQuantity: 1.234,
+          estimatedState: PredictedState.likely_available,
+          confidence: 0.9,
+          reason: 'daily_estimate',
+          predictionId: 'prediction-1',
+          evaluatedAt: new Date('2026-09-03T02:00:00.000Z'),
+          prediction: null,
+        },
+      };
+      prisma.product.findUnique.mockResolvedValue(product);
+
+      await expect(service.getInventory(PRODUCT_ID)).resolves.toMatchObject({
+        productId: PRODUCT_ID,
+        productName: 'milk',
+        trackingStatus: 'tracked',
+        estimatedQuantity: 1.23,
+        predictedState: PredictedState.likely_available,
+      });
+      expect(prisma.product.findUnique).toHaveBeenCalledWith({
+        where: { id: PRODUCT_ID },
+        select: expect.objectContaining({
+          id: true,
+          names: expect.any(Object),
+          stockProjection: expect.any(Object),
+        }),
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns untracked for a product without a projection', async () => {
+      prisma.product.findUnique.mockResolvedValue({
+        id: PRODUCT_ID,
+        ...PRODUCT_NAMES,
+        stockProjection: null,
+      });
+
+      await expect(service.getInventory(PRODUCT_ID)).resolves.toMatchObject({
+        trackingStatus: 'untracked',
+        estimatedState: null,
+      });
+    });
+
+    it('rejects an unknown product without attempting a write', async () => {
+      prisma.product.findUnique.mockResolvedValue(null);
+
+      await expect(service.getInventory(PRODUCT_ID)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listInventory', () => {
+    const projection = (
+      estimatedState: PredictedState,
+      estimatedQuantity: number | null = 1,
+    ) => ({
+      unit: 'item',
+      recordedQuantity: 2,
+      recordedAt: new Date('2026-09-01T08:00:00.000Z'),
+      recordedSource: 'api',
+      recordedEventId: `event-${estimatedState}`,
+      estimatedQuantity,
+      estimatedState,
+      confidence: 0.8,
+      reason: 'daily_estimate',
+      predictionId: null,
+      evaluatedAt: new Date('2026-09-03T02:00:00.000Z'),
+    });
+
+    it('groups tracked non-depleted products and sorts each group by name', async () => {
+      prisma.product.findMany.mockResolvedValue([
+        {
+          id: 'available-z',
+          names: [{ displayName: 'Zucchini' }],
+          stockProjection: projection(PredictedState.likely_available),
+        },
+        {
+          id: 'uncertain',
+          names: [{ displayName: 'Rice' }],
+          stockProjection: projection(PredictedState.uncertain, null),
+        },
+        {
+          id: 'low-a',
+          names: [{ displayName: 'Apples' }],
+          stockProjection: projection(PredictedState.probably_low),
+        },
+        {
+          id: 'out',
+          names: [{ displayName: 'Bread' }],
+          stockProjection: projection(PredictedState.probably_out, 0),
+        },
+        {
+          id: 'stale-zero',
+          names: [{ displayName: 'Cereal' }],
+          stockProjection: projection(PredictedState.likely_available, 0),
+        },
+      ]);
+
+      await expect(service.listInventory()).resolves.toMatchObject({
+        current: [
+          { productId: 'low-a', productName: 'Apples' },
+          { productId: 'available-z', productName: 'Zucchini' },
+        ],
+        uncertain: [{ productId: 'uncertain', productName: 'Rice' }],
+      });
+      expect(prisma.product.findMany).toHaveBeenCalledWith({
+        where: { stockProjection: { isNot: null } },
+        select: expect.objectContaining({
+          id: true,
+          names: expect.any(Object),
+          stockProjection: expect.any(Object),
+        }),
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('returns empty groups when no products are tracked', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+
+      await expect(service.listInventory()).resolves.toEqual({
+        current: [],
+        uncertain: [],
+      });
+    });
+  });
+
   describe('recordEvent', () => {
     it.each([InventoryEventType.STOCK_SET, InventoryEventType.STOCK_CONSUMED])(
       'rejects dedicated mutation event type %s before writing',

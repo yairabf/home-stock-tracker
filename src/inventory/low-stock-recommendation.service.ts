@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { GroceryItemStatus, ProductNameKind } from '../generated/prisma/enums';
+import { Injectable } from '@nestjs/common';
 import {
-  PREDICTION_ENGINE,
-  type PredictionEngine,
-} from '../estimation/prediction-engine';
+  GroceryItemStatus,
+  PredictedState,
+  ProductNameKind,
+} from '../generated/prisma/enums';
 import { HouseholdService } from '../household/household.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -18,8 +18,6 @@ export class LowStockRecommendationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly householdService: HouseholdService,
-    @Inject(PREDICTION_ENGINE)
-    private readonly predictionEngine: PredictionEngine,
     private readonly operationalLogger: OperationalLogger,
   ) {}
 
@@ -27,12 +25,24 @@ export class LowStockRecommendationService {
     const [household, products, pendingItems] = await Promise.all([
       this.householdService.getOrCreate(),
       this.prisma.product.findMany({
-        where: { predictionEnabled: true },
+        where: {
+          predictionEnabled: true,
+          stockProjection: { isNot: null },
+        },
         select: {
           id: true,
           names: {
             where: { kind: ProductNameKind.canonical },
             select: { displayName: true },
+          },
+          stockProjection: {
+            select: {
+              estimatedState: true,
+              confidence: true,
+              reason: true,
+              predictionId: true,
+              prediction: { select: { recommendedAction: true } },
+            },
           },
         },
       }),
@@ -44,12 +54,7 @@ export class LowStockRecommendationService {
     const pendingProductIds = new Set(
       pendingItems.map(({ productId }) => productId),
     );
-    const eligibleProducts = products.filter(
-      ({ id }) => !pendingProductIds.has(id),
-    );
-    const candidates = await Promise.all(
-      eligibleProducts.map((product) => this.predictSafely(product)),
-    );
+    const candidates = products.map((product) => this.toCandidate(product));
 
     return selectLowStockRecommendations(
       candidates.filter(
@@ -60,20 +65,20 @@ export class LowStockRecommendationService {
     );
   }
 
-  private async predictSafely(product: {
+  private toCandidate(product: {
     id: string;
     names: { displayName: string }[];
-  }): Promise<RecommendationCandidate | null> {
-    try {
-      const canonicalName = product.names[0]?.displayName;
-      if (!canonicalName) {
-        throw new Error('Product canonical name is missing');
-      }
-      return {
-        productName: canonicalName,
-        prediction: await this.predictionEngine.predictProduct(product.id),
-      };
-    } catch {
+    stockProjection: {
+      estimatedState: PredictedState;
+      confidence: number;
+      reason: string;
+      predictionId: string | null;
+      prediction: { recommendedAction: string | null } | null;
+    } | null;
+  }): RecommendationCandidate | null {
+    const canonicalName = product.names[0]?.displayName;
+    const projection = product.stockProjection;
+    if (!canonicalName || !projection) {
       this.operationalLogger.predictionRun({
         action: 'recommend',
         outcome: 'failure',
@@ -81,5 +86,14 @@ export class LowStockRecommendationService {
       });
       return null;
     }
+    return {
+      productId: product.id,
+      productName: canonicalName,
+      predictionId: projection.predictionId,
+      predictedState: projection.estimatedState,
+      confidenceScore: projection.confidence,
+      reason: projection.reason,
+      recommendedAction: projection.prediction?.recommendedAction ?? null,
+    };
   }
 }

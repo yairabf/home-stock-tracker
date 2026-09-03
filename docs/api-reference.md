@@ -286,13 +286,30 @@ stable machine-readable removal contract.
 | `POST` | `/api/v1/inventory/purchases`                          | Record one purchase/restock or an atomic batch.     |
 | `POST` | `/api/v1/inventory/purchases/complete`                 | Complete grocery IDs for one product.               |
 | `POST` | `/api/v1/inventory/purchases/complete-partial`         | Complete selected items or all except selected IDs. |
-| `GET`  | `/api/v1/inventory/estimate/:productId`                | Estimate one product's stock state.                 |
+| `GET`  | `/api/v1/inventory`                                    | List current and uncertain household stock.         |
+| `GET`  | `/api/v1/inventory/estimate/:productId`                | Read one product's materialized stock state.        |
 | `GET`  | `/api/v1/inventory/predictions/low-stock`              | Return actionable recommendations.                  |
 | `POST` | `/api/v1/inventory/predictions/:predictionId/feedback` | Accept, reject, or correct a prediction.            |
 | `POST` | `/api/v1/inventory/statistics/:productId/calculate`    | Recalculate learned statistics.                     |
 
 Event listing accepts optional `productId`, `eventType`, `limit` from 1 to 100,
 and non-negative `offset`.
+
+The product inventory read distinguishes `tracked` and `untracked` products.
+Tracked responses include the last explicit quantity, unit, time, source, and
+event ID plus the latest materialized quantity, state, confidence, reason,
+evaluation time, and prediction ID. Legacy prediction-shaped fields remain as
+additive aliases. Reads never recalculate or persist a prediction. Discrete
+units are shown as whole values and other units use at most two decimal places;
+stored decimal precision is unchanged.
+
+The household inventory view returns `{ "current": [], "uncertain": [] }`.
+`current` contains tracked available and low products, while `uncertain`
+contains tracked products whose presence is unclear. Out, expired, zero-balance,
+and untracked products are omitted. Both groups sort by canonical product name.
+Low-stock recommendations use these same materialized projections, apply the
+household confidence threshold, and suppress products already pending on the
+grocery list without automatically changing that list.
 
 Inventory event types:
 

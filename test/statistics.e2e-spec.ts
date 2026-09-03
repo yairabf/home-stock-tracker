@@ -8,11 +8,16 @@ import { InventoryEventType, ProductType } from '../src/generated/prisma/enums';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 import { createProductFixture } from './product-fixture';
+import {
+  PREDICTION_ENGINE,
+  type PredictionEngine,
+} from '../src/estimation/prediction-engine';
 
 describe('Statistics E2E Tests', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let productId: string;
+  let predictionEngine: PredictionEngine;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -26,6 +31,7 @@ describe('Statistics E2E Tests', () => {
     await app.init();
 
     prisma = app.get(PrismaService);
+    predictionEngine = app.get(PREDICTION_ENGINE);
   });
 
   afterAll(async () => {
@@ -252,19 +258,14 @@ describe('Statistics E2E Tests', () => {
 
       expect(statsResponse.body.avgPurchaseIntervalDays).toBeCloseTo(7.0, 0);
 
-      // Get estimation - should use learned interval with ±20% buffer
-      const estimationResponse = await request(app.getHttpServer())
-        .get(`/inventory/estimate/${productId}`)
-        .expect(200);
+      const estimation = await predictionEngine.predictProduct(productId);
 
+      expect(estimation.deterministicSignals.hasLearnedStatistics).toBe(true);
       expect(
-        estimationResponse.body.deterministicSignals.hasLearnedStatistics,
-      ).toBe(true);
-      expect(
-        estimationResponse.body.deterministicSignals.avgPurchaseIntervalDays,
+        estimation.deterministicSignals.avgPurchaseIntervalDays,
       ).toBeCloseTo(7.0, 0);
       // Confidence should be boosted for learned statistics
-      expect(estimationResponse.body.confidenceScore).toBeGreaterThan(0.5);
+      expect(estimation.confidenceScore).toBeGreaterThan(0.5);
     });
   });
 });

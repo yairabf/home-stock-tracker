@@ -49,5 +49,5 @@
   - [x] 33a. **Stock ledger foundation** - add stock projections, shelf-life policy storage, explicit inventory event types, canonical-unit rules, and atomic projection updates from existing purchases and grocery completion
   - [x] 33b. **Stock mutation and batch purchase APIs** - expose strict absolute-set, decrement, mark-out, and atomic multi-product purchase operations through REST and MCP
   - [x] 33c. **Daily stock estimation workflow** - infer missing shelf-life policies, apply deterministic consumption and expiration decay, persist predictions, schedule daily evaluation, and isolate per-product failures
-  - [ ] 33d. **Materialized inventory reads and recommendations** - expose tracked and untracked projections through REST and MCP, provide the household inventory view, and drive low-stock recommendations from materialized estimates
+  - [x] 33d. **Materialized inventory reads and recommendations** - expose tracked and untracked projections through REST and MCP, provide the household inventory view, and drive low-stock recommendations from materialized estimates
   - [ ] 33e. **Agent integration and contract release** - teach Hermes and OpenClaw the new purchase, inventory, and suggestion flows; update scenarios, documentation, fixtures, manifests, probes, and versioned MCP/skill contracts

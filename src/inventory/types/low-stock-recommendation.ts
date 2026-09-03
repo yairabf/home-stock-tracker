@@ -1,5 +1,4 @@
 import { PredictedState } from '../../generated/prisma/enums';
-import type { PredictionResult } from '../../estimation/types/prediction-result';
 
 export type LowStockState = Extract<
   PredictedState,
@@ -7,8 +6,13 @@ export type LowStockState = Extract<
 >;
 
 export interface RecommendationCandidate {
+  productId: string;
   productName: string;
-  prediction: PredictionResult;
+  predictionId: string | null;
+  predictedState: PredictedState;
+  confidenceScore: number;
+  reason: string;
+  recommendedAction: string | null;
 }
 
 export interface LowStockRecommendation {
@@ -32,34 +36,29 @@ export function selectLowStockRecommendations(
   pendingProductIds: ReadonlySet<string>,
 ): LowStockRecommendation[] {
   return candidates
-    .filter(({ prediction }) =>
-      qualifies(prediction, confidenceThreshold, pendingProductIds),
+    .filter((candidate) =>
+      qualifies(candidate, confidenceThreshold, pendingProductIds),
     )
-    .map(({ productName, prediction }) => ({
-      productId: prediction.productId,
-      productName,
-      predictionId: prediction.predictionId,
-      predictedState: prediction.predictedState as LowStockState,
-      confidenceScore: prediction.confidenceScore,
-      reason: prediction.reason,
-      recommendedAction: prediction.recommendedAction,
+    .map((candidate) => ({
+      ...candidate,
+      predictedState: candidate.predictedState as LowStockState,
     }))
     .sort(compareRecommendations);
 }
 
 function qualifies(
-  prediction: PredictionResult,
+  candidate: RecommendationCandidate,
   confidenceThreshold: number,
   pendingProductIds: ReadonlySet<string>,
 ): boolean {
   const isLowStock =
-    prediction.predictedState === PredictedState.probably_low ||
-    prediction.predictedState === PredictedState.probably_out;
+    candidate.predictedState === PredictedState.probably_low ||
+    candidate.predictedState === PredictedState.probably_out;
 
   return (
     isLowStock &&
-    prediction.confidenceScore >= confidenceThreshold &&
-    !pendingProductIds.has(prediction.productId)
+    candidate.confidenceScore >= confidenceThreshold &&
+    !pendingProductIds.has(candidate.productId)
   );
 }
 
