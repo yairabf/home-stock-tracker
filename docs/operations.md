@@ -15,6 +15,9 @@ security, database maintenance, troubleshooting, and current limitations.
 | `LLM_PROVIDER` | No | `openai` | Only `openai` is currently registered. |
 | `OPENAI_API_KEY` | Yes | None | Required credential for the supported OpenAI provider. |
 | `LLM_MODEL` | No | `gpt-5.6-sol` | OpenAI structured-generation model. |
+| `STOCK_WORKFLOW_ENABLED` | No | `true` | Enables the internal shelf-life and stock-estimation job. |
+| `STOCK_WORKFLOW_CRON` | No | `0 2 * * *` | Cron expression for the daily stock workflow. |
+| `STOCK_WORKFLOW_TIMEZONE` | No | `Asia/Jerusalem` | IANA timezone used to interpret the stock-workflow cron. |
 | `POSTGRES_USER` | Compose only | `home_stock` | Local database user. |
 | `POSTGRES_PASSWORD` | Compose only | `home_stock` | Local password. Change outside development. |
 | `POSTGRES_DB` | Compose only | `home_stock_tracker` | Local database name. |
@@ -40,6 +43,15 @@ results meeting the household threshold. They preserve service order and do not
 mutate the grocery list. `uncertain` and an empty recommendation list are valid
 results, especially with sparse history.
 
+The internal stock workflow runs shelf-life inference first and materialized
+stock evaluation second. Failures are isolated per product and retried on the
+next run when no shelf-life policy was saved. Daily evaluation updates estimate
+fields and predictions only; it does not rewrite the last explicit stock fact.
+
+Run exactly one service replica with `STOCK_WORKFLOW_ENABLED=true`. This release
+does not provide a distributed scheduler lock. For multiple app replicas, set
+the variable to `false` on every replica except the designated scheduler.
+
 ## Health and readiness
 
 - `GET /health` proves the process answers HTTP.
@@ -51,10 +63,11 @@ Health routes are public and never invoke the LLM or mutate data.
 
 ## Structured logs
 
-Logs cover inventory actions, prediction execution and persistence, LLM
-failures, and MCP failures. They intentionally exclude bearer tokens, prompts,
-product names, household content, quantities, reasons, recommendations, and raw
-provider errors.
+Logs cover inventory actions, prediction execution and persistence, daily stock
+workflow summaries and isolated product failures, LLM failures, and MCP
+failures. They intentionally exclude bearer tokens, prompts, product names,
+household content, quantities, reasons, recommendations, and raw provider
+errors.
 
 Use `LOG_LEVEL` to select verbosity. `log` is appropriate for normal local use;
 enable `debug` or `verbose` temporarily.
@@ -129,7 +142,7 @@ Agent-specific failures are covered in
 - No web or mobile UI and no exact real-time counts
 - Production deployment still requires operator-owned hosting, TLS, backups,
   and secret management
-- No built-in scheduler or messaging delivery
+- Internal stock scheduling assumes one enabled service replica; messaging delivery is external
 - OpenAI is the only implemented LLM adapter
 - No receipt OCR, barcode scanning, expiration tracking, storage locations,
   supermarket integration, or automatic purchasing

@@ -9,9 +9,25 @@ import { LowStockRecommendationService } from './low-stock-recommendation.servic
 import { StockLedgerService } from './stock-ledger.service';
 import { StatisticsModule } from '../statistics/statistics.module';
 import { StockMaterializationService } from './stock-materialization.service';
+import { LlmModule } from '../llm/llm.module';
+import { ShelfLifeReasoner } from './shelf-life-reasoner.service';
+import { ShelfLifeInferenceService } from './shelf-life-inference.service';
+import { DailyStockMaterializationService } from './daily-stock-materialization.service';
+import {
+  STOCK_WORKFLOW_CONFIG,
+  loadStockWorkflowConfig,
+} from '../config/application-config';
+import { DailyStockWorkflowService } from './daily-stock-workflow.service';
+import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.service';
 
 @Module({
-  imports: [ProductModule, EstimationModule, HouseholdModule, StatisticsModule],
+  imports: [
+    ProductModule,
+    EstimationModule,
+    HouseholdModule,
+    StatisticsModule,
+    LlmModule,
+  ],
   controllers: [InventoryController],
   providers: [
     InventoryService,
@@ -19,6 +35,15 @@ import { StockMaterializationService } from './stock-materialization.service';
     LowStockRecommendationService,
     StockLedgerService,
     StockMaterializationService,
+    ShelfLifeReasoner,
+    ShelfLifeInferenceService,
+    DailyStockMaterializationService,
+    DailyStockWorkflowService,
+    StockWorkflowSchedulerService,
+    {
+      provide: STOCK_WORKFLOW_CONFIG,
+      useFactory: loadStockWorkflowConfig,
+    },
   ],
   exports: [
     InventoryService,

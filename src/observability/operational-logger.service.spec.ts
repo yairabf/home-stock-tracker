@@ -93,4 +93,26 @@ describe('OperationalLogger', () => {
       errorType: 'provider_error',
     });
   });
+
+  it('emits allowlisted stock workflow summaries', () => {
+    const counts = { processed: 2, succeeded: 1, skipped: 0, failed: 1 };
+    service.stockWorkflow({
+      stage: 'end',
+      outcome: 'failure',
+      durationMs: 42,
+      shelfLife: counts,
+      evaluation: counts,
+    });
+
+    expect(error).toHaveBeenCalledWith({
+      event: 'stock.workflow',
+      stage: 'end',
+      outcome: 'failure',
+      phase: undefined,
+      productId: undefined,
+      durationMs: 42,
+      shelfLife: counts,
+      evaluation: counts,
+    });
+  });
 });

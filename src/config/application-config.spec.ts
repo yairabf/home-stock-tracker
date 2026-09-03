@@ -19,6 +19,11 @@ describe('loadApplicationConfig', () => {
       llmProvider: 'openai',
       llmModel: DEFAULT_OPENAI_MODEL,
       openAiApiKey: REQUIRED_ENVIRONMENT.OPENAI_API_KEY,
+      stockWorkflow: {
+        enabled: true,
+        cron: '0 2 * * *',
+        timezone: 'Asia/Jerusalem',
+      },
     });
   });
 
@@ -32,6 +37,9 @@ describe('loadApplicationConfig', () => {
         MCP_ENABLED: 'true',
         LLM_PROVIDER: 'openai',
         LLM_MODEL: 'configured-model',
+        STOCK_WORKFLOW_ENABLED: 'false',
+        STOCK_WORKFLOW_CRON: '15 4 * * *',
+        STOCK_WORKFLOW_TIMEZONE: 'UTC',
       }),
     ).toMatchObject({
       nodeEnv: 'production',
@@ -40,6 +48,11 @@ describe('loadApplicationConfig', () => {
       mcpEnabled: true,
       llmProvider: 'openai',
       llmModel: 'configured-model',
+      stockWorkflow: {
+        enabled: false,
+        cron: '15 4 * * *',
+        timezone: 'UTC',
+      },
     });
   });
 
@@ -53,6 +66,26 @@ describe('loadApplicationConfig', () => {
     ['MCP_ENABLED', { ...REQUIRED_ENVIRONMENT, MCP_ENABLED: 'yes' }],
     ['LLM_PROVIDER', { ...REQUIRED_ENVIRONMENT, LLM_PROVIDER: 'anthropic' }],
     ['LLM_MODEL', { ...REQUIRED_ENVIRONMENT, LLM_MODEL: ' ' }],
+    [
+      'STOCK_WORKFLOW_ENABLED',
+      { ...REQUIRED_ENVIRONMENT, STOCK_WORKFLOW_ENABLED: 'yes' },
+    ],
+    [
+      'STOCK_WORKFLOW_CRON',
+      { ...REQUIRED_ENVIRONMENT, STOCK_WORKFLOW_CRON: ' ' },
+    ],
+    [
+      'STOCK_WORKFLOW_TIMEZONE',
+      { ...REQUIRED_ENVIRONMENT, STOCK_WORKFLOW_TIMEZONE: ' ' },
+    ],
+    [
+      'STOCK_WORKFLOW_CRON',
+      { ...REQUIRED_ENVIRONMENT, STOCK_WORKFLOW_CRON: 'not a cron' },
+    ],
+    [
+      'STOCK_WORKFLOW_TIMEZONE',
+      { ...REQUIRED_ENVIRONMENT, STOCK_WORKFLOW_TIMEZONE: 'Not/A_Timezone' },
+    ],
   ])('rejects malformed %s configuration', (_name, environment) => {
     expect(() => loadApplicationConfig(environment)).toThrow();
   });

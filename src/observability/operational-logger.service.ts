@@ -17,6 +17,23 @@ type IntegrationErrorType =
 
 type CatalogIntegrityAction = 'lookup' | 'direct_resolution' | 'alias_write';
 
+interface WorkflowPhaseCounts {
+  processed: number;
+  succeeded: number;
+  skipped: number;
+  failed: number;
+}
+
+export interface StockWorkflowLog {
+  stage: 'start' | 'end' | 'product_failure';
+  outcome: 'success' | 'failure';
+  phase?: 'shelf_life' | 'evaluation';
+  productId?: string;
+  durationMs?: number;
+  shelfLife?: WorkflowPhaseCounts;
+  evaluation?: WorkflowPhaseCounts;
+}
+
 export interface InventoryActionLog {
   action: InventoryAction;
   outcome: 'success' | 'failure';
@@ -69,7 +86,8 @@ interface OperationalEvent {
     | 'prediction.persistence'
     | 'integration.llm'
     | 'integration.mcp'
-    | 'catalog.integrity';
+    | 'catalog.integrity'
+    | 'stock.workflow';
   outcome: OperationalOutcome;
   action?: InventoryAction | PredictionAction | CatalogIntegrityAction;
   productId?: string;
@@ -84,6 +102,11 @@ interface OperationalEvent {
   ownerCount?: number;
   errorType?:
     IntegrationErrorType | 'persistence_error' | 'multiple_name_owners';
+  stage?: 'start' | 'end' | 'product_failure';
+  phase?: 'shelf_life' | 'evaluation';
+  durationMs?: number;
+  shelfLife?: WorkflowPhaseCounts;
+  evaluation?: WorkflowPhaseCounts;
 }
 
 @Injectable()
@@ -171,6 +194,28 @@ export class OperationalLogger {
       normalizedNameFingerprint,
       ownerCount,
       errorType,
+    });
+  }
+
+  stockWorkflow(input: StockWorkflowLog): void {
+    const {
+      stage,
+      outcome,
+      phase,
+      productId,
+      durationMs,
+      shelfLife,
+      evaluation,
+    } = input;
+    this.write({
+      event: 'stock.workflow',
+      stage,
+      outcome,
+      phase,
+      productId,
+      durationMs,
+      shelfLife,
+      evaluation,
     });
   }
 

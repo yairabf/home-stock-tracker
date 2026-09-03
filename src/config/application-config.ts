@@ -1,5 +1,6 @@
 import { DEFAULT_OPENAI_MODEL } from '../llm/openai/openai.tokens';
 import { parseLogLevels } from '../observability/log-levels';
+import { CronTime } from 'cron';
 
 const DEFAULT_PORT = 3000;
 const DEFAULT_LOG_LEVEL = 'log';
@@ -15,7 +16,19 @@ export interface ApplicationConfig {
   llmProvider: string;
   llmModel: string;
   openAiApiKey?: string;
+  stockWorkflow: StockWorkflowConfig;
 }
+
+export interface StockWorkflowConfig {
+  enabled: boolean;
+  cron: string;
+  timezone: string;
+}
+
+export const STOCK_WORKFLOW_CONFIG = Symbol('STOCK_WORKFLOW_CONFIG');
+
+export const DEFAULT_STOCK_WORKFLOW_CRON = '0 2 * * *';
+export const DEFAULT_STOCK_WORKFLOW_TIMEZONE = 'Asia/Jerusalem';
 
 export function loadApplicationConfig(
   environment: NodeJS.ProcessEnv = process.env,
@@ -49,6 +62,7 @@ export function loadApplicationConfig(
     environment.OPENAI_API_KEY,
     'OPENAI_API_KEY',
   );
+  const stockWorkflow = loadStockWorkflowConfig(environment);
 
   if (llmProvider === 'openai' && !openAiApiKey) {
     throw new Error('OPENAI_API_KEY is required when LLM_PROVIDER is openai');
@@ -64,7 +78,30 @@ export function loadApplicationConfig(
     llmProvider,
     llmModel,
     openAiApiKey,
+    stockWorkflow,
   };
+}
+
+export function loadStockWorkflowConfig(
+  environment: NodeJS.ProcessEnv = process.env,
+): StockWorkflowConfig {
+  const config = {
+    enabled: parseBoolean(
+      environment.STOCK_WORKFLOW_ENABLED,
+      'STOCK_WORKFLOW_ENABLED',
+      true,
+    ),
+    cron:
+      optionalTrimmed(environment.STOCK_WORKFLOW_CRON, 'STOCK_WORKFLOW_CRON') ??
+      DEFAULT_STOCK_WORKFLOW_CRON,
+    timezone:
+      optionalTrimmed(
+        environment.STOCK_WORKFLOW_TIMEZONE,
+        'STOCK_WORKFLOW_TIMEZONE',
+      ) ?? DEFAULT_STOCK_WORKFLOW_TIMEZONE,
+  };
+  new CronTime(config.cron, config.timezone);
+  return config;
 }
 
 function requiredTrimmed(value: string | undefined, name: string): string {

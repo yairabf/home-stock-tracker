@@ -14,9 +14,11 @@ import { ServiceAuthModule } from './auth/service-auth.module';
 import { ServiceAuthGuard } from './auth/service-auth.guard';
 import { ObservabilityModule } from './observability/observability.module';
 import { HealthModule } from './health/health.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
     GroceryModule,
     ProductModule,

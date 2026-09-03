@@ -36,6 +36,9 @@ contents into logs, or bake it into an image.
 | `LLM_MODEL` | Optional, default `gpt-5.6-sol` | OpenAI model override. |
 | `MCP_ENABLED` | Optional, default `false` | Set exactly `true` to expose `/mcp`. |
 | `LOG_LEVEL` | Optional, default `log` | One of `fatal`, `error`, `warn`, `log`, `debug`, or `verbose`. |
+| `STOCK_WORKFLOW_ENABLED` | Optional, default `true` | Enables the internal daily stock workflow. Use one enabled replica only. |
+| `STOCK_WORKFLOW_CRON` | Optional, default `0 2 * * *` | Cron expression for stock evaluation. |
+| `STOCK_WORKFLOW_TIMEZONE` | Optional, default `Asia/Jerusalem` | IANA timezone for the stock cron. |
 | `APP_PORT` | Optional, default `3000` | Host port for the service. |
 | `IMAGE_TAG` | Optional, default `local` | Local image tag used by Compose. Use an immutable release identifier in deployment. |
 
@@ -44,6 +47,10 @@ contents into logs, or bake it into an image.
 For a managed external PostgreSQL deployment, provide an equivalent
 `DATABASE_URL` through the platform's secret configuration rather than editing
 the image.
+
+The stock scheduler has no distributed lock. When running multiple app
+replicas, designate exactly one with `STOCK_WORKFLOW_ENABLED=true` and disable it
+on the others.
 
 ## Build the image
 

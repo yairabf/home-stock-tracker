@@ -1,6 +1,7 @@
 import { PredictedState, ShelfLifePolicyKind } from '../generated/prisma/enums';
 import {
   StockMaterializationException,
+  materializeDailyStock,
   materializeStockForward,
 } from './stock-materialization';
 import type { ForwardStockMaterializationInput } from './types/stock-materialization';
@@ -165,5 +166,98 @@ describe('materializeStockForward', () => {
     expect(() =>
       materializeStockForward({ ...baseInput, shelfLifePolicy }),
     ).toThrow(StockMaterializationException);
+  });
+});
+
+describe('materializeDailyStock', () => {
+  const baseInput = {
+    estimatedQuantity: 3,
+    recordedAt: new Date('2026-09-01T02:00:00.000Z'),
+    previousEvaluatedAt: new Date('2026-09-02T02:00:00.000Z'),
+    evaluatedAt: new Date('2026-09-03T02:00:00.000Z'),
+    shelfLifePolicy: {
+      kind: ShelfLifePolicyKind.finite,
+      shelfLifeDays: 10,
+      confidence: 0.9,
+    },
+    estimatedConsumptionIntervalDays: 2,
+    explicitState: null,
+  };
+
+  it('decays incrementally from the previous estimate without double counting', () => {
+    const first = materializeDailyStock(baseInput);
+    const second = materializeDailyStock({
+      ...baseInput,
+      estimatedQuantity: first.estimatedQuantity,
+      previousEvaluatedAt: first.evaluatedAt,
+      evaluatedAt: new Date('2026-09-04T02:00:00.000Z'),
+    });
+
+    expect(first.estimatedQuantity).toBe(2.5);
+    expect(second.estimatedQuantity).toBe(2);
+    expect(second.expectedConsumption).toBe(0.5);
+  });
+
+  it('preserves decimal precision and classifies one consumption unit as low', () => {
+    expect(
+      materializeDailyStock({ ...baseInput, estimatedQuantity: 0.75 }),
+    ).toMatchObject({
+      estimatedQuantity: 0.25,
+      estimatedState: PredictedState.probably_low,
+      reason: 'daily_stock_low',
+    });
+  });
+
+  it('forces expired finite stock to zero but does not expire nonperishable stock', () => {
+    expect(
+      materializeDailyStock({
+        ...baseInput,
+        shelfLifePolicy: { ...baseInput.shelfLifePolicy, shelfLifeDays: 2 },
+      }),
+    ).toMatchObject({
+      estimatedQuantity: 0,
+      reason: 'daily_stock_expired',
+    });
+    expect(
+      materializeDailyStock({
+        ...baseInput,
+        shelfLifePolicy: {
+          kind: ShelfLifePolicyKind.nonperishable,
+          shelfLifeDays: null,
+          confidence: 0.9,
+        },
+      }),
+    ).toMatchObject({
+      estimatedQuantity: 2.5,
+      reason: 'daily_stock_available',
+    });
+  });
+
+  it('uses reduced-confidence fallback when shelf-life evidence is missing', () => {
+    expect(
+      materializeDailyStock({ ...baseInput, shelfLifePolicy: null }),
+    ).toMatchObject({ estimatedQuantity: 2.5, confidence: 0.8 });
+  });
+
+  it.each([
+    [PredictedState.probably_out, 0, 'daily_explicit_out'],
+    [PredictedState.probably_low, 2.5, 'daily_explicit_low'],
+  ] as const)(
+    'keeps explicit %s precedence',
+    (explicitState, estimatedQuantity, reason) => {
+      expect(
+        materializeDailyStock({ ...baseInput, explicitState }),
+      ).toMatchObject({ estimatedQuantity, reason });
+    },
+  );
+
+  it('keeps quantity-free projections uncertain without an explicit signal', () => {
+    expect(
+      materializeDailyStock({ ...baseInput, estimatedQuantity: null }),
+    ).toMatchObject({
+      estimatedQuantity: null,
+      estimatedState: PredictedState.uncertain,
+      reason: 'daily_stock_uncertain',
+    });
   });
 });

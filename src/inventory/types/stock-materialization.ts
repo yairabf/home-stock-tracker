@@ -40,3 +40,35 @@ export interface PurchaseMaterializationInput {
   purchasedAt: Date;
   receivedAt: Date;
 }
+
+export interface DailyStockMaterializationInput {
+  estimatedQuantity: number | null;
+  recordedAt: Date;
+  evaluatedAt: Date;
+  previousEvaluatedAt: Date;
+  shelfLifePolicy: ShelfLifeEvidence | null;
+  estimatedConsumptionIntervalDays: number | null;
+  explicitState:
+    | typeof PredictedState.probably_low
+    | typeof PredictedState.probably_out
+    | null;
+}
+
+export type DailyStockMaterializationReason =
+  | 'daily_stock_expired'
+  | 'daily_stock_depleted'
+  | 'daily_explicit_out'
+  | 'daily_explicit_low'
+  | 'daily_stock_low'
+  | 'daily_stock_available'
+  | 'daily_stock_uncertain';
+
+export interface DailyStockMaterializationResult {
+  estimatedQuantity: number | null;
+  estimatedState: PredictedState;
+  confidence: number;
+  reason: DailyStockMaterializationReason;
+  evaluatedAt: Date;
+  elapsedDays: number;
+  expectedConsumption: number;
+}

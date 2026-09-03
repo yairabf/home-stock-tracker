@@ -5,9 +5,125 @@ import type {
   ForwardStockMaterializationReason,
   ForwardStockMaterializationResult,
   ShelfLifeEvidence,
+  DailyStockMaterializationInput,
+  DailyStockMaterializationResult,
 } from './types/stock-materialization';
 
 const MISSING_EVIDENCE_PENALTY = 0.2;
+
+export function materializeDailyStock(
+  input: DailyStockMaterializationInput,
+): DailyStockMaterializationResult {
+  assertDailyInput(input);
+  const elapsedDays =
+    (input.evaluatedAt.getTime() - input.previousEvaluatedAt.getTime()) /
+    MS_PER_DAY;
+  const ageDays =
+    (input.evaluatedAt.getTime() - input.recordedAt.getTime()) / MS_PER_DAY;
+  const consumptionInterval = validConsumptionInterval(
+    input.estimatedConsumptionIntervalDays,
+  );
+  const expectedConsumption = consumptionInterval
+    ? elapsedDays / consumptionInterval
+    : 0;
+  const confidence = evidenceConfidence(
+    input.shelfLifePolicy,
+    consumptionInterval,
+  );
+
+  if (input.explicitState === PredictedState.probably_out) {
+    return dailyResult(0, PredictedState.probably_out, 1, 'daily_explicit_out');
+  }
+  if (isExpired(input.shelfLifePolicy, ageDays)) {
+    return dailyResult(
+      0,
+      PredictedState.probably_out,
+      confidence,
+      'daily_stock_expired',
+    );
+  }
+  if (input.estimatedQuantity === null) {
+    if (input.explicitState === PredictedState.probably_low) {
+      return dailyResult(
+        null,
+        PredictedState.probably_low,
+        1,
+        'daily_explicit_low',
+      );
+    }
+    return dailyResult(
+      null,
+      PredictedState.uncertain,
+      confidence,
+      'daily_stock_uncertain',
+    );
+  }
+
+  const estimatedQuantity = Math.max(
+    0,
+    input.estimatedQuantity - expectedConsumption,
+  );
+  if (estimatedQuantity === 0) {
+    return dailyResult(
+      0,
+      PredictedState.probably_out,
+      confidence,
+      'daily_stock_depleted',
+    );
+  }
+  if (input.explicitState === PredictedState.probably_low) {
+    return dailyResult(
+      estimatedQuantity,
+      PredictedState.probably_low,
+      1,
+      'daily_explicit_low',
+    );
+  }
+  const isLow =
+    consumptionInterval !== null &&
+    estimatedQuantity <= 1 / consumptionInterval;
+  return dailyResult(
+    estimatedQuantity,
+    isLow ? PredictedState.probably_low : PredictedState.likely_available,
+    confidence,
+    isLow ? 'daily_stock_low' : 'daily_stock_available',
+  );
+
+  function dailyResult(
+    quantity: number | null,
+    state: PredictedState,
+    resultConfidence: number,
+    reason: DailyStockMaterializationResult['reason'],
+  ): DailyStockMaterializationResult {
+    return {
+      estimatedQuantity: quantity,
+      estimatedState: state,
+      confidence: resultConfidence,
+      reason,
+      evaluatedAt: new Date(input.evaluatedAt),
+      elapsedDays,
+      expectedConsumption,
+    };
+  }
+}
+
+function assertDailyInput(input: DailyStockMaterializationInput): void {
+  if (
+    (input.estimatedQuantity !== null &&
+      (!Number.isFinite(input.estimatedQuantity) ||
+        input.estimatedQuantity < 0)) ||
+    Number.isNaN(input.recordedAt.getTime()) ||
+    Number.isNaN(input.previousEvaluatedAt.getTime()) ||
+    Number.isNaN(input.evaluatedAt.getTime()) ||
+    input.evaluatedAt < input.previousEvaluatedAt ||
+    input.evaluatedAt < input.recordedAt
+  ) {
+    throw new StockMaterializationException(
+      'Invalid daily stock projection input',
+    );
+  }
+  assertValidShelfLifePolicy(input.shelfLifePolicy);
+}
 
 export class StockMaterializationException extends Error {
   constructor(message: string) {

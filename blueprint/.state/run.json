@@ -2,10 +2,15 @@
   "schemaVersion": 1,
   "command": "complete",
   "status": "ready",
-  "summary": "Feature 33b is merged locally and ready to push",
-  "detail": "The verified feature is archived and squash-merged into local main after all final gates passed; pushing main remains a separate explicit approval.",
+  "summary": "Feature 33c is merged locally and ready to push",
+  "detail": "Feature 33c was squash-merged into local main and its feature branch was deleted; awaiting separate approval before pushing main.",
   "boundary": "push_approval",
-  "startedAt": "2026-09-03T11:48:00Z",
-  "updatedAt": "2026-09-03T12:05:43Z",
-  "resumeCommand": "push main after approval"
+  "target": "33c",
+  "progress": {
+    "completedSteps": 5,
+    "totalSteps": 5
+  },
+  "startedAt": "2026-09-03T12:25:01.082Z",
+  "updatedAt": "2026-09-03T13:05:10Z",
+  "resumeCommand": "approve push main"
 }
