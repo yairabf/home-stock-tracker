@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "command": "complete",
   "status": "ready",
-  "summary": "Feature 33a is committed and ready to merge",
-  "detail": "Final tests and build passed; the verified spec is archived and the local feature work commit is ready for explicit squash-merge approval.",
-  "boundary": "merge_approval",
-  "startedAt": "2026-09-02T20:33:37Z",
-  "updatedAt": "2026-09-02T20:56:41Z",
-  "resumeCommand": "run complete skill"
+  "summary": "Feature 33b is merged locally and ready to push",
+  "detail": "The verified feature is archived and squash-merged into local main after all final gates passed; pushing main remains a separate explicit approval.",
+  "boundary": "push_approval",
+  "startedAt": "2026-09-03T11:48:00Z",
+  "updatedAt": "2026-09-03T12:05:43Z",
+  "resumeCommand": "push main after approval"
 }

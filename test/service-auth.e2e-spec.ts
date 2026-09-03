@@ -64,4 +64,22 @@ describe('Service authentication (e2e)', () => {
 
     expect(getHello).toHaveBeenCalledTimes(1);
   });
+
+  it.each([
+    [
+      '/api/v1/inventory/stock/00000000-0000-4000-8000-000000000001',
+      { operation: 'mark_out' },
+    ],
+    [
+      '/api/v1/inventory/purchases',
+      {
+        items: [{ productId: '00000000-0000-4000-8000-000000000001' }],
+      },
+    ],
+  ])(
+    'protects mutation route %s with the global bearer guard',
+    (path, body) => {
+      return request(app.getHttpServer()).post(path).send(body).expect(401);
+    },
+  );
 });

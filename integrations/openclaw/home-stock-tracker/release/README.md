@@ -1,14 +1,14 @@
 # Home Stock Tracker OpenClaw release contract
 
 This generated release metadata belongs to the `openclaw` bundle. Keep
-`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/1.2.0/tools-list.json`
+`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/1.3.0/tools-list.json`
 fixture from the same generated release.
 
 ## Compatibility
 
 - Skill version: `1.12.0`
 - MCP server: `home-stock-tracker`
-- MCP contract: `1.2.0`
+- MCP contract: `1.3.0`
 - Compatible MCP range: `>=1.0.0 <2.0.0`
 
 ## Prerequisites
@@ -38,6 +38,8 @@ fixture from the same generated release.
 - `list_inventory_events`
 - `product_add_alias`
 - `record_purchase`
+- `update_inventory`
+- `record_purchases`
 - `record_stock_signal`
 - `record_prediction_feedback`
 - `complete_grocery_purchase`

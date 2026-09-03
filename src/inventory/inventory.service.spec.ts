@@ -18,8 +18,13 @@ import {
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { StockLedgerService } from './stock-ledger.service';
 import { StatisticsService } from '../statistics/statistics.service';
+import { StockMaterializationService } from './stock-materialization.service';
+import { StockMutationOperation } from './types/stock-mutation';
+import { Prisma } from '../generated/prisma/client';
+import { StockLedgerException } from './stock-ledger.exception';
 
 const PRODUCT_ID = '11111111-1111-4111-8111-111111111111';
+const SECOND_PRODUCT_ID = '22222222-2222-4222-8222-222222222222';
 const PRODUCT_NAMES = {
   names: [
     {
@@ -37,6 +42,7 @@ describe('InventoryService', () => {
   let prisma: {
     product: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
     };
     inventoryEvent: {
       create: jest.Mock;
@@ -54,13 +60,20 @@ describe('InventoryService', () => {
   let stockLedgerService: {
     resetWithinTransaction: jest.Mock;
     applyObservationWithinTransaction: jest.Mock;
+    setWithinTransaction: jest.Mock;
+    decrementWithinTransaction: jest.Mock;
+    markOutWithinTransaction: jest.Mock;
   };
   let statisticsService: { calculateProductStatistics: jest.Mock };
+  let stockMaterializationService: {
+    materializePurchaseWithinTransaction: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = {
       product: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
       },
       inventoryEvent: {
         create: jest.fn(),
@@ -78,8 +91,23 @@ describe('InventoryService', () => {
     stockLedgerService = {
       resetWithinTransaction: jest.fn(),
       applyObservationWithinTransaction: jest.fn(),
+      setWithinTransaction: jest.fn(),
+      decrementWithinTransaction: jest.fn(),
+      markOutWithinTransaction: jest.fn(),
     };
     statisticsService = { calculateProductStatistics: jest.fn() };
+    stockMaterializationService = {
+      materializePurchaseWithinTransaction: jest.fn(
+        (_tx, input: { quantity: number; receivedAt: Date }) =>
+          Promise.resolve({
+            estimatedQuantity: input.quantity,
+            estimatedState: PredictedState.likely_available,
+            confidence: 1,
+            reason: 'purchase_recorded',
+            evaluatedAt: input.receivedAt,
+          }),
+      ),
+    };
     prisma.product.findUnique.mockResolvedValue({
       id: PRODUCT_ID,
       typicalUnit: 'liter',
@@ -94,6 +122,10 @@ describe('InventoryService', () => {
         { provide: OperationalLogger, useValue: operationalLogger },
         { provide: StockLedgerService, useValue: stockLedgerService },
         { provide: StatisticsService, useValue: statisticsService },
+        {
+          provide: StockMaterializationService,
+          useValue: stockMaterializationService,
+        },
       ],
     }).compile();
 
@@ -101,6 +133,25 @@ describe('InventoryService', () => {
   });
 
   describe('recordEvent', () => {
+    it.each([InventoryEventType.STOCK_SET, InventoryEventType.STOCK_CONSUMED])(
+      'rejects dedicated mutation event type %s before writing',
+      async (eventType) => {
+        await expect(
+          service.recordEvent({
+            productId: PRODUCT_ID,
+            eventType,
+            source: 'api',
+          }),
+        ).rejects.toMatchObject({
+          response: expect.objectContaining({
+            code: 'INVALID_INVENTORY_EVENT_TYPE',
+          }),
+        });
+        expect(prisma.$transaction).not.toHaveBeenCalled();
+        expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+      },
+    );
+
     it('validates the product exists, persists the event, and returns it', async () => {
       productService.findOne.mockResolvedValue({ id: PRODUCT_ID });
       const createdEvent = {
@@ -227,6 +278,9 @@ describe('InventoryService', () => {
           quantity: 2,
           explicitUnit: 'liter',
           typicalUnit: 'liter',
+          materialization: expect.objectContaining({
+            reason: 'purchase_recorded',
+          }),
         }),
       );
       expect(statisticsService.calculateProductStatistics).toHaveBeenCalledWith(
@@ -295,6 +349,75 @@ describe('InventoryService', () => {
       );
     });
 
+    it('uses purchasedAt for the recorded fact and receipt time for materialization', async () => {
+      const purchasedAt = '2026-08-30T10:00:00.000Z';
+      const materialization = {
+        estimatedQuantity: 0.5,
+        estimatedState: PredictedState.likely_available,
+        confidence: 0.8,
+        reason: 'purchase_forward_estimated' as const,
+        evaluatedAt: new Date('2026-09-03T10:00:00.000Z'),
+      };
+      stockMaterializationService.materializePurchaseWithinTransaction.mockResolvedValue(
+        materialization,
+      );
+      prisma.inventoryEvent.create.mockResolvedValue({
+        id: 'backdated-purchase',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.PURCHASED,
+        quantity: 2,
+        unit: 'liter',
+        timestamp: new Date(purchasedAt),
+        source: 'api',
+        confidence: null,
+        metadata: null,
+      });
+
+      await service.recordPurchase({
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.PURCHASED,
+        quantity: 2,
+        unit: 'liter',
+        purchasedAt,
+        source: 'api',
+      });
+
+      expect(prisma.inventoryEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ timestamp: new Date(purchasedAt) }),
+      });
+      expect(
+        stockMaterializationService.materializePurchaseWithinTransaction,
+      ).toHaveBeenCalledWith(prisma, {
+        productId: PRODUCT_ID,
+        quantity: 2,
+        purchasedAt: new Date(purchasedAt),
+        receivedAt: expect.any(Date),
+      });
+      expect(stockLedgerService.resetWithinTransaction).toHaveBeenCalledWith(
+        prisma,
+        expect.objectContaining({
+          occurredAt: new Date(purchasedAt),
+          materialization,
+        }),
+      );
+    });
+
+    it('rejects a future purchasedAt before opening a transaction', async () => {
+      await expect(
+        service.recordPurchase({
+          productId: PRODUCT_ID,
+          eventType: InventoryEventType.PURCHASED,
+          purchasedAt: '2999-01-01T00:00:00.000Z',
+          source: 'api',
+        }),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: 'INVALID_PURCHASE_TIMESTAMP',
+        }),
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
     it('logs statistics failure without failing the committed purchase', async () => {
       const createdEvent = {
         id: 'purchase-statistics-failure',
@@ -354,6 +477,377 @@ describe('InventoryService', () => {
       ).rejects.toThrow(NotFoundException);
       expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
       expect(operationalLogger.inventoryAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateStock', () => {
+    const projection = {
+      productId: PRODUCT_ID,
+      unit: 'liter',
+      recordedQuantity: 4,
+      recordedAt: new Date('2026-09-03T10:00:00.000Z'),
+      recordedSource: 'api',
+      recordedEventId: 'stock-event',
+      estimatedQuantity: 4,
+      estimatedState: PredictedState.likely_available,
+      confidence: 1,
+      reason: 'stock_set',
+      predictionId: null,
+      evaluatedAt: new Date('2026-09-03T10:00:00.000Z'),
+    };
+
+    it.each([
+      {
+        operation: StockMutationOperation.set,
+        eventType: InventoryEventType.STOCK_SET,
+        ledgerMethod: 'setWithinTransaction' as const,
+        reason: 'stock_set',
+      },
+      {
+        operation: StockMutationOperation.decrement,
+        eventType: InventoryEventType.STOCK_CONSUMED,
+        ledgerMethod: 'decrementWithinTransaction' as const,
+        reason: 'stock_decremented',
+      },
+    ])(
+      'orchestrates $operation as one event and projection transaction',
+      async ({ operation, eventType, ledgerMethod, reason }) => {
+        const event = {
+          id: 'stock-event',
+          productId: PRODUCT_ID,
+          eventType,
+          quantity: 2,
+          unit: 'liter',
+          timestamp: new Date('2026-09-03T10:00:00.000Z'),
+          source: 'api',
+          confidence: null,
+          metadata: null,
+        };
+        prisma.inventoryEvent.create.mockResolvedValue(event);
+        stockLedgerService[ledgerMethod].mockResolvedValue(projection);
+
+        await expect(
+          service.updateStock({
+            productId: PRODUCT_ID,
+            operation,
+            quantity: 2,
+            unit: 'liter',
+            source: 'api',
+          }),
+        ).resolves.toEqual({ event, stock: projection });
+
+        expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+        expect(prisma.inventoryEvent.create).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            eventType,
+            quantity: 2,
+            source: 'api',
+          }),
+        });
+        expect(stockLedgerService[ledgerMethod]).toHaveBeenCalledWith(
+          prisma,
+          expect.objectContaining({
+            eventId: 'stock-event',
+            quantity: 2,
+            reason,
+          }),
+        );
+      },
+    );
+
+    it('orchestrates mark_out without accepting a quantity or unit', async () => {
+      const event = {
+        id: 'stock-event',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.STOCK_OUT,
+        quantity: 0,
+        unit: null,
+        timestamp: new Date('2026-09-03T10:00:00.000Z'),
+        source: 'mcp',
+        confidence: null,
+        metadata: null,
+      };
+      prisma.inventoryEvent.create.mockResolvedValue(event);
+      stockLedgerService.markOutWithinTransaction.mockResolvedValue({
+        ...projection,
+        recordedQuantity: 0,
+        estimatedQuantity: 0,
+        estimatedState: PredictedState.probably_out,
+      });
+
+      const result = await service.updateStock({
+        productId: PRODUCT_ID,
+        operation: StockMutationOperation.mark_out,
+        source: 'mcp',
+      });
+
+      expect(prisma.inventoryEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          eventType: InventoryEventType.STOCK_OUT,
+          quantity: 0,
+          unit: undefined,
+        }),
+      });
+      expect(stockLedgerService.markOutWithinTransaction).toHaveBeenCalledWith(
+        prisma,
+        expect.objectContaining({ reason: 'stock_marked_out' }),
+      );
+      expect(result.stock.estimatedState).toBe(PredictedState.probably_out);
+    });
+
+    it('does not report success or recalculate after a transaction failure', async () => {
+      prisma.inventoryEvent.create.mockResolvedValue({
+        id: 'stock-event',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.STOCK_SET,
+      });
+      stockLedgerService.setWithinTransaction.mockRejectedValue(
+        new Error('projection write failed'),
+      );
+
+      await expect(
+        service.updateStock({
+          productId: PRODUCT_ID,
+          operation: StockMutationOperation.set,
+          quantity: 2,
+          source: 'api',
+        }),
+      ).rejects.toThrow('projection write failed');
+      expect(
+        statisticsService.calculateProductStatistics,
+      ).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'update_stock', outcome: 'success' }),
+      );
+    });
+
+    it('retries a serialization conflict with the same transaction contract', async () => {
+      const event = {
+        id: 'stock-event',
+        productId: PRODUCT_ID,
+        eventType: InventoryEventType.STOCK_SET,
+        quantity: 2,
+        unit: null,
+        timestamp: new Date('2026-09-03T10:00:00.000Z'),
+        source: 'api',
+        confidence: null,
+        metadata: null,
+      };
+      prisma.inventoryEvent.create.mockResolvedValue(event);
+      stockLedgerService.setWithinTransaction.mockResolvedValue(projection);
+      prisma.$transaction
+        .mockRejectedValueOnce(
+          new Prisma.PrismaClientKnownRequestError('serialization conflict', {
+            code: 'P2034',
+            clientVersion: 'test',
+          }),
+        )
+        .mockImplementationOnce((operation) => operation(prisma));
+
+      await service.updateStock({
+        productId: PRODUCT_ID,
+        operation: StockMutationOperation.set,
+        quantity: 2,
+        source: 'api',
+      });
+
+      expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+      expect(prisma.$transaction).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Function),
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    });
+  });
+
+  describe('recordPurchases', () => {
+    const products = [
+      { id: PRODUCT_ID, typicalUnit: 'liter' },
+      { id: SECOND_PRODUCT_ID, typicalUnit: 'packet' },
+    ];
+
+    beforeEach(() => {
+      prisma.product.findMany.mockResolvedValue([...products].reverse());
+      prisma.inventoryEvent.create.mockImplementation(({ data }) =>
+        Promise.resolve({
+          id: `event-${data.productId}`,
+          ...data,
+          unit: data.unit ?? null,
+          confidence: null,
+          metadata: null,
+        }),
+      );
+      stockLedgerService.resetWithinTransaction.mockImplementation(
+        (_tx, input) =>
+          Promise.resolve({
+            productId: input.productId,
+            unit: input.explicitUnit ?? input.typicalUnit ?? 'item',
+            recordedQuantity: input.quantity,
+            recordedAt: input.occurredAt,
+            recordedSource: input.source,
+            recordedEventId: input.eventId,
+            estimatedQuantity: input.materialization.estimatedQuantity,
+            estimatedState: input.materialization.estimatedState,
+            confidence: input.materialization.confidence,
+            reason: input.materialization.reason,
+            predictionId: null,
+            evaluatedAt: input.materialization.evaluatedAt,
+          }),
+      );
+    });
+
+    it('creates multi-product receipts in input order with timestamp precedence and unit fallback', async () => {
+      const requestTimestamp = '2026-08-30T08:00:00.000Z';
+      const itemTimestamp = '2026-08-31T09:00:00.000Z';
+
+      const result = await service.recordPurchases({
+        purchasedAt: requestTimestamp,
+        items: [
+          { productId: PRODUCT_ID, quantity: 2 },
+          {
+            productId: SECOND_PRODUCT_ID,
+            unit: 'box',
+            purchasedAt: itemTimestamp,
+          },
+        ],
+        source: 'mcp',
+      });
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [PRODUCT_ID, SECOND_PRODUCT_ID] } },
+        select: { id: true, typicalUnit: true },
+      });
+      expect(prisma.inventoryEvent.create).toHaveBeenNthCalledWith(1, {
+        data: expect.objectContaining({
+          productId: PRODUCT_ID,
+          quantity: 2,
+          timestamp: new Date(requestTimestamp),
+          source: 'mcp',
+        }),
+      });
+      expect(prisma.inventoryEvent.create).toHaveBeenNthCalledWith(2, {
+        data: expect.objectContaining({
+          productId: SECOND_PRODUCT_ID,
+          quantity: 1,
+          timestamp: new Date(itemTimestamp),
+          source: 'mcp',
+        }),
+      });
+      expect(stockLedgerService.resetWithinTransaction).toHaveBeenNthCalledWith(
+        1,
+        prisma,
+        expect.objectContaining({
+          explicitUnit: undefined,
+          typicalUnit: 'liter',
+          materialization: expect.objectContaining({ estimatedQuantity: 2 }),
+        }),
+      );
+      expect(result.items.map((item) => item.event.productId)).toEqual([
+        PRODUCT_ID,
+        SECOND_PRODUCT_ID,
+      ]);
+      expect(result.items.map((item) => item.stock.unit)).toEqual([
+        'liter',
+        'box',
+      ]);
+      expect(
+        statisticsService.calculateProductStatistics,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('rejects duplicates before any product or event write', async () => {
+      await expect(
+        service.recordPurchases({
+          items: [{ productId: PRODUCT_ID }, { productId: PRODUCT_ID }],
+          source: 'api',
+        }),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({
+          code: 'DUPLICATE_PURCHASE_PRODUCT',
+        }),
+      });
+      expect(prisma.product.findMany).not.toHaveBeenCalled();
+      expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+    });
+
+    it('resolves every product before writing and reports the first missing ID', async () => {
+      prisma.product.findMany.mockResolvedValue([products[0]]);
+
+      await expect(
+        service.recordPurchases({
+          items: [{ productId: PRODUCT_ID }, { productId: SECOND_PRODUCT_ID }],
+          source: 'api',
+        }),
+      ).rejects.toThrow(`No product with id "${SECOND_PRODUCT_ID}"`);
+      expect(prisma.inventoryEvent.create).not.toHaveBeenCalled();
+    });
+
+    it('aborts post-commit work when a later ledger write rejects the transaction', async () => {
+      stockLedgerService.resetWithinTransaction
+        .mockImplementationOnce((_tx, input) =>
+          Promise.resolve({
+            productId: input.productId,
+            unit: 'liter',
+            recordedQuantity: 1,
+            recordedAt: input.occurredAt,
+            recordedSource: input.source,
+            recordedEventId: input.eventId,
+            estimatedQuantity: 1,
+            estimatedState: PredictedState.likely_available,
+            confidence: 1,
+            reason: 'purchase_recorded',
+            predictionId: null,
+            evaluatedAt: input.occurredAt,
+          }),
+        )
+        .mockRejectedValueOnce(
+          new StockLedgerException(
+            'Stock unit must remain packet; received carton',
+          ),
+        );
+
+      await expect(
+        service.recordPurchases({
+          items: [
+            { productId: PRODUCT_ID },
+            { productId: SECOND_PRODUCT_ID, unit: 'carton' },
+          ],
+          source: 'api',
+        }),
+      ).rejects.toMatchObject({ status: 400 });
+      expect(prisma.inventoryEvent.create).toHaveBeenCalledTimes(2);
+      expect(
+        statisticsService.calculateProductStatistics,
+      ).not.toHaveBeenCalled();
+      expect(operationalLogger.inventoryAction).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'record_purchase',
+          outcome: 'success',
+          affectedCount: 2,
+        }),
+      );
+    });
+
+    it('isolates statistics failures after commit', async () => {
+      statisticsService.calculateProductStatistics
+        .mockRejectedValueOnce(new Error('first statistics failure'))
+        .mockResolvedValueOnce({});
+
+      await expect(
+        service.recordPurchases({
+          items: [{ productId: PRODUCT_ID }, { productId: SECOND_PRODUCT_ID }],
+          source: 'api',
+        }),
+      ).resolves.toHaveProperty('items.length', 2);
+      expect(
+        statisticsService.calculateProductStatistics,
+      ).toHaveBeenCalledTimes(2);
+      expect(operationalLogger.inventoryAction).toHaveBeenCalledWith({
+        action: 'recalculate_statistics',
+        outcome: 'failure',
+        productId: PRODUCT_ID,
+        errorType: 'persistence_error',
+      });
     });
   });
 

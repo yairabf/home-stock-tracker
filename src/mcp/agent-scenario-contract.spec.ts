@@ -198,7 +198,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -233,7 +233,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(

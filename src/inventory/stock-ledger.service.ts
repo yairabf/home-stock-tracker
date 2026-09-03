@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PredictedState } from '../generated/prisma/enums';
-import { StockLedgerException } from './stock-ledger.exception';
 import {
+  StockLedgerException,
+  StockStateConflictException,
+} from './stock-ledger.exception';
+import {
+  StockDecrementInput,
   StockFactInput,
   StockLedgerTransaction,
+  StockMarkOutInput,
   StockObservationInput,
+  StockSetInput,
   StockUnitInput,
 } from './types/stock-ledger';
 
@@ -43,27 +49,123 @@ export class StockLedgerService {
     const existing = await tx.stockProjection.findUnique({
       where: { productId: input.productId },
     });
-    if (existing && existing.evaluatedAt > input.occurredAt) {
+    if (existing && existing.recordedAt > input.occurredAt) {
       return existing;
     }
     const unit = this.resolveCanonicalUnit({
       ...input,
       existingUnit: existing?.unit,
     });
+    const materialization = input.materialization;
     const data = {
       unit,
       recordedQuantity: input.quantity,
       recordedAt: input.occurredAt,
       recordedSource: input.source,
       recordedEventId: input.eventId,
-      estimatedQuantity: input.quantity,
-      estimatedState: PredictedState.likely_available,
-      confidence: EXPLICIT_SIGNAL_CONFIDENCE,
-      reason: input.reason,
+      estimatedQuantity: materialization?.estimatedQuantity ?? input.quantity,
+      estimatedState:
+        materialization?.estimatedState ?? PredictedState.likely_available,
+      confidence: materialization?.confidence ?? EXPLICIT_SIGNAL_CONFIDENCE,
+      reason: materialization?.reason ?? input.reason,
       predictionId: null,
-      evaluatedAt: input.occurredAt,
+      evaluatedAt: materialization?.evaluatedAt ?? input.occurredAt,
     };
 
+    return tx.stockProjection.upsert({
+      where: { productId: input.productId },
+      create: { productId: input.productId, ...data },
+      update: data,
+    });
+  }
+
+  async setWithinTransaction(tx: StockLedgerTransaction, input: StockSetInput) {
+    this.assertPositiveQuantity(input.quantity);
+    const existing = await tx.stockProjection.findUnique({
+      where: { productId: input.productId },
+    });
+    if (existing !== null && this.isStale(existing, input.occurredAt)) {
+      return existing;
+    }
+
+    const unit = this.resolveSetUnit({
+      ...input,
+      existingUnit: existing?.unit,
+    });
+    const data = this.absoluteFactData(
+      input,
+      unit,
+      PredictedState.likely_available,
+    );
+    return tx.stockProjection.upsert({
+      where: { productId: input.productId },
+      create: { productId: input.productId, ...data },
+      update: data,
+    });
+  }
+
+  async decrementWithinTransaction(
+    tx: StockLedgerTransaction,
+    input: StockDecrementInput,
+  ) {
+    this.assertPositiveQuantity(input.quantity);
+    const existing = await tx.stockProjection.findUnique({
+      where: { productId: input.productId },
+    });
+    if (
+      existing === null ||
+      typeof existing.estimatedQuantity !== 'number' ||
+      !Number.isFinite(existing.estimatedQuantity)
+    ) {
+      throw new StockStateConflictException(
+        'Stock must have a numeric estimate before it can be decremented',
+      );
+    }
+    if (existing !== null && this.isStale(existing, input.occurredAt)) {
+      return existing;
+    }
+
+    const currentEstimate = existing.estimatedQuantity;
+    this.resolveCanonicalUnit({
+      ...input,
+      existingUnit: existing.unit,
+    });
+    const estimatedQuantity = Math.max(0, currentEstimate - input.quantity);
+    return tx.stockProjection.update({
+      where: { productId: input.productId },
+      data: {
+        estimatedQuantity,
+        estimatedState:
+          estimatedQuantity === 0
+            ? PredictedState.probably_out
+            : existing.estimatedState,
+        reason: input.reason,
+        predictionId: null,
+        evaluatedAt: input.occurredAt,
+      },
+    });
+  }
+
+  async markOutWithinTransaction(
+    tx: StockLedgerTransaction,
+    input: StockMarkOutInput,
+  ) {
+    const existing = await tx.stockProjection.findUnique({
+      where: { productId: input.productId },
+    });
+    if (existing !== null && this.isStale(existing, input.occurredAt)) {
+      return existing;
+    }
+
+    const unit = this.resolveCanonicalUnit({
+      existingUnit: existing?.unit,
+      typicalUnit: input.typicalUnit,
+    });
+    const data = this.absoluteFactData(
+      { ...input, quantity: 0 },
+      unit,
+      PredictedState.probably_out,
+    );
     return tx.stockProjection.upsert({
       where: { productId: input.productId },
       create: { productId: input.productId, ...data },
@@ -144,6 +246,39 @@ export class StockLedgerService {
         'Stock quantity must be a finite positive number',
       );
     }
+  }
+
+  private resolveSetUnit(input: StockUnitInput): string {
+    const explicitUnit = this.normalizeUnit(input.explicitUnit, 'explicit');
+    if (explicitUnit) return explicitUnit;
+    return this.resolveCanonicalUnit(input);
+  }
+
+  private absoluteFactData(
+    input: StockFactInput,
+    unit: string,
+    estimatedState: PredictedState,
+  ) {
+    return {
+      unit,
+      recordedQuantity: input.quantity,
+      recordedAt: input.occurredAt,
+      recordedSource: input.source,
+      recordedEventId: input.eventId,
+      estimatedQuantity: input.quantity,
+      estimatedState,
+      confidence: EXPLICIT_SIGNAL_CONFIDENCE,
+      reason: input.reason,
+      predictionId: null,
+      evaluatedAt: input.occurredAt,
+    };
+  }
+
+  private isStale(
+    projection: { evaluatedAt: Date } | null,
+    occurredAt: Date,
+  ): boolean {
+    return projection !== null && projection.evaluatedAt > occurredAt;
   }
 
   private normalizeUnit(

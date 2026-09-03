@@ -48,6 +48,11 @@ import {
 } from './schemas/grocery-confirmation.schema';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 import { HouseholdService } from '../household/household.service';
+import {
+  StockMutationOperation,
+  type StockMutation,
+} from '../inventory/types/stock-mutation';
+import { MAX_BATCH_PURCHASE_ITEMS } from '../inventory/types/purchase-contract';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -108,6 +113,8 @@ export const PUBLISHED_INVENTORY_EVENT_TYPES = [
   InventoryEventType.PREDICTION_ACCEPTED,
   InventoryEventType.PREDICTION_REJECTED,
   InventoryEventType.INFERRED_LOW_STOCK,
+  InventoryEventType.STOCK_SET,
+  InventoryEventType.STOCK_CONSUMED,
 ] as const;
 
 const groceryAdditionItemInputSchema = z
@@ -318,6 +325,86 @@ const inventoryEventOutputSchema = z.object({
   source: z.string(),
   confidence: z.number().nullable(),
   metadata: z.json().nullable(),
+});
+
+const purchasedAtSchema = z.iso
+  .datetime({ offset: true })
+  .describe('ISO 8601 timestamp with an explicit timezone; must not be future');
+
+const stockProjectionOutputSchema = z.object({
+  productId: z.string(),
+  unit: z.string(),
+  recordedQuantity: z.number().nullable(),
+  recordedAt: z.string(),
+  recordedSource: z.string(),
+  recordedEventId: z.string(),
+  estimatedQuantity: z.number().nullable(),
+  estimatedState: z.enum(PredictedState),
+  confidence: z.number(),
+  reason: z.string(),
+  predictionId: z.string().nullable(),
+  evaluatedAt: z.string(),
+});
+
+const stockMutationOutputSchema = z.object({
+  event: inventoryEventOutputSchema,
+  stock: stockProjectionOutputSchema,
+});
+
+const updateInventoryInputSchema = z
+  .object({
+    productId: z.uuid(),
+    operation: z.enum(StockMutationOperation),
+    quantity: z.number().positive().finite().optional(),
+    unit: z.string().trim().min(1).optional(),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    const markOut = input.operation === StockMutationOperation.mark_out;
+    const valid = markOut
+      ? input.quantity === undefined && input.unit === undefined
+      : input.quantity !== undefined;
+    if (!valid) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Stock mutation fields must match the selected operation',
+      });
+    }
+  });
+
+const batchPurchaseItemInputSchema = z
+  .object({
+    productId: z.uuid(),
+    quantity: z.number().positive().finite().optional(),
+    unit: z.string().trim().min(1).optional(),
+    purchasedAt: purchasedAtSchema.optional(),
+  })
+  .strict();
+
+const recordPurchasesInputSchema = z
+  .object({
+    purchasedAt: purchasedAtSchema.optional(),
+    items: z
+      .array(batchPurchaseItemInputSchema)
+      .min(1)
+      .max(MAX_BATCH_PURCHASE_ITEMS),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (
+      new Set(input.items.map((item) => item.productId)).size !==
+      input.items.length
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['items'],
+        message: 'Purchase batch must not contain duplicate product IDs',
+      });
+    }
+  });
+
+const recordPurchasesOutputSchema = z.object({
+  items: z.array(stockMutationOutputSchema),
 });
 
 const inventoryEventHistoryInputSchema = z
@@ -577,6 +664,9 @@ export class McpServerFactory {
               InventoryEventType.PURCHASED,
               InventoryEventType.RESTOCKED,
             ]),
+            quantity: z.number().positive().finite().optional(),
+            unit: z.string().trim().min(1).optional(),
+            purchasedAt: purchasedAtSchema.optional(),
           })
           .strict(),
         outputSchema: inventoryEventOutputSchema,
@@ -585,6 +675,76 @@ export class McpServerFactory {
         this.runTool('record_purchase', async () =>
           this.toolResult(
             await this.inventoryService.recordPurchase({
+              ...input,
+              source: TransportSource.mcp,
+            }),
+          ),
+        ),
+    );
+
+    server.registerTool(
+      'update_inventory',
+      {
+        description:
+          'Apply one explicit stock mutation to an exact product ID and return the recorded event plus resulting stock projection.',
+        inputSchema: updateInventoryInputSchema,
+        outputSchema: stockMutationOutputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
+      },
+      (input) => {
+        let mutation: StockMutation;
+        if (input.operation === StockMutationOperation.mark_out) {
+          mutation = {
+            productId: input.productId,
+            operation: input.operation,
+            source: TransportSource.mcp,
+          };
+        } else if (input.operation === StockMutationOperation.set) {
+          mutation = {
+            productId: input.productId,
+            operation: input.operation,
+            quantity: input.quantity!,
+            unit: input.unit,
+            source: TransportSource.mcp,
+          };
+        } else {
+          mutation = {
+            productId: input.productId,
+            operation: input.operation,
+            quantity: input.quantity!,
+            unit: input.unit,
+            source: TransportSource.mcp,
+          };
+        }
+        return this.runTool('update_inventory', async () =>
+          this.toolResult(await this.inventoryService.updateStock(mutation)),
+        );
+      },
+    );
+
+    server.registerTool(
+      'record_purchases',
+      {
+        description:
+          'Record an all-or-nothing batch of purchases for distinct exact product IDs and return ordered event and stock receipts.',
+        inputSchema: recordPurchasesInputSchema,
+        outputSchema: recordPurchasesOutputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
+      },
+      (input) =>
+        this.runTool('record_purchases', async () =>
+          this.toolResult(
+            await this.inventoryService.recordPurchases({
               ...input,
               source: TransportSource.mcp,
             }),

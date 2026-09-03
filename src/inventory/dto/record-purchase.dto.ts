@@ -7,7 +7,10 @@ import {
   IsPositive,
   IsString,
   IsUUID,
+  IsISO8601,
+  Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { InventoryEventType } from '../../generated/prisma/enums';
 
 const PURCHASE_EVENT_TYPES = [
@@ -26,12 +29,16 @@ export class RecordPurchaseDto {
     typeof InventoryEventType.PURCHASED | typeof InventoryEventType.RESTOCKED;
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber({ allowInfinity: false, allowNaN: false })
   @IsPositive()
   quantity?: number;
 
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
+  @IsNotEmpty()
   unit?: string;
 
   @IsOptional()
@@ -41,4 +48,12 @@ export class RecordPurchaseDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  @IsISO8601({ strict: true, strictSeparator: true })
+  @Matches(/(?:Z|[+-]\d{2}:\d{2})$/i, {
+    message: 'purchasedAt must include an explicit timezone',
+  })
+  purchasedAt?: string;
 }

@@ -1,5 +1,8 @@
 import { PredictedState } from '../generated/prisma/enums';
-import { StockLedgerException } from './stock-ledger.exception';
+import {
+  StockLedgerException,
+  StockStateConflictException,
+} from './stock-ledger.exception';
 import { StockLedgerService } from './stock-ledger.service';
 import { StockLedgerTransaction } from './types/stock-ledger';
 
@@ -9,7 +12,9 @@ describe('StockLedgerService', () => {
     unit: string;
     recordedQuantity?: number;
     recordedEventId?: string;
-    estimatedQuantity?: number;
+    estimatedQuantity?: number | null;
+    estimatedState?: PredictedState;
+    confidence?: number;
     evaluatedAt?: Date;
   }
 
@@ -19,10 +24,16 @@ describe('StockLedgerService', () => {
     update: Record<string, unknown>;
   }
 
+  interface UpdateArguments {
+    where: { productId: string };
+    data: Record<string, unknown>;
+  }
+
   const service = new StockLedgerService();
   const stockProjection = {
     findUnique: jest.fn<(args: unknown) => Promise<ProjectionRecord | null>>(),
     upsert: jest.fn<(args: UpsertArguments) => Promise<unknown>>(),
+    update: jest.fn<(args: UpdateArguments) => Promise<unknown>>(),
   };
   const tx = { stockProjection } as unknown as StockLedgerTransaction;
   const baseFact = {
@@ -38,6 +49,7 @@ describe('StockLedgerService', () => {
     jest.clearAllMocks();
     stockProjection.findUnique.mockResolvedValue(null);
     stockProjection.upsert.mockResolvedValue({});
+    stockProjection.update.mockResolvedValue({});
   });
 
   it.each([
@@ -128,6 +140,7 @@ describe('StockLedgerService', () => {
       recordedQuantity: 7,
       recordedEventId: 'newer-event',
       estimatedQuantity: 7,
+      recordedAt: new Date('2026-09-02T10:00:01.000Z'),
       evaluatedAt: new Date('2026-09-02T10:00:01.000Z'),
     };
     stockProjection.findUnique.mockResolvedValue(newerProjection);
@@ -139,6 +152,31 @@ describe('StockLedgerService', () => {
       }),
     ).resolves.toBe(newerProjection);
     expect(stockProjection.upsert).not.toHaveBeenCalled();
+  });
+
+  it('stores a backdated purchase fact with its forward-materialized estimate', async () => {
+    const evaluatedAt = new Date('2026-09-03T10:00:00.000Z');
+
+    await service.resetWithinTransaction(tx, {
+      ...baseFact,
+      explicitUnit: 'liter',
+      materialization: {
+        estimatedQuantity: 0.5,
+        estimatedState: PredictedState.likely_available,
+        confidence: 0.8,
+        reason: 'purchase_forward_estimated',
+        evaluatedAt,
+      },
+    });
+
+    expect(lastUpsert().create).toMatchObject({
+      recordedQuantity: 2,
+      recordedAt: baseFact.occurredAt,
+      estimatedQuantity: 0.5,
+      confidence: 0.8,
+      reason: 'purchase_forward_estimated',
+      evaluatedAt,
+    });
   });
 
   it('materializes an out observation at zero', async () => {
@@ -213,6 +251,206 @@ describe('StockLedgerService', () => {
     expect(stockProjection.upsert).not.toHaveBeenCalled();
   });
 
+  it('sets a first absolute balance', async () => {
+    await service.setWithinTransaction(tx, {
+      ...baseFact,
+      explicitUnit: 'liter',
+      reason: 'stock_set',
+    });
+
+    expect(lastUpsert().create).toMatchObject({
+      productId: 'product-1',
+      unit: 'liter',
+      recordedQuantity: 2,
+      estimatedQuantity: 2,
+      estimatedState: PredictedState.likely_available,
+      recordedEventId: 'event-1',
+    });
+  });
+
+  it('treats an explicit set unit as confirmed replacement', async () => {
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'liter',
+      recordedQuantity: 9,
+      estimatedQuantity: 9,
+    });
+
+    await service.setWithinTransaction(tx, {
+      ...baseFact,
+      explicitUnit: 'carton',
+      reason: 'stock_set',
+    });
+
+    expect(lastUpsert().update).toMatchObject({
+      unit: 'carton',
+      recordedQuantity: 2,
+      estimatedQuantity: 2,
+    });
+  });
+
+  it('retains the established unit when a set omits it', async () => {
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'liter',
+      estimatedQuantity: 2,
+    });
+
+    await service.setWithinTransaction(tx, {
+      ...baseFact,
+      reason: 'stock_set',
+    });
+
+    expect(lastUpsert().update).toMatchObject({ unit: 'liter' });
+  });
+
+  it.each([
+    null,
+    { productId: 'product-1', unit: 'item', estimatedQuantity: null },
+  ])('rejects decrement without a numeric estimate', async (projection) => {
+    stockProjection.findUnique.mockResolvedValue(projection);
+
+    await expect(
+      service.decrementWithinTransaction(tx, {
+        ...baseFact,
+        quantity: 1,
+        reason: 'stock_decremented',
+      }),
+    ).rejects.toThrow(StockStateConflictException);
+    expect(stockProjection.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a decrement unit that conflicts with the ledger', async () => {
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'liter',
+      estimatedQuantity: 2,
+      estimatedState: PredictedState.likely_available,
+    });
+
+    await expect(
+      service.decrementWithinTransaction(tx, {
+        ...baseFact,
+        quantity: 1,
+        explicitUnit: 'carton',
+        reason: 'stock_decremented',
+      }),
+    ).rejects.toThrow(StockLedgerException);
+  });
+
+  it('decrements the estimate while preserving absolute fact and uncertainty', async () => {
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'item',
+      recordedQuantity: 5,
+      recordedEventId: 'recorded-event',
+      estimatedQuantity: 3,
+      estimatedState: PredictedState.probably_low,
+      confidence: 0.6,
+    });
+
+    await service.decrementWithinTransaction(tx, {
+      ...baseFact,
+      quantity: 1,
+      explicitUnit: 'item',
+      reason: 'stock_decremented',
+    });
+
+    expect(lastUpdate().data).toMatchObject({
+      estimatedQuantity: 2,
+      estimatedState: PredictedState.probably_low,
+      reason: 'stock_decremented',
+      predictionId: null,
+    });
+    expect(lastUpdate().data).not.toHaveProperty('recordedQuantity');
+    expect(lastUpdate().data).not.toHaveProperty('recordedEventId');
+    expect(lastUpdate().data).not.toHaveProperty('confidence');
+  });
+
+  it('clamps an over-decrement at zero and marks the estimate out', async () => {
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'item',
+      estimatedQuantity: 1,
+      estimatedState: PredictedState.likely_available,
+    });
+
+    await service.decrementWithinTransaction(tx, {
+      ...baseFact,
+      quantity: 4,
+      reason: 'stock_decremented',
+    });
+
+    expect(lastUpdate().data).toMatchObject({
+      estimatedQuantity: 0,
+      estimatedState: PredictedState.probably_out,
+    });
+  });
+
+  it('marks untracked and already-out stock at an explicit zero balance', async () => {
+    await service.markOutWithinTransaction(tx, {
+      productId: 'product-1',
+      eventId: 'event-1',
+      occurredAt: baseFact.occurredAt,
+      source: 'mcp',
+      reason: 'stock_marked_out',
+      typicalUnit: 'item',
+    });
+    expect(lastUpsert().create).toMatchObject({
+      recordedQuantity: 0,
+      estimatedQuantity: 0,
+      estimatedState: PredictedState.probably_out,
+    });
+
+    stockProjection.findUnique.mockResolvedValue({
+      productId: 'product-1',
+      unit: 'item',
+      recordedQuantity: 0,
+      estimatedQuantity: 0,
+      estimatedState: PredictedState.probably_out,
+    });
+    await service.markOutWithinTransaction(tx, {
+      productId: 'product-1',
+      eventId: 'event-2',
+      occurredAt: baseFact.occurredAt,
+      source: 'mcp',
+      reason: 'stock_marked_out',
+    });
+    expect(lastUpsert().update).toMatchObject({
+      recordedQuantity: 0,
+      recordedEventId: 'event-2',
+      estimatedQuantity: 0,
+    });
+  });
+
+  it.each(['set', 'decrement', 'mark_out'] as const)(
+    'does not let a stale %s replace a newer projection',
+    async (operation) => {
+      const newerProjection = {
+        productId: 'product-1',
+        unit: 'item',
+        recordedQuantity: 7,
+        recordedEventId: 'newer-event',
+        estimatedQuantity: 7,
+        estimatedState: PredictedState.likely_available,
+        evaluatedAt: new Date('2026-09-02T10:00:01.000Z'),
+      };
+      stockProjection.findUnique.mockResolvedValue(newerProjection);
+
+      const common = { ...baseFact, reason: `stock_${operation}` };
+      if (operation === 'set') {
+        await service.setWithinTransaction(tx, common);
+      } else if (operation === 'decrement') {
+        await service.decrementWithinTransaction(tx, common);
+      } else {
+        await service.markOutWithinTransaction(tx, common);
+      }
+
+      expect(stockProjection.upsert).not.toHaveBeenCalled();
+      expect(stockProjection.update).not.toHaveBeenCalled();
+    },
+  );
+
   function lastUpsert(): UpsertArguments {
     const calls = stockProjection.upsert.mock.calls as unknown as Array<
       [UpsertArguments]
@@ -220,6 +458,17 @@ describe('StockLedgerService', () => {
     const call = calls.at(-1);
     if (!call) {
       throw new Error('Expected stock projection upsert');
+    }
+    return call[0];
+  }
+
+  function lastUpdate(): UpdateArguments {
+    const calls = stockProjection.update.mock.calls as unknown as Array<
+      [UpdateArguments]
+    >;
+    const call = calls.at(-1);
+    if (!call) {
+      throw new Error('Expected stock projection update');
     }
     return call[0];
   }

@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-09-01T19:57:39.354059+00:00",
+  "generated_at": "2026-09-03T08:57:16.513238+00:00",
   "nodes": {
     "blueprint_context_bugs_readme": {
-      "code_fingerprint": "0f9ed992519c06b5d94431c9834c93929adbd92a80e27cc3c003b12b319ef062",
+      "code_fingerprint": "2c53cb2d81883e072e79abcca723df7bd8c94cb644fcbe58e0a3b35492ef7426",
       "label": "bugs/README.md",
       "last": "2026-09-01T19:39:22.130271+00:00",
       "provenance": [
@@ -12,42 +12,31 @@
           "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
         }
       ],
-      "score": 0.999706626,
+      "score": 0.96472965,
       "source_file": "blueprint/context/bugs/README.md",
       "status": "tentative",
       "uses": 1
     },
-    "blueprint_context_bugs_triage_mcp_and_skill_gaps_current_triage": {
-      "code_fingerprint": "265f6e8fb311960d737aff8f88337b13fbf7d388ff7e4de4ed5eb056184aede4",
-      "label": "MCP and skill gaps - current triage",
-      "last": "2026-09-01T19:47:04.501938+00:00",
-      "provenance": [
-        {
-          "date": "2026-09-01T19:47:04.501938+00:00",
-          "outcome": "useful",
-          "q": "can you update the blueprint/context/bugs/triage.md file?"
-        }
-      ],
-      "score": 0.999830244,
-      "source_file": "blueprint/context/bugs/triage.md",
-      "status": "tentative",
-      "uses": 1
-    },
     "docs_agent_integrations_openclaw": {
-      "code_fingerprint": "3c967ce0b11e3143b43e0e7aeb7bc214e60e14b41d14ca724c541e2256a9b5e0",
+      "code_fingerprint": "5f98a0eea31c9d7b6c96ee30322a31356b4855ee48dfb9bcaf3ae422e8fb2463",
       "label": "OpenClaw",
-      "last": "2026-09-01T19:47:04.501938+00:00",
+      "last": "2026-09-01T19:58:07.210066+00:00",
       "provenance": [
+        {
+          "date": "2026-09-01T19:58:07.210066+00:00",
+          "outcome": "useful",
+          "q": "according to blueprint/context/bugs/triage.md which ones i can run paralel?"
+        },
         {
           "date": "2026-09-01T19:47:04.501938+00:00",
           "outcome": "useful",
           "q": "can you update the blueprint/context/bugs/triage.md file?"
         }
       ],
-      "score": 0.999830244,
+      "score": 1.929868891,
       "source_file": "docs/agent-integrations.md",
-      "status": "tentative",
-      "uses": 1
+      "status": "preferred",
+      "uses": 2
     },
     "src_estimation_estimation_service_estimationservice": {
       "code_fingerprint": "1718c2d389820f3f79a63be57861cb682eb2f327c76b57b947a3d6736186e222",
@@ -60,7 +49,7 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 0.888088353,
+      "score": 0.857016592,
       "source_file": "src/estimation/estimation.service.ts",
       "status": "tentative",
       "uses": 1
@@ -81,58 +70,79 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 1.887794978,
+      "score": 1.821746242,
       "source_file": "src/grocery/grocery.service.ts",
       "status": "preferred",
       "uses": 2
     },
-    "src_inventory_inventory_service_inventoryservice": {
-      "code_fingerprint": "df1f25b20add0618bc0327ae588d2e1c486cc86a320632d3996f3a600a6a8d10",
-      "label": "InventoryService",
-      "last": "2026-09-01T19:47:04.501938+00:00",
+    "src_inventory_dto_inventory_event_response_dto_inventoryeventresponsedto": {
+      "code_fingerprint": "731b4de644236044d16516275b28283a5a51fea3091f8242a60caf7b6d03f34c",
+      "label": "InventoryEventResponseDto",
+      "last": "2026-09-03T08:46:53.525241+00:00",
       "provenance": [
         {
-          "date": "2026-09-01T19:47:04.501938+00:00",
+          "date": "2026-09-03T08:46:53.525241+00:00",
           "outcome": "useful",
-          "q": "can you update the blueprint/context/bugs/triage.md file?"
-        },
-        {
-          "date": "2026-09-01T19:39:22.130271+00:00",
-          "outcome": "useful",
-          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
-        },
-        {
-          "date": "2026-08-27T16:40:44.458164+00:00",
-          "outcome": "useful",
-          "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
+          "q": "Which existing DTO, validation, purchase, event, response, quantity, unit, and stock contracts constrain implementation Step 1 of feature 33b?"
         }
       ],
-      "score": 2.887625222,
-      "source_file": "src/inventory/inventory.service.ts",
-      "status": "preferred",
-      "uses": 3
-    },
-    "src_inventory_prediction_feedback_service_predictionfeedbackservice": {
-      "code_fingerprint": "f4460214891e9b9f7daf5624a515abef183be571b85f01c7f171011f3930213d",
-      "label": "PredictionFeedbackService",
-      "last": "2026-09-01T19:47:04.501938+00:00",
-      "provenance": [
-        {
-          "date": "2026-09-01T19:47:04.501938+00:00",
-          "outcome": "useful",
-          "q": "can you update the blueprint/context/bugs/triage.md file?"
-        }
-      ],
-      "score": 0.999830244,
-      "source_file": "src/inventory/prediction-feedback.service.ts",
+      "score": 0.999833416,
+      "source_file": "src/inventory/dto/inventory-event-response.dto.ts",
       "status": "tentative",
       "uses": 1
     },
-    "src_mcp_mcp_server_factory_mcpserverfactory": {
-      "code_fingerprint": "e8426579205a7caa96c79b2e9d78af38327109f276d571bd17b6c541c5b9e459",
-      "label": "McpServerFactory",
-      "last": "2026-09-01T19:47:04.501938+00:00",
+    "src_inventory_dto_record_purchase_dto_recordpurchasedto": {
+      "code_fingerprint": "cb5ea73d23d7e1c0306044f4ddbfdaf6428644b2ce070523bee6d04091b2ed4f",
+      "label": "RecordPurchaseDto",
+      "last": "2026-09-03T08:46:53.525241+00:00",
       "provenance": [
+        {
+          "date": "2026-09-03T08:46:53.525241+00:00",
+          "outcome": "useful",
+          "q": "Which existing DTO, validation, purchase, event, response, quantity, unit, and stock contracts constrain implementation Step 1 of feature 33b?"
+        }
+      ],
+      "score": 0.999833416,
+      "source_file": "src/inventory/dto/record-purchase.dto.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_inventory_inventory_controller": {
+      "code_fingerprint": "5999610d8b505488a0830c4155fda2feeec73def720b19cda173edd0a6755f22",
+      "label": "inventory.controller.ts",
+      "last": "2026-09-03T08:37:34.619218+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-03T08:37:34.619218+00:00",
+          "outcome": "useful",
+          "q": "What existing contracts and code paths constrain feature 33b stock mutation and batch purchase APIs?"
+        }
+      ],
+      "score": 0.99968399,
+      "source_file": "src/inventory/inventory.controller.ts",
+      "status": "tentative",
+      "uses": 1
+    },
+    "src_inventory_inventory_service_inventoryservice": {
+      "code_fingerprint": "d0d9ae3b5f7ab7c6e6a0df072bdbde0a80f14bd1e264b0e208570e3698ad1cac",
+      "label": "InventoryService",
+      "last": "2026-09-03T08:46:53.525241+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-03T08:46:53.525241+00:00",
+          "outcome": "useful",
+          "q": "Which existing DTO, validation, purchase, event, response, quantity, unit, and stock contracts constrain implementation Step 1 of feature 33b?"
+        },
+        {
+          "date": "2026-09-03T08:37:34.619218+00:00",
+          "outcome": "useful",
+          "q": "What existing contracts and code paths constrain feature 33b stock mutation and batch purchase APIs?"
+        },
+        {
+          "date": "2026-09-01T19:58:07.210066+00:00",
+          "outcome": "useful",
+          "q": "according to blueprint/context/bugs/triage.md which ones i can run paralel?"
+        },
         {
           "date": "2026-09-01T19:47:04.501938+00:00",
           "outcome": "useful",
@@ -144,10 +154,83 @@
           "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
         }
       ],
-      "score": 1.999536869,
-      "source_file": "src/mcp/mcp-server.factory.ts",
+      "score": 5.751132538,
+      "source_file": "src/inventory/inventory.service.ts",
+      "status": "preferred",
+      "uses": 6
+    },
+    "src_inventory_prediction_feedback_service_predictionfeedbackservice": {
+      "code_fingerprint": "bee826d6cd03d2e026bbc1b0cba0ad8f20e6c98a6e93295092a7d45b0842f5a7",
+      "label": "PredictionFeedbackService",
+      "last": "2026-09-01T19:58:07.210066+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-01T19:58:07.210066+00:00",
+          "outcome": "useful",
+          "q": "according to blueprint/context/bugs/triage.md which ones i can run paralel?"
+        },
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        }
+      ],
+      "score": 1.929868891,
+      "source_file": "src/inventory/prediction-feedback.service.ts",
       "status": "preferred",
       "uses": 2
+    },
+    "src_inventory_stock_ledger_service_stockledgerservice": {
+      "code_fingerprint": "749c8b262b5ab0f1b5b314a9caabff1815d7cde45f58910f51b84a866153594b",
+      "label": "StockLedgerService",
+      "last": "2026-09-03T08:46:53.525241+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-03T08:46:53.525241+00:00",
+          "outcome": "useful",
+          "q": "Which existing DTO, validation, purchase, event, response, quantity, unit, and stock contracts constrain implementation Step 1 of feature 33b?"
+        },
+        {
+          "date": "2026-09-03T08:37:34.619218+00:00",
+          "outcome": "useful",
+          "q": "What existing contracts and code paths constrain feature 33b stock mutation and batch purchase APIs?"
+        }
+      ],
+      "score": 1.999517406,
+      "source_file": "src/inventory/stock-ledger.service.ts",
+      "status": "preferred",
+      "uses": 2
+    },
+    "src_mcp_mcp_server_factory_mcpserverfactory": {
+      "code_fingerprint": "4fc5b8a6b577ef1c0e59ff6b98ac02cf970e4548b351eb5417299508dc98d35d",
+      "label": "McpServerFactory",
+      "last": "2026-09-03T08:37:34.619218+00:00",
+      "provenance": [
+        {
+          "date": "2026-09-03T08:37:34.619218+00:00",
+          "outcome": "useful",
+          "q": "What existing contracts and code paths constrain feature 33b stock mutation and batch purchase APIs?"
+        },
+        {
+          "date": "2026-09-01T19:58:07.210066+00:00",
+          "outcome": "useful",
+          "q": "according to blueprint/context/bugs/triage.md which ones i can run paralel?"
+        },
+        {
+          "date": "2026-09-01T19:47:04.501938+00:00",
+          "outcome": "useful",
+          "q": "can you update the blueprint/context/bugs/triage.md file?"
+        },
+        {
+          "date": "2026-09-01T19:39:22.130271+00:00",
+          "outcome": "useful",
+          "q": "Okay I want to plan all the bugs that we have fixed. I think we fixed a lot of them already in the history. You can see I think we fixed the first, second, and third. I think we already fixed maybe even the fourth. What I want you to do now is go through all of README and the files, trying to send according to what we have in the code right now: what needs to be fixed and not what can be weighted and what we can reject."
+        }
+      ],
+      "score": 3.894282531,
+      "source_file": "src/mcp/mcp-server.factory.ts",
+      "status": "preferred",
+      "uses": 4
     },
     "src_prisma_prisma_service_prismaservice": {
       "code_fingerprint": "feb74d59625d69c30e262e00b6cf09b46ba980b234d48b93b724338e02813c46",
@@ -160,7 +243,7 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 0.888088353,
+      "score": 0.857016592,
       "source_file": "src/prisma/prisma.service.ts",
       "status": "tentative",
       "uses": 1
@@ -176,7 +259,7 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 0.888088353,
+      "score": 0.857016592,
       "source_file": "src/product/product.controller.ts",
       "status": "tentative",
       "uses": 1
@@ -192,13 +275,13 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 0.888088353,
+      "score": 0.857016592,
       "source_file": "src/product/product.service.ts",
       "status": "tentative",
       "uses": 1
     },
     "src_statistics_statistics_service_statisticsservice": {
-      "code_fingerprint": "82c26b575cb0903dd49a5b0c4fe9269e9ed0c43a8fa614311dabf5f6fee1ffc2",
+      "code_fingerprint": "23c827cf2252a1145fc1206485fa9b02220706ddb518d2e8486c09aee5eeda32",
       "label": "StatisticsService",
       "last": "2026-08-27T16:40:44.458164+00:00",
       "provenance": [
@@ -208,7 +291,7 @@
           "q": "Why is ProductService the main cross-community bridge between product, grocery, inventory, persistence, and controllers?"
         }
       ],
-      "score": 0.888088353,
+      "score": 0.857016592,
       "source_file": "src/statistics/statistics.service.ts",
       "status": "tentative",
       "uses": 1

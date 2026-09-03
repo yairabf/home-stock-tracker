@@ -9,6 +9,7 @@ import { LowStockRecommendationService } from './low-stock-recommendation.servic
 import { PredictionFeedbackService } from './prediction-feedback.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { PredictionFeedbackOutcome } from './dto/prediction-feedback.dto';
+import { StockMutationOperation } from './types/stock-mutation';
 
 describe('InventoryController low-stock recommendations', () => {
   let controller: InventoryController;
@@ -82,6 +83,8 @@ describe('InventoryController provenance', () => {
   const inventoryService = {
     recordEvent: jest.fn(),
     recordPurchase: jest.fn(),
+    recordPurchases: jest.fn(),
+    updateStock: jest.fn(),
     completePurchase: jest.fn(),
     completePartialPurchase: jest.fn(),
   };
@@ -112,6 +115,51 @@ describe('InventoryController provenance', () => {
       expect.objectContaining({ source: 'api' }),
     );
   });
+
+  it('dispatches batch purchases without changing the existing route', async () => {
+    const items = [
+      { productId: '00000000-0000-4000-8000-000000000001', quantity: 2 },
+    ];
+
+    await controller.recordPurchase({
+      items,
+      purchasedAt: '2026-09-01T10:00:00.000Z',
+    });
+
+    expect(inventoryService.recordPurchases).toHaveBeenCalledWith({
+      items,
+      purchasedAt: '2026-09-01T10:00:00.000Z',
+      source: 'api',
+    });
+    expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
+    expect(
+      Reflect.getMetadata(
+        PATH_METADATA,
+        InventoryController.prototype.recordPurchase,
+      ),
+    ).toBe('purchases');
+  });
+
+  it.each([
+    [StockMutationOperation.set, { quantity: 4, unit: 'liter' }],
+    [StockMutationOperation.decrement, { quantity: 1, unit: 'liter' }],
+    [StockMutationOperation.mark_out, {}],
+  ])(
+    'supplies api provenance to the %s stock operation',
+    async (operation, fields) => {
+      await controller.updateStock('00000000-0000-4000-8000-000000000001', {
+        operation,
+        ...fields,
+      });
+
+      expect(inventoryService.updateStock).toHaveBeenCalledWith({
+        productId: '00000000-0000-4000-8000-000000000001',
+        operation,
+        ...fields,
+        source: 'api',
+      });
+    },
+  );
 
   it('supplies api provenance to purchase completion writes', async () => {
     await controller.completePurchase({

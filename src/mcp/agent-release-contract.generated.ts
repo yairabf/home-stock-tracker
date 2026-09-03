@@ -6,8 +6,8 @@ export const AGENT_RELEASE_CONTRACT = {
   },
   mcp: {
     serverName: 'home-stock-tracker',
-    contractVersion: '1.2.0',
-    toolsFixture: 'contracts/1.2.0/tools-list.json',
+    contractVersion: '1.3.0',
+    toolsFixture: 'contracts/1.3.0/tools-list.json',
     versionPolicy: {
       breaking: 'major',
       additive: 'minor',
@@ -23,6 +23,7 @@ export const AGENT_RELEASE_CONTRACT = {
     tags: ['household', 'grocery', 'inventory', 'mcp'],
   },
   features: [
+    'batch-purchase-recording',
     'grocery-add',
     'grocery-catalog-confirmation',
     'grocery-list',
@@ -38,6 +39,7 @@ export const AGENT_RELEASE_CONTRACT = {
     'product-lookup',
     'product-search',
     'purchase-recording',
+    'stock-mutations',
     'stock-signals',
   ],
   requiredTools: [
@@ -55,6 +57,8 @@ export const AGENT_RELEASE_CONTRACT = {
     'list_inventory_events',
     'product_add_alias',
     'record_purchase',
+    'update_inventory',
+    'record_purchases',
     'record_stock_signal',
     'record_prediction_feedback',
     'complete_grocery_purchase',

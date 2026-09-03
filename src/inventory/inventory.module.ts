@@ -8,6 +8,7 @@ import { HouseholdModule } from '../household/household.module';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
 import { StockLedgerService } from './stock-ledger.service';
 import { StatisticsModule } from '../statistics/statistics.module';
+import { StockMaterializationService } from './stock-materialization.service';
 
 @Module({
   imports: [ProductModule, EstimationModule, HouseholdModule, StatisticsModule],
@@ -17,6 +18,7 @@ import { StatisticsModule } from '../statistics/statistics.module';
     PredictionFeedbackService,
     LowStockRecommendationService,
     StockLedgerService,
+    StockMaterializationService,
   ],
   exports: [
     InventoryService,

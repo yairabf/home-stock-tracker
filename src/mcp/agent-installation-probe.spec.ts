@@ -12,6 +12,7 @@ import {
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import express, { type Request, type Response } from 'express';
+import { AGENT_RELEASE_CONTRACT } from './agent-release-contract.generated';
 
 interface ProbeProcessResult {
   status: number | null;
@@ -49,7 +50,8 @@ describe('read-only agent installation probe', () => {
     readFileSync(
       join(
         projectRoot,
-        'integrations/shared/home-stock-tracker/contracts/1.2.0/tools-list.json',
+        'integrations/shared/home-stock-tracker',
+        AGENT_RELEASE_CONTRACT.mcp.toolsFixture,
       ),
       'utf8',
     ),

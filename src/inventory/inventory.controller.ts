@@ -17,7 +17,6 @@ import {
 } from '../estimation/prediction-engine';
 import { EstimationResponseDto } from './dto/estimation-response.dto';
 import { RecordInventoryEventDto } from './dto/record-inventory-event.dto';
-import { RecordPurchaseDto } from './dto/record-purchase.dto';
 import { ListInventoryEventsDto } from './dto/list-inventory-events.dto';
 import { InventoryEventResponseDto } from './dto/inventory-event-response.dto';
 import { InventoryEventListResponseDto } from './dto/inventory-event-list-response.dto';
@@ -31,6 +30,13 @@ import { PredictionFeedbackService } from './prediction-feedback.service';
 import { LowStockRecommendationService } from './low-stock-recommendation.service';
 import { LowStockRecommendationListResponseDto } from './dto/low-stock-recommendation-response.dto';
 import { TransportSource } from '../common/transport-source';
+import { RecordPurchasesDto } from './dto/record-purchases.dto';
+import { UpdateStockDto } from './dto/update-stock.dto';
+import {
+  RecordPurchasesResponseDto,
+  StockMutationResponseDto,
+} from './dto/stock-mutation-response.dto';
+import { StockMutationOperation } from './types/stock-mutation';
 
 @Controller('inventory')
 export class InventoryController {
@@ -71,11 +77,47 @@ export class InventoryController {
   }
 
   @Post('purchases')
+  @HttpCode(HttpStatus.CREATED)
   recordPurchase(
-    @Body() dto: RecordPurchaseDto,
-  ): Promise<InventoryEventResponseDto> {
+    @Body() dto: RecordPurchasesDto,
+  ): Promise<InventoryEventResponseDto | RecordPurchasesResponseDto> {
+    if (dto.items !== undefined) {
+      return this.inventoryService.recordPurchases({
+        items: dto.items,
+        purchasedAt: dto.purchasedAt,
+        source: TransportSource.api,
+      });
+    }
     return this.inventoryService.recordPurchase({
-      ...dto,
+      productId: dto.productId!,
+      eventType: dto.eventType!,
+      quantity: dto.quantity,
+      unit: dto.unit,
+      confidence: dto.confidence,
+      metadata: dto.metadata,
+      purchasedAt: dto.purchasedAt,
+      source: TransportSource.api,
+    });
+  }
+
+  @Post('stock/:productId')
+  @HttpCode(HttpStatus.CREATED)
+  updateStock(
+    @Param('productId', new ParseUUIDPipe()) productId: string,
+    @Body() dto: UpdateStockDto,
+  ): Promise<StockMutationResponseDto> {
+    if (dto.operation === StockMutationOperation.mark_out) {
+      return this.inventoryService.updateStock({
+        productId,
+        operation: dto.operation,
+        source: TransportSource.api,
+      });
+    }
+    return this.inventoryService.updateStock({
+      productId,
+      operation: dto.operation,
+      quantity: dto.quantity!,
+      unit: dto.unit,
       source: TransportSource.api,
     });
   }

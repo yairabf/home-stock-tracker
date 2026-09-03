@@ -153,6 +153,8 @@ describe('McpController', () => {
         'list_inventory_events',
         'product_add_alias',
         'record_purchase',
+        'update_inventory',
+        'record_purchases',
         'record_stock_signal',
         'record_prediction_feedback',
         'complete_grocery_purchase',

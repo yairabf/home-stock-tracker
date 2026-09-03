@@ -1,5 +1,6 @@
 import { Prisma } from '../../generated/prisma/client';
 import { PredictedState } from '../../generated/prisma/enums';
+import type { ForwardStockMaterializationResult } from './stock-materialization';
 
 export type StockLedgerTransaction = Prisma.TransactionClient;
 
@@ -17,6 +18,7 @@ export interface StockFactInput extends StockUnitInput {
   occurredAt: Date;
   source: string;
   reason: string;
+  materialization?: ForwardStockMaterializationResult;
 }
 
 export interface StockObservationInput extends StockUnitInput {
@@ -27,4 +29,17 @@ export interface StockObservationInput extends StockUnitInput {
   occurredAt: Date;
   source: string;
   reason: string;
+}
+
+export type StockSetInput = StockFactInput;
+
+export type StockDecrementInput = StockFactInput;
+
+export interface StockMarkOutInput {
+  productId: string;
+  eventId: string;
+  occurredAt: Date;
+  source: string;
+  reason: string;
+  typicalUnit?: string | null;
 }

@@ -5,6 +5,7 @@ export type OperationalOutcome = 'success' | 'fallback' | 'failure';
 type InventoryAction =
   | 'record_event'
   | 'record_purchase'
+  | 'update_stock'
   | 'complete_purchase'
   | 'complete_partial_purchase'
   | 'recalculate_statistics';

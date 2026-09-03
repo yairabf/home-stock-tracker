@@ -9,6 +9,8 @@ import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';
 import { createProductFixture } from './product-fixture';
+import { InventoryService } from '../src/inventory/inventory.service';
+import { StockLedgerService } from '../src/inventory/stock-ledger.service';
 
 describe('Stock ledger foundation (e2e)', () => {
   interface InventoryEventBody {
@@ -18,6 +20,8 @@ describe('Stock ledger foundation (e2e)', () => {
 
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let inventoryService: InventoryService;
+  let stockLedgerService: StockLedgerService;
   const productIds: string[] = [];
 
   beforeAll(async () => {
@@ -36,6 +40,8 @@ describe('Stock ledger foundation (e2e)', () => {
     );
     await app.init();
     prisma = app.get(PrismaService);
+    inventoryService = app.get(InventoryService);
+    stockLedgerService = app.get(StockLedgerService);
   });
 
   afterEach(async () => {
@@ -211,6 +217,161 @@ describe('Stock ledger foundation (e2e)', () => {
     expect(stored.recordedAt.getTime()).toBe(newestTimestamp);
     expect(stored.recordedQuantity).toBe(recordedEvent.quantity);
     expect(stored.estimatedQuantity).toBe(recordedEvent.quantity);
+  });
+
+  it('records an ordered multi-product batch with timestamp precedence and forward estimates', async () => {
+    const milk = await createProduct('batch-milk', 'liter');
+    const rice = await createProduct('batch-rice', 'packet');
+    const requestPurchasedAt = new Date(Date.now() - 2 * 86_400_000);
+    const itemPurchasedAt = new Date(Date.now() - 86_400_000);
+    await prisma.productShelfLifePolicy.create({
+      data: {
+        productId: milk.id,
+        kind: 'nonperishable',
+        shelfLifeDays: null,
+        confidence: 0.9,
+        rationale: 'batch materialization fixture',
+        evaluatedAt: new Date(),
+      },
+    });
+    await prisma.productStatistics.create({
+      data: {
+        productId: milk.id,
+        estimatedConsumptionIntervalDays: 10,
+      },
+    });
+
+    const result = await inventoryService.recordPurchases({
+      purchasedAt: requestPurchasedAt.toISOString(),
+      items: [
+        { productId: milk.id, quantity: 2 },
+        {
+          productId: rice.id,
+          unit: 'bag',
+          purchasedAt: itemPurchasedAt.toISOString(),
+        },
+      ],
+      source: 'mcp',
+    });
+
+    expect(result.items.map((item) => item.event.productId)).toEqual([
+      milk.id,
+      rice.id,
+    ]);
+    expect(result.items[0]).toMatchObject({
+      event: {
+        quantity: 2,
+        source: 'mcp',
+        timestamp: requestPurchasedAt,
+      },
+      stock: {
+        unit: 'liter',
+        recordedQuantity: 2,
+        recordedAt: requestPurchasedAt,
+        estimatedState: 'likely_available',
+        reason: 'purchase_forward_estimated',
+      },
+    });
+    expect(result.items[0].stock.estimatedQuantity).toBeGreaterThan(1.79);
+    expect(result.items[0].stock.estimatedQuantity).toBeLessThan(1.81);
+    expect(result.items[1]).toMatchObject({
+      event: { quantity: 1, timestamp: itemPurchasedAt },
+      stock: { unit: 'bag', recordedQuantity: 1 },
+    });
+  });
+
+  it('rolls back every batch write after an incompatible unit', async () => {
+    const milk = await createProduct('batch-unit-first', 'liter');
+    const rice = await createProduct('batch-unit-second', 'packet');
+    await inventoryService.recordPurchase({
+      productId: rice.id,
+      eventType: 'PURCHASED',
+      quantity: 2,
+      unit: 'packet',
+      source: 'api',
+    });
+    const eventCountBefore = await prisma.inventoryEvent.count({
+      where: { productId: { in: [milk.id, rice.id] } },
+    });
+
+    await expect(
+      inventoryService.recordPurchases({
+        items: [
+          { productId: milk.id, quantity: 3 },
+          { productId: rice.id, quantity: 4, unit: 'carton' },
+        ],
+        source: 'api',
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+
+    await expect(
+      prisma.inventoryEvent.count({
+        where: { productId: { in: [milk.id, rice.id] } },
+      }),
+    ).resolves.toBe(eventCountBefore);
+    await expect(
+      prisma.stockProjection.findUnique({ where: { productId: milk.id } }),
+    ).resolves.toBeNull();
+    await expect(projection(rice.id)).resolves.toMatchObject({
+      unit: 'packet',
+      recordedQuantity: 2,
+    });
+  });
+
+  it('rolls back earlier writes when a later projection persistence call fails', async () => {
+    const milk = await createProduct('batch-persistence-first', 'liter');
+    const rice = await createProduct('batch-persistence-second', 'packet');
+    const reset =
+      stockLedgerService.resetWithinTransaction.bind(stockLedgerService);
+    const resetSpy = jest
+      .spyOn(stockLedgerService, 'resetWithinTransaction')
+      .mockImplementationOnce(reset)
+      .mockRejectedValueOnce(new Error('simulated persistence failure'));
+
+    try {
+      await expect(
+        inventoryService.recordPurchases({
+          items: [{ productId: milk.id }, { productId: rice.id }],
+          source: 'api',
+        }),
+      ).rejects.toThrow('simulated persistence failure');
+    } finally {
+      resetSpy.mockRestore();
+    }
+
+    await expect(
+      prisma.inventoryEvent.count({
+        where: { productId: { in: [milk.id, rice.id] } },
+      }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.stockProjection.count({
+        where: { productId: { in: [milk.id, rice.id] } },
+      }),
+    ).resolves.toBe(0);
+  });
+
+  it('keeps concurrent batch event and projection provenance consistent', async () => {
+    const product = await createProduct('concurrent-batch', 'item');
+
+    await Promise.all([
+      inventoryService.recordPurchases({
+        items: [{ productId: product.id, quantity: 2 }],
+        source: 'api',
+      }),
+      inventoryService.recordPurchases({
+        items: [{ productId: product.id, quantity: 7 }],
+        source: 'mcp',
+      }),
+    ]);
+    const stored = await projection(product.id);
+    const recordedEvent = await prisma.inventoryEvent.findUniqueOrThrow({
+      where: { id: stored.recordedEventId },
+    });
+
+    expect(stored.recordedQuantity).toBe(recordedEvent.quantity);
+    expect(stored.recordedAt).toEqual(recordedEvent.timestamp);
+    expect(stored.recordedSource).toBe(recordedEvent.source);
   });
 
   async function createProduct(label: string, typicalUnit: string) {

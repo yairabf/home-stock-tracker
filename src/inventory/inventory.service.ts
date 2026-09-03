@@ -3,7 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client';
+import {
+  Prisma,
+  type InventoryEvent,
+  type StockProjection,
+} from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import {
@@ -38,6 +42,20 @@ import {
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { StockLedgerService } from './stock-ledger.service';
 import { StatisticsService } from '../statistics/statistics.service';
+import { StockMaterializationService } from './stock-materialization.service';
+import {
+  MAX_BATCH_PURCHASE_ITEMS,
+  PurchaseTimestampException,
+  resolveBatchPurchaseTimestamps,
+  resolvePurchaseTimestamp,
+} from './types/purchase-contract';
+import { StockMutation, StockMutationOperation } from './types/stock-mutation';
+import {
+  RecordPurchasesResponseDto,
+  StockMutationResponseDto,
+  StockProjectionResponseDto,
+} from './dto/stock-mutation-response.dto';
+import { RecordPurchaseBatchItemDto } from './dto/record-purchases.dto';
 
 interface PurchaseEventInput {
   productId: string;
@@ -54,6 +72,7 @@ export class InventoryService {
     private readonly operationalLogger: OperationalLogger,
     private readonly stockLedgerService: StockLedgerService,
     private readonly statisticsService: StatisticsService,
+    private readonly stockMaterializationService: StockMaterializationService,
   ) {}
 
   async recordPurchase(
@@ -71,7 +90,11 @@ export class InventoryService {
         'Purchase quantity must be a finite positive number',
       );
     }
-    const occurredAt = new Date();
+    const receivedAt = new Date();
+    const purchasedAt = this.resolvePurchaseTimestamp(
+      dto.purchasedAt,
+      receivedAt,
+    );
     const event = await this.runStockTransaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { id: dto.productId },
@@ -86,21 +109,32 @@ export class InventoryService {
           eventType: dto.eventType,
           quantity,
           unit: dto.unit,
-          timestamp: occurredAt,
+          timestamp: purchasedAt,
           source: dto.source,
           confidence: dto.confidence,
           metadata: dto.metadata as Prisma.InputJsonValue | undefined,
         },
       });
+      const materialization =
+        await this.stockMaterializationService.materializePurchaseWithinTransaction(
+          tx,
+          {
+            productId: dto.productId,
+            quantity,
+            purchasedAt,
+            receivedAt,
+          },
+        );
       await this.stockLedgerService.resetWithinTransaction(tx, {
         productId: dto.productId,
         eventId: createdEvent.id,
         quantity,
-        occurredAt,
+        occurredAt: purchasedAt,
         source: dto.source,
         reason: 'purchase_recorded',
         explicitUnit: dto.unit,
         typicalUnit: product.typicalUnit,
+        materialization,
       });
       return createdEvent;
     });
@@ -115,6 +149,175 @@ export class InventoryService {
     });
 
     return InventoryEventResponseDto.fromEntity(event);
+  }
+
+  async updateStock(input: StockMutation): Promise<StockMutationResponseDto> {
+    const occurredAt = new Date();
+    const result = await this.runStockTransaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: input.productId },
+        select: { id: true, typicalUnit: true },
+      });
+      if (!product) {
+        throw new NotFoundException(`No product with id "${input.productId}"`);
+      }
+
+      const event = await tx.inventoryEvent.create({
+        data: {
+          productId: input.productId,
+          eventType: this.stockMutationEventType(input.operation),
+          quantity:
+            input.operation === StockMutationOperation.mark_out
+              ? 0
+              : input.quantity,
+          unit:
+            input.operation === StockMutationOperation.mark_out
+              ? undefined
+              : input.unit,
+          timestamp: occurredAt,
+          source: input.source,
+        },
+      });
+
+      const common = {
+        productId: input.productId,
+        eventId: event.id,
+        occurredAt,
+        source: input.source,
+        typicalUnit: product.typicalUnit,
+      };
+      const stock =
+        input.operation === StockMutationOperation.set
+          ? await this.stockLedgerService.setWithinTransaction(tx, {
+              ...common,
+              quantity: input.quantity,
+              explicitUnit: input.unit,
+              reason: 'stock_set',
+            })
+          : input.operation === StockMutationOperation.decrement
+            ? await this.stockLedgerService.decrementWithinTransaction(tx, {
+                ...common,
+                quantity: input.quantity,
+                explicitUnit: input.unit,
+                reason: 'stock_decremented',
+              })
+            : await this.stockLedgerService.markOutWithinTransaction(tx, {
+                ...common,
+                reason: 'stock_marked_out',
+              });
+
+      return { event, stock };
+    });
+
+    await this.recalculateStatisticsAfterCommit(result.event.productId);
+    this.operationalLogger.inventoryAction({
+      action: 'update_stock',
+      outcome: 'success',
+      productId: result.event.productId,
+      inventoryEventId: result.event.id,
+    });
+
+    return {
+      event: InventoryEventResponseDto.fromEntity(result.event),
+      stock: StockProjectionResponseDto.fromEntity(result.stock),
+    };
+  }
+
+  async recordPurchases(input: {
+    items: RecordPurchaseBatchItemDto[];
+    purchasedAt?: string;
+    source: string;
+  }): Promise<RecordPurchasesResponseDto> {
+    const receivedAt = new Date();
+    const result = await this.runStockTransaction(async (tx) => {
+      this.assertBatchPurchaseItems(input.items);
+      const purchasedAts = this.resolveBatchPurchaseTimestamps(
+        input.items,
+        input.purchasedAt,
+        receivedAt,
+      );
+      const productIds = input.items.map((item) => item.productId);
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, typicalUnit: true },
+      });
+      const productsById = new Map(
+        products.map((product) => [product.id, product]),
+      );
+      const missingProductId = productIds.find(
+        (productId) => !productsById.has(productId),
+      );
+      if (missingProductId) {
+        throw new NotFoundException(`No product with id "${missingProductId}"`);
+      }
+
+      const items: Array<{
+        event: InventoryEvent;
+        stock: StockProjection;
+      }> = [];
+      for (const [index, item] of input.items.entries()) {
+        const quantity = item.quantity ?? 1;
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          throw new BadRequestException({
+            code: 'INVALID_PURCHASE_QUANTITY',
+            message: 'Purchase quantity must be a finite positive number',
+          });
+        }
+        const product = productsById.get(item.productId)!;
+        const purchasedAt = purchasedAts[index];
+        const event = await tx.inventoryEvent.create({
+          data: {
+            productId: item.productId,
+            eventType: InventoryEventType.PURCHASED,
+            quantity,
+            unit: item.unit,
+            timestamp: purchasedAt,
+            source: input.source,
+          },
+        });
+        const materialization =
+          await this.stockMaterializationService.materializePurchaseWithinTransaction(
+            tx,
+            {
+              productId: item.productId,
+              quantity,
+              purchasedAt,
+              receivedAt,
+            },
+          );
+        const stock = await this.stockLedgerService.resetWithinTransaction(tx, {
+          productId: item.productId,
+          eventId: event.id,
+          quantity,
+          occurredAt: purchasedAt,
+          source: input.source,
+          reason: 'purchase_recorded',
+          explicitUnit: item.unit,
+          typicalUnit: product.typicalUnit,
+          materialization,
+        });
+        items.push({ event, stock });
+      }
+      return { items, productIds };
+    });
+
+    await Promise.all(
+      result.productIds.map((productId) =>
+        this.recalculateStatisticsAfterCommit(productId),
+      ),
+    );
+    this.operationalLogger.inventoryAction({
+      action: 'record_purchase',
+      outcome: 'success',
+      affectedCount: result.items.length,
+    });
+
+    return {
+      items: result.items.map(({ event, stock }) => ({
+        event: InventoryEventResponseDto.fromEntity(event),
+        stock: StockProjectionResponseDto.fromEntity(stock),
+      })),
+    };
   }
 
   private async runStockTransaction<T>(
@@ -145,6 +348,69 @@ export class InventoryService {
     );
   }
 
+  private resolvePurchaseTimestamp(
+    purchasedAt: string | undefined,
+    receivedAt: Date,
+  ): Date {
+    try {
+      return resolvePurchaseTimestamp(purchasedAt, receivedAt);
+    } catch (error) {
+      if (error instanceof PurchaseTimestampException) {
+        throw new BadRequestException({
+          code: 'INVALID_PURCHASE_TIMESTAMP',
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  }
+
+  private resolveBatchPurchaseTimestamps(
+    items: RecordPurchaseBatchItemDto[],
+    purchasedAt: string | undefined,
+    receivedAt: Date,
+  ): Date[] {
+    try {
+      return resolveBatchPurchaseTimestamps({ items, purchasedAt }, receivedAt);
+    } catch (error) {
+      if (error instanceof PurchaseTimestampException) {
+        throw new BadRequestException({
+          code: 'INVALID_PURCHASE_TIMESTAMP',
+          message: error.message,
+        });
+      }
+      throw error;
+    }
+  }
+
+  private assertBatchPurchaseItems(items: RecordPurchaseBatchItemDto[]): void {
+    if (items.length === 0 || items.length > MAX_BATCH_PURCHASE_ITEMS) {
+      throw new BadRequestException({
+        code: 'INVALID_PURCHASE_BATCH_SIZE',
+        message: `Purchase batch must contain between 1 and ${MAX_BATCH_PURCHASE_ITEMS} items`,
+      });
+    }
+    if (new Set(items.map((item) => item.productId)).size !== items.length) {
+      throw new BadRequestException({
+        code: 'DUPLICATE_PURCHASE_PRODUCT',
+        message: 'Purchase batch must not contain duplicate product IDs',
+      });
+    }
+  }
+
+  private stockMutationEventType(
+    operation: StockMutationOperation,
+  ): InventoryEventType {
+    switch (operation) {
+      case StockMutationOperation.set:
+        return InventoryEventType.STOCK_SET;
+      case StockMutationOperation.decrement:
+        return InventoryEventType.STOCK_CONSUMED;
+      case StockMutationOperation.mark_out:
+        return InventoryEventType.STOCK_OUT;
+    }
+  }
+
   private async recalculateStatisticsAfterCommit(
     productId: string,
   ): Promise<void> {
@@ -163,6 +429,16 @@ export class InventoryService {
   async recordEvent(
     dto: RecordInventoryEventDto & { source: string },
   ): Promise<InventoryEventResponseDto> {
+    if (
+      dto.eventType === InventoryEventType.STOCK_SET ||
+      dto.eventType === InventoryEventType.STOCK_CONSUMED
+    ) {
+      throw new BadRequestException({
+        code: 'INVALID_INVENTORY_EVENT_TYPE',
+        message:
+          'STOCK_SET and STOCK_CONSUMED must use the dedicated stock mutation operation',
+      });
+    }
     if (
       dto.eventType === InventoryEventType.STOCK_LOW ||
       dto.eventType === InventoryEventType.STOCK_OUT

@@ -282,7 +282,8 @@ stable machine-readable removal contract.
 | ------ | ------------------------------------------------------ | --------------------------------------------------- |
 | `POST` | `/api/v1/inventory/events`                             | Record an inventory event.                          |
 | `GET`  | `/api/v1/inventory/events`                             | List events with filters and pagination.            |
-| `POST` | `/api/v1/inventory/purchases`                          | Record `PURCHASED` or `RESTOCKED`.                  |
+| `POST` | `/api/v1/inventory/stock/:productId`                   | Set, decrement, or mark out current stock.          |
+| `POST` | `/api/v1/inventory/purchases`                          | Record one purchase/restock or an atomic batch.     |
 | `POST` | `/api/v1/inventory/purchases/complete`                 | Complete grocery IDs for one product.               |
 | `POST` | `/api/v1/inventory/purchases/complete-partial`         | Complete selected items or all except selected IDs. |
 | `GET`  | `/api/v1/inventory/estimate/:productId`                | Estimate one product's stock state.                 |
@@ -296,9 +297,9 @@ and non-negative `offset`.
 Inventory event types:
 
 ```text
-GROCERY_ADDED, GROCERY_REMOVED, PURCHASED, RESTOCKED, STOCK_LOW, STOCK_OUT,
-STOCK_CONFIRMED, STOCK_CORRECTED, PREDICTION_ACCEPTED, PREDICTION_REJECTED,
-INFERRED_LOW_STOCK
+GROCERY_ADDED, GROCERY_REMOVED, PURCHASED, RESTOCKED, STOCK_SET,
+STOCK_CONSUMED, STOCK_LOW, STOCK_OUT, STOCK_CONFIRMED, STOCK_CORRECTED,
+PREDICTION_ACCEPTED, PREDICTION_REJECTED, INFERRED_LOW_STOCK
 ```
 
 Every event requires `productId` and `eventType`. `quantity`, `unit`,
@@ -307,6 +308,63 @@ positive quantity and defaults an omitted quantity to `1`. A purchase or
 restock replaces the materialized stock estimate rather than adding to it.
 Prefer the focused purchase and stock routes over directly creating internal
 prediction events.
+
+The stock route accepts exactly one of these strict bodies:
+
+```json
+{ "operation": "set", "quantity": 5, "unit": "liter" }
+```
+
+```json
+{ "operation": "decrement", "quantity": 1, "unit": "liter" }
+```
+
+```json
+{ "operation": "mark_out" }
+```
+
+Quantities are finite and positive. `set` may establish or explicitly replace
+the canonical unit. `decrement` requires a tracked numeric estimate and a
+compatible unit, subtracts the requested amount, and clamps the estimate at
+zero. `mark_out` accepts no quantity or unit. Successful responses contain the
+new event and materialized `stock`; an unknown product returns `404`, and an
+untracked or quantity-unknown decrement returns `409` with
+`STOCK_STATE_CONFLICT`.
+
+The purchases route preserves its legacy single body and event-only response:
+
+```json
+{
+  "productId": "product-uuid",
+  "eventType": "PURCHASED",
+  "quantity": 2,
+  "unit": "carton",
+  "purchasedAt": "2026-09-01T10:00:00Z"
+}
+```
+
+It also accepts a distinct batch body and returns `{ "items": [...] }` in input
+order:
+
+```json
+{
+  "purchasedAt": "2026-09-01T10:00:00Z",
+  "items": [
+    { "productId": "first-product-uuid", "quantity": 2 },
+    {
+      "productId": "second-product-uuid",
+      "purchasedAt": "2026-09-02T10:00:00Z"
+    }
+  ]
+}
+```
+
+A batch contains 1 through 100 unique product IDs. Item timestamps override the
+request timestamp; omitted quantities default to `1`. Timestamps require an
+explicit timezone and cannot be in the future. All products, events, and stock
+projections commit in one serializable transaction, so any invalid or missing
+item leaves the entire batch unwritten. Backdated facts retain their historical
+event time while their stock estimate is materialized forward to receipt time.
 
 Prediction feedback shapes:
 
@@ -402,6 +460,8 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `get_inventory`                 | Read  | Estimate one product's stock state.                                                            |
 | `list_inventory_events`         | Read  | List recorded inventory events with filters and bounded pagination.                            |
 | `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
+| `update_inventory`              | Write | Set, decrement, or mark out one product's current stock.                                       |
+| `record_purchases`              | Write | Record an ordered, all-or-nothing batch of resolved product IDs.                               |
 | `record_stock_signal`           | Write | Record low, out, confirmed, or corrected stock.                                                |
 | `record_prediction_feedback`    | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.         |
 | `complete_grocery_purchase`     | Write | Complete pending rows atomically and optionally record explicit actual purchase measurements.  |
@@ -413,6 +473,20 @@ the same exact normalized canonical-name and alias lookup as REST and returns th
 same approved display spelling. `PRODUCT_NAME_CONFLICT` is the stable namespace
 conflict for MCP and internal callers; it is final and should not be retried as a
 name lookup or write without changing the requested ownership.
+
+`record_purchase` accepts the legacy single-purchase fields plus optional
+`purchasedAt`. `update_inventory` includes `productId` alongside the same strict
+stock-operation fields as REST. `record_purchases` uses the same batch shape as
+REST, including request/item timestamp precedence and the 100-item limit. MCP
+never accepts client-supplied provenance; all three tools record source `mcp`.
+Resolve names with `get_product` or `search_products` before batch submission.
+
+The current mutation contract intentionally stops at deterministic writes and
+forward materialization. Shelf-life inference and scheduled evaluation belong to
+feature 33c; complete and enriched inventory reads belong to 33d; agent behavior,
+new conversation scenarios, and skill release `1.13.0` belong to 33e. The
+presence of these tools in discovery does not claim that installed agents already
+choose or orchestrate them.
 
 `get_household_context` accepts only `{}` and returns `id`, `adultsCount`,
 `childrenCount`, `childAgeGroups`, `predictionPreferences`,

@@ -67,6 +67,8 @@ describe('McpServerFactory grocery tools', () => {
     Pick<
       InventoryService,
       | 'recordPurchase'
+      | 'recordPurchases'
+      | 'updateStock'
       | 'recordEvent'
       | 'listEvents'
       | 'completeGroceryPurchase'
@@ -100,6 +102,8 @@ describe('McpServerFactory grocery tools', () => {
     predictionEngine = { predictProduct: jest.fn() };
     inventoryService = {
       recordPurchase: jest.fn(),
+      recordPurchases: jest.fn(),
+      updateStock: jest.fn(),
       recordEvent: jest.fn(),
       listEvents: jest.fn(),
       completeGroceryPurchase: jest.fn(),
@@ -152,6 +156,8 @@ describe('McpServerFactory grocery tools', () => {
       'list_inventory_events',
       'product_add_alias',
       'record_purchase',
+      'update_inventory',
+      'record_purchases',
       'record_stock_signal',
       'record_prediction_feedback',
       'complete_grocery_purchase',
@@ -446,12 +452,75 @@ describe('McpServerFactory grocery tools', () => {
         },
       },
     });
+    const updateInventoryTool = result.tools.find(
+      ({ name }) => name === 'update_inventory',
+    );
+    expect(updateInventoryTool).toMatchObject({
+      inputSchema: {
+        type: 'object',
+      },
+      outputSchema: {
+        properties: {
+          event: { type: 'object' },
+          stock: {
+            type: 'object',
+            properties: {
+              recordedQuantity: {},
+              estimatedState: { enum: Object.values(PredictedState) },
+              evaluatedAt: { type: 'string' },
+            },
+          },
+        },
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    });
+    expect(JSON.stringify(updateInventoryTool?.inputSchema)).toContain(
+      'additionalProperties',
+    );
+    expect(updateInventoryTool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      required: ['productId', 'operation'],
+      properties: {
+        productId: { type: 'string', format: 'uuid' },
+        operation: { enum: ['set', 'decrement', 'mark_out'] },
+        quantity: { type: 'number', exclusiveMinimum: 0 },
+        unit: { type: 'string', minLength: 1 },
+      },
+    });
+    const recordPurchasesTool = result.tools.find(
+      ({ name }) => name === 'record_purchases',
+    );
+    expect(recordPurchasesTool).toMatchObject({
+      inputSchema: {
+        additionalProperties: false,
+        required: ['items'],
+        properties: {
+          purchasedAt: { type: 'string', format: 'date-time' },
+          items: {
+            type: 'array',
+            minItems: 1,
+            maxItems: 100,
+            items: { type: 'object', additionalProperties: false },
+          },
+        },
+      },
+      outputSchema: {
+        properties: { items: { type: 'array' } },
+      },
+    });
     for (const name of [
       'grocery_add',
       'grocery_confirm_new_product',
       'grocery_confirm_product_alias',
       'product_add_alias',
       'record_purchase',
+      'update_inventory',
+      'record_purchases',
       'record_stock_signal',
       'complete_grocery_purchase',
     ]) {
@@ -997,6 +1066,8 @@ describe('McpServerFactory grocery tools', () => {
     expect(groceryService.confirmNewProduct).not.toHaveBeenCalled();
     expect(groceryService.confirmProductAlias).not.toHaveBeenCalled();
     expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
+    expect(inventoryService.updateStock).not.toHaveBeenCalled();
+    expect(inventoryService.recordPurchases).not.toHaveBeenCalled();
     expect(inventoryService.recordEvent).not.toHaveBeenCalled();
     expect(inventoryService.completeGroceryPurchase).not.toHaveBeenCalled();
   });
@@ -1572,6 +1643,7 @@ describe('McpServerFactory grocery tools', () => {
         quantity: 2,
         unit: 'liter',
         metadata: { store: 'market' },
+        purchasedAt: '2026-08-26T12:00:00.000Z',
       },
     });
 
@@ -1581,11 +1653,181 @@ describe('McpServerFactory grocery tools', () => {
       quantity: 2,
       unit: 'liter',
       metadata: { store: 'market' },
+      purchasedAt: '2026-08-26T12:00:00.000Z',
       source: 'mcp',
     });
     expect(result.structuredContent).toEqual({
       ...event,
       timestamp: event.timestamp.toISOString(),
+    });
+  });
+
+  it('rejects a timezone-free record_purchase timestamp before service invocation', async () => {
+    const result = await client.callTool({
+      name: 'record_purchase',
+      arguments: {
+        productId: item.productId,
+        eventType: InventoryEventType.PURCHASED,
+        purchasedAt: '2026-08-26T12:00:00',
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(inventoryService.recordPurchase).not.toHaveBeenCalled();
+  });
+
+  it('updates inventory with MCP provenance and a structured receipt', async () => {
+    const receipt = stockMutationReceipt(InventoryEventType.STOCK_SET);
+    inventoryService.updateStock.mockResolvedValue(receipt);
+
+    const result = await client.callTool({
+      name: 'update_inventory',
+      arguments: {
+        productId: item.productId,
+        operation: 'set',
+        quantity: 4,
+        unit: 'liter',
+      },
+    });
+
+    expect(inventoryService.updateStock).toHaveBeenCalledWith({
+      productId: item.productId,
+      operation: 'set',
+      quantity: 4,
+      unit: 'liter',
+      source: 'mcp',
+    });
+    expect(result.structuredContent).toEqual(
+      JSON.parse(JSON.stringify(receipt)),
+    );
+  });
+
+  it('records ordered batch purchases with MCP provenance and timestamp inheritance inputs', async () => {
+    const first = stockMutationReceipt(InventoryEventType.PURCHASED);
+    const second = stockMutationReceipt(InventoryEventType.PURCHASED, {
+      productId: '00000000-0000-4000-8000-000000000004',
+      eventId: '00000000-0000-4000-8000-000000000005',
+    });
+    inventoryService.recordPurchases.mockResolvedValue({
+      items: [first, second],
+    });
+    const purchasedAt = '2026-08-25T12:00:00.000Z';
+    const itemPurchasedAt = '2026-08-26T12:00:00+02:00';
+    const items = [
+      { productId: item.productId, quantity: 2 },
+      {
+        productId: second.event.productId,
+        purchasedAt: itemPurchasedAt,
+      },
+    ];
+
+    const result = await client.callTool({
+      name: 'record_purchases',
+      arguments: { purchasedAt, items },
+    });
+
+    expect(inventoryService.recordPurchases).toHaveBeenCalledWith({
+      purchasedAt,
+      items,
+      source: 'mcp',
+    });
+    expect(
+      (result.structuredContent as { items: Array<typeof first> }).items.map(
+        ({ event }) => event.productId,
+      ),
+    ).toEqual([item.productId, second.event.productId]);
+  });
+
+  it.each([
+    [
+      'set without quantity',
+      'update_inventory',
+      {
+        productId: item.productId,
+        operation: 'set',
+      },
+    ],
+    [
+      'mark_out with fields',
+      'update_inventory',
+      {
+        productId: item.productId,
+        operation: 'mark_out',
+        quantity: 1,
+      },
+    ],
+    [
+      'client source',
+      'update_inventory',
+      {
+        productId: item.productId,
+        operation: 'mark_out',
+        source: 'api',
+      },
+    ],
+    [
+      'duplicate batch products',
+      'record_purchases',
+      {
+        items: [{ productId: item.productId }, { productId: item.productId }],
+      },
+    ],
+    [
+      'timezone-free batch timestamp',
+      'record_purchases',
+      {
+        purchasedAt: '2026-08-26T12:00:00',
+        items: [{ productId: item.productId }],
+      },
+    ],
+    [
+      'unknown batch field',
+      'record_purchases',
+      {
+        items: [{ productId: item.productId, eventType: 'PURCHASED' }],
+      },
+    ],
+  ])(
+    'rejects invalid %s input before service invocation',
+    async (_label, name, args) => {
+      const result = await client.callTool({ name, arguments: args });
+
+      expect(result.isError).toBe(true);
+      expect(inventoryService.updateStock).not.toHaveBeenCalled();
+      expect(inventoryService.recordPurchases).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns stock state conflicts as safe MCP tool errors', async () => {
+    inventoryService.updateStock.mockRejectedValue(
+      new ConflictException({
+        code: 'STOCK_STATE_CONFLICT',
+        message: 'Stock must be tracked before decrementing',
+      }),
+    );
+
+    const result = await client.callTool({
+      name: 'update_inventory',
+      arguments: {
+        productId: item.productId,
+        operation: 'decrement',
+        quantity: 1,
+      },
+    });
+
+    expect(result).toEqual({
+      content: [
+        {
+          type: 'text',
+          text: 'STOCK_STATE_CONFLICT: Stock must be tracked before decrementing',
+        },
+      ],
+      isError: true,
+    });
+    expect(operationalLogger.mcpIntegration).toHaveBeenCalledWith({
+      outcome: 'failure',
+      tool: 'update_inventory',
+      errorType: 'domain_error',
     });
   });
 
@@ -1998,5 +2240,34 @@ function inventoryEvent(eventType: InventoryEventType) {
     source: 'mcp',
     confidence: null,
     metadata: null,
+  };
+}
+
+function stockMutationReceipt(
+  eventType: InventoryEventType,
+  overrides: { productId?: string; eventId?: string } = {},
+) {
+  const productId = overrides.productId ?? item.productId;
+  const event = {
+    ...inventoryEvent(eventType),
+    id: overrides.eventId ?? '00000000-0000-4000-8000-000000000003',
+    productId,
+  };
+  return {
+    event,
+    stock: {
+      productId,
+      unit: 'liter',
+      recordedQuantity: 2,
+      recordedAt: new Date('2026-08-27T12:00:00.000Z'),
+      recordedSource: 'mcp',
+      recordedEventId: event.id,
+      estimatedQuantity: 2,
+      estimatedState: PredictedState.likely_available,
+      confidence: 1,
+      reason: 'purchase_recorded',
+      predictionId: null,
+      evaluatedAt: new Date('2026-08-27T12:00:00.000Z'),
+    },
   };
 }
