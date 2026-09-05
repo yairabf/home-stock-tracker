@@ -1,5 +1,9 @@
 # Household Stock Ledger and Daily Estimation
 
+Completed under build-plan items 33a through 33e on 2026-09-03. This archived
+plan preserves the overall scope; the individual feature archives record the
+implemented specifications.
+
 ## Summary
 
 Add a hybrid household-stock capability within `src/inventory`. Explicit purchases and user updates maintain one current stock projection per product, while a daily service workflow estimates remaining quantity from elapsed time, shelf life, learned consumption, and household composition.

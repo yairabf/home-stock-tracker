@@ -1,15 +1,11 @@
 {
   "schemaVersion": 1,
-  "command": "complete",
+  "command": "feature",
   "status": "ready",
-  "summary": "Feature 33e merged locally",
-  "detail": "Feature 33e was squash-merged into local main and its feature branch was deleted. Waiting for a separate push decision.",
+  "summary": "MCP-05 already completed",
+  "detail": "Confirmed existing implementation and completed fix archive; corrected stale bug status and index. No new active spec needed.",
   "boundary": "reviewed",
-  "target": "33e",
-  "progress": {
-    "completedSteps": 4,
-    "totalSteps": 4
-  },
-  "updatedAt": "2026-09-05T20:57:35Z",
-  "resumeCommand": "/complete"
+  "target": "MCP-05",
+  "updatedAt": "2026-09-05T21:24:04.467600+00:00",
+  "resumeCommand": null
 }

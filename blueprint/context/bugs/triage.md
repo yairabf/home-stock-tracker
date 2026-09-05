@@ -7,13 +7,7 @@ here.
 
 ## Deferred candidates
 
-| ID     | Decision | Current position                                                                                                                                                                                                          |
-| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MCP-05 | Wait     | Feature 31 delivered the grocery-specific `grocery_confirm_product_alias` path. A generic alias-administration tool remains optional until catalog maintenance outside grocery confirmation has a concrete user workflow. |
-| MCP-10 | Wait     | A read-only household-context tool could help setup verification and detailed explanations, but existing prediction responses and operator checks have not demonstrated the need.                                         |
-
-These are not active correctness bugs and are not scheduled. Their retained
-briefs are starting hypotheses that must be revalidated before implementation.
+None currently retained. MCP-05 and MCP-10 were completed on 2026-09-02.
 
 ## Rejected as separate work
 
@@ -33,9 +27,11 @@ briefs are starting hypotheses that must be revalidated before implementation.
 | MCP-02                                         | [Duplicate-safe grocery additions](../../history/fixes/mcp-02-duplicate-safe-grocery-additions.md)                           |
 | MCP-03                                         | [Direct pending grocery-item updates](../../history/fixes/mcp-03-direct-pending-grocery-item-updates.md)                     |
 | MCP-04                                         | [Feature 29 — product search and resolution proposals](../../history/features/29-product-search-and-resolution-proposals.md) |
+| MCP-05                                         | [Standalone alias administration](../../history/fixes/mcp-05-standalone-alias-administration.md)                             |
 | MCP-06                                         | [Inventory-event history MCP tool](../../history/fixes/mcp-06-no-inventory-event-history-tool.md)                            |
 | MCP-07                                         | [Prediction-feedback MCP tool](../../history/fixes/mcp-07-prediction-feedback-tool.md)                                       |
 | MCP-09                                         | [Purchase-completion actual measurements](../../history/fixes/mcp-09-purchase-completion-actual-quantity-details.md)         |
+| MCP-10 | [Read-only household context](../../history/fixes/mcp-10-no-read-only-household-context-tool.md) |
 | MCP-11, SKILL-04, SKILL-05, SKILL-06, SKILL-07 | [Feature 32 — verifiable agent integration contract](../../history/features/32-verifiable-agent-integration-contract.md)     |
 | MCP-12                                         | [Generic MCP source attribution](../../history/fixes/mcp-source-attribution.md)                                              |
 | MCP-X01                                        | [Pending-only grocery removal](../../history/fixes/guard-grocery-remove-pending-state.md)                                    |
