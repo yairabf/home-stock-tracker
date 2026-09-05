@@ -97,6 +97,25 @@ returned product ID, `eventType: "PURCHASED"`, and `limit: 1`. It should describ
 the result as recorded history, not estimated current stock, and must not expose
 or invent event metadata.
 
+For the new inventory reads, ask "What do we have?" The agent should call
+`list_inventory` once and label `current` as estimated stock while keeping
+`uncertain` separate. Then ask "Show me the list." It should call both
+`grocery_list` and `get_low_stock_predictions`, label committed and suggested
+items separately, and make no write until one suggestion is explicitly confirmed
+through the normal grocery-add workflow.
+
+For a stock-update smoke check, report one exact absolute quantity, one explicit
+decrement, and one out state. The agent should resolve each product and use
+`update_inventory` with `set`, `decrement`, and `mark_out` respectively, without
+unit conversion or automatic retry. A quantity-free "we still have milk" report
+must produce a clarification question before any write.
+
+For a batch-purchase smoke check, report two recently purchased products outside
+the grocery-list completion flow. The agent should resolve both identities before
+calling `record_purchases` once, preserve order and per-item measurements, and
+stop without a partial write when either identity is unresolved or the result is
+uncertain.
+
 For an unfamiliar product, the agent should call `grocery_add` in proposal mode
 with `productName` and nested `groceryItem`. A `product_resolution_required`
 result is non-authoritative and must not cause a write until the user approves

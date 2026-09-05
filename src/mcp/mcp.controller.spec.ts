@@ -15,7 +15,6 @@ import {
 } from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
 import { ProductSearchService } from '../product/product-search.service';
-import { PREDICTION_ENGINE } from '../estimation/prediction-engine';
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { APP_GUARD } from '@nestjs/core';
@@ -55,6 +54,8 @@ describe('McpController', () => {
   const inventoryService = {
     recordPurchase: jest.fn(),
     recordEvent: jest.fn(),
+    getInventory: jest.fn(),
+    listInventory: jest.fn(),
     listEvents: jest.fn(),
     completeGroceryPurchase: jest.fn(),
   };
@@ -79,10 +80,6 @@ describe('McpController', () => {
         },
         { provide: ProductService, useValue: productService },
         { provide: ProductSearchService, useValue: productSearchService },
-        {
-          provide: PREDICTION_ENGINE,
-          useValue: { predictProduct: jest.fn() },
-        },
         {
           provide: InventoryService,
           useValue: inventoryService,
@@ -150,6 +147,7 @@ describe('McpController', () => {
         'get_product',
         'search_products',
         'get_inventory',
+        'list_inventory',
         'list_inventory_events',
         'product_add_alias',
         'record_purchase',
@@ -266,6 +264,16 @@ describe('McpController', () => {
       expect(inventoryService.listEvents).toHaveBeenCalledWith({
         limit: 20,
         offset: 0,
+      });
+
+      inventoryService.listInventory.mockResolvedValue({
+        current: [],
+        uncertain: [],
+      });
+      await expect(
+        client.callTool({ name: 'list_inventory', arguments: {} }),
+      ).resolves.toMatchObject({
+        structuredContent: { current: [], uncertain: [] },
       });
 
       const groceryItemId = '00000000-0000-4000-8000-000000000001';

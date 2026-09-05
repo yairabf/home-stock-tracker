@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import type { PredictionEngine } from '../estimation/prediction-engine';
 import type { GroceryService } from '../grocery/grocery.service';
 import type { InventoryService } from '../inventory/inventory.service';
 import type { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
@@ -38,7 +37,6 @@ describe('MCP contract fixture', () => {
       {} as GroceryService,
       {} as ProductService,
       {} as ProductSearchService,
-      {} as PredictionEngine,
       {} as InventoryService,
       {} as PredictionFeedbackService,
       {} as LowStockRecommendationService,

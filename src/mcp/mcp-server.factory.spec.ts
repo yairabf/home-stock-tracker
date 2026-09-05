@@ -14,7 +14,6 @@ import {
 } from './mcp-server.factory';
 import { ProductService } from '../product/product.service';
 import { ProductSearchService } from '../product/product-search.service';
-import type { PredictionEngine } from '../estimation/prediction-engine';
 import { PredictedState } from '../generated/prisma/enums';
 import { InventoryService } from '../inventory/inventory.service';
 import { InventoryEventType } from '../generated/prisma/enums';
@@ -29,6 +28,7 @@ import {
 } from '../grocery/types/policy-aware-grocery-addition';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 import { HouseholdService } from '../household/household.service';
+import { InventoryTrackingStatus } from '../inventory/dto/inventory-read-response.dto';
 
 const item = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -62,7 +62,6 @@ describe('McpServerFactory grocery tools', () => {
     Pick<ProductService, 'addAlias' | 'findOne' | 'findByExactOrAliasName'>
   >;
   let productSearchService: jest.Mocked<Pick<ProductSearchService, 'search'>>;
-  let predictionEngine: jest.Mocked<PredictionEngine>;
   let inventoryService: jest.Mocked<
     Pick<
       InventoryService,
@@ -70,6 +69,8 @@ describe('McpServerFactory grocery tools', () => {
       | 'recordPurchases'
       | 'updateStock'
       | 'recordEvent'
+      | 'getInventory'
+      | 'listInventory'
       | 'listEvents'
       | 'completeGroceryPurchase'
     >
@@ -99,12 +100,13 @@ describe('McpServerFactory grocery tools', () => {
       findByExactOrAliasName: jest.fn(),
     };
     productSearchService = { search: jest.fn() };
-    predictionEngine = { predictProduct: jest.fn() };
     inventoryService = {
       recordPurchase: jest.fn(),
       recordPurchases: jest.fn(),
       updateStock: jest.fn(),
       recordEvent: jest.fn(),
+      getInventory: jest.fn(),
+      listInventory: jest.fn(),
       listEvents: jest.fn(),
       completeGroceryPurchase: jest.fn(),
     };
@@ -116,7 +118,6 @@ describe('McpServerFactory grocery tools', () => {
       groceryService as GroceryService,
       productService as ProductService,
       productSearchService as ProductSearchService,
-      predictionEngine,
       inventoryService as InventoryService,
       predictionFeedbackService as PredictionFeedbackService,
       recommendationService as LowStockRecommendationService,
@@ -153,6 +154,7 @@ describe('McpServerFactory grocery tools', () => {
       'get_product',
       'search_products',
       'get_inventory',
+      'list_inventory',
       'list_inventory_events',
       'product_add_alias',
       'record_purchase',
@@ -1409,13 +1411,24 @@ describe('McpServerFactory grocery tools', () => {
     ]);
   });
 
-  it('returns a cold-start inventory estimate without inventing quantity', async () => {
-    predictionEngine.predictProduct.mockResolvedValue({
+  it('returns an untracked materialized inventory read without inventing quantity', async () => {
+    inventoryService.getInventory.mockResolvedValue({
       predictionId: null,
       productId: item.productId,
+      productName: 'Milk',
+      trackingStatus: InventoryTrackingStatus.untracked,
+      unit: null,
+      recordedQuantity: null,
+      recordedAt: null,
+      recordedSource: null,
+      recordedEventId: null,
+      estimatedQuantity: null,
+      estimatedState: null,
+      confidence: null,
+      evaluatedAt: null,
       predictedState: PredictedState.uncertain,
       confidenceScore: 0,
-      reason: 'Not enough household history',
+      reason: 'Stock is not tracked',
       recommendedAction: null,
       llmContributed: false,
       deterministicSignals: {
@@ -1444,15 +1457,74 @@ describe('McpServerFactory grocery tools', () => {
       arguments: { id: item.productId },
     });
 
-    expect(predictionEngine.predictProduct.mock.calls).toEqual([
-      [item.productId],
-    ]);
+    expect(inventoryService.getInventory).toHaveBeenCalledWith(item.productId);
     expect(result.structuredContent).toMatchObject({
       productId: item.productId,
+      productName: 'Milk',
+      trackingStatus: 'untracked',
+      recordedQuantity: null,
+      estimatedQuantity: null,
       predictedState: PredictedState.uncertain,
       deterministicSignals: { coldStart: true, eventCount: 0 },
     });
     expect(result.structuredContent).not.toHaveProperty('quantity');
+  });
+
+  it('lists the materialized household inventory without mutation', async () => {
+    const recordedAt = new Date('2026-09-01T10:00:00.000Z');
+    const evaluatedAt = new Date('2026-09-03T02:00:00.000Z');
+    inventoryService.listInventory.mockResolvedValue({
+      current: [
+        {
+          productId: item.productId,
+          productName: 'Milk',
+          trackingStatus: InventoryTrackingStatus.tracked,
+          unit: 'liter',
+          recordedQuantity: 2,
+          recordedAt,
+          recordedSource: 'mcp',
+          recordedEventId: '00000000-0000-4000-8000-000000000003',
+          estimatedQuantity: 1.25,
+          estimatedState: PredictedState.probably_low,
+          confidence: 0.9,
+          reason: 'Expected household consumption',
+          predictionId: '00000000-0000-4000-8000-000000000004',
+          evaluatedAt,
+        },
+      ],
+      uncertain: [],
+    });
+
+    const result = await client.callTool({
+      name: 'list_inventory',
+      arguments: {},
+    });
+
+    expect(inventoryService.listInventory).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent).toEqual({
+      current: [
+        expect.objectContaining({
+          productId: item.productId,
+          trackingStatus: 'tracked',
+          recordedAt: recordedAt.toISOString(),
+          estimatedQuantity: 1.25,
+          evaluatedAt: evaluatedAt.toISOString(),
+        }),
+      ],
+      uncertain: [],
+    });
+    expect(inventoryService.recordEvent).not.toHaveBeenCalled();
+    expect(inventoryService.updateStock).not.toHaveBeenCalled();
+  });
+
+  it('rejects list-inventory arguments before invoking the service', async () => {
+    const result = await client.callTool({
+      name: 'list_inventory',
+      arguments: { limit: 10 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(inventoryService.listInventory).not.toHaveBeenCalled();
   });
 
   it('lists filtered inventory history without exposing metadata', async () => {
@@ -1612,7 +1684,7 @@ describe('McpServerFactory grocery tools', () => {
     expect(productResult.isError).toBe(true);
     expect(inventoryResult.isError).toBe(true);
     expect(productService.findOne.mock.calls).toHaveLength(0);
-    expect(predictionEngine.predictProduct.mock.calls).toHaveLength(0);
+    expect(inventoryService.getInventory.mock.calls).toHaveLength(0);
   });
 
   it('returns unknown products as MCP tool errors', async () => {

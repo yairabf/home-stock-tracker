@@ -356,7 +356,13 @@
       }
     },
     {
-      "description": "Estimate the current inventory state for one product.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Read the latest materialized inventory estimate and last explicit stock fact for one exact product ID. This read never recalculates stock.",
       "execution": {
         "taskSupport": "forbidden"
       },
@@ -380,6 +386,16 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false,
         "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "confidenceScore": {
             "type": "number"
           },
@@ -571,6 +587,42 @@
             ],
             "type": "object"
           },
+          "estimatedQuantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "estimatedState": {
+            "anyOf": [
+              {
+                "enum": [
+                  "likely_available",
+                  "probably_low",
+                  "probably_out",
+                  "uncertain"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evaluatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "llmContributed": {
             "type": "boolean"
           },
@@ -596,10 +648,77 @@
           "productId": {
             "type": "string"
           },
-          "reason": {
+          "productName": {
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "recommendedAction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recordedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recordedEventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recordedQuantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recordedSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trackingStatus": {
+            "enum": [
+              "tracked",
+              "untracked"
+            ],
+            "type": "string"
+          },
+          "unit": {
             "anyOf": [
               {
                 "type": "string"
@@ -611,11 +730,22 @@
           }
         },
         "required": [
-          "predictionId",
           "productId",
+          "productName",
+          "trackingStatus",
+          "unit",
+          "recordedQuantity",
+          "recordedAt",
+          "recordedSource",
+          "recordedEventId",
+          "estimatedQuantity",
+          "estimatedState",
+          "confidence",
+          "reason",
+          "predictionId",
+          "evaluatedAt",
           "predictedState",
           "confidenceScore",
-          "reason",
           "recommendedAction",
           "llmContributed",
           "deterministicSignals"
@@ -2537,6 +2667,344 @@
           "note",
           "source",
           "relatedInventoryEventId"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Read the complete materialized household inventory grouped into current and uncertain products. Depleted and untracked products are omitted.",
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_inventory",
+      "outputSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "estimatedQuantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "estimatedState": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "likely_available",
+                        "probably_low",
+                        "probably_out",
+                        "uncertain"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "evaluatedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "predictionId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedQuantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedSource": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "trackingStatus": {
+                  "enum": [
+                    "tracked",
+                    "untracked"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "productId",
+                "productName",
+                "trackingStatus",
+                "unit",
+                "recordedQuantity",
+                "recordedAt",
+                "recordedSource",
+                "recordedEventId",
+                "estimatedQuantity",
+                "estimatedState",
+                "confidence",
+                "reason",
+                "predictionId",
+                "evaluatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "uncertain": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "estimatedQuantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "estimatedState": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "likely_available",
+                        "probably_low",
+                        "probably_out",
+                        "uncertain"
+                      ],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "evaluatedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "predictionId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedEventId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedQuantity": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recordedSource": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "trackingStatus": {
+                  "enum": [
+                    "tracked",
+                    "untracked"
+                  ],
+                  "type": "string"
+                },
+                "unit": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "productId",
+                "productName",
+                "trackingStatus",
+                "unit",
+                "recordedQuantity",
+                "recordedAt",
+                "recordedSource",
+                "recordedEventId",
+                "estimatedQuantity",
+                "estimatedState",
+                "confidence",
+                "reason",
+                "predictionId",
+                "evaluatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "current",
+          "uncertain"
         ],
         "type": "object"
       }

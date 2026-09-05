@@ -2152,6 +2152,239 @@
         "Treat the tick as a fresh read, call the tool exactly once, and produce one consolidated message. Do not infer delivery history or silently deduplicate.",
         "Deliver at most one message for the run; cadence is the MVP repeat-notification control."
       ]
+    },
+    {
+      "id": "household-inventory-view",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        { "tool": "list_inventory", "argumentKeys": [], "enumValues": [] }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "no-mutation-from-read",
+        "no-inventory-count-invention",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Household inventory view",
+        "The user asks what the household probably has.",
+        "Call `list_inventory({})` once; label `current` as estimated stock and keep `uncertain` separate.",
+        "Return only the materialized household view without treating omitted products as known absent."
+      ]
+    },
+    {
+      "id": "combined-grocery-and-suggestions",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        { "tool": "grocery_list", "argumentKeys": [], "enumValues": [] },
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-mutation-from-read",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Combined grocery list and suggestions",
+        "The user says, \"Show me the list.\"",
+        "Call `grocery_list({})` and `get_low_stock_predictions({})`; present committed items and suggestions as separate labeled groups.",
+        "No suggestion is represented as committed and no mutation occurs."
+      ]
+    },
+    {
+      "id": "confirmed-suggestion-addition",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-user-confirmation"],
+      "calls": [
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "grocery_add",
+          "argumentKeys": ["productName", "groceryItem"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-mutation-before-confirmation",
+        "no-identity-guess"
+      ],
+      "row": [
+        "Confirmed suggestion addition",
+        "After seeing suggestions, the user explicitly asks to add one named suggestion.",
+        "Use the returned product name in the normal `grocery_add` proposal workflow only after confirmation.",
+        "Only the confirmed suggestion enters the grocery workflow; other suggestions remain read-only."
+      ]
+    },
+    {
+      "id": "recent-batch-purchase",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id", "explicit-actual-measurement"],
+      "calls": [
+        {
+          "tool": "record_purchases",
+          "argumentKeys": [
+            "purchasedAt",
+            "items[].productId",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "actual-measurements-user-supplied",
+        "preserve-item-boundaries",
+        "preserve-returned-order",
+        "trusted-ids-only"
+      ],
+      "row": [
+        "Recently purchased product list",
+        "The user reports several resolved products purchased yesterday with measurements attached to specific items.",
+        "Call `record_purchases` once with unique trusted product IDs, preserving item order, measurements, and the explicit timestamp.",
+        "All ordered purchase receipts are returned, or none of the batch is recorded."
+      ]
+    },
+    {
+      "id": "unresolved-batch-purchase",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "resolution-required",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-identity-guess",
+        "no-mutation-on-ambiguity"
+      ],
+      "row": [
+        "Unresolved batch purchase",
+        "One product in a recently purchased list cannot be resolved exactly.",
+        "Ask the user to resolve that product before sending the batch; do not record the already resolved prefix.",
+        "No purchase in the list is recorded."
+      ]
+    },
+    {
+      "id": "batch-purchase-transport-uncertainty",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id"],
+      "calls": [
+        {
+          "tool": "record_purchases",
+          "argumentKeys": ["items[].productId"],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-automatic-retry",
+        "stop-on-uncertain-mutation"
+      ],
+      "row": [
+        "Batch purchase transport uncertainty",
+        "The atomic `record_purchases` call ends without a reliable result.",
+        "Stop and report that the whole batch outcome is uncertain; do not retry or continue with individual writes.",
+        "No success claim is made and duplicate purchases are avoided."
+      ]
+    },
+    {
+      "id": "explicit-stock-set",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id", "explicit-actual-measurement"],
+      "calls": [
+        {
+          "tool": "update_inventory",
+          "argumentKeys": ["productId", "operation", "quantity", "unit"],
+          "enumValues": [{ "path": "operation", "value": "set" }]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "actual-measurements-user-supplied",
+        "trusted-ids-only",
+        "no-unit-conversion"
+      ],
+      "row": [
+        "Explicit stock set",
+        "The user reports an exact current quantity and unit for one resolved product.",
+        "Call `update_inventory` with `operation: \"set\"` and only the supplied measurement.",
+        "The explicit stock fact and resulting materialized projection are returned."
+      ]
+    },
+    {
+      "id": "explicit-stock-decrement",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id", "explicit-actual-measurement"],
+      "calls": [
+        {
+          "tool": "update_inventory",
+          "argumentKeys": ["productId", "operation", "quantity", "unit"],
+          "enumValues": [{ "path": "operation", "value": "decrement" }]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "actual-measurements-user-supplied",
+        "trusted-ids-only",
+        "no-fact-invention",
+        "no-unit-conversion"
+      ],
+      "row": [
+        "Explicit stock decrement",
+        "The user reports consuming an exact amount from one resolved product.",
+        "Call `update_inventory` with `operation: \"decrement\"`; send the consumed amount, not a calculated final balance.",
+        "The service atomically clamps and returns the resulting projection."
+      ]
+    },
+    {
+      "id": "explicit-stock-mark-out",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["trusted-product-id"],
+      "calls": [
+        {
+          "tool": "update_inventory",
+          "argumentKeys": ["productId", "operation"],
+          "enumValues": [{ "path": "operation", "value": "mark_out" }]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": ["trusted-ids-only", "no-fact-invention"],
+      "row": [
+        "Explicit stock mark-out",
+        "The user says one resolved product is out.",
+        "Call `update_inventory` with `operation: \"mark_out\"` and no quantity or unit.",
+        "The returned explicit fact and projection are zero without an invented measurement."
+      ]
+    },
+    {
+      "id": "quantity-free-stock-confirmation",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-inventory-count-invention",
+        "no-mutation-before-confirmation"
+      ],
+      "row": [
+        "Quantity-free stock confirmation",
+        "The user says, \"We still have milk,\" without referring to a prediction or giving a quantity.",
+        "Ask how much remains before any stock write; do not send `STOCK_CONFIRMED` as a substitute balance.",
+        "No mutation occurs until the user supplies a positive quantity."
+      ]
     }
   ]
 }

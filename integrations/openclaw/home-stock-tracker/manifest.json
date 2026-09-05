@@ -7,7 +7,7 @@
   },
   "skill": {
     "name": "home-stock-tracker",
-    "version": "1.12.0"
+    "version": "1.13.0"
   },
   "mcp": {
     "serverName": "home-stock-tracker",
@@ -29,8 +29,10 @@
     "grocery-remove",
     "grocery-update",
     "household-context",
+    "household-inventory-view",
     "inventory-estimation",
     "inventory-event-history",
+    "materialized-inventory",
     "low-stock-recommendations",
     "prediction-feedback",
     "product-alias-management",
@@ -52,6 +54,7 @@
     "get_product",
     "search_products",
     "get_inventory",
+    "list_inventory",
     "list_inventory_events",
     "product_add_alias",
     "record_purchase",

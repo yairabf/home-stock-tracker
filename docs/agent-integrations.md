@@ -13,6 +13,11 @@ The generated bundle manifests are the install contract:
 Use their `requiredTools`, `mcp`, `verification`, and `rollback` fields instead
 of copying tool counts or release versions into deployment notes.
 
+The current bundles teach both agents to read materialized household inventory,
+record atomic multi-product purchases, apply explicit stock updates, and present
+committed grocery items separately from low-stock suggestions. A suggestion is
+added only after explicit confirmation through the normal grocery workflow.
+
 ## Shared prerequisites
 
 1. Start Home Stock Tracker and confirm `/health` and `/ready` succeed.

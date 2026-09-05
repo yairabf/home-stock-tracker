@@ -474,7 +474,8 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `get_product`                   | Read  | Resolve an exact product name/alias or known UUID.                                             |
 | `search_products`               | Read  | Deterministically discover exact or nearby products without mutation or LLM use.               |
 | `product_add_alias`             | Write | Add an explicitly confirmed alias to one exact product outside a grocery workflow.             |
-| `get_inventory`                 | Read  | Estimate one product's stock state.                                                            |
+| `get_inventory`                 | Read  | Read one product's materialized estimate and last explicit fact.                               |
+| `list_inventory`                | Read  | Read tracked non-depleted household stock grouped as current and uncertain.                    |
 | `list_inventory_events`         | Read  | List recorded inventory events with filters and bounded pagination.                            |
 | `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
 | `update_inventory`              | Write | Set, decrement, or mark out one product's current stock.                                       |
@@ -498,12 +499,26 @@ REST, including request/item timestamp precedence and the 100-item limit. MCP
 never accepts client-supplied provenance; all three tools record source `mcp`.
 Resolve names with `get_product` or `search_products` before batch submission.
 
-The current mutation contract intentionally stops at deterministic writes and
-forward materialization. Shelf-life inference and scheduled evaluation belong to
-feature 33c; complete and enriched inventory reads belong to 33d; agent behavior,
-new conversation scenarios, and skill release `1.13.0` belong to 33e. The
-presence of these tools in discovery does not claim that installed agents already
-choose or orchestrate them.
+Agents must resolve every product before one `record_purchases` call, preserve
+input order and per-item measurements, and stop without a partial batch when an
+identity is unresolved. `update_inventory` uses `set` for an explicit current
+quantity, `decrement` for an explicit consumed amount, and `mark_out` for an
+explicit out report. A quantity-free availability statement requires a quantity
+clarification before a stock write.
+
+The additive MCP `1.3.0` contract publishes deterministic stock writes,
+scheduled materialization results, complete inventory reads, and the agent
+workflows released with skill `1.13.0`.
+
+`get_inventory` accepts one exact product UUID and returns the same materialized
+contract as the REST product read. `trackingStatus` distinguishes `tracked` from
+`untracked`; recorded fields remain separate from estimated fields. The tool
+does not invoke the prediction engine or persist any read side effect.
+
+`list_inventory` accepts only `{}` and returns `{ current, uncertain }` using the
+same membership, ordering, precision, and read-only behavior as the REST
+household view. It has no pagination or filters. Depleted and untracked products
+are omitted, which is not proof that those products are physically absent.
 
 `get_household_context` accepts only `{}` and returns `id`, `adultsCount`,
 `childrenCount`, `childAgeGroups`, `predictionPreferences`,
@@ -630,13 +645,15 @@ latest state without retrying or recalculating automatically.
 4. Call `grocery_list` before removing or completing grocery-item UUIDs; prefer
    completion `items` and add actual fields only from explicit user facts.
 5. Resolve named products before history reads and distinguish recorded events from estimated current stock.
-6. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
-7. Never guess IDs, quantities, units, event types, metadata, or stock state.
-8. Write only when the mutation and target are unambiguous.
-9. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
-10. Treat `uncertain`, empty history, and empty recommendation lists as successful results.
-11. Never turn a recommendation into a list mutation without a separate request.
-12. Read household context only for an explicit setup, configuration, identity,
+6. Use `list_inventory` for the materialized household view; keep `current` and `uncertain` separate.
+7. For a general grocery-list request, call both `grocery_list` and `get_low_stock_predictions`, then label committed and suggested items separately.
+8. Use prediction feedback only with one non-null prediction ID from active context or a fresh prediction read.
+9. Never guess IDs, quantities, units, event types, metadata, or stock state.
+10. Write only when the mutation and target are unambiguous.
+11. Never retry a stale decision or a write after a transport failure with an uncertain outcome.
+12. Treat `uncertain`, empty history, and empty recommendation lists as successful results.
+13. Never turn a recommendation into a list mutation without explicit confirmation through the grocery-add workflow.
+14. Read household context only for an explicit setup, configuration, identity,
     or explanation question; never create defaults or call it before every prediction.
 
 For "I bought everything except toilet paper," list pending items, require one

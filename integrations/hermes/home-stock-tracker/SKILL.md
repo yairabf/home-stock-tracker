@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.12.0
+version: 1.13.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -45,10 +45,13 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
 | `get_product`                   | Resolve an exact spoken product name or alias to a canonical product and UUID, or retrieve an already-known product ID.                                                                                                | Nearby or broad product discovery is required.                                                                                                                                        |
 | `search_products`               | Discover exact or nearby catalog products when the phrase is unknown, broad, or ambiguous. Preserve returned order and present plausible candidates.                                                                   | The product UUID is already trusted, or the user is asking search to create, alias, or mutate a product.                                                                              |
 | `product_add_alias`             | The user explicitly confirms that one alias identifies one exact trusted product ID outside a grocery-add workflow.                                                                                                    | The target is ambiguous, the relationship is inferred or only suggested, or the request also needs a grocery mutation.                                                                |
-| `get_inventory`                 | The user asks whether one known product is probably available, low, or out. Resolve its product ID first.                                                                                                              | The user asks for an exact physical count or for all recommendations.                                                                                                                 |
+| `get_inventory`                 | The user asks for the latest materialized estimate and last explicit fact for one known product. Resolve its product ID first.                                                                                         | The user asks for an exact physical count, all household inventory, or all recommendations.                                                                                           |
+| `list_inventory`                | The user asks what is probably available across the household. Preserve the separate `current` and `uncertain` groups.                                                                                                 | The user asks for committed grocery items, recorded history, or exact physical counts.                                                                                                |
 | `list_inventory_events`         | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                                          |
 | `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                                                    |
-| `record_stock_signal`           | The user directly reports one resolved product as low, out, confirmed available, or corrects an earlier stock record without referring to a prediction.                                                                | The statement is feedback about one specific prediction or is too vague to map to an allowed event type.                                                                              |
+| `record_purchases`              | The user reports a recently purchased list that is not a grocery-list completion. Resolve every product first, preserve item order and boundaries, and send one atomic batch.                                          | Any identity is unresolved, a product appears twice, the report is future intent, or the user refers to pending grocery rows.                                                         |
+| `update_inventory`              | The user supplies an explicit absolute quantity, decrement amount, or says one exact product is out. Use `set`, `decrement`, or `mark_out` respectively.                                                               | Availability is vague, a required quantity is missing, the unit would need conversion, or the target is unresolved.                                                                   |
+| `record_stock_signal`           | The user directly reports a qualitative low state or corrects recorded history without referring to a prediction and without an explicit stock quantity.                                                               | The statement supplies an exact quantity, says the product is out, confirms availability without a quantity, or refers to one specific prediction.                                    |
 | `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.                              |
 | `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                      | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
 | `get_low_stock_predictions`     | The user asks what the household needs or which products are confidently predicted low or out.                                                                                                                         | The user asks for the grocery list or one product's estimated state.                                                                                                                  |
@@ -72,8 +75,8 @@ MCP does not create or update household configuration.
 ## Resolve identifiers first
 
 Spoken product names are not IDs. Before `get_inventory`,
-`list_inventory_events`, `product_add_alias`, `record_purchase`, or
-`record_stock_signal`, call:
+`list_inventory_events`, `product_add_alias`, `record_purchase`,
+`record_purchases`, `update_inventory`, or `record_stock_signal`, call:
 
 ```json
 { "tool": "get_product", "arguments": { "productName": "milk" } }
@@ -239,13 +242,21 @@ were confirmed and which later additions were not attempted, and do not retry.
 
 ### Read lists and recommendations
 
-- "What's on the grocery list?" calls `grocery_list({})` and summarizes only
-  the returned pending items.
+- "What's on the grocery list?" or "Show me the list" calls both
+  `grocery_list({})` and `get_low_stock_predictions({})`. Present two clearly
+  labeled groups: committed grocery items and suggested items. Preserve each
+  result's order and say when either group is empty.
 - "What do we need?" calls `get_low_stock_predictions({})` and summarizes only
   the returned recommendations.
+- "What do we have?" calls `list_inventory({})`. Present `current` as estimated
+  available stock and `uncertain` separately. Do not present omitted depleted or
+  untracked products as known absent.
 
-Do not merge these answers or turn a recommendation into a grocery-list change
-unless the user explicitly requests that mutation.
+The combined list presentation does not merge the two backend contracts. Never
+present a suggestion as already committed. If the user explicitly confirms one
+suggestion, run the normal `grocery_add` workflow for its returned product name;
+do not mutate from the recommendation read alone or assume confirmation for
+other suggestions.
 
 ### Read recorded inventory history
 
@@ -320,6 +331,53 @@ These rules apply only to an explicitly scheduled proactive check. For a direct
 question such as "What do we need?", follow the interactive behavior above and
 tell the user when the recommendation list is empty.
 
+### Record a recently purchased product list
+
+Use `record_purchases` when the user reports a completed purchase containing
+several products without referring to pending grocery rows:
+
+1. Resolve every named product with `get_product`, one product at a time, unless
+   its exact product ID is already trusted in the active interaction.
+2. Stop before mutation if any name is unresolved or ambiguous. Do not record a
+   partial prefix of the list.
+3. Preserve the user's item order and keep each quantity, unit, and timestamp
+   attached only to the item it described. Never copy measurements between
+   items or convert units.
+4. Reject duplicate resolved product IDs as ambiguous. Ask the user for one
+   consolidated measurement for that product.
+5. Call `record_purchases` once with one unique item per resolved product. Send
+   `quantity`, `unit`, request-level `purchasedAt`, or per-item `purchasedAt`
+   only when the user supplied that fact. An omitted quantity uses the service
+   default; do not claim the user reported one.
+6. Summarize the returned ordered receipts only after the complete batch
+   succeeds.
+
+The batch is all-or-nothing. A validation or domain error means no item was
+recorded. After an uncertain transport result, stop, report that the entire
+batch outcome is uncertain, and do not retry automatically.
+
+### Update explicit stock
+
+Resolve the exact product first, then map only explicit measurements:
+
+- "We have 3 cartons of milk" uses `update_inventory` with `operation: "set"`,
+  `quantity: 3`, and `unit: "cartons"`.
+- "We used 2 cartons of milk" uses `operation: "decrement"` and the explicit
+  measurement. Do not calculate or send a final balance.
+- "We are out of milk" uses `operation: "mark_out"` with no quantity or unit.
+
+For "we still have milk" or another quantity-free availability statement that
+is not prediction feedback, ask how much remains. Call `set` only after the user
+provides a positive quantity, with a unit only when supplied. Do not turn a
+quantity-free `STOCK_CONFIRMED` signal into a known balance, invent a count, or
+fall back to `record_stock_signal` to avoid the clarification.
+
+If `set` would establish a different canonical unit, repeat the exact quantity
+and unit and obtain explicit confirmation before the call. Never convert units.
+Treat an untracked or quantity-unknown decrement as final for that attempt and
+ask for an absolute current quantity before a new decision. After an uncertain
+mutation result, do not retry or claim the balance changed.
+
 ### Complete a shopping trip
 
 For "I bought everything," "I bought these items," or "I bought everything
@@ -366,16 +424,22 @@ For `record_purchase`, use only:
 For `record_stock_signal`, use only:
 
 - `STOCK_LOW` - clearly low, nearly out, or almost out.
-- `STOCK_OUT` - clearly none left or out.
-- `STOCK_CONFIRMED` - clearly still available or plenty remains.
 - `STOCK_CORRECTED` - the user explicitly corrects an earlier stock record and
   provides enough information for this correction signal.
+
+Use `update_inventory` `mark_out` for a direct out report. Ask for a quantity
+before representing confirmed availability as a balance. `STOCK_OUT` and
+`STOCK_CONFIRMED` remain accepted service event types for compatibility, but new
+agent conversations should use the materialized stock workflow above.
 
 If no mapping is clear, ask rather than choosing the closest enum.
 
 ## Results and failures
 
 - An empty `grocery_list` means there are no matching list items.
+- Empty `list_inventory.current` and `list_inventory.uncertain` groups mean no
+  tracked non-depleted products were returned; they do not prove the household
+  physically has nothing.
 - An empty `list_inventory_events.items` array means there are no matching
   recorded events. It does not establish the product's current stock state.
 - An empty `recommendations` array is a successful result: there are no
@@ -411,7 +475,16 @@ Call `grocery_list`, find one exact pending `productName` match, then call
 **"Did we probably run out of milk?"**
 
 Call `get_product` with `productName: "milk"`, then `get_inventory` with the
-returned product `id`. Preserve uncertainty and the returned reason.
+returned product `id`. Label the response as the latest materialized estimate,
+keep the last explicit fact separate, and preserve uncertainty and the returned
+reason.
+
+**"Show me the list."**
+
+Call `grocery_list({})` and `get_low_stock_predictions({})`. Present committed
+grocery items first and suggested items second, with clear labels. Make no
+mutation unless the user then explicitly confirms a suggestion through the
+normal grocery-add workflow.
 
 **"When did we last buy milk?"**
 
@@ -438,7 +511,8 @@ When one active prediction is unambiguously referenced and has a non-null
 When this directly answers one active prediction, call
 `record_prediction_feedback` with its non-null `predictionId`,
 `outcome: "corrected"`, and `correctedState: "likely_available"`. Do not also
-call `record_stock_signal`.
+call `record_stock_signal`. Without a referenced prediction, resolve milk and
+ask how much remains before using `update_inventory` with `operation: "set"`.
 
 **"We're almost out of cereal."**
 
@@ -451,6 +525,14 @@ Call `get_product` with `productName: "cereal"`, then
 Call `get_product` with `productName: "milk"`, then `record_purchase` with the
 `productId` set to the returned `id`, `eventType: "PURCHASED"`, `quantity: 3`,
 and `unit: "cartons"`.
+
+**"I bought milk and two cartons of eggs yesterday."**
+
+Resolve both products, then call `record_purchases` once with the returned IDs
+in user order. Omit milk's quantity and unit, attach `quantity: 2` and
+`unit: "cartons"` only to eggs, and include yesterday's exact timestamp only if
+the user or surrounding trusted context establishes it. Do not partially record
+the list if either identity is unresolved.
 
 **"What do we need?"**
 

@@ -3,10 +3,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { GroceryService } from '../grocery/grocery.service';
 import { ProductService } from '../product/product.service';
-import {
-  PREDICTION_ENGINE,
-  type PredictionEngine,
-} from '../estimation/prediction-engine';
 import { ProductResponseDto } from '../product/dto/product-response.dto';
 import { ProductSearchResponseDto } from '../product/dto/product-search-response.dto';
 import { ProductSearchService } from '../product/product-search.service';
@@ -18,7 +14,6 @@ import {
   PRODUCT_SEARCH_MAX_LIMIT,
   PRODUCT_SEARCH_MAX_QUERY_LENGTH,
 } from '../product/types/product-search';
-import { EstimationResponseDto } from '../inventory/dto/estimation-response.dto';
 import { InventoryService } from '../inventory/inventory.service';
 import { LowStockRecommendationService } from '../inventory/low-stock-recommendation.service';
 import { LowStockRecommendationListResponseDto } from '../inventory/dto/low-stock-recommendation-response.dto';
@@ -286,34 +281,59 @@ const householdContextOutputSchema = z
   })
   .strict();
 
-const estimationOutputSchema = z.object({
-  predictionId: z.string().nullable(),
-  productId: z.string(),
+const deterministicSignalsOutputSchema = z.object({
+  lastPurchaseAt: z.string().nullable(),
+  lastLowStockSignalAt: z.string().nullable(),
+  lastStockConfirmationAt: z.string().nullable(),
+  daysSinceLastPurchase: z.number().nullable(),
+  daysSinceLastLowSignal: z.number().nullable(),
+  productType: z.string().nullable(),
+  eventCount: z.number(),
+  coldStart: z.boolean(),
+  hasLearnedStatistics: z.boolean(),
+  avgPurchaseIntervalDays: z.number().nullable(),
+  avgNeedIntervalDays: z.number().nullable(),
+  estimatedConsumptionIntervalDays: z.number().nullable(),
+  observationCount: z.number(),
+  isPerishable: z.boolean(),
+  predictionStrategy: z.string().nullable(),
+  householdContext: householdContextSchema.nullable(),
+  authoritativeDirectSignal: z.boolean(),
+});
+
+const inventoryItemOutputSchema = z
+  .object({
+    productId: z.string(),
+    productName: z.string(),
+    trackingStatus: z.enum(['tracked', 'untracked']),
+    unit: z.string().nullable(),
+    recordedQuantity: z.number().nullable(),
+    recordedAt: z.string().nullable(),
+    recordedSource: z.string().nullable(),
+    recordedEventId: z.string().nullable(),
+    estimatedQuantity: z.number().nullable(),
+    estimatedState: z.enum(PredictedState).nullable(),
+    confidence: z.number().nullable(),
+    reason: z.string().nullable(),
+    predictionId: z.string().nullable(),
+    evaluatedAt: z.string().nullable(),
+  })
+  .strict();
+
+const inventoryEstimateOutputSchema = inventoryItemOutputSchema.extend({
   predictedState: z.enum(PredictedState),
   confidenceScore: z.number(),
-  reason: z.string(),
   recommendedAction: z.string().nullable(),
   llmContributed: z.boolean(),
-  deterministicSignals: z.object({
-    lastPurchaseAt: z.string().nullable(),
-    lastLowStockSignalAt: z.string().nullable(),
-    lastStockConfirmationAt: z.string().nullable(),
-    daysSinceLastPurchase: z.number().nullable(),
-    daysSinceLastLowSignal: z.number().nullable(),
-    productType: z.string().nullable(),
-    eventCount: z.number(),
-    coldStart: z.boolean(),
-    hasLearnedStatistics: z.boolean(),
-    avgPurchaseIntervalDays: z.number().nullable(),
-    avgNeedIntervalDays: z.number().nullable(),
-    estimatedConsumptionIntervalDays: z.number().nullable(),
-    observationCount: z.number(),
-    isPerishable: z.boolean(),
-    predictionStrategy: z.string().nullable(),
-    householdContext: householdContextSchema.nullable(),
-    authoritativeDirectSignal: z.boolean(),
-  }),
+  deterministicSignals: deterministicSignalsOutputSchema,
 });
+
+const householdInventoryOutputSchema = z
+  .object({
+    current: z.array(inventoryItemOutputSchema),
+    uncertain: z.array(inventoryItemOutputSchema),
+  })
+  .strict();
 
 const inventoryEventOutputSchema = z.object({
   id: z.string(),
@@ -566,8 +586,6 @@ export class McpServerFactory {
     private readonly groceryService: GroceryService,
     private readonly productService: ProductService,
     private readonly productSearchService: ProductSearchService,
-    @Inject(PREDICTION_ENGINE)
-    private readonly predictionEngine: PredictionEngine,
     private readonly inventoryService: InventoryService,
     private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
@@ -857,17 +875,40 @@ export class McpServerFactory {
     server.registerTool(
       'get_inventory',
       {
-        description: 'Estimate the current inventory state for one product.',
+        description:
+          'Read the latest materialized inventory estimate and last explicit stock fact for one exact product ID. This read never recalculates stock.',
         inputSchema: z.object({ id: z.uuid() }).strict(),
-        outputSchema: estimationOutputSchema,
+        outputSchema: inventoryEstimateOutputSchema,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
       },
       ({ id }) =>
         this.runTool('get_inventory', async () =>
-          this.toolResult(
-            EstimationResponseDto.fromEstimationResult(
-              await this.predictionEngine.predictProduct(id),
-            ),
-          ),
+          this.toolResult(await this.inventoryService.getInventory(id)),
+        ),
+    );
+
+    server.registerTool(
+      'list_inventory',
+      {
+        description:
+          'Read the complete materialized household inventory grouped into current and uncertain products. Depleted and untracked products are omitted.',
+        inputSchema: z.object({}).strict(),
+        outputSchema: householdInventoryOutputSchema,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      () =>
+        this.runTool('list_inventory', async () =>
+          this.toolResult(await this.inventoryService.listInventory()),
         ),
     );
 

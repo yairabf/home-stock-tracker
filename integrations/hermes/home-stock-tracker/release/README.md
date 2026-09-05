@@ -6,7 +6,7 @@ fixture from the same generated release.
 
 ## Compatibility
 
-- Skill version: `1.12.0`
+- Skill version: `1.13.0`
 - MCP server: `home-stock-tracker`
 - MCP contract: `1.3.0`
 - Compatible MCP range: `>=1.0.0 <2.0.0`
@@ -35,6 +35,7 @@ fixture from the same generated release.
 - `get_product`
 - `search_products`
 - `get_inventory`
+- `list_inventory`
 - `list_inventory_events`
 - `product_add_alias`
 - `record_purchase`

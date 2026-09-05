@@ -240,4 +240,16 @@ describe('agent release contract', () => {
       `version: ${AGENT_RELEASE_CONTRACT.skill.version}`,
     );
   });
+
+  it('publishes the materialized inventory agent release', () => {
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.3.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.13.0');
+    expect(AGENT_RELEASE_CONTRACT.features).toEqual(
+      expect.arrayContaining([
+        'household-inventory-view',
+        'materialized-inventory',
+      ]),
+    );
+    expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain('list_inventory');
+  });
 });

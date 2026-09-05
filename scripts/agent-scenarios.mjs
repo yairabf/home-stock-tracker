@@ -204,7 +204,12 @@ function validateCallOrder(scenario, path) {
   ) {
     throw new Error(`${path} must read groceries before purchase completion`);
   }
-  for (const write of ['record_purchase', 'record_stock_signal']) {
+  for (const write of [
+    'record_purchase',
+    'record_purchases',
+    'update_inventory',
+    'record_stock_signal',
+  ]) {
     if (
       calls.includes(write) &&
       !precedes('get_product', write) &&
@@ -212,6 +217,27 @@ function validateCallOrder(scenario, path) {
     ) {
       throw new Error(`${path} must resolve a product before ${write}`);
     }
+  }
+  if (
+    calls.includes('grocery_add') &&
+    calls.includes('get_low_stock_predictions') &&
+    !hasPrerequisite('explicit-user-confirmation')
+  ) {
+    throw new Error(
+      `${path} must require confirmation before adding a suggestion`,
+    );
+  }
+  if (
+    scenario.safetyInvariants.includes('one-recommendation-read') &&
+    calls.filter((tool) => tool === 'get_low_stock_predictions').length !== 1
+  ) {
+    throw new Error(`${path} must contain exactly one recommendation read`);
+  }
+  if (
+    calls.includes('record_purchases') &&
+    !scenario.safetyInvariants.includes('all-or-nothing-batch')
+  ) {
+    throw new Error(`${path} must preserve all-or-nothing batch behavior`);
   }
   if (
     calls.includes('record_prediction_feedback') &&
@@ -335,8 +361,10 @@ export function validateScenarioContract(contract, toolsFixture) {
           'complete_grocery_purchase',
           'product_add_alias',
           'record_purchase',
+          'record_purchases',
           'record_prediction_feedback',
           'record_stock_signal',
+          'update_inventory',
         ].includes(tool),
       )
     ) {

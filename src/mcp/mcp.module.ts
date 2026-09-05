@@ -4,7 +4,6 @@ import { McpServerFactory } from './mcp-server.factory';
 import { GroceryModule } from '../grocery/grocery.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ProductModule } from '../product/product.module';
-import { EstimationModule } from '../estimation/estimation.module';
 import { InventoryModule } from '../inventory/inventory.module';
 import { ObservabilityModule } from '../observability/observability.module';
 import { HouseholdModule } from '../household/household.module';
@@ -14,7 +13,6 @@ import { HouseholdModule } from '../household/household.module';
     PrismaModule,
     GroceryModule,
     ProductModule,
-    EstimationModule,
     InventoryModule,
     ObservabilityModule,
     HouseholdModule,

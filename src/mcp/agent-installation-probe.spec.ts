@@ -235,7 +235,7 @@ describe('read-only agent installation probe', () => {
 
   it('distinguishes hidden tools from schema drift', async () => {
     state.tools = canonicalFixture.tools.filter(
-      ({ name }) => name !== 'grocery_remove',
+      ({ name }) => name !== 'list_inventory',
     );
     const hidden = await runProbe();
     state.tools = canonicalFixture.tools.map((tool, index) =>

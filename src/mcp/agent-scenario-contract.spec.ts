@@ -40,14 +40,16 @@ describe('executable agent scenario contract', () => {
     });
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Validated 93 executable agent scenarios.');
+    expect(result.stdout).toContain(
+      'Validated 103 executable agent scenarios.',
+    );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(93);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(93);
+    expect(fixture.scenarios).toHaveLength(103);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(103);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -301,5 +303,95 @@ describe('executable agent scenario contract', () => {
         },
       ],
     });
+  });
+
+  it('encodes materialized reads, confirmed suggestions, and stock mutations', () => {
+    expect(
+      scenarios
+        .get('combined-grocery-and-suggestions')
+        ?.calls.map(({ tool }) => tool),
+    ).toEqual(['grocery_list', 'get_low_stock_predictions']);
+    expect(
+      scenarios.get('confirmed-suggestion-addition')?.prerequisites,
+    ).toContain('explicit-user-confirmation');
+    expect(
+      scenarios.get('household-inventory-view')?.calls.map(({ tool }) => tool),
+    ).toEqual(['list_inventory']);
+    expect(scenarios.get('quantity-free-stock-confirmation')?.calls).toEqual(
+      [],
+    );
+    for (const id of [
+      'explicit-stock-set',
+      'explicit-stock-decrement',
+      'explicit-stock-mark-out',
+    ]) {
+      expect(scenarios.get(id)?.calls[0].tool).toBe('update_inventory');
+    }
+  });
+
+  it('encodes atomic batch purchase success and stop paths', () => {
+    const success = scenarios.get('recent-batch-purchase');
+    expect(success?.calls[0].tool).toBe('record_purchases');
+    expect(success?.safetyInvariants).toContain('all-or-nothing-batch');
+    expect(scenarios.get('unresolved-batch-purchase')?.calls).toEqual([]);
+    expect(
+      scenarios.get('batch-purchase-transport-uncertainty')?.safetyInvariants,
+    ).toEqual(
+      expect.arrayContaining([
+        'all-or-nothing-batch',
+        'no-automatic-retry',
+        'stop-on-uncertain-mutation',
+      ]),
+    );
+  });
+
+  it.each([
+    [
+      'batch identity prerequisite',
+      `
+        const scenario = contract.scenarios.find(({ id }) => id === 'recent-batch-purchase');
+        scenario.prerequisites = scenario.prerequisites.filter((value) => value !== 'trusted-product-id');
+      `,
+      'must resolve a product before record_purchases',
+    ],
+    [
+      'batch atomicity invariant',
+      `
+        const scenario = contract.scenarios.find(({ id }) => id === 'recent-batch-purchase');
+        scenario.safetyInvariants = scenario.safetyInvariants.filter((value) => value !== 'all-or-nothing-batch');
+      `,
+      'must preserve all-or-nothing batch behavior',
+    ],
+    [
+      'suggestion confirmation prerequisite',
+      `
+        const scenario = contract.scenarios.find(({ id }) => id === 'confirmed-suggestion-addition');
+        scenario.prerequisites = [];
+      `,
+      'must require confirmation before adding a suggestion',
+    ],
+  ])('rejects a scenario without its %s', (_case, mutation, expectedError) => {
+    const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json',
+        'utf8',
+      ));
+      const tools = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
+        'utf8',
+      ));
+      ${mutation}
+      validateScenarioContract(contract, tools);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', script],
+      { cwd: root, encoding: 'utf8' },
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(expectedError);
   });
 });
