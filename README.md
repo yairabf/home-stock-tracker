@@ -49,15 +49,42 @@ validation, persistence, and prediction.
 ## Conversation mockups
 
 Household members can manage the shared list and respond to stock predictions
-through a familiar chat interface. Suggestions are shown separately and are not
-added to the grocery list without explicit approval.
+through a familiar chat interface. Click any preview to open the full-size image.
 
-| Flow | English | Hebrew |
-| --- | --- | --- |
-| Add groceries | <img src="docs/mockups/agent-chat/add-groceries-en.png" alt="English conversation adding milk and eggs to the grocery list" width="280"> | <img src="docs/mockups/agent-chat/add-groceries-he.png" alt="Hebrew conversation adding milk and eggs to the grocery list" width="280"> |
-| Finish shopping | <img src="docs/mockups/agent-chat/finish-shopping-en.png" alt="English conversation completing a shopping trip except for toilet paper" width="280"> | <img src="docs/mockups/agent-chat/finish-shopping-he.png" alt="Hebrew conversation completing a shopping trip except for toilet paper" width="280"> |
-| Proactive low-stock alert | <img src="docs/mockups/agent-chat/low-stock-alert-en.png" alt="English proactive low-stock cereal recommendation" width="280"> | <img src="docs/mockups/agent-chat/low-stock-alert-he.png" alt="Hebrew proactive low-stock cereal recommendation" width="280"> |
-| List and suggestions | <img src="docs/mockups/agent-chat/list-and-suggestions-en.png" alt="English grocery list with low-stock suggestions shown separately" width="280"> | <img src="docs/mockups/agent-chat/list-and-suggestions-he.png" alt="Hebrew grocery list with low-stock suggestions shown separately" width="280"> |
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Add groceries</strong><br>
+      <sub>Update the shared list using natural language.</sub><br><br>
+      <a href="docs/mockups/agent-chat/add-groceries-en.png">
+        <img src="docs/mockups/agent-chat/add-groceries-en.png" alt="Conversation adding milk and eggs to the grocery list" width="360">
+      </a>
+    </td>
+    <td width="50%" align="center">
+      <strong>Finish shopping</strong><br>
+      <sub>Record purchases while leaving exceptions pending.</sub><br><br>
+      <a href="docs/mockups/agent-chat/finish-shopping-en.png">
+        <img src="docs/mockups/agent-chat/finish-shopping-en.png" alt="Conversation completing a shopping trip except for toilet paper" width="360">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Proactive low-stock alert</strong><br>
+      <sub>Review a prediction before approving a list change.</sub><br><br>
+      <a href="docs/mockups/agent-chat/low-stock-alert-en.png">
+        <img src="docs/mockups/agent-chat/low-stock-alert-en.png" alt="Proactive low-stock cereal recommendation" width="360">
+      </a>
+    </td>
+    <td width="50%" align="center">
+      <strong>List and suggestions</strong><br>
+      <sub>Keep committed items separate from recommendations.</sub><br><br>
+      <a href="docs/mockups/agent-chat/list-and-suggestions-en.png">
+        <img src="docs/mockups/agent-chat/list-and-suggestions-en.png" alt="Grocery list with low-stock suggestions shown separately" width="360">
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## Architecture
 
