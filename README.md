@@ -46,6 +46,19 @@ It does not parse messages or send notifications. Hermes, OpenClaw, or another
 client owns conversation and delivery; Home Stock Tracker owns household state,
 validation, persistence, and prediction.
 
+## Conversation mockups
+
+Household members can manage the shared list and respond to stock predictions
+through a familiar chat interface. Suggestions are shown separately and are not
+added to the grocery list without explicit approval.
+
+| Flow | English | Hebrew |
+| --- | --- | --- |
+| Add groceries | <img src="docs/mockups/agent-chat/add-groceries-en.png" alt="English conversation adding milk and eggs to the grocery list" width="280"> | <img src="docs/mockups/agent-chat/add-groceries-he.png" alt="Hebrew conversation adding milk and eggs to the grocery list" width="280"> |
+| Finish shopping | <img src="docs/mockups/agent-chat/finish-shopping-en.png" alt="English conversation completing a shopping trip except for toilet paper" width="280"> | <img src="docs/mockups/agent-chat/finish-shopping-he.png" alt="Hebrew conversation completing a shopping trip except for toilet paper" width="280"> |
+| Proactive low-stock alert | <img src="docs/mockups/agent-chat/low-stock-alert-en.png" alt="English proactive low-stock cereal recommendation" width="280"> | <img src="docs/mockups/agent-chat/low-stock-alert-he.png" alt="Hebrew proactive low-stock cereal recommendation" width="280"> |
+| List and suggestions | <img src="docs/mockups/agent-chat/list-and-suggestions-en.png" alt="English grocery list with low-stock suggestions shown separately" width="280"> | <img src="docs/mockups/agent-chat/list-and-suggestions-he.png" alt="Hebrew grocery list with low-stock suggestions shown separately" width="280"> |
+
 ## Architecture
 
 ```text
