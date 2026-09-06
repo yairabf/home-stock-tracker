@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "verify": "npm run test -- --runInBand && npm run build",
     "build": "nest build",
     "agent:probe": "node scripts/agent-installation-probe.mjs",
     "contract:capture": "node scripts/generate-agent-skills.mjs && MCP_CONTRACT_CAPTURE=1 jest --runInBand src/mcp/mcp-contract-fixture.spec.ts",

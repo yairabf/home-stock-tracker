@@ -124,7 +124,7 @@ checks do not make the Blueprint unusable.
 - Test: `npm run test`
 - Test watch: `npm run test:watch`
 - End-to-end test: `npm run test:e2e`
-- Verify: Not configured yet. Run `/ci` when you want to define one.
+- Verify: `npm run verify` (unit tests, then production build)
 
 Testing is opt-in. If this project does not already have a unit test runner, run
 `/tests` or `$tests` to add one and update this section with the real test

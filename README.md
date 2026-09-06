@@ -18,7 +18,7 @@ and low-stock recommendations.
 | [API and MCP reference](docs/api-reference.md)                         | Authentication, REST routes, request values, MCP endpoint, the manifest-backed tool contract, and safe tool workflows.    |
 | [Agent integrations](docs/agent-integrations.md)                       | Complete Hermes, OpenClaw, and generic MCP-client setup with official references.                                         |
 | [Operations guide](docs/operations.md)                                 | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
-| [Deployment guide](docs/deployment.md)                                 | Production Docker and Compose configuration, migrations, smoke tests, rollback, and recovery.                             |
+| [Deployment guide](docs/deployment.md)                                 | Pull published GHCR images, update with Compose, or build locally; migrations, smoke tests, and recovery.                   |
 | [Hermes skill guide](integrations/hermes/home-stock-tracker/README.md) | Skill installation, WhatsApp delivery, and proactive stock-check cron jobs.                                               |
 
 Official agent references:

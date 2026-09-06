@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-home_stock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-home_stock_tracker}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-home_stock}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: ${IMAGE_REF:-ghcr.io/yairabf/home-stock-tracker:${IMAGE_TAG:-latest}}
+    restart: 'no'
+    command: ['npm', 'run', 'db:migrate:deploy']
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-home_stock}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-home_stock_tracker}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    image: ${IMAGE_REF:-ghcr.io/yairabf/home-stock-tracker:${IMAGE_TAG:-latest}}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-home_stock}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-home_stock_tracker}?schema=public
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:?Set API_AUTH_TOKEN}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_MODEL: ${LLM_MODEL:-gpt-5.6-sol}
+      LOG_LEVEL: ${LOG_LEVEL:-log}
+      MCP_ENABLED: ${MCP_ENABLED:-false}
+      STOCK_WORKFLOW_ENABLED: ${STOCK_WORKFLOW_ENABLED:-true}
+      STOCK_WORKFLOW_CRON: ${STOCK_WORKFLOW_CRON:-0 2 * * *}
+      STOCK_WORKFLOW_TIMEZONE: ${STOCK_WORKFLOW_TIMEZONE:-Asia/Jerusalem}
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/ready').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:

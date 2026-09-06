@@ -1,5 +1,87 @@
 # Deployment
 
+## Published images
+
+After a passing push to `main`, GitHub Actions publishes the public image
+`ghcr.io/yairabf/home-stock-tracker` for Linux AMD64 and ARM64. Docker selects
+the appropriate platform automatically. Pull requests run Verify and build both
+platforms without publishing. Failed checks leave `latest` unchanged.
+
+- `latest` selects the newest passing published main build. A stale workflow
+  publishes its commit image but skips `latest` promotion.
+- `sha-<full-commit-sha>` selects a specific source revision. Re-running that
+  commit can rebuild its tag; use an image digest for byte-for-byte pinning.
+- The GitHub Actions summary records the image digest and promotion result.
+
+The shared local and CI gate is `npm run verify` (unit tests, then build).
+On a fresh checkout, run `npm ci` and `npm exec prisma generate` first.
+
+### First-time registry activation (maintainer)
+
+After the workflow is merged and its first publication succeeds, open the
+`home-stock-tracker` package under the `yairabf` GitHub account. In package
+settings, change visibility to **Public**. New GHCR packages default to private.
+Ensure this repository has Actions write access to the package if a package
+with that name already exists. Publishing uses GitHub's generated `GITHUB_TOKEN`;
+no personal publishing token or application credentials belong in CI secrets.
+
+Verify an anonymous pull using a temporary empty Docker configuration:
+
+```bash
+anonymous_config=$(mktemp -d)
+docker --config "$anonymous_config" pull ghcr.io/yairabf/home-stock-tracker:latest
+```
+
+No image is published until the workflow reaches GitHub and runs successfully.
+Requiring the Verify check before merging is an optional repository ruleset
+setting, separate from the workflow. See the
+[GitHub Container Registry guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+### Install or update from the registry
+
+Place `docker-compose.release.yml`, `scripts/update-release.sh`, and a runtime
+`.env` in your installation directory (the script stays under `scripts/`).
+Copy `.env.example` as a starting point and replace its database password and
+credential placeholders. No source checkout or local image build is needed.
+Run commands from this directory. Keep the directory/Compose project name stable
+between updates so the existing PostgreSQL volume is reused.
+
+```bash
+sh scripts/update-release.sh
+```
+
+The helper pulls app and migration images, resolves the local pulled image to a
+digest, starts PostgreSQL, runs migrations from that digest, then recreates only
+the app and waits up to 120 seconds for readiness. It exits immediately on a
+failure. A failed pull or migration prevents app replacement; a failed readiness
+check reports failure without automatically rolling back the database or app.
+The release stack does not expose PostgreSQL on a host port.
+
+To choose a commit, set `IMAGE_TAG=sha-<full-commit-sha>` in `.env`. The default is
+`latest`. To pin exact image bytes, set
+`IMAGE_REF=ghcr.io/yairabf/home-stock-tracker@sha256:<digest>` instead;
+`IMAGE_REF` takes precedence over `IMAGE_TAG`. Remove that override to resume
+tag-based updates. Both app and migration services always use the same image.
+
+Pulling alone downloads an image without updating an existing container:
+
+```bash
+docker pull ghcr.io/yairabf/home-stock-tracker:latest
+```
+
+Use the helper to complete the migration and container recreation. Expect a
+brief app interruption during replacement. Schema migrations must remain
+compatible with the currently running app; incompatible migrations require a
+separately planned maintenance window. Keep database backups. Returning to an
+older image does not reverse database migrations; review schema compatibility
+before selecting an older tag or digest and running the helper again.
+
+If moving an existing local Compose installation to the release file, keep its
+project name (set `COMPOSE_PROJECT_NAME` if necessary) and verify the existing
+`postgres_data` volume before switching. Never use `down --volumes` to update.
+
+## Build and deploy locally
+
 This runbook deploys Home Stock Tracker as a private Docker service with
 PostgreSQL. The Compose stack is production-like and portable; provider-specific
 networking, TLS, backups, and secret stores remain operator responsibilities.

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "command": "feature",
+  "command": "complete",
   "status": "ready",
-  "summary": "MCP-05 already completed",
-  "detail": "Confirmed existing implementation and completed fix archive; corrected stale bug status and index. No new active spec needed.",
-  "boundary": "reviewed",
-  "target": "MCP-05",
-  "updatedAt": "2026-09-05T21:24:04.467600+00:00",
+  "summary": "Docker publishing CI verified",
+  "detail": "929 tests and production build passed. User clarified CI-only scope and authorized commit, merge, push, and registry activation.",
+  "boundary": "verified",
+  "target": "docker-image-publishing",
+  "updatedAt": "2026-09-06T16:13:48.476955+00:00",
   "resumeCommand": null
 }
