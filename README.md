@@ -1,5 +1,9 @@
 # Home Stock Tracker
 
+<p align="center">
+  <img src="docs/brand/home-stock-tracker-icon.png" alt="Home Stock Tracker icon" width="180">
+</p>
+
 Home Stock Tracker is a private NestJS service that manages a household grocery
 list, records purchases and stock observations, and estimates what is probably
 available, low, or out. It is designed for conversational use through agents
