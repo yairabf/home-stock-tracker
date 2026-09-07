@@ -41,15 +41,15 @@ describe('executable agent scenario contract', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      'Validated 103 executable agent scenarios.',
+      'Validated 112 executable agent scenarios.',
     );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(103);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(103);
+    expect(fixture.scenarios).toHaveLength(112);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(112);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -127,6 +127,21 @@ describe('executable agent scenario contract', () => {
     for (const scenario of fixture.scenarios.filter(
       ({ resultClass }) => resultClass === 'transport-uncertain',
     )) {
+      if (
+        scenario.calls.length > 0 &&
+        scenario.calls.every(
+          ({ tool }) => tool === 'inventory_confirm_new_product',
+        )
+      ) {
+        expect(scenario.prerequisites).toContain('explicit-user-confirmation');
+        expect(scenario.safetyInvariants).toEqual(
+          expect.arrayContaining([
+            'stable-confirmation-operation',
+            'preserve-newer-stock-on-replay',
+          ]),
+        );
+        continue;
+      }
       expect(scenario.safetyInvariants).toContain('no-automatic-retry');
       expect(scenario.safetyInvariants).toContain('stop-on-uncertain-mutation');
     }
@@ -200,7 +215,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -235,7 +250,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -379,7 +394,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.3.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -394,4 +409,46 @@ describe('executable agent scenario contract', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(expectedError);
   });
+  it.each([
+    [
+      'missing approval',
+      "scenario.prerequisites = scenario.prerequisites.filter(value => value !== 'explicit-user-confirmation');",
+      'must require confirmation',
+    ],
+    [
+      'grocery staging',
+      "scenario.calls.push({ tool: 'grocery_add', argumentKeys: ['productName', 'groceryItem'], enumValues: [] });",
+      'must not stage or change groceries',
+    ],
+    [
+      'unsafe ordinary retry',
+      "scenario.calls = [{ tool: 'update_inventory', argumentKeys: ['productId', 'operation', 'quantity'], enumValues: [] }]; scenario.prerequisites.push('trusted-product-id');",
+      'transport uncertainty must stop',
+    ],
+    [
+      'missing replay identity',
+      "scenario.safetyInvariants = scenario.safetyInvariants.filter(value => value !== 'stable-confirmation-operation');",
+      'stock confirmation requires stable-confirmation-operation',
+    ],
+  ])(
+    'rejects stock confirmation scenarios with %s',
+    (_name, mutation, error) => {
+      const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json', 'utf8'));
+      const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
+      ${mutation}
+      validateScenarioContract(contract, tools);
+    `;
+      const result = spawnSync(
+        process.execPath,
+        ['--input-type=module', '--eval', script],
+        { cwd: root, encoding: 'utf8' },
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(error);
+    },
+  );
 });

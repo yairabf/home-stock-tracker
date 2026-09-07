@@ -1,3 +1,4 @@
+import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
@@ -82,6 +83,9 @@ describe('McpServerFactory grocery tools', () => {
     Pick<PredictionFeedbackService, 'submitFeedback'>
   >;
   let operationalLogger: jest.Mocked<Pick<OperationalLogger, 'mcpIntegration'>>;
+  let stockConfirmation: jest.Mocked<
+    Pick<StockProductConfirmationService, 'confirm'>
+  >;
   let householdService: jest.Mocked<Pick<HouseholdService, 'getContext'>>;
 
   beforeEach(async () => {
@@ -112,6 +116,7 @@ describe('McpServerFactory grocery tools', () => {
     };
     recommendationService = { getRecommendations: jest.fn() };
     predictionFeedbackService = { submitFeedback: jest.fn() };
+    stockConfirmation = { confirm: jest.fn() };
     householdService = { getContext: jest.fn() };
     operationalLogger = { mcpIntegration: jest.fn() };
     const factory = new McpServerFactory(
@@ -123,6 +128,7 @@ describe('McpServerFactory grocery tools', () => {
       recommendationService as LowStockRecommendationService,
       householdService as HouseholdService,
       operationalLogger as OperationalLogger,
+      stockConfirmation as StockProductConfirmationService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -162,6 +168,7 @@ describe('McpServerFactory grocery tools', () => {
       'record_purchases',
       'record_stock_signal',
       'record_prediction_feedback',
+      'inventory_confirm_new_product',
       'complete_grocery_purchase',
       'get_low_stock_predictions',
     ]);
@@ -2298,6 +2305,63 @@ describe('McpServerFactory grocery tools', () => {
       ],
       isError: true,
     });
+  });
+  it('requires a strict, explicitly approved stock confirmation and publishes safe replay', async () => {
+    const tool = (await client.listTools()).tools.find(
+      ({ name }) => name === 'inventory_confirm_new_product',
+    );
+    expect(tool?.annotations).toMatchObject({
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    });
+    expect(tool?.inputSchema).toMatchObject({
+      additionalProperties: false,
+      required: ['operationId', 'product', 'stock'],
+    });
+    const input = {
+      operationId: item.id,
+      product: {
+        canonicalName: 'milk',
+        aliases: [],
+        category: 'dairy',
+        typicalUnit: 'liter',
+        productType: 'fast_consumable',
+        isPerishable: true,
+      },
+      stock: { quantity: 2, unit: 'liter' },
+    };
+    for (const invalid of [
+      { ...input, source: 'api' },
+      { ...input, stock: { quantity: 0, unit: 'liter' } },
+      { ...input, stock: { quantity: 2 } },
+      { ...input, stock: { quantity: 2, unit: 'carton' } },
+    ]) {
+      expect(
+        (
+          await client.callTool({
+            name: 'inventory_confirm_new_product',
+            arguments: invalid,
+          })
+        ).isError,
+      ).toBe(true);
+    }
+    expect(stockConfirmation.confirm).not.toHaveBeenCalled();
+    stockConfirmation.confirm.mockRejectedValue(
+      new ConflictException({
+        code: 'STOCK_CONFIRMATION_ID_CONFLICT',
+        message: 'Changed approval',
+      }),
+    );
+    const result = await client.callTool({
+      name: 'inventory_confirm_new_product',
+      arguments: input,
+    });
+    expect(stockConfirmation.confirm).toHaveBeenCalledWith(input);
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result)).toContain('STOCK_CONFIRMATION_ID_CONFLICT');
+    expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
   });
 });
 

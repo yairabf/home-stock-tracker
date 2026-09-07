@@ -5,8 +5,8 @@
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "1.3.0",
-    "toolsFixture": "contracts/1.3.0/tools-list.json",
+    "contractVersion": "1.4.0",
+    "toolsFixture": "contracts/1.4.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -16,10 +16,15 @@
   "skill": {
     "name": "home-stock-tracker",
     "description": "Use the household grocery and inventory MCP tools",
-    "version": "1.13.0",
-    "compatibleMcpRange": ">=1.0.0 <2.0.0",
+    "version": "1.14.0",
+    "compatibleMcpRange": ">=1.4.0 <2.0.0",
     "author": "Home Stock Tracker",
-    "tags": ["household", "grocery", "inventory", "mcp"]
+    "tags": [
+      "household",
+      "grocery",
+      "inventory",
+      "mcp"
+    ]
   },
   "features": [
     "batch-purchase-recording",
@@ -41,7 +46,8 @@
     "product-search",
     "purchase-recording",
     "stock-mutations",
-    "stock-signals"
+    "stock-signals",
+    "stock-product-confirmation"
   ],
   "requiredTools": [
     "grocery_add",
@@ -63,10 +69,14 @@
     "record_purchases",
     "record_stock_signal",
     "record_prediction_feedback",
+    "inventory_confirm_new_product",
     "complete_grocery_purchase",
     "get_low_stock_predictions"
   ],
-  "platforms": ["hermes", "openclaw"],
+  "platforms": [
+    "hermes",
+    "openclaw"
+  ],
   "bundle": {
     "schemaVersion": 1,
     "authentication": {

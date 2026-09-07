@@ -21,7 +21,6 @@ const sharedRoot = join(
 );
 const platforms = ['hermes', 'openclaw'];
 const releaseContract = loadReleaseContract(projectRoot);
-const scenarioContract = loadScenarioContract(projectRoot);
 
 function readSource(...parts) {
   return readFileSync(join(sharedRoot, ...parts), 'utf8').trimEnd();
@@ -154,6 +153,7 @@ ${rollback.guidance}
 }
 
 export function renderAgentScenarios(platform) {
+  const scenarioContract = loadScenarioContract(projectRoot);
   const sharedScenarios = readSource('scenarios.md').replace(
     '<!-- EXECUTABLE_GROCERY_CATALOG_SCENARIOS -->',
     renderScenarioTable(scenarioContract, platform),
@@ -286,7 +286,17 @@ function writeBundles(bundles) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const bundles = await generatedReleaseArtifacts();
+  const bundles = process.argv.includes('--runtime-only')
+    ? [
+        {
+          path: join(
+            projectRoot,
+            'src/mcp/agent-release-contract.generated.ts',
+          ),
+          content: await renderRuntimeContract(),
+        },
+      ]
+    : await generatedReleaseArtifacts();
   if (process.argv.includes('--check')) {
     checkBundles(bundles);
   } else {

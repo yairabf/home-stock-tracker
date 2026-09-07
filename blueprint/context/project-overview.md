@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 9311d0d13c21e4bf4475d1029de5aca74215316ea44017a5d80e9d41b16f71d5 -->
+<!-- blueprint:source-hash a2f3007d7eff19771826fc2a5d1be8586676fe4ffcea199d56c32460485626f8 -->
 
 > A NestJS service that tracks household groceries and estimates stock so Hermes can manage them through natural WhatsApp conversation.
 
@@ -17,7 +17,8 @@ This is a private single-household tool, not a multi-tenant SaaS product. Multip
 
 ## Features
 
-The MVP feature set, in build order. Item 12 (MCP tool interface) is the headline integration point - it's what makes the service usable by Hermes at all.
+Build-plan items 1-18 and 27-33 are complete, including all stock-ledger substeps.
+Items 19-26 remain planned. Item 12 is the headline agent integration.
 
 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API.
 2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.

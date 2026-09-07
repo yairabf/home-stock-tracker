@@ -18,7 +18,8 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
   result concisely.
 - One clear request may require several ordered tool calls. Finish prerequisite
   reads before mutations, preserve the user's item boundaries, and stop after an
-  uncertain mutation result instead of continuing or retrying.
+  uncertain ordinary mutation result instead of continuing or retrying. The
+  `inventory_confirm_new_product` replay exception below uses its original operation ID.
 
 ## Tool selection
 
@@ -40,7 +41,8 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
 | `list_inventory_events`         | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                                          |
 | `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                                                    |
 | `record_purchases`              | The user reports a recently purchased list that is not a grocery-list completion. Resolve every product first, preserve item order and boundaries, and send one atomic batch.                                          | Any identity is unresolved, a product appears twice, the report is future intent, or the user refers to pending grocery rows.                                                         |
-| `update_inventory`              | The user supplies an explicit absolute quantity, decrement amount, or says one exact product is out. Use `set`, `decrement`, or `mark_out` respectively.                                                               | Availability is vague, a required quantity is missing, the unit would need conversion, or the target is unresolved.                                                                   |
+| `update_inventory`              | The user supplies an explicit absolute quantity, decrement amount, or says one exact product is out. Use `set`, `decrement`, or `mark_out` respectively.                                                               | Availability is vague, a required quantity is missing, the unit conversion is uncertain, or the target is unresolved.                                                                   |
+| `inventory_confirm_new_product` | Explicitly approved complete product facts and a positive absolute stock quantity/unit for an unknown product. | Purchase completion, decrement, mark-out, zero stock, ambiguity, unapproved facts, or staging grocery entries. |
 | `record_stock_signal`           | The user directly reports a qualitative low state or corrects recorded history without referring to a prediction and without an explicit stock quantity.                                                               | The statement supplies an exact quantity, says the product is out, confirms availability without a quantity, or refers to one specific prediction.                                    |
 | `record_prediction_feedback`    | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.                              |
 | `complete_grocery_purchase`     | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                      | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
@@ -209,7 +211,7 @@ and `INVALID_UPDATE` as clarification branches, never as permission to guess.
 After an uncertain mutation transport result, stop and report uncertainty
 without retrying either tool.
 
-The confirmation tools can themselves return `confirmation_required`. That
+The grocery confirmation tools can themselves return `confirmation_required`. That
 means the approved catalog identity was applied, but no existing grocery
 quantity was changed. Preserve the returned request and resolve the final
 quantity through the same separate quantity workflow above. Do not repeat the
@@ -342,10 +344,58 @@ quantity-free `STOCK_CONFIRMED` signal into a known balance, invent a count, or
 fall back to `record_stock_signal` to avoid the clarification.
 
 If `set` would establish a different canonical unit, repeat the exact quantity
-and unit and obtain explicit confirmation before the call. Never convert units.
+and unit and obtain explicit confirmation before the call. For absolute sets only,
+convert explicit package measurements as described below; never infer a conversion.
 Treat an untracked or quantity-unknown decrement as final for that attempt and
 ask for an absolute current quantity before a new decision. After an uncertain
 mutation result, do not retry or claim the balance changed.
+
+### Unknown products during absolute stock sets
+
+A request to set stock does not authorize creating catalog products. Stock updates
+never add, complete, remove, or change grocery-list entries. Do not use `grocery_add`
+or `grocery_confirm_new_product` to stage a stock update.
+
+1. Simplify the supplied description into a generic household product, keeping brand
+   details on the agent side. Use one `3% milk` product tracked in liters across
+   brands/package sizes; keep meaningful variants such as lactose-free milk separate.
+   Convert only explicit package measurements: two one-liter cartons become quantity
+   `2`, unit `liter`. Use the catalog's exact unit spelling. Ask if identity, package
+   size, or conversion is uncertain. This does not change purchase-completion rules.
+2. Use `get_product`, then `search_products` when no exact product is found. Search
+   is read-only and does not provide creation authority. Apply known exact stock sets
+   immediately. Hold ambiguous lines for the user's choice; never select a candidate
+   from confidence alone. Decrement and mark-out still require existing products.
+3. For unknown products, gather the complete final creation facts: `canonicalName`,
+   `aliases`, `category`, `typicalUnit` (or null), `productType`, and `isPerishable`.
+   Ask for missing facts; do not use grocery addition to obtain proposals. Bundle
+   proposed products and their positive absolute quantities/units into one explicit
+   confirmation question. Declining causes no catalog or stock mutation for that line.
+4. After approval, generate and retain one UUID `operationId` per product/stock
+   decision, together with its exact approved payload. Call
+   `inventory_confirm_new_product({ operationId, product, stock: { quantity, unit } })`.
+   The quantity is finite and strictly positive, and the stock unit is explicit.
+   A supplied typical unit must match it. No source, dates, grocery fields, product
+   ID or operation selector may be sent. Zero uses mark-out on an existing product.
+5. Creation/reuse, the absolute stock set and its receipt commit together per line.
+   A bundled question is not an atomic batch. Report applied, failed and held lines
+   separately and resume only outstanding work; do not replay successful known sets.
+
+If a product appears while approval is pending, confirmation reuses it only when
+exact identity, classification facts and stock unit are compatible. Conflicts require
+clarification. It never silently changes existing metadata/aliases or units to fit.
+Do not bypass a conflict by changing the operation ID or payload without a new decision.
+
+**Safe confirmation replay:** After a lost or uncertain confirmation response, retry
+only `inventory_confirm_new_product` with the identical operation ID and payload.
+The stored original response is returned without another stock write or timestamp
+refresh, even after later stock changes. It describes the original action, not a
+fresh reading of current stock. `STOCK_CONFIRMATION_ID_CONFLICT` means the payload
+changed; `STOCK_CONFIRMATION_PRODUCT_CONFLICT` means existing identity/unit facts
+conflict. Both require clarification. `PRODUCT_NAME_CONFLICT` and
+`STOCK_STATE_CONFLICT` also require clarification. Do not automatically retry these
+domain conflicts. Ordinary `update_inventory` and purchase tools do not gain this
+replay protection; stop on their uncertain results.
 
 ### Complete a shopping trip
 
@@ -421,7 +471,8 @@ If no mapping is clear, ask rather than choosing the closest enum.
   user facts or ask a question.
 - After a mutation transport failure with an uncertain outcome, do not retry
   automatically. Report that the result is uncertain so duplicate writes are
-  avoided.
+  avoided. The sole exception is an identical `inventory_confirm_new_product`
+  retry with the original operation ID and approved payload, as described above.
 
 ## Examples
 
@@ -516,3 +567,17 @@ Call `grocery_list`. Match "toilet paper" to exactly one pending
 `{ items: [{ groceryItemId: <returned id> }, ...] }` for all remaining items.
 Omit actual fields because the user supplied no actual measurements. Leave
 toilet paper pending and summarize only the confirmed completed items.
+
+### Mixed absolute stock request with an unknown product
+
+The user asks to set stock from supplied grocery information: two one-liter cartons
+of branded 3% milk, one kilogram of rice, and an unclear yogurt description. This
+is a stock update, not an instruction to complete purchases or remove groceries.
+
+Normalize milk to generic `3% milk`, quantity `2`, unit `liter`, keeping the brand on
+the agent side. Set known rice to one kilogram immediately. Hold unknown milk and
+propose its complete product facts plus the two-liter set for explicit approval,
+bundled with any other new products. Ask which yogurt was meant without changing it.
+After approval, confirm milk with a retained operation UUID. If the response is lost,
+retry that exact confirmation. Report rice/milk successes and unresolved yogurt.
+All grocery entries remain unchanged, even matching pending products.

@@ -1,3 +1,4 @@
+import { StockProductConfirmationService } from './stock-product-confirmation.service';
 import { Module } from '@nestjs/common';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
@@ -30,6 +31,7 @@ import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.servic
   ],
   controllers: [InventoryController],
   providers: [
+    StockProductConfirmationService,
     InventoryService,
     PredictionFeedbackService,
     LowStockRecommendationService,
@@ -46,6 +48,7 @@ import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.servic
     },
   ],
   exports: [
+    StockProductConfirmationService,
     InventoryService,
     PredictionFeedbackService,
     LowStockRecommendationService,

@@ -1,3 +1,5 @@
+import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
+import { stockProductConfirmationSchema } from '../inventory/types/stock-product-confirmation';
 import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -591,6 +593,7 @@ export class McpServerFactory {
     private readonly lowStockRecommendationService: LowStockRecommendationService,
     private readonly householdService: HouseholdService,
     private readonly operationalLogger: OperationalLogger,
+    private readonly stockConfirmation: StockProductConfirmationService,
   ) {}
 
   create(): McpServer {
@@ -600,9 +603,38 @@ export class McpServerFactory {
     this.registerReadTools(server);
     this.registerProductWriteTool(server);
     this.registerInventoryWriteTools(server);
+    this.registerStockConfirmationTool(server);
     this.registerGroceryPurchaseCompletionTool(server);
     this.registerRecommendationTool(server);
     return server;
+  }
+
+  private registerStockConfirmationTool(server: McpServer): void {
+    server.registerTool(
+      'inventory_confirm_new_product',
+      {
+        description:
+          'Apply one explicitly user-approved new-product decision and positive absolute stock set atomically, without an LLM call or any grocery-list mutation. Resolve names first; use update_inventory for known exact products and hold ambiguity. Preserve the approved product facts, quantity, unit and operationId. Identical retries return the original result without another stock write, even after later stock changes. Changed payloads under the same ID and incompatible existing products require clarification; never change the payload or ID to bypass a conflict. Do not send source, dates, or grocery fields.',
+        inputSchema: stockProductConfirmationSchema,
+        outputSchema: stockMutationOutputSchema
+          .extend({
+            operationId: z.uuid(),
+            productId: z.uuid(),
+            productOutcome: z.enum(['created', 'reused']),
+          })
+          .strict(),
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      (input) =>
+        this.runTool('inventory_confirm_new_product', async () =>
+          this.toolResult(await this.stockConfirmation.confirm(input)),
+        ),
+    );
   }
 
   private registerProductWriteTool(server: McpServer): void {

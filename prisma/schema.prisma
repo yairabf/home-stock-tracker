@@ -240,3 +240,11 @@ model ProductShelfLifePolicy {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 }
+
+model StockProductConfirmation {
+  operationId     String   @id
+  requestVersion  Int
+  requestPayload  Json
+  responsePayload Json
+  createdAt       DateTime @default(now())
+}

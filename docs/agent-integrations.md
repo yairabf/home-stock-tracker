@@ -308,3 +308,18 @@ Never combine files from different bundle versions, rewrite a released fixture,
 or downgrade only the service or skill side. If no compatible pair is
 available, restore the previous service release and its complete bundle as one
 deployment change.
+
+## Confirming unknown products while setting stock
+
+For absolute stock requests, agents resolve products read-only and apply known exact
+sets immediately. Unknown products require explicit approval of complete product
+facts and the requested quantity/unit before `inventory_confirm_new_product`.
+Creation and stock setting commit atomically without changing grocery entries.
+Never use grocery-addition tools to stage a stock update. Hold ambiguous identities
+or uncertain package conversions for clarification; brand details stay with the agent.
+
+Each approved line carries a retained operation UUID. An identical confirmation retry
+returns the original receipt without another write, including after newer stock changes.
+Changed payloads and incompatible existing product facts/units require clarification.
+This exception does not make ordinary stock updates or purchase tools safe to replay.
+See the generated skill and scenarios for mixed requests, partial failures, and declines.

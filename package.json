@@ -9,7 +9,7 @@
     "verify": "npm run test -- --runInBand && npm run build",
     "build": "nest build",
     "agent:probe": "node scripts/agent-installation-probe.mjs",
-    "contract:capture": "node scripts/generate-agent-skills.mjs && MCP_CONTRACT_CAPTURE=1 jest --runInBand src/mcp/mcp-contract-fixture.spec.ts",
+    "contract:capture": "node scripts/generate-agent-skills.mjs --runtime-only && MCP_CONTRACT_CAPTURE=1 jest --runInBand src/mcp/mcp-contract-fixture.spec.ts && node scripts/generate-agent-skills.mjs",
     "contract:check": "node scripts/agent-release-contract.mjs && node scripts/agent-scenarios.mjs && node scripts/generate-agent-skills.mjs --check && node scripts/agent-documentation-contract.mjs && jest --runInBand src/mcp/agent-release-contract.spec.ts src/mcp/mcp-contract-fixture.spec.ts src/mcp/agent-scenario-contract.spec.ts src/mcp/agent-skill-generator.spec.ts src/mcp/agent-bundle-manifest.spec.ts src/mcp/agent-installation-probe.spec.ts",
     "db:migrate:deploy": "prisma migrate deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

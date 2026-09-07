@@ -1,3 +1,4 @@
+import type { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -42,6 +43,7 @@ describe('MCP contract fixture', () => {
       {} as LowStockRecommendationService,
       {} as HouseholdService,
       {} as OperationalLogger,
+      {} as StockProductConfirmationService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =

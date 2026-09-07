@@ -48,6 +48,11 @@ const PREREQUISITES = [
   'user-selected-product',
 ];
 const INVARIANTS = [
+  'atomic-catalog-and-stock-write',
+  'no-grocery-mutation',
+  'stable-confirmation-operation',
+  'preserve-newer-stock-on-replay',
+  'explicit-package-conversion',
   'atomic-catalog-and-grocery-write',
   'actual-measurements-user-supplied',
   'all-or-nothing-batch',
@@ -254,6 +259,7 @@ function validateCallOrder(scenario, path) {
     );
   }
   for (const confirmationTool of [
+    'inventory_confirm_new_product',
     'grocery_confirm_new_product',
     'grocery_confirm_product_alias',
     'product_add_alias',
@@ -275,6 +281,43 @@ function validateCallOrder(scenario, path) {
       `${path} must require a trusted product ID before product_add_alias`,
     );
   }
+  if (calls.includes('inventory_confirm_new_product')) {
+    for (const invariant of [
+      'atomic-catalog-and-stock-write',
+      'no-grocery-mutation',
+      'stable-confirmation-operation',
+    ]) {
+      if (!scenario.safetyInvariants.includes(invariant))
+        throw new Error(`${path} stock confirmation requires ${invariant}`);
+    }
+    if (!hasPrerequisite('complete-product-facts'))
+      throw new Error(
+        `${path} stock confirmation requires complete product facts`,
+      );
+    if (
+      calls.some(
+        (tool) =>
+          tool.startsWith('grocery_') || tool === 'complete_grocery_purchase',
+      )
+    ) {
+      throw new Error(
+        `${path} stock confirmation must not stage or change groceries`,
+      );
+    }
+  }
+}
+
+function isSafeStockConfirmationReplay(scenario) {
+  return (
+    scenario.calls.length > 0 &&
+    scenario.calls.every(
+      ({ tool }) => tool === 'inventory_confirm_new_product',
+    ) &&
+    scenario.prerequisites.includes('explicit-user-confirmation') &&
+    ['stable-confirmation-operation', 'preserve-newer-stock-on-replay'].every(
+      (invariant) => scenario.safetyInvariants.includes(invariant),
+    )
+  );
 }
 
 export function validateScenarioContract(contract, toolsFixture) {
@@ -337,7 +380,10 @@ export function validateScenarioContract(contract, toolsFixture) {
     if (titles.has(scenario.row[0]))
       throw new Error(`${path}.row title is duplicated`);
     titles.add(scenario.row[0]);
-    if (scenario.resultClass === 'transport-uncertain') {
+    if (
+      scenario.resultClass === 'transport-uncertain' &&
+      !isSafeStockConfirmationReplay(scenario)
+    ) {
       if (
         !scenario.safetyInvariants.includes('no-automatic-retry') ||
         !scenario.safetyInvariants.includes('stop-on-uncertain-mutation')
@@ -365,6 +411,7 @@ export function validateScenarioContract(contract, toolsFixture) {
           'record_prediction_feedback',
           'record_stock_signal',
           'update_inventory',
+          'inventory_confirm_new_product',
         ].includes(tool),
       )
     ) {

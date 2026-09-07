@@ -4,6 +4,8 @@ import {
   cpSync,
   mkdtempSync,
   readFileSync,
+  mkdirSync,
+  writeFileSync,
   rmSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -42,7 +44,7 @@ describe('agent skill generator', () => {
     'scenarios.md',
     'manifest.json',
     'release/README.md',
-    'contracts/1.3.0/tools-list.json',
+    'contracts/1.4.0/tools-list.json',
   ])('fails closed when generated %s was hand-edited', (artifact) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-skills-'));
 
@@ -90,6 +92,51 @@ describe('agent skill generator', () => {
       expect(result.stderr).toContain(
         `integrations/openclaw/home-stock-tracker/${artifact}`,
       );
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+  it('bootstraps runtime metadata before a new immutable fixture exists', () => {
+    const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-runtime-'));
+    try {
+      const shared = join(
+        temporaryRoot,
+        'integrations/shared/home-stock-tracker',
+      );
+      mkdirSync(shared, { recursive: true });
+      const contract = JSON.parse(
+        readFileSync(
+          join(
+            projectRoot,
+            'integrations/shared/home-stock-tracker/release-contract.json',
+          ),
+          'utf8',
+        ),
+      );
+      contract.mcp.contractVersion = '1.99.0';
+      contract.mcp.toolsFixture = 'contracts/1.99.0/tools-list.json';
+      writeFileSync(
+        join(shared, 'release-contract.json'),
+        JSON.stringify(contract),
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          join(projectRoot, 'scripts/generate-agent-skills.mjs'),
+          '--runtime-only',
+          '--project-root',
+          temporaryRoot,
+        ],
+        { cwd: projectRoot, encoding: 'utf8' },
+      );
+      expect(result.stderr).toBe('');
+      expect(result.status).toBe(0);
+      expect(
+        readFileSync(
+          join(temporaryRoot, 'src/mcp/agent-release-contract.generated.ts'),
+          'utf8',
+        ),
+      ).toContain("contractVersion: '1.99.0'");
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }

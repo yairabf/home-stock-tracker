@@ -1,22 +1,12 @@
 import { z } from 'zod';
-import { ProductType } from '../../generated/prisma/enums';
+import { confirmedProductInputSchema } from '../../product/types/confirmed-product.schema';
+export { confirmedProductInputSchema } from '../../product/types/confirmed-product.schema';
 
 export const confirmedGroceryItemInputSchema = z
   .object({
     requestedQuantity: z.number().positive().finite().optional(),
     unit: z.string().optional(),
     note: z.string().optional(),
-  })
-  .strict();
-
-export const confirmedProductInputSchema = z
-  .object({
-    canonicalName: z.string().trim().min(1),
-    aliases: z.array(z.string().trim().min(1)),
-    category: z.string().trim().min(1),
-    typicalUnit: z.string().nullable(),
-    productType: z.enum(ProductType),
-    isPerishable: z.boolean(),
   })
   .strict();
 

@@ -104,6 +104,15 @@ tool result, never from the model.
 | Explicit stock decrement | The user reports consuming an exact amount from one resolved product. | Call `update_inventory` with `operation: "decrement"`; send the consumed amount, not a calculated final balance. | The service atomically clamps and returns the resulting projection. |
 | Explicit stock mark-out | The user says one resolved product is out. | Call `update_inventory` with `operation: "mark_out"` and no quantity or unit. | The returned explicit fact and projection are zero without an invented measurement. |
 | Quantity-free stock confirmation | The user says, "We still have milk," without referring to a prediction or giving a quantity. | Ask how much remains before any stock write; do not send `STOCK_CONFIRMED` as a substitute balance. | No mutation occurs until the user supplies a positive quantity. |
+| Unknown stock product awaits approval | An absolute stock request names an unknown product. | Read-only search, gather complete facts and bundle the proposed product and positive quantity/unit with other unknowns for explicit approval. | No catalog or stock mutation for this line; do not stage it through grocery tools. |
+| Approved product and absolute stock | The user approves complete generic product facts and two liters of milk. | Generate and retain one operation UUID and call `inventory_confirm_new_product` with the exact approved product and stock. | Product creation and the two-liter stock set commit atomically; grocery entries are unchanged. |
+| Declined stock product creation | The user declines a proposed stock product. | Do not call confirmation. | Catalog and stock remain unchanged for that line. |
+| Mixed absolute stock request | Known rice, unknown milk and ambiguous yogurt occur in one stock request. | Set known rice immediately; hold milk for bundled creation approval and yogurt for clarification. Resume only remaining lines. | Report successful and held lines; do not promise an atomic batch or replay rice. |
+| Explicit stock package conversion | Two branded one-liter cartons of 3% milk are supplied in an absolute stock request. | Keep brands on the agent side; normalize to generic 3% milk, quantity 2, unit liter. Hold unknown product for approval. | Keep lactose-free variants separate; ask if package size or conversion is uncertain. |
+| Safe stock confirmation replay | The approved confirmation response was lost, possibly followed by a newer stock change. | Retry only `inventory_confirm_new_product` with the identical retained operation UUID and approved payload. | Original response is returned without an event, timestamp refresh or stock overwrite. |
+| Changed confirmation payload | The same operation UUID is supplied with a changed quantity. | Surface `STOCK_CONFIRMATION_ID_CONFLICT`; ask for clarification and do not change IDs to bypass it. | No second stock write occurs. |
+| Incompatible product appeared | The proposed name was created with incompatible facts or units before approval. | Surface `STOCK_CONFIRMATION_PRODUCT_CONFLICT` and clarify; no silent metadata or unit replacement. | No duplicate product, stock update or grocery mutation. |
+| Unknown decrement or out report | An unknown product is decremented or marked out, or an unknown zero set is requested. | Resolve an existing product or ask for clarification. Never enter new-product stock confirmation. | No new product or stock mutation. |
 
 ## Review record
 
@@ -137,7 +146,7 @@ For each row, verify:
 - history responses are described as recorded events, never as estimated
   current stock, and omitted metadata is never reconstructed;
 - history review alone never triggers a correction or another mutation;
-- uncertain names begin with `propose_if_missing`, whether explicit or through
+- uncertain grocery-addition names begin with `propose_if_missing`, whether explicit or through
   the MCP default, and always include nested `groceryItem`;
 - `product_resolution_required` never causes a product, alias, or grocery write;
 - proposal advice remains non-authoritative and every product choice comes from
@@ -151,7 +160,9 @@ For each row, verify:
   and moves quantity handling to the separate quantity workflow;
 - `create_if_missing` is used only with complete, deliberate product facts;
 - every persisted grocery quantity is finite, positive, and non-null;
-- no mutation runs after an ambiguous request or uncertain mutation result;
+- ambiguous stock lines stay untouched while other clear lines may proceed;
+- ordinary uncertain mutations stop; only identical stock confirmation retries
+  with the retained operation ID and approved payload may be replayed;
 - specific prediction corrections use one `record_prediction_feedback` call
   and never a second `record_stock_signal` call;
 - general stock corrections without a prediction reference stay on
@@ -165,3 +176,16 @@ For each row, verify:
 - every selected update field has its expected old value from the existing item;
 - final wording reflects the structured result rather than claiming unobserved
   inventory facts.
+
+
+
+## Stock confirmation review
+
+- New-product approval includes complete product facts and a positive absolute stock
+  quantity with an explicit unit; no decrement, mark-out, or zero creation.
+- The agent generates one operation UUID per approved decision and retains the exact
+  payload for uncertain-result retries. Product IDs still come only from service results.
+- Confirmations never mutate grocery entries; known lines can succeed while other
+  lines await approval or clarification, without a whole-request atomicity claim.
+- Explicit package conversion for stock sets is permitted; uncertain conversion is held.
+- Replayed receipts describe the original action and do not overwrite newer stock.

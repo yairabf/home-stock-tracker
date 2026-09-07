@@ -1,3 +1,4 @@
+import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import {
   Controller,
   Get,
@@ -69,6 +70,10 @@ describe('McpController', () => {
       imports: [ServiceAuthModule],
       controllers: [TestRestController, McpController],
       providers: [
+        {
+          provide: StockProductConfirmationService,
+          useValue: { confirm: jest.fn() },
+        },
         McpServerFactory,
         {
           provide: APP_GUARD,
@@ -155,6 +160,7 @@ describe('McpController', () => {
         'record_purchases',
         'record_stock_signal',
         'record_prediction_feedback',
+        'inventory_confirm_new_product',
         'complete_grocery_purchase',
         'get_low_stock_predictions',
       ]);

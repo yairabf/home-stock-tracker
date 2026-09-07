@@ -39,7 +39,7 @@ For each row, verify:
 - history responses are described as recorded events, never as estimated
   current stock, and omitted metadata is never reconstructed;
 - history review alone never triggers a correction or another mutation;
-- uncertain names begin with `propose_if_missing`, whether explicit or through
+- uncertain grocery-addition names begin with `propose_if_missing`, whether explicit or through
   the MCP default, and always include nested `groceryItem`;
 - `product_resolution_required` never causes a product, alias, or grocery write;
 - proposal advice remains non-authoritative and every product choice comes from
@@ -53,7 +53,9 @@ For each row, verify:
   and moves quantity handling to the separate quantity workflow;
 - `create_if_missing` is used only with complete, deliberate product facts;
 - every persisted grocery quantity is finite, positive, and non-null;
-- no mutation runs after an ambiguous request or uncertain mutation result;
+- ambiguous stock lines stay untouched while other clear lines may proceed;
+- ordinary uncertain mutations stop; only identical stock confirmation retries
+  with the retained operation ID and approved payload may be replayed;
 - specific prediction corrections use one `record_prediction_feedback` call
   and never a second `record_stock_signal` call;
 - general stock corrections without a prediction reference stay on
@@ -69,3 +71,14 @@ For each row, verify:
   inventory facts.
 
 <!-- PLATFORM_SCENARIOS -->
+
+## Stock confirmation review
+
+- New-product approval includes complete product facts and a positive absolute stock
+  quantity with an explicit unit; no decrement, mark-out, or zero creation.
+- The agent generates one operation UUID per approved decision and retains the exact
+  payload for uncertain-result retries. Product IDs still come only from service results.
+- Confirmations never mutate grocery entries; known lines can succeed while other
+  lines await approval or clarification, without a whole-request atomicity claim.
+- Explicit package conversion for stock sets is permitted; uncertain conversion is held.
+- Replayed receipts describe the original action and do not overwrite newer stock.
