@@ -48,39 +48,23 @@ validation, persistence, and prediction.
 
 ## Conversation mockups
 
-Household members can manage the shared list and respond to stock predictions
-through a familiar chat interface. Click any preview to open the full-size image.
+Two short conversations show how Hermes helps with the grocery list and current
+inventory. Click a preview to replay it at full size.
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <strong>Add groceries</strong><br>
-      <sub>Update the shared list using natural language.</sub><br><br>
-      <a href="docs/mockups/agent-chat/add-groceries-en.png">
-        <img src="docs/mockups/agent-chat/add-groceries-en.png" alt="Conversation adding milk and eggs to the grocery list" width="360">
+      <strong>Grocery list interaction</strong><br>
+      <sub>Ask what is needed and add a missing item.</sub><br><br>
+      <a href="docs/mockups/agent-chat/agent-list-interaction.gif">
+        <img src="docs/mockups/agent-chat/agent-list-interaction.gif" alt="Animated conversation asking about the grocery list and adding a missing item" width="360">
       </a>
     </td>
     <td width="50%" align="center">
-      <strong>Finish shopping</strong><br>
-      <sub>Record purchases while leaving exceptions pending.</sub><br><br>
-      <a href="docs/mockups/agent-chat/finish-shopping-en.png">
-        <img src="docs/mockups/agent-chat/finish-shopping-en.png" alt="Conversation completing a shopping trip except for toilet paper" width="360">
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <strong>Proactive low-stock alert</strong><br>
-      <sub>Review a prediction before approving a list change.</sub><br><br>
-      <a href="docs/mockups/agent-chat/low-stock-alert-en.png">
-        <img src="docs/mockups/agent-chat/low-stock-alert-en.png" alt="Proactive low-stock cereal recommendation" width="360">
-      </a>
-    </td>
-    <td width="50%" align="center">
-      <strong>List and suggestions</strong><br>
-      <sub>Keep committed items separate from recommendations.</sub><br><br>
-      <a href="docs/mockups/agent-chat/list-and-suggestions-en.png">
-        <img src="docs/mockups/agent-chat/list-and-suggestions-en.png" alt="Grocery list with low-stock suggestions shown separately" width="360">
+      <strong>Inventory interaction</strong><br>
+      <sub>Review recorded stock and correct an amount.</sub><br><br>
+      <a href="docs/mockups/agent-chat/inventory-interaction.gif">
+        <img src="docs/mockups/agent-chat/inventory-interaction.gif" alt="Animated conversation reviewing inventory and updating milk from two to three liters" width="360">
       </a>
     </td>
   </tr>
