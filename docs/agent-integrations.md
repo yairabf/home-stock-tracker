@@ -18,6 +18,15 @@ record atomic multi-product purchases, apply explicit stock updates, and present
 committed grocery items separately from low-stock suggestions. A suggestion is
 added only after explicit confirmation through the normal grocery workflow.
 
+## Online grocery store skills
+
+Vendor fulfillment is a separate integration from Home Stock Tracker. The
+portable [online grocery store integration tutorial](../integrations/hermes/online-grocery-store-integration/README.md)
+defines an isolated browser, account-holder login, exact-product resolution, and
+idempotent vendor-cart contract for future store-specific skills. It does not
+add browser automation to the NestJS service, implement a retailer, or mark a
+pending grocery line purchased when it is added to a vendor cart.
+
 ## Shared prerequisites
 
 1. Start Home Stock Tracker and confirm `/health` and `/ready` succeed.

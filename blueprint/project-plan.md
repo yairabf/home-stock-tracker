@@ -104,6 +104,7 @@ Post-MVP extensions currently planned after the initial product-name namespace:
 
 - Require every grocery-list line to have a positive quantity, defaulting an omitted quantity to `1` only when a new line is created.
 - Expose an absolute quantity-setting operation with optimistic concurrency so agents and other clients can apply an explicit final quantity without server-side arithmetic.
+- Provide a portable external online-grocery store adapter scaffold and tutorial. Store authentication, catalog search, browser automation, carts, and checkout remain outside Home Stock Tracker; no specific vendor implementation is included.
 
 Explicit MVP exclusions:
 
@@ -112,8 +113,7 @@ Explicit MVP exclusions:
 - No exact real-time inventory requirement.
 - No barcode scanner.
 - No receipt OCR.
-- No supermarket integration.
-- No automatic online purchasing.
+- No built-in supermarket integration or automatic online purchasing. A post-MVP external-adapter scaffold may document isolated vendor integrations without changing Home Stock Tracker domain behavior.
 - No computer vision.
 - No Home Assistant integration.
 - No expiration-date tracking unless it becomes trivial to add.
