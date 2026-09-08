@@ -1,0 +1,41 @@
+---
+name: {{STORE_SLUG}}-shared-cart
+description: {{SKILL_DESCRIPTION}}
+metadata:
+  hermes:
+    tags: [grocery, cart, external-integration]
+---
+
+# {{DISPLAY_NAME}} shared cart
+
+Use this skill only for the isolated `{{STORE_SLUG}}` adapter and only after an
+authorized account holder has approved the caller and completed private login.
+
+## Store boundary
+
+- Store: `{{DISPLAY_NAME}}`
+- Base URL: `{{BASE_URL}}`
+- Login URL: `{{LOGIN_URL}}`
+- Locale: `{{LOCALE}}`
+- Home Stock Tracker remains the source of truth for pending groceries,
+  purchases, and inventory.
+
+## Required behavior
+
+1. Read the pending grocery list through authenticated Home Stock Tracker MCP.
+2. Resolve each generic line to an authorized exact live product. Never select
+   the first result or silently substitute.
+3. Revalidate a saved product ID and exact name through a fresh live search.
+4. Call the idempotent `ensure` operation with a final target quantity.
+5. Re-read the cart and stop on unknown state or a fulfillment choice.
+6. Leave the Home Stock Tracker line pending until a real purchase is reported.
+
+## Prohibited behavior
+
+Never request or expose credentials, OTPs, cookies, tokens, account identifiers,
+browser state, or session IDs. Never check out, pay, change an address, submit an
+order, accept substitutions, round unsupported weighted quantities, or retry an
+uncertain mutation automatically.
+
+The generated `adapter.mjs` is intentionally inert. Implement and verify the
+store-specific adapter contract before use.

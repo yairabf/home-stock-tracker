@@ -1,0 +1,49 @@
+# {{DISPLAY_NAME}} shared cart skill
+
+This generated starter is an isolated placeholder for `{{STORE_SLUG}}`. It is
+not a working store adapter. Every supported adapter command fails closed with
+`not_implemented` until store-specific read and mutation behavior is written and
+verified against [the adapter contract](references/adapter-contract.md).
+
+## Non-secret configuration
+
+- Base URL: `{{BASE_URL}}`
+- Login URL: `{{LOGIN_URL}}`
+- Locale: `{{LOCALE}}`
+
+Keep account identities, credentials, cookies, tokens, browser profiles,
+session state, selectors, ports, and populated preferences outside committed
+files. The local `data/preferences.json` file is ignored by default.
+
+## Generated files
+
+- `SKILL.md` contains the store boundary and safe operating workflow.
+- `store.json` contains only public, non-secret store metadata.
+- `adapter.mjs` validates `status`, `cart`, `search`, and `ensure`, then returns
+  `not_implemented` without side effects.
+- `lib/preferences.mjs` loads, validates, looks up, and atomically saves local
+  exact-product preferences.
+- `references/adapter-contract.md` is the load-bearing implementation contract.
+
+The preference helper exports `loadPreferences`, `findPreference`,
+`savePreference`, `normalizeGenericName`, and `validatePreferencesRegistry`.
+A returned preference is only a candidate for fresh live revalidation.
+
+## Implementation boundary
+
+Implement only `status`, `cart`, `search`, and idempotent `ensure`. Do not add
+checkout, payment, address changes, order submission, substitutions, or an
+automatic retry after an uncertain mutation. A generic grocery name never
+authorizes a brand or package choice, and a saved exact product must pass a
+fresh live search before reuse.
+
+Adding an item to this vendor cart is not a purchase. Never complete a Home
+Stock Tracker grocery line or record inventory merely because an item entered
+the cart.
+
+## Before promotion
+
+Follow the repository's online grocery integration tutorial. Complete read-only
+discovery first, preserve per-store browser and resource isolation, use a
+private account-holder login handoff, then prove every case in the live
+verification matrix before enabling cart mutation.

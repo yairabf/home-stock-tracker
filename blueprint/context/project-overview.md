@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 28640ce5a3f62c2f873d58f4b5dac3aa4ae49100dae9dc05b405172a8823b1ca -->
+<!-- blueprint:source-hash 89c1818e3bd682867f10a7c18f27ca1d46e1664a329a8ae7111deb6a8f4571ab -->
 
 > A NestJS service that tracks household groceries and estimates stock so Hermes can manage them through natural WhatsApp conversation.
 
@@ -17,7 +17,7 @@ This is a private single-household tool, not a multi-tenant SaaS product. Multip
 
 ## Features
 
-Build-plan items 1-18 and 27-33 are complete. Items 19-26 and 34 remain planned.
+Build-plan items 1-18 and 27-34 are complete. Items 19-26 remain planned.
 
 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API.
 2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
@@ -55,9 +55,9 @@ Post-MVP:
 31. **Confirmed grocery catalog decisions** - apply user-approved product creation or alias decisions and safely complete the original grocery addition.
 32. **Verifiable agent integration contract** - establish one versioned MCP-and-skill compatibility contract with schema fixtures, drift checks, executable safety scenarios, installation verification, and platform-specific release manifests.
 33. **Household stock ledger and daily estimation** - maintain materialized household stock projections from explicit updates and daily shelf-life and consumption estimates, then expose them through REST, MCP, recommendations, and agent behavior.
-34. **Online grocery store integration scaffold** - document and generate isolated, fail-closed vendor-cart skills using existing grocery MCP tools.
+34. **Online grocery store integration scaffold** - document and generate isolated, fail-closed vendor-cart skills using existing grocery MCP tools. ✓ 2026-09-08
    - **34a. Store-skill contract and tutorial** - define the portable integration boundary, secure operating model, adapter rules, and live verification matrix. ✓ 2026-09-08
-   - **34b. Fail-closed store-skill scaffold** - generate and test an isolated starter skill with non-secret preferences and strict validation.
+   - **34b. Fail-closed store-skill scaffold** - generate and test an isolated starter skill with non-secret preferences and strict validation. ✓ 2026-09-08
 
 **Explicit MVP exclusions:** no web UI, mobile app, exact real-time inventory, barcode scanner, receipt OCR, built-in retailer integration, or automatic online purchasing. Feature 34 only documents external adapters: it does not change the service or implement a vendor. No computer vision, Home Assistant integration, expiration tracking (unless trivial), advanced ML pipeline, dedicated Python prediction service, multi-tenant architecture, Redis without a need, or automatic grocery-list mutation from predictions alone.
 

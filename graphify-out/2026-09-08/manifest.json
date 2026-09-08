@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "blueprint/.state/run.json": {
-    "mtime": 1788873810.216953,
-    "seen": 1788873981.115675,
-    "ast_hash": "048087fdcc727734dcde749419176371",
+    "mtime": 1788873439.9715664,
+    "seen": 1788873755.296361,
+    "ast_hash": "16d52b80d9c5f937c347f09d7d803453",
     "semantic_hash": ""
   },
   "blueprint/config.json": {
@@ -2160,9 +2160,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1788873810.1463497,
-    "seen": 1788873981.126194,
-    "ast_hash": "80659500be0bf0817346528907b62c83",
+    "mtime": 1788873439.8891969,
+    "seen": 1788873755.304302,
+    "ast_hash": "393d74b5f0174459842d1e632d512b83",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/README.md": {
@@ -3240,21 +3240,21 @@
     "semantic_hash": ""
   },
   "integrations/hermes/online-grocery-store-integration/templates/preferences.mjs": {
-    "mtime": 1788873885.467702,
-    "seen": 1788873981.115958,
-    "ast_hash": "050c24f63e378fb6b1b5cd94f0d5a72e",
+    "mtime": 1788873377.4424295,
+    "seen": 1788873755.2964969,
+    "ast_hash": "02c997e3aa70ef7a68ffb780a79d56cc",
     "semantic_hash": ""
   },
   "scripts/generate-store-skill.mjs": {
-    "mtime": 1788873872.5256813,
-    "seen": 1788873981.116493,
-    "ast_hash": "acf9cdfe8a9929c2df883e46963976c6",
+    "mtime": 1788873344.89036,
+    "seen": 1788873755.296771,
+    "ast_hash": "ab5e5c3f3de530dd4290f6d04e0500a8",
     "semantic_hash": ""
   },
   "src/tooling/store-skill-scaffold.spec.ts": {
-    "mtime": 1788873872.7643118,
-    "seen": 1788873981.1209679,
-    "ast_hash": "596d9eedd35adbf8f6de8901263ab5d2",
+    "mtime": 1788873638.8211985,
+    "seen": 1788873755.30021,
+    "ast_hash": "cc8c5a52d6bae1391cdd171be17ad39a",
     "semantic_hash": ""
   },
   "blueprint/history/features/34a-store-skill-contract-and-tutorial.md": {

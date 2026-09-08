@@ -1,10 +1,16 @@
 {
   "schemaVersion": 1,
   "command": "complete",
-  "status": "ready",
-  "summary": "Feature 34a is archived and ready to squash merge",
-  "boundary": "merge_review",
-  "target": "34a-store-skill-contract-and-tutorial",
-  "updatedAt": "2026-09-08T12:00:00.000000+00:00",
-  "resumeCommand": "Approve squash merge to main"
+  "status": "complete",
+  "summary": "Feature 34b is complete and published",
+  "detail": "Feature 34b was squash-merged into main, its feature branch was deleted, and local main was pushed to origin with features 34a and 34b.",
+  "boundary": "complete",
+  "target": "34b-fail-closed-store-skill-scaffold",
+  "progress": {
+    "completed": 4,
+    "total": 4,
+    "current": null
+  },
+  "updatedAt": "2026-09-08T13:45:00.000Z",
+  "resumeCommand": "$status"
 }

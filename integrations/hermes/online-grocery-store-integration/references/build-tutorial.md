@@ -24,6 +24,31 @@ A generic grocery item and an exact store SKU are separate facts. Never infer
 brand, package, fat level, dietary variant, variety, certification, vintage, or
 substitution from the generic item.
 
+### Generate the inert starter
+
+Use only non-secret public store metadata. The output root must already exist:
+
+```bash
+npm run store-skill:scaffold -- \
+  --store-slug example-store \
+  --display-name "Example Store" \
+  --base-url https://store.example \
+  --login-url https://store.example/login \
+  --locale en-US \
+  --output-root /path/to/private-skills
+```
+
+The generator refuses existing targets and has no force, merge, or refresh
+mode. Its `adapter.mjs` validates `status`, `cart`, `search`, and `ensure`, then
+returns `not_implemented` without browser or network activity. Malformed calls
+return `error`; neither result permits a mutation.
+
+Implement store behavior only after completing read-only discovery. Use
+`lib/preferences.mjs` to validate and atomically save exact-product choices in
+the ignored local `data/preferences.json`. A lookup is only a revalidation
+candidate. It never authorizes first-result selection, substitution, package
+conversion, or cart mutation.
+
 ## 2. Protect reference integrations
 
 If an existing production integration is used for architectural reference,
@@ -44,17 +69,17 @@ the new store's resources.
 
 Each store uses a separate set of resources:
 
-| Resource | Required form |
-| --- | --- |
-| Skill | `<store>-shared-cart` |
-| Browser container | `<store>-browser` |
-| Host WebDriver port | Unique, checked before use |
-| Host noVNC port | Unique, checked before use |
-| Browser profile | One persistent directory dedicated to the store |
-| Session state | One private file dedicated to the store |
-| Browser adapter | One store-specific implementation |
-| Preferences | One non-secret store-specific registry |
-| Selectors and parsers | Store-specific locale and modal rules |
+| Resource              | Required form                                   |
+| --------------------- | ----------------------------------------------- |
+| Skill                 | `<store>-shared-cart`                           |
+| Browser container     | `<store>-browser`                               |
+| Host WebDriver port   | Unique, checked before use                      |
+| Host noVNC port       | Unique, checked before use                      |
+| Browser profile       | One persistent directory dedicated to the store |
+| Session state         | One private file dedicated to the store         |
+| Browser adapter       | One store-specific implementation               |
+| Preferences           | One non-secret store-specific registry          |
+| Selectors and parsers | Store-specific locale and modal rules           |
 
 Check existing Docker containers and listening ports before provisioning. Never
 select ports by assumption. Do not share a profile between Chromium instances,
@@ -161,19 +186,23 @@ channel. Do not simulate another person's inbound identity.
 Run these cases against each real store adapter before enabling routine cart
 fulfillment:
 
-| Area | Required cases |
-| --- | --- |
-| Session | Missing state, dead session, live reuse, container restart |
-| Authentication | Logged out, successful handoff, expired login, wrong account |
-| Search | No result, one result, many results, hidden duplicate |
-| Cart | Empty, populated, parser fallback, localized decimals |
-| Quantity | Packaged unit, weighted increment, already above target |
-| Preference | Missing, confirmed, disappeared, materially changed |
-| Modal | Delivery, address, or fulfillment interruption after the first increment |
-| Mutation | Verified success, not found, uncertain transport with no retry |
-| Channels | Local discovery and a real read-only request per authorized channel |
-| Isolation | Reference hashes and privacy-safe authenticated status unchanged |
+| Area           | Required cases                                                           |
+| -------------- | ------------------------------------------------------------------------ |
+| Session        | Missing state, dead session, live reuse, container restart               |
+| Authentication | Logged out, successful handoff, expired login, wrong account             |
+| Search         | No result, one result, many results, hidden duplicate                    |
+| Cart           | Empty, populated, parser fallback, localized decimals                    |
+| Quantity       | Packaged unit, weighted increment, already above target                  |
+| Preference     | Missing, confirmed, disappeared, materially changed                      |
+| Modal          | Delivery, address, or fulfillment interruption after the first increment |
+| Mutation       | Verified success, not found, uncertain transport with no retry           |
+| Channels       | Local discovery and a real read-only request per authorized channel      |
+| Isolation      | Reference hashes and privacy-safe authenticated status unchanged         |
 
 Do not promote an adapter that cannot prove these states. Keep all live commands
 in the account holder's approved execution environment and never embed secrets
 in an agent prompt or repository document.
+
+The scaffold's automated tests prove only generator validation, overwrite
+protection, inert command behavior, and preference-registry rules. They do not
+replace this live verification matrix for an implemented retailer adapter.

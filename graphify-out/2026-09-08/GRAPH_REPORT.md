@@ -1,7 +1,7 @@
 # Graph Report - home-stock-tracker  (2026-09-08)
 
 ## Corpus Check
-- 542 files · ~951,852 words
+- 542 files · ~951,818 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -107,7 +107,7 @@
 - Home Stock Tracker
 - Home Stock Tracker
 - ServiceAuthConfigService
-- RecordInventoryEventDto
+- InventoryController
 - Prisma Compute Framework Readiness
 - MongoDB Setup
 - Prisma SQL Driver Adapter Implementation
@@ -126,7 +126,7 @@
 - MySQL Setup
 - management-api
 - Fix: MCP-10 read-only household context
-- inventory.service.spec.ts
+- StockLedgerService
 - application-config.ts
 - Feature: Daily stock estimation workflow
 - grocery.service.ts
@@ -142,7 +142,7 @@
 - autopilot - optional Blueprint loop
 - onboard - finish the Blueprint overlay setup
 - inventory/stock-materialization.ts
-- CompletePurchaseDto
+- inventory.service.spec.ts
 - adopt - bootstrap the blueprint from an existing codebase
 - Feature: <name>
 - <Project Name> - Project Overview
@@ -335,7 +335,7 @@
 - hermes/workflow.md
 - agent-documentation-contract.mjs
 - product-with-names.ts
-- CompletePartialPurchaseDto
+- RecordInventoryEventDto
 - mcp
 - mcp
 - store-skill-scaffold.spec.ts
@@ -347,7 +347,7 @@
 - Home Stock Tracker OpenClaw release contract
 - Current Feature
 - household.service.ts
-- reflect-metadata
+- class-transformer
 - @nestjs/schedule
 - pg
 - prisma
@@ -537,7 +537,7 @@ Nodes (20): cursor, distinct, Filtered include, include, Include relation count,
 
 ### Community 38 - "dependencies"
 Cohesion: 0.08
-Nodes (25): class-transformer, class-validator, cron, dotenv, @modelcontextprotocol/sdk, @nestjs/common, @nestjs/core, @nestjs/mapped-types (+17 more)
+Nodes (25): class-validator, cron, dotenv, @modelcontextprotocol/sdk, @nestjs/common, @nestjs/core, @nestjs/mapped-types, @nestjs/platform-express (+17 more)
 
 ### Community 39 - "statistics.service.ts"
 Cohesion: 0.16
@@ -747,9 +747,9 @@ Nodes (21): Add one item and handle an existing line, Add several items, Complet
 Cohesion: 0.21
 Nodes (4): ServiceAuthConfigService, Injectable, ServiceAuthModule, Module
 
-### Community 92 - "RecordInventoryEventDto"
-Cohesion: 0.15
-Nodes (15): RecordInventoryEventDto, IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID (+7 more)
+### Community 92 - "InventoryController"
+Cohesion: 0.38
+Nodes (6): InventoryController, Body, Controller, HttpCode, Param, Post
 
 ### Community 93 - "Prisma Compute Framework Readiness"
 Cohesion: 0.14
@@ -823,9 +823,9 @@ Nodes (12): API exploration, Authentication methods, Base URL, Current resource 
 Cohesion: 0.14
 Nodes (14): Build loop, Build steps, Completion record, Data / contracts, Files / areas, Fix: MCP-10 read-only household context, Goal, In scope (+6 more)
 
-### Community 111 - "inventory.service.spec.ts"
-Cohesion: 0.12
-Nodes (19): PRODUCT_NAMES, StockLedgerException, StockStateConflictException, ProjectionRecord, UpdateArguments, UpsertArguments, StockLedgerService, Injectable (+11 more)
+### Community 111 - "StockLedgerService"
+Cohesion: 0.17
+Nodes (13): StockLedgerService, Injectable, StockMaterializationService, Injectable, StockDecrementInput, StockFactInput, StockLedgerTransaction, StockMarkOutInput (+5 more)
 
 ### Community 112 - "application-config.ts"
 Cohesion: 0.24
@@ -887,9 +887,9 @@ Nodes (12): Formatting, Input, onboard - finish the Blueprint overlay setup, Rul
 Cohesion: 0.19
 Nodes (17): assertDailyInput(), assertValidInput(), assertValidShelfLifePolicy(), evidenceConfidence(), fallbackReason(), isExpired(), materializeDailyStock(), materializeStockForward() (+9 more)
 
-### Community 127 - "CompletePurchaseDto"
-Cohesion: 0.17
-Nodes (11): ArrayNotEmpty, CompletePurchaseDto, ArrayUnique, IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional (+3 more)
+### Community 127 - "inventory.service.spec.ts"
+Cohesion: 0.06
+Nodes (28): ArrayNotEmpty, CompletePartialPurchaseDto, ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional (+20 more)
 
 ### Community 128 - "adopt - bootstrap the blueprint from an existing codebase"
 Cohesion: 0.17
@@ -1575,9 +1575,9 @@ Nodes (7): authoredPublicDocs, integrationGuide, normalizedIntegrationGuide, pla
 Cohesion: 0.17
 Nodes (10): ProductResponseDto, ProductController, Body, Controller, Get, Param, Post, getProductAliases() (+2 more)
 
-### Community 323 - "CompletePartialPurchaseDto"
-Cohesion: 0.17
-Nodes (11): CompletePartialPurchaseDto, ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString (+3 more)
+### Community 323 - "RecordInventoryEventDto"
+Cohesion: 0.20
+Nodes (9): RecordInventoryEventDto, IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID (+1 more)
 
 ### Community 324 - "mcp"
 Cohesion: 0.22
@@ -1638,7 +1638,7 @@ Nodes (10): CreateHouseholdDto, IsArray, IsInt, IsNumber, IsOptional, IsString, 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PrismaService` connect `PrismaService` to `HouseholdService`, `product-resolution.ts`, `LlmGenerationResult`, `stock-product-confirmation.service.ts`, `LlmProvider`, `shelf-life-reasoner.service.ts`, `health.controller.ts`, `app.module.ts`, `prediction-reasoner.service.ts`, `low-stock-recommendation.service.ts`, `purchase-completion.mcp.e2e-spec.ts`, `policy-aware-grocery-addition.ts`, `AppService`, `statistics.service.ts`, `daily-stock-workflow.service.ts`, `createProductFixture`, `product-search.service.ts`, `estimation.service.ts`, `household.service.ts`, `product.service.ts`, `inventory.service.ts`, `prediction-feedback.service.ts`, `inventory.service.spec.ts`, `grocery.service.ts`, `grocery-update.e2e-spec.ts`?**
+- **Why does `PrismaService` connect `PrismaService` to `HouseholdService`, `product-resolution.ts`, `LlmGenerationResult`, `stock-product-confirmation.service.ts`, `LlmProvider`, `shelf-life-reasoner.service.ts`, `health.controller.ts`, `app.module.ts`, `prediction-reasoner.service.ts`, `low-stock-recommendation.service.ts`, `purchase-completion.mcp.e2e-spec.ts`, `policy-aware-grocery-addition.ts`, `AppService`, `statistics.service.ts`, `daily-stock-workflow.service.ts`, `createProductFixture`, `product-search.service.ts`, `estimation.service.ts`, `household.service.ts`, `product.service.ts`, `inventory.service.ts`, `prediction-feedback.service.ts`, `StockLedgerService`, `grocery.service.ts`, `grocery-update.e2e-spec.ts`, `inventory.service.spec.ts`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Why does `LlmProvider` connect `LlmProvider` to `product-resolution.ts`, `PrismaService`, `LlmGenerationResult`, `shelf-life-reasoner.service.ts`, `createProductFixture`, `prediction-reasoner.service.ts`, `policy-aware-grocery-addition.ts`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._

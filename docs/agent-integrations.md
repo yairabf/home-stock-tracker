@@ -27,6 +27,22 @@ idempotent vendor-cart contract for future store-specific skills. It does not
 add browser automation to the NestJS service, implement a retailer, or mark a
 pending grocery line purchased when it is added to a vendor cart.
 
+Generate an inert store-specific starter with non-secret public metadata:
+
+```bash
+npm run store-skill:scaffold -- \
+  --store-slug example-store \
+  --display-name "Example Store" \
+  --base-url https://store.example \
+  --login-url https://store.example/login \
+  --locale en-US \
+  --output-root /path/to/private-skills
+```
+
+The target must not already exist. The generated adapter is deliberately
+non-operational and returns `not_implemented` until its store behavior passes
+the tutorial's live verification matrix.
+
 ## Shared prerequisites
 
 1. Start Home Stock Tracker and confirm `/health` and `/ready` succeed.

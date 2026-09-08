@@ -12,9 +12,35 @@ automation, or run inside Home Stock Tracker.
 - A load-bearing vendor-adapter contract in
   [references/adapter-contract.md](references/adapter-contract.md).
 
-Feature 34b will add a fail-closed generator that creates a store-specific
-starter bundle from this contract. Until then, this directory is documentation
-only.
+The repository generator creates a fail-closed store-specific starter from this
+contract. The output is still not a retailer implementation: its adapter exits
+non-zero with `not_implemented` until live store behavior is added and verified.
+
+## Generate a starter
+
+Create or choose an existing output directory, then run:
+
+```bash
+npm run store-skill:scaffold -- \
+  --store-slug example-store \
+  --display-name "Example Store" \
+  --base-url https://store.example \
+  --login-url https://store.example/login \
+  --locale en-US \
+  --output-root /path/to/private-skills
+```
+
+The command creates
+`/path/to/private-skills/example-store-shared-cart`. It rejects invalid input,
+an existing target, any overwrite flag, and output inside this portable source
+bundle. It performs no network, browser, Docker, or Home Stock Tracker action.
+
+The generated bundle includes non-secret store configuration, the four-command
+inert adapter, an empty local preference registry, its strict helper, and a copy
+of the adapter contract. `data/preferences.json` is ignored by default because
+populated choices are local operational data. Keep it backed up with permissions
+appropriate for the authorized store operators; do not treat it as a credential
+store.
 
 ## Before use
 
@@ -22,8 +48,9 @@ only.
    configuration.
 2. Choose one authorized store account owner and explicitly authorize every
    caller who may operate its shared cart.
-3. Read the build tutorial and create isolated browser, session, port, adapter,
-   and preference resources for the selected store.
+3. Generate the inert starter, then read the build tutorial and create isolated
+   browser, session, port, adapter, and preference resources for the selected
+   store.
 4. Complete read-only discovery before enabling any cart mutation.
 
 Never store service tokens, store credentials, browser state, OTPs, product
