@@ -9,7 +9,13 @@ import {
   rmSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+
+const LOCAL_PYTHON_ARTIFACTS = new Set([
+  '.pytest_cache',
+  '.venv',
+  '__pycache__',
+]);
 
 describe('agent skill generator', () => {
   const projectRoot = process.cwd();
@@ -52,7 +58,10 @@ describe('agent skill generator', () => {
       cpSync(
         join(projectRoot, 'integrations'),
         join(temporaryRoot, 'integrations'),
-        { recursive: true },
+        {
+          recursive: true,
+          filter: (source) => !LOCAL_PYTHON_ARTIFACTS.has(basename(source)),
+        },
       );
       cpSync(
         join(projectRoot, 'package.json'),

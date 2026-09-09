@@ -1,0 +1,8 @@
+{
+  "domain": "home_stock_tracker",
+  "name": "Home Stock Tracker",
+  "config_flow": true,
+  "integration_type": "service",
+  "single_config_entry": true,
+  "version": "0.1.0"
+}
