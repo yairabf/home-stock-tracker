@@ -35,6 +35,9 @@ import {
   HouseholdInventoryResponseDto,
   InventoryEstimateResponseDto,
 } from './dto/inventory-read-response.dto';
+import { ExpirationBatchService } from './expiration-batch.service';
+import { RecordExpirationBatchDto } from './dto/record-expiration-batch.dto';
+import { ExpirationBatchResponseDto } from './dto/expiration-batch-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -42,11 +45,27 @@ export class InventoryController {
     private readonly inventoryService: InventoryService,
     private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
+    private readonly expirationBatchService: ExpirationBatchService,
   ) {}
 
   @Get()
   listInventory(): Promise<HouseholdInventoryResponseDto> {
     return this.inventoryService.listInventory();
+  }
+
+  @Post('purchases/:purchaseEventId/expiration')
+  @HttpCode(HttpStatus.CREATED)
+  async recordExpiration(
+    @Param('purchaseEventId', new ParseUUIDPipe()) purchaseEventId: string,
+    @Body() dto: RecordExpirationBatchDto,
+  ): Promise<ExpirationBatchResponseDto> {
+    return ExpirationBatchResponseDto.fromEntity(
+      await this.expirationBatchService.record({
+        purchaseEventId,
+        expiresAt: dto.expiresAt,
+        source: TransportSource.api,
+      }),
+    );
   }
 
   @Get('predictions/low-stock')

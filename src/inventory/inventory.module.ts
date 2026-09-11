@@ -20,6 +20,7 @@ import {
 } from '../config/application-config';
 import { DailyStockWorkflowService } from './daily-stock-workflow.service';
 import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.service';
+import { ExpirationBatchService } from './expiration-batch.service';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.servic
     DailyStockMaterializationService,
     DailyStockWorkflowService,
     StockWorkflowSchedulerService,
+    ExpirationBatchService,
     {
       provide: STOCK_WORKFLOW_CONFIG,
       useFactory: loadStockWorkflowConfig,
@@ -53,6 +55,7 @@ import { StockWorkflowSchedulerService } from './stock-workflow-scheduler.servic
     PredictionFeedbackService,
     LowStockRecommendationService,
     StockLedgerService,
+    ExpirationBatchService,
   ],
 })
 export class InventoryModule {}

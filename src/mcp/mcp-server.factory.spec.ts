@@ -1,4 +1,5 @@
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
+import { ExpirationBatchService } from '../inventory/expiration-batch.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
@@ -129,6 +130,7 @@ describe('McpServerFactory grocery tools', () => {
       householdService as HouseholdService,
       operationalLogger as OperationalLogger,
       stockConfirmation as StockProductConfirmationService,
+      { record: jest.fn() } as unknown as ExpirationBatchService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -167,8 +169,9 @@ describe('McpServerFactory grocery tools', () => {
       'update_inventory',
       'record_purchases',
       'record_stock_signal',
-      'record_prediction_feedback',
-      'inventory_confirm_new_product',
+        'record_prediction_feedback',
+        'record_purchase_expiration',
+        'inventory_confirm_new_product',
       'complete_grocery_purchase',
       'get_low_stock_predictions',
     ]);

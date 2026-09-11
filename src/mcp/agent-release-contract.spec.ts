@@ -242,8 +242,8 @@ describe('agent release contract', () => {
   });
 
   it('publishes the materialized inventory agent release', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.4.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.14.0');
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.5.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.15.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',

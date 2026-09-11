@@ -69,6 +69,9 @@ describe('Inventory mutations MCP API (e2e)', () => {
   });
 
   afterEach(async () => {
+    await prisma.expirationBatch.deleteMany({
+      where: { productId: { in: productIds } },
+    });
     await prisma.stockProjection.deleteMany({
       where: { productId: { in: productIds } },
     });
@@ -216,6 +219,36 @@ describe('Inventory mutations MCP API (e2e)', () => {
     expect(projection.recordedAt).toEqual(recordedEvent.timestamp);
     expect(projection.recordedSource).toBe('mcp');
     await expect(eventCount([product.id])).resolves.toBe(2);
+  });
+
+  it('records expiry through MCP with MCP provenance and no stock mutation', async () => {
+    const product = await createProduct('expiration-batch', 'item');
+    const event = await prisma.inventoryEvent.create({
+      data: {
+        productId: product.id,
+        eventType: 'RESTOCKED',
+        source: 'api',
+        timestamp: new Date('2026-09-01T09:00:00.000Z'),
+      },
+    });
+    const result = await client.callTool({
+      name: 'record_purchase_expiration',
+      arguments: {
+        purchaseEventId: event.id,
+        expiresAt: '2026-09-15T09:00:00.000Z',
+      },
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toMatchObject({
+      productId: product.id,
+      purchaseEventId: event.id,
+      expiresAt: '2026-09-15T09:00:00.000Z',
+      source: 'mcp',
+    });
+    await expect(
+      prisma.stockProjection.findUnique({ where: { productId: product.id } }),
+    ).resolves.toBeNull();
   });
 
   async function callMutation(

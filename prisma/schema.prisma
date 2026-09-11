@@ -46,13 +46,14 @@ model Product {
   predictionEnabled  Boolean      @default(true)
   config             Json?
 
-  names            ProductName[]
-  groceryListItems GroceryListItem[]
-  inventoryEvents  InventoryEvent[]
-  predictions      Prediction[]
-  statistics       ProductStatistics?
-  stockProjection  StockProjection?
-  shelfLifePolicy  ProductShelfLifePolicy?
+  names             ProductName[]
+  groceryListItems  GroceryListItem[]
+  inventoryEvents   InventoryEvent[]
+  expirationBatches ExpirationBatch[]
+  predictions       Prediction[]
+  statistics        ProductStatistics?
+  stockProjection   StockProjection?
+  shelfLifePolicy   ProductShelfLifePolicy?
 }
 
 model ProductName {
@@ -130,10 +131,24 @@ model InventoryEvent {
   metadata   Json?
 
   groceryListItems        GroceryListItem[]
-  recordedStockProjection StockProjection? @relation("RecordedStockEvent")
+  recordedStockProjection StockProjection?  @relation("RecordedStockEvent")
+  expirationBatch         ExpirationBatch?
 
   @@index([productId])
   @@index([eventType])
+}
+
+model ExpirationBatch {
+  id              String         @id @default(uuid())
+  productId       String
+  product         Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  purchaseEventId String         @unique
+  purchaseEvent   InventoryEvent @relation(fields: [purchaseEventId], references: [id], onDelete: Restrict)
+  expiresAt       DateTime
+  recordedAt      DateTime       @default(now())
+  source          String
+
+  @@index([productId, expiresAt])
 }
 
 model Household {

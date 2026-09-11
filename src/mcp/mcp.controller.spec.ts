@@ -26,6 +26,7 @@ import { ProductNameKind } from '../generated/prisma/enums';
 import { PredictionFeedbackService } from '../inventory/prediction-feedback.service';
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 import { HouseholdService } from '../household/household.service';
+import { ExpirationBatchService } from '../inventory/expiration-batch.service';
 
 @Controller()
 class TestRestController {
@@ -105,6 +106,10 @@ describe('McpController', () => {
           provide: OperationalLogger,
           useValue: { mcpIntegration: jest.fn() },
         },
+        {
+          provide: ExpirationBatchService,
+          useValue: { record: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -160,6 +165,7 @@ describe('McpController', () => {
         'record_purchases',
         'record_stock_signal',
         'record_prediction_feedback',
+        'record_purchase_expiration',
         'inventory_confirm_new_product',
         'complete_grocery_purchase',
         'get_low_stock_predictions',

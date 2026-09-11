@@ -32,7 +32,9 @@
 ## Post-MVP
 
 - [ ] 19. **Expiration tracking** - record expiration information and surface products likely to expire soon
-- [ ] 20. **Storage locations** - track products across locations such as fridge, freezer, pantry, and storage room
+  - [x] 19a. **Expiration-batch foundation** - record immutable, explicit expiration information against exact purchase events without changing stock projections or existing purchase contracts
+  - [ ] 19b. **Expiration status and reads** - derive expiry status from explicit batch dates and existing shelf-life policy, then expose additive read data
+  - [ ] 19c. **Expiring-soon recommendations** - expose separate, confidence-aware expiring-soon recommendations without changing low-stock behavior
 - [ ] 21. **Product-specific automation policies** - allow selected products to be suggested, ignored, or automatically added based on prediction confidence
 - [ ] 22. **Advanced prediction engine** - improve forecasting with richer statistical models and introduce a Python prediction service only if justified
 - [ ] 23. **Background job infrastructure** - add Redis and a job queue when asynchronous or distributed prediction workloads require them

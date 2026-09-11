@@ -284,6 +284,7 @@ stable machine-readable removal contract.
 | `GET`  | `/api/v1/inventory/events`                             | List events with filters and pagination.            |
 | `POST` | `/api/v1/inventory/stock/:productId`                   | Set, decrement, or mark out current stock.          |
 | `POST` | `/api/v1/inventory/purchases`                          | Record one purchase/restock or an atomic batch.     |
+| `POST` | `/api/v1/inventory/purchases/:purchaseEventId/expiration` | Record one immutable explicit expiry timestamp.  |
 | `POST` | `/api/v1/inventory/purchases/complete`                 | Complete grocery IDs for one product.               |
 | `POST` | `/api/v1/inventory/purchases/complete-partial`         | Complete selected items or all except selected IDs. |
 | `GET`  | `/api/v1/inventory`                                    | List current and uncertain household stock.         |
@@ -382,6 +383,21 @@ explicit timezone and cannot be in the future. All products, events, and stock
 projections commit in one serializable transaction, so any invalid or missing
 item leaves the entire batch unwritten. Backdated facts retain their historical
 event time while their stock estimate is materialized forward to receipt time.
+
+An expiry fact is recorded separately after receiving the exact purchase or
+restock event ID. It accepts only an ISO 8601 `expiresAt` value with an explicit
+timezone:
+
+```json
+{ "expiresAt": "2026-09-15T10:00:00Z" }
+```
+
+The response contains `id`, `productId`, `purchaseEventId`, `expiresAt`,
+`recordedAt`, and server-owned `source`. The event must exist, be `PURCHASED` or
+`RESTOCKED`, and not be later than `expiresAt`. One event can have exactly one
+expiry fact. Invalid requests leave the inventory event, stock projection,
+prediction, grocery list, and any existing expiry fact unchanged. This release
+records source evidence only; it does not evaluate expiry state or change stock.
 
 Prediction feedback shapes:
 
@@ -482,6 +498,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `record_purchases`              | Write | Record an ordered, all-or-nothing batch of resolved product IDs.                               |
 | `record_stock_signal`           | Write | Record low, out, confirmed, or corrected stock.                                                |
 | `record_prediction_feedback`    | Write | Accept, reject, or correct one exact prediction returned by a trusted prediction read.         |
+| `record_purchase_expiration`    | Write | Record one immutable explicit expiry timestamp for an exact purchase or restock event.         |
 | `complete_grocery_purchase`     | Write | Complete pending rows atomically and optionally record explicit actual purchase measurements.  |
 | `get_low_stock_predictions`     | Read  | Return actionable high-confidence recommendations.                                             |
 
@@ -498,6 +515,13 @@ stock-operation fields as REST. `record_purchases` uses the same batch shape as
 REST, including request/item timestamp precedence and the 100-item limit. MCP
 never accepts client-supplied provenance; all three tools record source `mcp`.
 Resolve names with `get_product` or `search_products` before batch submission.
+
+`record_purchase_expiration` accepts only the trusted event receipt ID and an
+explicit-timezone `expiresAt`. It returns the same expiry-fact shape as REST and
+records source `mcp`; callers cannot choose the product or provenance. Use it
+only after a successful `record_purchase` or `record_purchases` receipt, never
+to revise a purchase, stock balance, or earlier expiry fact. A duplicate or an
+uncertain write must not be retried automatically.
 
 Agents must resolve every product before one `record_purchases` call, preserve
 input order and per-item measurements, and stop without a partial batch when an

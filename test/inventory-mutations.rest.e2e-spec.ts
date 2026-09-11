@@ -34,6 +34,9 @@ describe('Inventory mutations REST API (e2e)', () => {
   });
 
   afterEach(async () => {
+    await prisma.expirationBatch.deleteMany({
+      where: { productId: { in: productIds } },
+    });
     await prisma.stockProjection.deleteMany({
       where: { productId: { in: productIds } },
     });
@@ -54,6 +57,44 @@ describe('Inventory mutations REST API (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  it('records one expiry fact without changing the purchase receipt or stock projection', async () => {
+    const product = await createProduct('expiration-batch', 'carton');
+    const purchasedAt = new Date(Date.now() - 86_400_000).toISOString();
+    const purchase = await request(app.getHttpServer())
+      .post('/api/v1/inventory/purchases')
+      .send({ productId: product.id, eventType: 'PURCHASED', purchasedAt })
+      .expect(201);
+    const beforeProjection = await prisma.stockProjection.findUniqueOrThrow({
+      where: { productId: product.id },
+    });
+    const beforeRecommendations = await request(app.getHttpServer())
+      .get('/api/v1/inventory/predictions/low-stock')
+      .expect(200);
+
+    const response = await request(app.getHttpServer())
+      .post(`/api/v1/inventory/purchases/${purchase.body.id}/expiration`)
+      .send({ expiresAt: '2026-12-31T12:00:00.000Z' })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      productId: product.id,
+      purchaseEventId: purchase.body.id,
+      expiresAt: '2026-12-31T12:00:00.000Z',
+      source: 'api',
+    });
+    await expect(
+      prisma.stockProjection.findUnique({ where: { productId: product.id } }),
+    ).resolves.toEqual(beforeProjection);
+    await request(app.getHttpServer())
+      .get('/api/v1/inventory/predictions/low-stock')
+      .expect(200)
+      .expect(beforeRecommendations.body);
+    await request(app.getHttpServer())
+      .post(`/api/v1/inventory/purchases/${purchase.body.id}/expiration`)
+      .send({ expiresAt: '2027-01-01T12:00:00.000Z' })
+      .expect(409);
   });
 
   it('returns event and stock receipts for set, decrement, and mark_out', async () => {

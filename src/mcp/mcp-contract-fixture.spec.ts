@@ -1,4 +1,5 @@
 import type { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
+import type { ExpirationBatchService } from '../inventory/expiration-batch.service';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -44,6 +45,7 @@ describe('MCP contract fixture', () => {
       {} as HouseholdService,
       {} as OperationalLogger,
       {} as StockProductConfirmationService,
+      {} as ExpirationBatchService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =

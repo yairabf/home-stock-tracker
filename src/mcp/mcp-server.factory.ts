@@ -50,6 +50,8 @@ import {
   type StockMutation,
 } from '../inventory/types/stock-mutation';
 import { MAX_BATCH_PURCHASE_ITEMS } from '../inventory/types/purchase-contract';
+import { ExpirationBatchService } from '../inventory/expiration-batch.service';
+import { ExpirationBatchResponseDto } from '../inventory/dto/expiration-batch-response.dto';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -353,6 +355,22 @@ const purchasedAtSchema = z.iso
   .datetime({ offset: true })
   .describe('ISO 8601 timestamp with an explicit timezone; must not be future');
 
+const expirationBatchInputSchema = z
+  .object({
+    purchaseEventId: z.uuid(),
+    expiresAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+const expirationBatchOutputSchema = z.object({
+  id: z.uuid(),
+  productId: z.uuid(),
+  purchaseEventId: z.uuid(),
+  expiresAt: z.iso.datetime({ offset: true }),
+  recordedAt: z.iso.datetime({ offset: true }),
+  source: z.enum(['api', 'mcp']),
+});
+
 const stockProjectionOutputSchema = z.object({
   productId: z.string(),
   unit: z.string(),
@@ -594,6 +612,7 @@ export class McpServerFactory {
     private readonly householdService: HouseholdService,
     private readonly operationalLogger: OperationalLogger,
     private readonly stockConfirmation: StockProductConfirmationService,
+    private readonly expirationBatchService: ExpirationBatchService,
   ) {}
 
   create(): McpServer {
@@ -603,10 +622,34 @@ export class McpServerFactory {
     this.registerReadTools(server);
     this.registerProductWriteTool(server);
     this.registerInventoryWriteTools(server);
+    this.registerExpirationBatchTool(server);
     this.registerStockConfirmationTool(server);
     this.registerGroceryPurchaseCompletionTool(server);
     this.registerRecommendationTool(server);
     return server;
+  }
+
+  private registerExpirationBatchTool(server: McpServer): void {
+    server.registerTool(
+      'record_purchase_expiration',
+      {
+        description:
+          'Record one explicit expiry timestamp for an exact existing purchase or restock event. This does not change stock or the purchase receipt.',
+        inputSchema: expirationBatchInputSchema,
+        outputSchema: expirationBatchOutputSchema,
+      },
+      (input) =>
+        this.runTool('record_purchase_expiration', async () =>
+          this.toolResult(
+            ExpirationBatchResponseDto.fromEntity(
+              await this.expirationBatchService.record({
+                ...input,
+                source: TransportSource.mcp,
+              }),
+            ),
+          ),
+        ),
+    );
   }
 
   private registerStockConfirmationTool(server: McpServer): void {

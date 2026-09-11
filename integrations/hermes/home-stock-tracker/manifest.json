@@ -7,13 +7,13 @@
   },
   "skill": {
     "name": "home-stock-tracker",
-    "version": "1.14.0"
+    "version": "1.15.0"
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "1.4.0",
-    "compatibleRange": ">=1.4.0 <2.0.0",
-    "toolsFixture": "contracts/1.4.0/tools-list.json",
+    "contractVersion": "1.5.0",
+    "compatibleRange": ">=1.5.0 <2.0.0",
+    "toolsFixture": "contracts/1.5.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -31,6 +31,7 @@
     "household-context",
     "household-inventory-view",
     "inventory-estimation",
+    "expiration-batch-recording",
     "inventory-event-history",
     "materialized-inventory",
     "low-stock-recommendations",
@@ -63,6 +64,7 @@
     "record_purchases",
     "record_stock_signal",
     "record_prediction_feedback",
+    "record_purchase_expiration",
     "inventory_confirm_new_product",
     "complete_grocery_purchase",
     "get_low_stock_predictions"

@@ -9,6 +9,7 @@ import { PredictionFeedbackService } from './prediction-feedback.service';
 import { InventoryEventType } from '../generated/prisma/enums';
 import { PredictionFeedbackOutcome } from './dto/prediction-feedback.dto';
 import { StockMutationOperation } from './types/stock-mutation';
+import { ExpirationBatchService } from './expiration-batch.service';
 
 describe('InventoryController low-stock recommendations', () => {
   let controller: InventoryController;
@@ -21,6 +22,7 @@ describe('InventoryController low-stock recommendations', () => {
       providers: [
         { provide: InventoryService, useValue: {} },
         { provide: PredictionFeedbackService, useValue: {} },
+        { provide: ExpirationBatchService, useValue: {} },
         {
           provide: LowStockRecommendationService,
           useValue: recommendationService,
@@ -93,6 +95,7 @@ describe('InventoryController provenance', () => {
     inventoryService as unknown as InventoryService,
     predictionFeedbackService as unknown as PredictionFeedbackService,
     {} as LowStockRecommendationService,
+    {} as ExpirationBatchService,
   );
 
   beforeEach(() => jest.clearAllMocks());
