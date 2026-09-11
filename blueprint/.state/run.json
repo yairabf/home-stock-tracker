@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "command": "complete",
-  "status": "complete",
-  "summary": "Feature 34b is complete and published",
-  "detail": "Feature 34b was squash-merged into main, its feature branch was deleted, and local main was pushed to origin with features 34a and 34b.",
-  "boundary": "complete",
-  "target": "34b-fail-closed-store-skill-scaffold",
+  "status": "ready",
+  "summary": "Completion requires an active spec on a feature or fix branch",
+  "detail": "The Home Assistant documentation and roadmap edits remain uncommitted on main; no active work item exists to archive.",
+  "boundary": "planning",
+  "target": "current-feature",
   "progress": {
-    "completed": 4,
+    "completed": 1,
     "total": 4,
     "current": null
   },
-  "updatedAt": "2026-09-08T13:45:00.000Z",
-  "resumeCommand": "$status"
+  "updatedAt": "2026-09-11T00:00:00.000Z",
+  "resumeCommand": "$fix"
 }

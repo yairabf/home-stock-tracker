@@ -115,7 +115,6 @@ Explicit MVP exclusions:
 - No receipt OCR.
 - No built-in supermarket integration or automatic online purchasing. A post-MVP external-adapter scaffold may document isolated vendor integrations without changing Home Stock Tracker domain behavior.
 - No computer vision.
-- No Home Assistant integration.
 - No expiration-date tracking unless it becomes trivial to add.
 - No advanced ML training pipeline.
 - No dedicated Python prediction microservice.
@@ -455,7 +454,7 @@ If the project later becomes a product, possible monetization models include:
 - Free tier with limited prediction history.
 - Paid AI-powered inventory prediction.
 - Family/shared-household plans.
-- Premium integrations such as Home Assistant or retailer services.
+- Premium integrations such as retailer services.
 
 Advertising is not a preferred model because the product may handle sensitive household consumption and purchasing behavior.
 
@@ -523,7 +522,6 @@ The service itself must not depend on WhatsApp or Hermes-specific presentation.
 Future UIs may include:
 
 - Web dashboard.
-- Home Assistant dashboard.
 - Mobile application.
 
 These would consume the same backend API.

@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 89c1818e3bd682867f10a7c18f27ca1d46e1664a329a8ae7111deb6a8f4571ab -->
+<!-- blueprint:source-hash 19f67efc493051f4b54803319d583c748d3a591a1f1162313e6eb1993f985b3e -->
 
 > A NestJS service that tracks household groceries and estimates stock so Hermes can manage them through natural WhatsApp conversation.
 
@@ -17,7 +17,7 @@ This is a private single-household tool, not a multi-tenant SaaS product. Multip
 
 ## Features
 
-Build-plan items 1-18 and 27-34 are complete. Items 19-26 remain planned.
+Build-plan items 1-18 and 27-34 are complete. Items 19-24 and 26 remain planned.
 
 1. **Grocery list management** - add, remove, and retrieve grocery list items through the service API.
 2. **Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
@@ -46,7 +46,6 @@ Post-MVP:
 22. **Advanced prediction engine** - add richer forecasting when justified.
 23. **Background job infrastructure** - introduce queueing when prediction workloads require it.
 24. **Receipt and barcode ingestion** - add receipt or barcode purchase signals.
-25. **Home Assistant integration** - expose household state to automation.
 26. **Management dashboard** - review inventory, predictions, history, and corrections in a web interface.
 27. **Product name namespace** - store canonical names and aliases in one globally unique normalized namespace for indexed, deterministic lookup.
 28. **Grocery quantity contract** - require every grocery line to store a positive quantity, default new lines to `1`, and expose an absolute, concurrency-safe quantity-setting operation.
@@ -59,7 +58,7 @@ Post-MVP:
    - **34a. Store-skill contract and tutorial** - define the portable integration boundary, secure operating model, adapter rules, and live verification matrix. ✓ 2026-09-08
    - **34b. Fail-closed store-skill scaffold** - generate and test an isolated starter skill with non-secret preferences and strict validation. ✓ 2026-09-08
 
-**Explicit MVP exclusions:** no web UI, mobile app, exact real-time inventory, barcode scanner, receipt OCR, built-in retailer integration, or automatic online purchasing. Feature 34 only documents external adapters: it does not change the service or implement a vendor. No computer vision, Home Assistant integration, expiration tracking (unless trivial), advanced ML pipeline, dedicated Python prediction service, multi-tenant architecture, Redis without a need, or automatic grocery-list mutation from predictions alone.
+**Explicit MVP exclusions:** no web UI, mobile app, exact real-time inventory, barcode scanner, receipt OCR, built-in retailer integration, or automatic online purchasing. Feature 34 only documents external adapters: it does not change the service or implement a vendor. No computer vision, expiration tracking (unless trivial), advanced ML pipeline, dedicated Python prediction service, multi-tenant architecture, Redis without a need, or automatic grocery-list mutation from predictions alone.
 
 ## Data model
 
@@ -217,7 +216,7 @@ Notification behavior by confidence:
 - **Medium confidence** - mention only when relevant or during a scheduled check.
 - **Low confidence** - stay silent; the system favors silence over weak predictions.
 
-The service itself must stay presentation-agnostic - it must not depend on WhatsApp or Hermes-specific formatting, so a future web dashboard, Home Assistant surface, or mobile app could consume the same API.
+The service itself must stay presentation-agnostic - it must not depend on WhatsApp or Hermes-specific formatting, so a future web dashboard or mobile app could consume the same API.
 
 ## Deployment
 

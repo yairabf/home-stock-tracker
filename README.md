@@ -24,6 +24,7 @@ and low-stock recommendations.
 | [Operations guide](docs/operations.md)                                 | Environment variables, predictions, health checks, logs, security, database operations, troubleshooting, and limitations. |
 | [Deployment guide](docs/deployment.md)                                 | Pull published GHCR images, update with Compose, or build locally; migrations, smoke tests, and recovery.                   |
 | [Hermes skill guide](integrations/hermes/home-stock-tracker/README.md) | Skill installation, WhatsApp delivery, and proactive stock-check cron jobs.                                               |
+| <img src="https://brands.home-assistant.io/_/homeassistant/icon.png" alt="Home Assistant icon" width="24"> [Home Assistant integration](https://github.com/yairabf/home-stock-tracker-ha) | Install the standalone, read-only HACS integration for grocery, inventory, and low-stock sensors. |
 
 Official agent references:
 
