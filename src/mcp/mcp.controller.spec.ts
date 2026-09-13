@@ -58,6 +58,7 @@ describe('McpController', () => {
     recordEvent: jest.fn(),
     getInventory: jest.fn(),
     listInventory: jest.fn(),
+    listExpirationStatuses: jest.fn(),
     listEvents: jest.fn(),
     completeGroceryPurchase: jest.fn(),
   };
@@ -158,6 +159,7 @@ describe('McpController', () => {
         'search_products',
         'get_inventory',
         'list_inventory',
+        'list_expiration_status',
         'list_inventory_events',
         'product_add_alias',
         'record_purchase',
@@ -287,6 +289,11 @@ describe('McpController', () => {
       ).resolves.toMatchObject({
         structuredContent: { current: [], uncertain: [] },
       });
+
+      inventoryService.listExpirationStatuses.mockResolvedValue({ items: [] });
+      await expect(
+        client.callTool({ name: 'list_expiration_status', arguments: {} }),
+      ).resolves.toMatchObject({ structuredContent: { items: [] } });
 
       const groceryItemId = '00000000-0000-4000-8000-000000000001';
       inventoryService.completeGroceryPurchase.mockResolvedValue({

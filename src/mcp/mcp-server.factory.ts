@@ -371,6 +371,30 @@ const expirationBatchOutputSchema = z.object({
   source: z.enum(['api', 'mcp']),
 });
 
+const expirationStatusItemOutputSchema = z
+  .object({
+    purchaseEventId: z.uuid(),
+    productId: z.uuid(),
+    productName: z.string(),
+    purchasedAt: z.iso.datetime({ offset: true }),
+    expiresAt: z.iso.datetime({ offset: true }).nullable(),
+    status: z.enum([
+      'expired',
+      'expiring_soon',
+      'fresh',
+      'nonperishable',
+      'unknown',
+    ]),
+    expirySource: z.enum(['explicit', 'shelf_life_policy', 'none']),
+    shelfLifeDays: z.number().nullable(),
+    evaluatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+const expirationStatusListOutputSchema = z
+  .object({ items: z.array(expirationStatusItemOutputSchema) })
+  .strict();
+
 const stockProjectionOutputSchema = z.object({
   productId: z.string(),
   unit: z.string(),
@@ -984,6 +1008,26 @@ export class McpServerFactory {
       () =>
         this.runTool('list_inventory', async () =>
           this.toolResult(await this.inventoryService.listInventory()),
+        ),
+    );
+
+    server.registerTool(
+      'list_expiration_status',
+      {
+        description:
+          'Read expiry status for recorded purchase and restock batches. This is batch evidence, not proof that a quantity remains on hand, and never changes stock.',
+        inputSchema: z.object({}).strict(),
+        outputSchema: expirationStatusListOutputSchema,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      () =>
+        this.runTool('list_expiration_status', async () =>
+          this.toolResult(await this.inventoryService.listExpirationStatuses()),
         ),
     );
 

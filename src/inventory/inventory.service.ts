@@ -62,6 +62,10 @@ import {
   InventoryEstimateResponseDto,
   InventoryItemResponseDto,
 } from './dto/inventory-read-response.dto';
+import {
+  ExpirationStatusItemResponseDto,
+  ExpirationStatusListResponseDto,
+} from './dto/expiration-status-response.dto';
 
 interface PurchaseEventInput {
   productId: string;
@@ -167,6 +171,37 @@ export class InventoryService {
     return result;
   }
 
+  async listExpirationStatuses(): Promise<ExpirationStatusListResponseDto> {
+    const events = await this.prisma.inventoryEvent.findMany({
+      where: {
+        eventType: {
+          in: [InventoryEventType.PURCHASED, InventoryEventType.RESTOCKED],
+        },
+      },
+      select: {
+        id: true,
+        productId: true,
+        timestamp: true,
+        expirationBatch: { select: { expiresAt: true } },
+        product: {
+          select: {
+            names: {
+              where: { kind: ProductNameKind.canonical },
+              select: { displayName: true },
+            },
+            shelfLifePolicy: { select: { kind: true, shelfLifeDays: true } },
+          },
+        },
+      },
+    });
+    const evaluatedAt = new Date();
+    const items = events.map((event) =>
+      ExpirationStatusItemResponseDto.fromEntity(event, evaluatedAt),
+    );
+    items.sort((left, right) => this.compareExpirationStatusItems(left, right));
+    return { items };
+  }
+
   private isDepletedProjection(projection: {
     estimatedQuantity: number | null;
     estimatedState: PredictedState;
@@ -186,6 +221,24 @@ export class InventoryService {
       left.productName.localeCompare(right.productName) ||
       left.productId.localeCompare(right.productId)
     );
+  }
+
+  private compareExpirationStatusItems(
+    left: ExpirationStatusItemResponseDto,
+    right: ExpirationStatusItemResponseDto,
+  ): number {
+    return (
+      this.compareNullableDates(left.expiresAt, right.expiresAt) ||
+      left.productName.localeCompare(right.productName) ||
+      left.purchaseEventId.localeCompare(right.purchaseEventId)
+    );
+  }
+
+  private compareNullableDates(left: Date | null, right: Date | null): number {
+    if (left === null && right === null) return 0;
+    if (left === null) return 1;
+    if (right === null) return -1;
+    return left.getTime() - right.getTime();
   }
 
   async recordPurchase(

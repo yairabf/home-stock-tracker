@@ -2201,6 +2201,30 @@
       ]
     },
     {
+      "id": "expiration-status-view",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "list_expiration_status",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "no-mutation-from-read",
+        "no-inventory-count-invention",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Expiration status view",
+        "The user asks what might expire soon.",
+        "Call `list_expiration_status({})` once and report every returned batch status with its expiry source.",
+        "Do not claim a batch is still on hand, change stock, or add a grocery item from this read."
+      ]
+    },
+    {
       "id": "combined-grocery-and-suggestions",
       "platforms": ["hermes", "openclaw"],
       "prerequisites": [],

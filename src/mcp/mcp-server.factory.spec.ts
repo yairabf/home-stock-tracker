@@ -73,6 +73,7 @@ describe('McpServerFactory grocery tools', () => {
       | 'recordEvent'
       | 'getInventory'
       | 'listInventory'
+      | 'listExpirationStatuses'
       | 'listEvents'
       | 'completeGroceryPurchase'
     >
@@ -112,6 +113,7 @@ describe('McpServerFactory grocery tools', () => {
       recordEvent: jest.fn(),
       getInventory: jest.fn(),
       listInventory: jest.fn(),
+      listExpirationStatuses: jest.fn(),
       listEvents: jest.fn(),
       completeGroceryPurchase: jest.fn(),
     };
@@ -163,6 +165,7 @@ describe('McpServerFactory grocery tools', () => {
       'search_products',
       'get_inventory',
       'list_inventory',
+      'list_expiration_status',
       'list_inventory_events',
       'product_add_alias',
       'record_purchase',
@@ -1535,6 +1538,58 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.isError).toBe(true);
     expect(inventoryService.listInventory).not.toHaveBeenCalled();
+  });
+
+  it('lists expiration status without mutation', async () => {
+    const purchasedAt = new Date('2026-09-01T10:00:00.000Z');
+    const expiresAt = new Date('2026-09-12T10:00:00.000Z');
+    const evaluatedAt = new Date('2026-09-10T10:00:00.000Z');
+    inventoryService.listExpirationStatuses.mockResolvedValue({
+      items: [
+        {
+          purchaseEventId: item.id,
+          productId: item.productId,
+          productName: 'Milk',
+          purchasedAt,
+          expiresAt,
+          status: 'expiring_soon',
+          expirySource: 'explicit',
+          shelfLifeDays: null,
+          evaluatedAt,
+        },
+      ],
+    });
+
+    const result = await client.callTool({
+      name: 'list_expiration_status',
+      arguments: {},
+    });
+
+    expect(inventoryService.listExpirationStatuses).toHaveBeenCalledTimes(1);
+    expect(result.structuredContent).toEqual({
+      items: [
+        expect.objectContaining({
+          purchaseEventId: item.id,
+          purchasedAt: purchasedAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          evaluatedAt: evaluatedAt.toISOString(),
+          status: 'expiring_soon',
+          expirySource: 'explicit',
+        }),
+      ],
+    });
+    expect(inventoryService.recordEvent).not.toHaveBeenCalled();
+    expect(inventoryService.updateStock).not.toHaveBeenCalled();
+  });
+
+  it('rejects expiration-status arguments before invoking the service', async () => {
+    const result = await client.callTool({
+      name: 'list_expiration_status',
+      arguments: { limit: 10 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(inventoryService.listExpirationStatuses).not.toHaveBeenCalled();
   });
 
   it('lists filtered inventory history without exposing metadata', async () => {

@@ -285,6 +285,7 @@ stable machine-readable removal contract.
 | `POST` | `/api/v1/inventory/stock/:productId`                   | Set, decrement, or mark out current stock.          |
 | `POST` | `/api/v1/inventory/purchases`                          | Record one purchase/restock or an atomic batch.     |
 | `POST` | `/api/v1/inventory/purchases/:purchaseEventId/expiration` | Record one immutable explicit expiry timestamp.  |
+| `GET`  | `/api/v1/inventory/expiration`                         | List read-only purchase-batch expiry statuses.      |
 | `POST` | `/api/v1/inventory/purchases/complete`                 | Complete grocery IDs for one product.               |
 | `POST` | `/api/v1/inventory/purchases/complete-partial`         | Complete selected items or all except selected IDs. |
 | `GET`  | `/api/v1/inventory`                                    | List current and uncertain household stock.         |
@@ -399,6 +400,14 @@ expiry fact. Invalid requests leave the inventory event, stock projection,
 prediction, grocery list, and any existing expiry fact unchanged. This release
 records source evidence only; it does not evaluate expiry state or change stock.
 
+`GET /api/v1/inventory/expiration` returns `{ "items": [...] }`, one item for
+each recorded `PURCHASED` or `RESTOCKED` event. An explicit expiry fact takes
+precedence; otherwise a valid finite shelf-life policy derives the date from the
+purchase timestamp. Status is `expired`, `expiring_soon`, `fresh`,
+`nonperishable`, or `unknown`. The response includes its `evaluatedAt` time and
+never changes stock, predictions, groceries, or expiry facts. It reports
+purchase-batch evidence only, not whether a quantity remains on hand.
+
 Prediction feedback shapes:
 
 ```json
@@ -492,6 +501,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 | `product_add_alias`             | Write | Add an explicitly confirmed alias to one exact product outside a grocery workflow.             |
 | `get_inventory`                 | Read  | Read one product's materialized estimate and last explicit fact.                               |
 | `list_inventory`                | Read  | Read tracked non-depleted household stock grouped as current and uncertain.                    |
+| `list_expiration_status`        | Read  | List read-only expiry status for recorded purchase and restock batches.                        |
 | `list_inventory_events`         | Read  | List recorded inventory events with filters and bounded pagination.                            |
 | `record_purchase`               | Write | Record `PURCHASED` or `RESTOCKED`.                                                             |
 | `update_inventory`              | Write | Set, decrement, or mark out one product's current stock.                                       |
@@ -522,6 +532,11 @@ records source `mcp`; callers cannot choose the product or provenance. Use it
 only after a successful `record_purchase` or `record_purchases` receipt, never
 to revise a purchase, stock balance, or earlier expiry fact. A duplicate or an
 uncertain write must not be retried automatically.
+
+`list_expiration_status({})` takes no arguments. It returns one status per
+purchase or restock batch. Report the returned status and expiry source, but do
+not treat a batch as evidence that its quantity remains on hand or mutate stock
+from this read.
 
 Agents must resolve every product before one `record_purchases` call, preserve
 input order and per-item measurements, and stop without a partial batch when an

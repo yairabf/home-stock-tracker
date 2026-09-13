@@ -123,7 +123,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.15.0');
+      expect(skill).toContain('version: 1.16.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -177,7 +177,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform limits household context reads to explicit questions',
     ({ skill, scenarios }) => {
-      expect(skill).toContain('version: 1.15.0');
+      expect(skill).toContain('version: 1.16.0');
       expect(skill).toMatch(/\| `get_household_context`\s+\|/);
       expect(skill).toContain(
         'Do not fetch household context as a hidden prerequisite',
@@ -258,7 +258,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.15.0');
+      expect(skill).toContain('version: 1.16.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -285,7 +285,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents actual purchase completion without invention',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.15.0');
+      expect(skill).toContain('version: 1.16.0');
       expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
       expect(skill).toContain('preferred inclusive `items` array');
       expect(skill).toContain('`actualQuantity`');
@@ -307,6 +307,17 @@ describe('agent inventory skill contract', () => {
       expect(scenarios).not.toContain(
         'complete_grocery_purchase({ groceryItemIds:',
       );
+    },
+  );
+
+  it.each(bundles)(
+    '$platform documents read-only expiration-status reads',
+    ({ skill, scenarios, readme }) => {
+      expect(skill).toMatch(/\| `list_expiration_status`\s+\|/);
+      expect(skill).toContain('Report batch evidence and its source');
+      expect(scenarios).toContain('Expiration status view');
+      expect(scenarios).toContain('Do not claim a batch is still on hand');
+      expect(readme).toContain('`list_expiration_status`');
     },
   );
 

@@ -270,6 +270,94 @@ describe('InventoryService', () => {
     });
   });
 
+  describe('listExpirationStatuses', () => {
+    it('reads eligible events once, maps statuses, and sorts known expiry first', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-09-10T12:00:00.000Z'));
+      prisma.inventoryEvent.findMany.mockResolvedValue([
+        {
+          id: 'unknown-z',
+          productId: 'product-z',
+          timestamp: new Date('2026-09-01T12:00:00.000Z'),
+          expirationBatch: null,
+          product: {
+            names: [{ displayName: 'Zucchini' }],
+            shelfLifePolicy: null,
+          },
+        },
+        {
+          id: 'explicit-b',
+          productId: 'product-b',
+          timestamp: new Date('2026-09-01T12:00:00.000Z'),
+          expirationBatch: { expiresAt: new Date('2026-09-12T12:00:00.000Z') },
+          product: {
+            names: [{ displayName: 'Bananas' }],
+            shelfLifePolicy: null,
+          },
+        },
+        {
+          id: 'policy-a',
+          productId: 'product-a',
+          timestamp: new Date('2026-09-01T12:00:00.000Z'),
+          expirationBatch: null,
+          product: {
+            names: [{ displayName: 'Apples' }],
+            shelfLifePolicy: { kind: 'finite', shelfLifeDays: 7 },
+          },
+        },
+      ]);
+
+      const result = await service.listExpirationStatuses();
+
+      expect(result.items.map((item) => item.purchaseEventId)).toEqual([
+        'policy-a',
+        'explicit-b',
+        'unknown-z',
+      ]);
+      expect(result.items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            purchaseEventId: 'policy-a',
+            status: 'expired',
+            expirySource: 'shelf_life_policy',
+          }),
+          expect.objectContaining({
+            purchaseEventId: 'explicit-b',
+            expirySource: 'explicit',
+          }),
+          expect.objectContaining({
+            purchaseEventId: 'unknown-z',
+            status: 'unknown',
+          }),
+        ]),
+      );
+      expect(prisma.inventoryEvent.findMany).toHaveBeenCalledWith({
+        where: {
+          eventType: {
+            in: [InventoryEventType.PURCHASED, InventoryEventType.RESTOCKED],
+          },
+        },
+        select: expect.objectContaining({
+          id: true,
+          productId: true,
+          timestamp: true,
+          expirationBatch: expect.any(Object),
+          product: expect.any(Object),
+        }),
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      jest.useRealTimers();
+    });
+
+    it('returns an empty list without a transaction', async () => {
+      prisma.inventoryEvent.findMany.mockResolvedValue([]);
+
+      await expect(service.listExpirationStatuses()).resolves.toEqual({
+        items: [],
+      });
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
   describe('recordEvent', () => {
     it.each([InventoryEventType.STOCK_SET, InventoryEventType.STOCK_CONSUMED])(
       'rejects dedicated mutation event type %s before writing',

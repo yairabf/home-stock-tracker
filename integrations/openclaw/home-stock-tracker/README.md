@@ -104,6 +104,10 @@ For the new inventory reads, ask "What do we have?" The agent should call
 items separately, and make no write until one suggestion is explicitly confirmed
 through the normal grocery-add workflow.
 
+For an expiration-status smoke check, ask "What might expire soon?" The agent
+should call `list_expiration_status` once and report its returned batch status and
+expiry source without claiming that a batch is still on hand or changing stock.
+
 For a stock-update smoke check, report one exact absolute quantity, one explicit
 decrement, and one out state. The agent should resolve each product and use
 `update_inventory` with `set`, `decrement`, and `mark_out` respectively, without

@@ -41,15 +41,15 @@ describe('executable agent scenario contract', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      'Validated 112 executable agent scenarios.',
+      'Validated 113 executable agent scenarios.',
     );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(112);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(112);
+    expect(fixture.scenarios).toHaveLength(113);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(113);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -215,7 +215,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -250,7 +250,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -394,7 +394,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -437,7 +437,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.4.0/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
       ${mutation}
       validateScenarioContract(contract, tools);

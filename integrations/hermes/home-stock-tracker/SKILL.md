@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.15.0
+version: 1.16.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -48,6 +48,7 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
 | `product_add_alias`             | The user explicitly confirms that one alias identifies one exact trusted product ID outside a grocery-add workflow.                                                                                                    | The target is ambiguous, the relationship is inferred or only suggested, or the request also needs a grocery mutation.                                                                |
 | `get_inventory`                 | The user asks for the latest materialized estimate and last explicit fact for one known product. Resolve its product ID first.                                                                                         | The user asks for an exact physical count, all household inventory, or all recommendations.                                                                                           |
 | `list_inventory`                | The user asks what is probably available across the household. Preserve the separate `current` and `uncertain` groups.                                                                                                 | The user asks for committed grocery items, recorded history, or exact physical counts.                                                                                                |
+| `list_expiration_status`        | The user asks what might expire soon or wants expiry status for recorded purchase and restock batches. Report batch evidence and its source without inferring remaining quantities.                                  | The user asks what is currently on hand, needs a physical count, or wants to change stock, grocery items, or expiry records.                                                        |
 | `list_inventory_events`         | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                                          |
 | `record_purchase`               | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                                                    |
 | `record_purchases`              | The user reports a recently purchased list that is not a grocery-list completion. Resolve every product first, preserve item order and boundaries, and send one atomic batch.                                          | Any identity is unresolved, a product appears twice, the report is future intent, or the user refers to pending grocery rows.                                                         |
@@ -490,6 +491,9 @@ If no mapping is clear, ask rather than choosing the closest enum.
 - Empty `list_inventory.current` and `list_inventory.uncertain` groups mean no
   tracked non-depleted products were returned; they do not prove the household
   physically has nothing.
+- An empty `list_expiration_status.items` array means no purchase or restock
+  batches have expiry evidence to report. A returned batch status is not proof
+  that any quantity remains on hand.
 - An empty `list_inventory_events.items` array means there are no matching
   recorded events. It does not establish the product's current stock state.
 - An empty `recommendations` array is a successful result: there are no
@@ -543,6 +547,13 @@ Call `get_product` with `productName: "milk"`, then call
 `list_inventory_events` with the returned `productId`, `eventType: "PURCHASED"`,
 and `limit: 1`. Report the returned timestamp as recorded purchase history, not
 as evidence of the current quantity.
+
+**"What might expire soon?"**
+
+Call `list_expiration_status({})` once. Report each returned batch status and
+expiry source, including `unknown` when no usable expiry evidence exists. Do
+not infer remaining quantities, remove stock, or add grocery items from this
+read.
 
 **"Teach the system that whole milk means milk."**
 

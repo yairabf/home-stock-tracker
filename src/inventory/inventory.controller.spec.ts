@@ -89,6 +89,7 @@ describe('InventoryController provenance', () => {
     completePartialPurchase: jest.fn(),
     getInventory: jest.fn(),
     listInventory: jest.fn(),
+    listExpirationStatuses: jest.fn(),
   };
   const predictionFeedbackService = { submitFeedback: jest.fn() };
   const controller = new InventoryController(
@@ -119,6 +120,21 @@ describe('InventoryController provenance', () => {
       uncertain: [],
     });
     expect(inventoryService.listInventory).toHaveBeenCalledTimes(1);
+  });
+
+  it('delegates the expiration-status read to the inventory service', async () => {
+    inventoryService.listExpirationStatuses.mockResolvedValue({ items: [] });
+
+    await expect(controller.listExpirationStatuses()).resolves.toEqual({
+      items: [],
+    });
+    expect(inventoryService.listExpirationStatuses).toHaveBeenCalledTimes(1);
+    expect(
+      Reflect.getMetadata(
+        PATH_METADATA,
+        InventoryController.prototype.listExpirationStatuses,
+      ),
+    ).toBe('expiration');
   });
 
   it('supplies api provenance to inventory event writes', async () => {

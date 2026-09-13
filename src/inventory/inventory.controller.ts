@@ -38,6 +38,7 @@ import {
 import { ExpirationBatchService } from './expiration-batch.service';
 import { RecordExpirationBatchDto } from './dto/record-expiration-batch.dto';
 import { ExpirationBatchResponseDto } from './dto/expiration-batch-response.dto';
+import { ExpirationStatusListResponseDto } from './dto/expiration-status-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -51,6 +52,11 @@ export class InventoryController {
   @Get()
   listInventory(): Promise<HouseholdInventoryResponseDto> {
     return this.inventoryService.listInventory();
+  }
+
+  @Get('expiration')
+  listExpirationStatuses(): Promise<ExpirationStatusListResponseDto> {
+    return this.inventoryService.listExpirationStatuses();
   }
 
   @Post('purchases/:purchaseEventId/expiration')

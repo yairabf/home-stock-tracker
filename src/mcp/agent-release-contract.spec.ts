@@ -241,15 +241,19 @@ describe('agent release contract', () => {
     );
   });
 
-  it('publishes the materialized inventory agent release', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.5.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.15.0');
+  it('publishes the expiration-status agent release', () => {
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.6.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.16.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',
         'materialized-inventory',
+        'expiration-status-reads',
       ]),
     );
     expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain('list_inventory');
+    expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain(
+      'list_expiration_status',
+    );
   });
 });
