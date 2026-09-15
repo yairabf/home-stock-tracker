@@ -215,7 +215,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -250,7 +250,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -394,7 +394,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -437,7 +437,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.6.0/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
       ${mutation}
       validateScenarioContract(contract, tools);

@@ -57,6 +57,7 @@ const groceryItemOutputSchema = z.object({
   id: z.string(),
   productId: z.string(),
   productName: z.string(),
+  category: z.string().nullable(),
   requestedQuantity: z.number().positive().finite(),
   unit: z.string().nullable(),
   dateAdded: z.string(),
@@ -309,6 +310,7 @@ const inventoryItemOutputSchema = z
   .object({
     productId: z.string(),
     productName: z.string(),
+    category: z.string().nullable(),
     trackingStatus: z.enum(['tracked', 'untracked']),
     unit: z.string().nullable(),
     recordedQuantity: z.number().nullable(),

@@ -177,6 +177,13 @@ For each row, verify:
 - every selected update field has its expected old value from the existing item;
 - final wording reflects the structured result rather than claiming unobserved
   inventory facts.
+- list and inventory presentation groups only by each exact returned `category`,
+  uses `ללא קטגוריה` only for null or empty values, and never infers a category
+  from a product name;
+- category sections preserve returned item order and do not merge grocery,
+  recommendations, `current`, or `uncertain` groups;
+- Hebrew list lines keep quantity and unit at the end, without Markdown tables or
+  padded columns.
 
 
 

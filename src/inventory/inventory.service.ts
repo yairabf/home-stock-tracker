@@ -90,6 +90,7 @@ export class InventoryService {
       where: { id: productId },
       select: {
         id: true,
+        category: true,
         names: {
           where: { kind: ProductNameKind.canonical },
           select: { displayName: true },
@@ -129,6 +130,7 @@ export class InventoryService {
       where: { stockProjection: { isNot: null } },
       select: {
         id: true,
+        category: true,
         names: {
           where: { kind: ProductNameKind.canonical },
           select: { displayName: true },
@@ -823,6 +825,7 @@ export class InventoryService {
         GroceryItemResponseDto.fromEntity(
           item,
           getCanonicalProductName(item.product),
+          item.product.category,
         ),
       ),
     };
@@ -940,6 +943,7 @@ export class InventoryService {
         GroceryItemResponseDto.fromEntity(
           item,
           getCanonicalProductName(item.product),
+          item.product.category,
         ),
       ),
     };

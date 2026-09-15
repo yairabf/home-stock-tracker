@@ -136,6 +136,7 @@ describe('InventoryService', () => {
     it('returns a materialized tracked projection selected with its canonical name', async () => {
       const product = {
         id: PRODUCT_ID,
+        category: 'dairy',
         ...PRODUCT_NAMES,
         stockProjection: {
           unit: 'liter',
@@ -158,6 +159,7 @@ describe('InventoryService', () => {
         productId: PRODUCT_ID,
         productName: 'milk',
         trackingStatus: 'tracked',
+        category: 'dairy',
         estimatedQuantity: 1.23,
         predictedState: PredictedState.likely_available,
       });
@@ -175,12 +177,14 @@ describe('InventoryService', () => {
     it('returns untracked for a product without a projection', async () => {
       prisma.product.findUnique.mockResolvedValue({
         id: PRODUCT_ID,
+        category: null,
         ...PRODUCT_NAMES,
         stockProjection: null,
       });
 
       await expect(service.getInventory(PRODUCT_ID)).resolves.toMatchObject({
         trackingStatus: 'untracked',
+        category: null,
         estimatedState: null,
       });
     });
@@ -217,11 +221,13 @@ describe('InventoryService', () => {
       prisma.product.findMany.mockResolvedValue([
         {
           id: 'available-z',
+          category: 'produce',
           names: [{ displayName: 'Zucchini' }],
           stockProjection: projection(PredictedState.likely_available),
         },
         {
           id: 'uncertain',
+          category: null,
           names: [{ displayName: 'Rice' }],
           stockProjection: projection(PredictedState.uncertain, null),
         },
@@ -245,9 +251,15 @@ describe('InventoryService', () => {
       await expect(service.listInventory()).resolves.toMatchObject({
         current: [
           { productId: 'low-a', productName: 'Apples' },
-          { productId: 'available-z', productName: 'Zucchini' },
+          {
+            productId: 'available-z',
+            productName: 'Zucchini',
+            category: 'produce',
+          },
         ],
-        uncertain: [{ productId: 'uncertain', productName: 'Rice' }],
+        uncertain: [
+          { productId: 'uncertain', productName: 'Rice', category: null },
+        ],
       });
       expect(prisma.product.findMany).toHaveBeenCalledWith({
         where: { stockProjection: { isNot: null } },

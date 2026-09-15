@@ -241,14 +241,15 @@ describe('agent release contract', () => {
     );
   });
 
-  it('publishes the expiration-status agent release', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.6.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.16.0');
+  it('publishes the category-aware list-output agent release', () => {
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.7.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.17.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',
         'materialized-inventory',
         'expiration-status-reads',
+        'category-aware-list-outputs',
       ]),
     );
     expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain('list_inventory');

@@ -7,13 +7,13 @@
   },
   "skill": {
     "name": "home-stock-tracker",
-    "version": "1.16.0"
+    "version": "1.17.0"
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "1.6.0",
+    "contractVersion": "1.7.0",
     "compatibleRange": ">=1.5.0 <2.0.0",
-    "toolsFixture": "contracts/1.6.0/tools-list.json",
+    "toolsFixture": "contracts/1.7.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -22,6 +22,7 @@
   },
   "features": [
     "batch-purchase-recording",
+    "category-aware-list-outputs",
     "grocery-add",
     "grocery-catalog-confirmation",
     "grocery-list",

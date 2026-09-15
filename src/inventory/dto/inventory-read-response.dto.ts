@@ -27,6 +27,7 @@ interface InventoryReadProjection {
 
 export interface InventoryReadEntity {
   id: string;
+  category: string | null;
   names: Array<{ displayName: string }>;
   stockProjection: InventoryReadProjection | null;
 }
@@ -34,6 +35,7 @@ export interface InventoryReadEntity {
 export class InventoryItemResponseDto {
   productId: string;
   productName: string;
+  category: string | null;
   trackingStatus: InventoryTrackingStatus;
   unit: string | null;
   recordedQuantity: number | null;
@@ -52,6 +54,7 @@ export class InventoryItemResponseDto {
     const projection = entity.stockProjection;
     dto.productId = entity.id;
     dto.productName = entity.names[0]?.displayName ?? '';
+    dto.category = entity.category;
     dto.trackingStatus = projection
       ? InventoryTrackingStatus.tracked
       : InventoryTrackingStatus.untracked;

@@ -31,6 +31,8 @@
 
 ## Post-MVP
 
+- [x] 35. **Category-aware list outputs** - expose stored product categories in grocery and inventory reads, publish the additive MCP contract, and render returned categories safely in agent list responses ✓ 2026-09-15
+
 - [ ] 19. **Expiration tracking** - record expiration information and surface products likely to expire soon
   - [x] 19a. **Expiration-batch foundation** - record immutable, explicit expiration information against exact purchase events without changing stock projections or existing purchase contracts
   - [x] 19b. **Expiration status and reads** - derive expiry status from explicit batch dates and existing shelf-life policy, then expose additive read data

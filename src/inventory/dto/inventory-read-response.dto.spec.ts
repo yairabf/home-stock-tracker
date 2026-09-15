@@ -13,12 +13,14 @@ describe('InventoryItemResponseDto', () => {
     expect(
       InventoryItemResponseDto.fromEntity({
         id: 'product-1',
+        category: null,
         names: [{ displayName: 'Milk' }],
         stockProjection: null,
       }),
     ).toEqual({
       productId: 'product-1',
       productName: 'Milk',
+      category: null,
       trackingStatus: InventoryTrackingStatus.untracked,
       unit: null,
       recordedQuantity: null,
@@ -43,6 +45,7 @@ describe('InventoryItemResponseDto', () => {
     (unit, value, expected) => {
       const entity = {
         id: 'product-1',
+        category: 'dairy',
         names: [{ displayName: 'Milk' }],
         stockProjection: {
           unit,
@@ -64,6 +67,7 @@ describe('InventoryItemResponseDto', () => {
 
       expect(result).toMatchObject({
         trackingStatus: InventoryTrackingStatus.tracked,
+        category: 'dairy',
         recordedQuantity: expected,
         estimatedQuantity: expected,
         estimatedState: PredictedState.likely_available,
@@ -75,6 +79,7 @@ describe('InventoryItemResponseDto', () => {
   it('keeps additive legacy fields without calculating an untracked estimate', () => {
     const result = InventoryEstimateResponseDto.fromEntity({
       id: 'product-1',
+      category: null,
       names: [{ displayName: 'Milk' }],
       stockProjection: null,
     });
@@ -82,6 +87,7 @@ describe('InventoryItemResponseDto', () => {
     expect(result).toMatchObject({
       productId: 'product-1',
       trackingStatus: InventoryTrackingStatus.untracked,
+      category: null,
       predictedState: PredictedState.uncertain,
       confidenceScore: 0,
       reason: 'Stock is not tracked',

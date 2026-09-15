@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 1.16.0
+version: 1.17.0
 author: Home Stock Tracker
 metadata:
   hermes:
@@ -254,6 +254,30 @@ were confirmed and which later additions were not attempted, and do not retry.
 - "What do we have?" calls `list_inventory({})`. Present `current` as estimated
   available stock and `uncertain` separately. Do not present omitted depleted or
   untracked products as known absent.
+
+When presenting `grocery_list` or `list_inventory`, group items by their exact
+returned `category` within the relevant top-level result. Use `ללא קטגוריה` only
+when `category` is null or empty. Never derive, translate, normalize, or choose a
+category from a product name. Preserve the service item order within every category.
+
+Keep committed grocery items, recommendations, `current`, and `uncertain` as
+separate concepts. Category grouping never merges those top-level groups. Use one
+item per line, never a Markdown table or padded columns. Put quantity and unit at
+the end of each Hebrew item line for RTL stability, and preserve mixed Hebrew,
+Latin, percentages, and numbers exactly. Add directional characters only when a
+specific mixed-direction value visibly reorders in the messaging channel.
+
+For example, a returned grocery category can be presented as:
+
+```text
+🛒 *רשימת הקניות*
+
+*פירות וירקות*
+⬜ בננה - 1 קילו
+```
+
+An uncertain inventory item remains under a separate uncertainty heading even
+when its category matches an item in `current`.
 
 The combined list presentation does not merge the two backend contracts. Never
 present a suggestion as already committed. If the user explicitly confirms one

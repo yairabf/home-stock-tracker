@@ -36,6 +36,7 @@ const item = {
   id: '00000000-0000-4000-8000-000000000001',
   productId: '00000000-0000-4000-8000-000000000002',
   productName: 'milk',
+  category: 'dairy',
   requestedQuantity: 2,
   unit: 'liter',
   dateAdded: new Date('2026-08-27T10:00:00.000Z'),
@@ -200,6 +201,10 @@ describe('McpServerFactory grocery tools', () => {
     expect(JSON.stringify(groceryAddTool?.outputSchema)).toContain(
       'product_resolution_required',
     );
+    for (const name of ['grocery_list', 'get_inventory', 'list_inventory']) {
+      const tool = result.tools.find((candidate) => candidate.name === name);
+      expect(JSON.stringify(tool?.outputSchema)).toContain('"category"');
+    }
     const predictionFeedbackTool = result.tools.find(
       ({ name }) => name === 'record_prediction_feedback',
     );
@@ -919,6 +924,19 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.structuredContent).toEqual({ items: [] });
   });
 
+  it('publishes the exact grocery category in structured output', async () => {
+    groceryService.listItems.mockResolvedValue([item]);
+
+    const result = await client.callTool({
+      name: 'grocery_list',
+      arguments: {},
+    });
+
+    expect(result.structuredContent).toMatchObject({
+      items: [{ id: item.id, category: 'dairy' }],
+    });
+  });
+
   it('returns the configured household context without extra fields', async () => {
     const context = {
       id: '00000000-0000-4000-8000-000000000010',
@@ -1429,6 +1447,7 @@ describe('McpServerFactory grocery tools', () => {
       predictionId: null,
       productId: item.productId,
       productName: 'Milk',
+      category: null,
       trackingStatus: InventoryTrackingStatus.untracked,
       unit: null,
       recordedQuantity: null,
@@ -1474,6 +1493,7 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.structuredContent).toMatchObject({
       productId: item.productId,
       productName: 'Milk',
+      category: null,
       trackingStatus: 'untracked',
       recordedQuantity: null,
       estimatedQuantity: null,
@@ -1491,6 +1511,7 @@ describe('McpServerFactory grocery tools', () => {
         {
           productId: item.productId,
           productName: 'Milk',
+          category: 'dairy',
           trackingStatus: InventoryTrackingStatus.tracked,
           unit: 'liter',
           recordedQuantity: 2,
@@ -1518,6 +1539,7 @@ describe('McpServerFactory grocery tools', () => {
       current: [
         expect.objectContaining({
           productId: item.productId,
+          category: 'dairy',
           trackingStatus: 'tracked',
           recordedAt: recordedAt.toISOString(),
           estimatedQuantity: 1.25,

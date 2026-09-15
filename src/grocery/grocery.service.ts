@@ -177,6 +177,7 @@ export class GroceryService {
           {
             id: exactMatch.id,
             canonicalName: exactMatch.canonicalName,
+            category: exactMatch.category,
           },
           dto.groceryItem,
           dto.source,
@@ -259,7 +260,7 @@ export class GroceryService {
 
   private async addForProductWithinTransaction(
     tx: Prisma.TransactionClient,
-    product: { id: string; canonicalName: string },
+    product: { id: string; canonicalName: string; category: string | null },
     groceryItem: GroceryAdditionItemInput,
     source: GroceryItemSource,
     requestedAddition: GroceryRequestedAddition,
@@ -273,7 +274,11 @@ export class GroceryService {
       });
       return {
         outcome: 'created',
-        createdItem: GroceryItemResponseDto.fromEntity(item, productName),
+        createdItem: GroceryItemResponseDto.fromEntity(
+          item,
+          productName,
+          product.category,
+        ),
         existingItems: [],
         requestedAddition,
       };
@@ -289,7 +294,11 @@ export class GroceryService {
         outcome: 'confirmation_required',
         createdItem: null,
         existingItems: existing.map((item) =>
-          GroceryItemResponseDto.fromEntity(item, productName),
+          GroceryItemResponseDto.fromEntity(
+            item,
+            productName,
+            product.category,
+          ),
         ),
         requestedAddition,
       };
@@ -300,7 +309,11 @@ export class GroceryService {
     });
     return {
       outcome: 'created',
-      createdItem: GroceryItemResponseDto.fromEntity(item, productName),
+      createdItem: GroceryItemResponseDto.fromEntity(
+        item,
+        productName,
+        product.category,
+      ),
       existingItems: [],
       requestedAddition,
     };
@@ -309,10 +322,12 @@ export class GroceryService {
   private groceryProduct(product: ProductWithNames): {
     id: string;
     canonicalName: string;
+    category: string | null;
   } {
     return {
       id: product.id,
       canonicalName: getCanonicalProductName(product),
+      category: product.category,
     };
   }
 
@@ -405,6 +420,7 @@ export class GroceryService {
       GroceryItemResponseDto.fromEntity(
         item,
         getCanonicalProductName(item.product),
+        item.product.category,
       ),
     );
   }
@@ -426,6 +442,7 @@ export class GroceryService {
     const current = GroceryItemResponseDto.fromEntity(
       existing,
       getCanonicalProductName(existing.product),
+      existing.product.category,
     );
     if (existing.status !== GroceryItemStatus.pending) {
       throw groceryConflict(
@@ -457,6 +474,7 @@ export class GroceryService {
     return GroceryItemResponseDto.fromEntity(
       { ...existing, requestedQuantity: dto.requestedQuantity },
       getCanonicalProductName(existing.product),
+      existing.product.category,
     );
   }
 
@@ -475,6 +493,7 @@ export class GroceryService {
     const current = GroceryItemResponseDto.fromEntity(
       existing,
       getCanonicalProductName(existing.product),
+      existing.product.category,
     );
     this.validateUpdate(existing, dto, current);
     const data = this.updatedFields(dto);
@@ -490,6 +509,7 @@ export class GroceryService {
     return GroceryItemResponseDto.fromEntity(
       { ...existing, ...data },
       getCanonicalProductName(existing.product),
+      existing.product.category,
     );
   }
 
@@ -625,6 +645,7 @@ export class GroceryService {
     const current = GroceryItemResponseDto.fromEntity(
       latest,
       getCanonicalProductName(latest.product),
+      latest.product.category,
     );
     const code =
       latest.status === GroceryItemStatus.pending
@@ -660,6 +681,7 @@ export class GroceryService {
     return GroceryItemResponseDto.fromEntity(
       { ...existing, status: GroceryItemStatus.removed },
       getCanonicalProductName(existing.product),
+      existing.product.category,
     );
   }
 }

@@ -8,6 +8,7 @@ export class GroceryItemResponseDto {
   id: string;
   productId: string;
   productName: string;
+  category: string | null;
   requestedQuantity: number;
   unit: string | null;
   dateAdded: Date;
@@ -19,11 +20,13 @@ export class GroceryItemResponseDto {
   static fromEntity(
     item: GroceryListItemModel,
     productName: string,
+    category: string | null,
   ): GroceryItemResponseDto {
     const dto = new GroceryItemResponseDto();
     dto.id = item.id;
     dto.productId = item.productId;
     dto.productName = productName;
+    dto.category = category;
     dto.requestedQuantity = item.requestedQuantity;
     dto.unit = item.unit;
     dto.dateAdded = item.dateAdded;

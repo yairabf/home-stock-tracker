@@ -18,6 +18,7 @@ import { PRODUCT_NAME_CONFLICT } from '../product/product-name.exception';
 
 const product = {
   id: 'product-1',
+  category: 'dairy',
   names: [
     {
       id: 'name-1',
@@ -28,6 +29,35 @@ const product = {
     },
   ],
 };
+
+describe('GroceryService listItems', () => {
+  it('returns the stored product category without additional product reads', async () => {
+    const findMany = jest.fn().mockResolvedValue([
+      {
+        id: 'grocery-item-1',
+        productId: product.id,
+        requestedQuantity: 1,
+        unit: null,
+        dateAdded: new Date('2026-09-01T10:00:00.000Z'),
+        status: GroceryItemStatus.pending,
+        note: null,
+        source: GroceryItemSource.api,
+        relatedInventoryEventId: null,
+        product,
+      },
+    ]);
+    const service = new GroceryService(
+      { groceryListItem: { findMany } } as unknown as PrismaService,
+      {} as ProductService,
+      {} as ProductResolutionService,
+    );
+
+    await expect(service.listItems()).resolves.toMatchObject([
+      { productId: product.id, category: 'dairy' },
+    ]);
+    expect(findMany).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('GroceryService policy-aware deterministic addition', () => {
   const item = {
@@ -93,6 +123,7 @@ describe('GroceryService policy-aware deterministic addition', () => {
   it('creates product and grocery item inside one serializable transaction', async () => {
     await expect(service.addPolicyAwareItem(request)).resolves.toMatchObject({
       outcome: 'created',
+      createdItem: { category: 'dairy' },
       requestedAddition: {
         productName: 'Milk',
         requestedQuantity: null,
