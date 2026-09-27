@@ -29,6 +29,10 @@
 - [x] 17. **Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures ✓ 2026-08-28
 - [x] 18. **Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment ✓ 2026-08-28
 
+## GitHub issue fixes
+
+- [x] 36. **Issue #3: Typed MCP grocery arguments and same-conversation recovery** - published native JSON argument examples and bounded recovery guidance; verified strict-schema, persistent-state, and controlled Hermes replay with injected-failure limitations recorded in `blueprint/history/features/36-mcp-product-confirmation-argument-types.md` ✓ 2026-09-28
+
 ## Post-MVP
 
 - [x] 35. **Category-aware list outputs** - expose stored product categories in grocery and inventory reads, publish the additive MCP contract, and render returned categories safely in agent list responses ✓ 2026-09-15
