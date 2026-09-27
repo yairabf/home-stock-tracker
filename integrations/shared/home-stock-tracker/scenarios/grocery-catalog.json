@@ -2704,6 +2704,191 @@
         "Resolve an existing product or ask for clarification. Never enter new-product stock confirmation.",
         "No new product or stock mutation."
       ]
+    },
+    {
+      "id": "noninvoked-confirmation-correction",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "explicit-tool-not-invoked",
+        "approved-grocery-intent",
+        "explicit-user-confirmation",
+        "complete-product-facts"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_confirm_new_product",
+          "argumentKeys": [
+            "product.canonicalName",
+            "product.aliases",
+            "product.category",
+            "product.typicalUnit",
+            "product.productType",
+            "product.isPerishable",
+            "groceryItem.requestedQuantity",
+            "groceryItem.unit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "bounded-noninvoked-correction",
+        "no-fact-invention",
+        "preserve-prior-successes",
+        "atomic-catalog-and-grocery-write",
+        "no-llm-on-confirmation"
+      ],
+      "row": [
+        "Correct a non-invoked confirmation",
+        "User-approved confirmation is rejected by the tool layer with explicit non-invocation; quantity/boolean were strings and aliases an object.",
+        "Rebuild all fields from approved facts with JSON number, boolean, and aliases array; make one corrected confirmation in the same conversation.",
+        "Preserve approval and prior successful work; do not claim a service outage or repeat the original addition."
+      ]
+    },
+    {
+      "id": "noninvoked-grocery-quantity-correction",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "explicit-tool-not-invoked",
+        "approved-grocery-intent"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_add",
+          "argumentKeys": [
+            "productName",
+            "groceryItem.requestedQuantity",
+            "groceryItem.unit"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "bounded-noninvoked-correction",
+        "no-fact-invention",
+        "preserve-prior-successes"
+      ],
+      "row": [
+        "Correct a non-invoked grocery quantity",
+        "An approved fabric-softener addition is explicitly not invoked because quantity was a string.",
+        "Send the same requested quantity as a number in one corrected grocery_add call in the current conversation.",
+        "Do not repeat earlier successful items or ask for the same approval again."
+      ]
+    },
+    {
+      "id": "noninvoked-correction-missing-facts",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "explicit-tool-not-invoked"
+      ],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-mutation-before-confirmation",
+        "no-fact-invention",
+        "preserve-prior-successes"
+      ],
+      "row": [
+        "Missing facts during argument correction",
+        "A non-invoked confirmation lacks complete approved facts or approval.",
+        "Ask a focused question for missing facts/approval; do not infer a boolean, quantity, or alias from malformed input.",
+        "No corrected mutation is attempted until the existing approval requirements are satisfied."
+      ]
+    },
+    {
+      "id": "noninvoked-correction-exhausted",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "explicit-tool-not-invoked",
+        "approved-grocery-intent"
+      ],
+      "calls": [],
+      "resultClass": "blocked",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "no-success-claim-on-error",
+        "preserve-prior-successes"
+      ],
+      "row": [
+        "Corrected attempt still rejected",
+        "The one corrected attempt is also rejected before invocation.",
+        "Stop the correction loop and explain the actual remaining validation error.",
+        "No repeated variations, success claim, or service-outage claim."
+      ]
+    },
+    {
+      "id": "correction-after-prior-success",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "explicit-tool-not-invoked",
+        "approved-grocery-intent",
+        "prior-mutation-result",
+        "explicit-user-confirmation",
+        "complete-product-facts"
+      ],
+      "calls": [
+        {
+          "tool": "grocery_confirm_new_product",
+          "argumentKeys": [
+            "product",
+            "groceryItem"
+          ],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "bounded-noninvoked-correction",
+        "no-fact-invention",
+        "preserve-prior-successes",
+        "atomic-catalog-and-grocery-write",
+        "no-llm-on-confirmation"
+      ],
+      "row": [
+        "Preserve earlier success during correction",
+        "An earlier grocery addition succeeded; a separate approved confirmation was explicitly not invoked.",
+        "Correct only the rejected confirmation once, preserving its approved facts.",
+        "Do not replay the successful addition or restart the multi-item request."
+      ]
+    },
+    {
+      "id": "creation-policy-mismatch",
+      "platforms": [
+        "hermes",
+        "openclaw"
+      ],
+      "prerequisites": [
+        "prior-mutation-result"
+      ],
+      "calls": [],
+      "resultClass": "confirmation-required",
+      "safetyInvariants": [
+        "no-automatic-retry",
+        "no-fact-invention",
+        "preserve-prior-successes"
+      ],
+      "row": [
+        "Name-only creation policy mismatch",
+        "A name-only create_if_missing request returns Product input must match unknownProductPolicy without explicit non-invocation proof.",
+        "Explain that complete product facts are missing; clarify approval and execution state before any fresh proposal or confirmation.",
+        "Do not invent product facts, presume non-invocation, or automatically retry the mutation."
+      ]
     }
   ]
 }

@@ -241,9 +241,9 @@ describe('agent release contract', () => {
     );
   });
 
-  it('publishes the category-aware list-output agent release', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.7.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.17.0');
+  it('publishes the typed-argument recovery release with existing list features', () => {
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.7.1');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.17.1');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',

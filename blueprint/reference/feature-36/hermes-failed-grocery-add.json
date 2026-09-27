@@ -1,0 +1,7 @@
+{
+  "productName": "תבלין גריל עוף",
+  "unknownProductPolicy": "create_if_missing",
+  "groceryItem": {
+    "unit": "שקית"
+  }
+}

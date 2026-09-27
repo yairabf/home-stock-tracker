@@ -1066,7 +1066,7 @@ export class McpServerFactory {
       'grocery_add',
       {
         description:
-          'Add a product to the household grocery list. Omitted unknownProductPolicy uses propose_if_missing: begin uncertain names there and present product_resolution_required candidates or advice without mutation. Use explicit create_if_missing only with complete deterministic product facts. An omitted grocery quantity defaults to 1 only for a new line; confirmation_required never changes an existing quantity.',
+          'Add a product to the household grocery list. For ordinary names use propose_if_missing, e.g. {"productName":"chicken grill seasoning","groceryItem":{"requestedQuantity":1,"unit":"bag"}}. Present product_resolution_required candidates or advice without mutation, then obtain approval before confirmation. create_if_missing requires complete approved product facts under product; never send that policy with productName alone or guess missing facts. Quantities must be JSON numbers, not strings. Product isPerishable must be a boolean and aliases an array of strings. An omitted quantity defaults to 1 only for a new line; confirmation_required never changes an existing quantity. Only if client argument validation explicitly confirms the tool was NOT invoked, correct all argument shapes from already approved facts and make one corrected attempt in the same conversation. Do not repeat earlier successes or retry domain errors or uncertain execution. The server cannot observe client-side rejection.',
         inputSchema: groceryAddInputSchema,
         outputSchema: groceryAddOutputSchema,
       },
@@ -1084,7 +1084,7 @@ export class McpServerFactory {
       'grocery_confirm_new_product',
       {
         description:
-          'Apply a user-approved final product-creation payload and complete the original grocery addition without an LLM call. Do not send proposal state or source. An omitted quantity defaults to 1 only for a new line. confirmation_required means an existing pending quantity was not changed; handle that as a separate user decision. PRODUCT_NAME_CONFLICT is final for this decision and must not be auto-retried.',
+          'Apply a user-approved final product-creation payload and complete the original grocery addition without an LLM call. Argument shape example, not permission to invent facts: {"product":{"canonicalName":"chicken grill seasoning","aliases":["chicken grill spice mix"],"category":"spices","typicalUnit":"bag","productType":"pantry_staple","isPerishable":false},"groceryItem":{"requestedQuantity":1,"unit":"bag"}}. Use JSON booleans and numbers, never "false" or "1"; aliases is an array, never an item object. Preserve every approved fact and original grocery intent; ask for missing facts or approval. Do not send proposal state or source. An omitted quantity defaults to 1 only for a new line. confirmation_required leaves an existing pending quantity unchanged and needs a separate decision. Only if client argument validation explicitly confirms the tool was NOT invoked, fix all argument shapes and make one corrected attempt in the same conversation without requesting the same approval again. Never repeat earlier successful writes or retry uncertain execution. PRODUCT_NAME_CONFLICT is final and must not be auto-retried. The server cannot observe client-side rejection.',
         inputSchema: confirmNewProductInputSchema,
         outputSchema: groceryConfirmationOutputSchema,
       },

@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
+import { confirmNewProductInputSchema } from './schemas/grocery-confirmation.schema';
 
 const LOCAL_PYTHON_ARTIFACTS = new Set([
   '.pytest_cache',
@@ -45,12 +46,37 @@ describe('agent skill generator', () => {
     expect(openClawSkill).not.toMatch(/Hermes|WhatsApp|\[SILENT\]|hermes cron/);
   });
 
+  it.each(['hermes', 'openclaw'])(
+    'publishes a schema-valid typed confirmation example for %s',
+    (platform) => {
+      const skill = readFileSync(
+        join(
+          projectRoot,
+          'integrations',
+          platform,
+          'home-stock-tracker/SKILL.md',
+        ),
+        'utf8',
+      );
+      const examples = [...skill.matchAll(/```json\n([\s\S]*?)\n```/g)].map(
+        (match) => JSON.parse(match[1]) as Record<string, unknown>,
+      );
+      const confirmation = examples.find((example) => 'product' in example);
+      expect(confirmation).toBeDefined();
+      const parsed = confirmNewProductInputSchema.parse(confirmation);
+      expect(parsed).toEqual(confirmation);
+      expect(parsed.product.isPerishable).toBe(false);
+      expect(parsed.product.aliases).toEqual(['chicken grill spice mix']);
+      expect(parsed.groceryItem.requestedQuantity).toBe(1);
+    },
+  );
+
   it.each([
     'SKILL.md',
     'scenarios.md',
     'manifest.json',
     'release/README.md',
-    'contracts/1.7.0/tools-list.json',
+    'contracts/1.7.1/tools-list.json',
   ])('fails closed when generated %s was hand-edited', (artifact) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-skills-'));
 

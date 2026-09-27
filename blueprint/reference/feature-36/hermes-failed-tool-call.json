@@ -1,0 +1,19 @@
+{
+  "name": "mcp__home_stock_tracker__grocery_confirm_new_product",
+  "arguments": {
+    "groceryItem": {
+      "requestedQuantity": "1",
+      "unit": "שקית"
+    },
+    "product": {
+      "aliases": {
+        "item": "תערובת גריל עוף"
+      },
+      "canonicalName": "תבלין גריל עוף",
+      "category": "תבלינים",
+      "isPerishable": "false",
+      "productType": "pantry_staple",
+      "typicalUnit": "שקית"
+    }
+  }
+}

@@ -77,6 +77,31 @@ describe('MCP contract fixture', () => {
     );
   });
 
+  it('changes only the two grocery descriptions from contract 1.7.0', () => {
+    const previous = readMcpContractSnapshot(
+      join(
+        projectRoot,
+        'integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
+      ),
+    );
+    const withoutDescriptions = (contract: McpContractSnapshot) =>
+      contract.tools.map(
+        ({ description: _description, ...definition }) => definition,
+      );
+
+    expect(withoutDescriptions(snapshot)).toEqual(
+      withoutDescriptions(previous),
+    );
+    expect(
+      snapshot.tools
+        .filter(
+          (tool, index) =>
+            tool.description !== previous.tools[index].description,
+        )
+        .map(({ name }) => name),
+    ).toEqual(['grocery_add', 'grocery_confirm_new_product']);
+  });
+
   it('normalizes tool ordering before comparison', () => {
     expect(
       normalizeMcpContractSnapshot(

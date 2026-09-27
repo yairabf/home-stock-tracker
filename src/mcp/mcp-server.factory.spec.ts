@@ -46,6 +46,15 @@ const item = {
   relatedInventoryEventId: null,
 };
 
+const approvedSeasoning = {
+  canonicalName: 'תבלין גריל עוף',
+  aliases: ['תערובת גריל עוף'],
+  category: 'תבלינים',
+  typicalUnit: 'שקית',
+  productType: 'pantry_staple',
+  isPerishable: false,
+};
+
 describe('McpServerFactory grocery tools', () => {
   let groceryService: jest.Mocked<
     Pick<
@@ -149,6 +158,41 @@ describe('McpServerFactory grocery tools', () => {
 
   afterEach(async () => closeServer());
 
+  it.each(['grocery_add', 'grocery_confirm_new_product'])(
+    'publishes a dispatchable typed JSON example for %s',
+    async (name) => {
+      const tools = await client.listTools();
+      const description = tools.tools.find(
+        (tool) => tool.name === name,
+      )?.description;
+      const example = description?.match(/(\{.*\})\./)?.[1];
+      expect(example).toBeDefined();
+      const args = JSON.parse(example!) as Record<string, unknown>;
+      const service =
+        name === 'grocery_add'
+          ? groceryService.addPolicyAwareItem
+          : groceryService.confirmNewProduct;
+      service.mockResolvedValue({
+        outcome: 'created',
+        createdItem: item,
+        existingItems: [],
+        requestedAddition: {
+          productName: 'chicken grill seasoning',
+          requestedQuantity: 1,
+          unit: 'bag',
+          note: null,
+          ifPendingExists: PendingGroceryItemPolicy.return_existing,
+        },
+      });
+
+      const result = await client.callTool({ name, arguments: args });
+
+      expect(result.isError).not.toBe(true);
+      expect(service).toHaveBeenCalledTimes(1);
+      expect(service.mock.calls[0][0]).toMatchObject(args);
+    },
+  );
+
   it('discovers the grocery tools with strict schemas', async () => {
     expect(client.getServerVersion()).toMatchObject(MCP_SERVER_INFO);
     const result = await client.listTools();
@@ -236,8 +280,19 @@ describe('McpServerFactory grocery tools', () => {
         additionalProperties: false,
         required: ['product', 'groceryItem'],
         properties: {
-          product: { type: 'object' },
-          groceryItem: { type: 'object' },
+          product: {
+            type: 'object',
+            properties: {
+              isPerishable: { type: 'boolean' },
+              aliases: { type: 'array', items: { type: 'string' } },
+            },
+          },
+          groceryItem: {
+            type: 'object',
+            properties: {
+              requestedQuantity: { type: 'number', exclusiveMinimum: 0 },
+            },
+          },
         },
       },
     });
@@ -1047,6 +1102,91 @@ describe('McpServerFactory grocery tools', () => {
     expect(result.isError).toBe(true);
     expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['string quantity', approvedSeasoning, { requestedQuantity: '1' }],
+    ['string false', { ...approvedSeasoning, isPerishable: 'false' }, {}],
+    ['string true', { ...approvedSeasoning, isPerishable: 'true' }, {}],
+    [
+      'object aliases',
+      { ...approvedSeasoning, aliases: { item: 'תערובת גריל עוף' } },
+      {},
+    ],
+  ])(
+    'rejects confirmation with %s before mutation',
+    async (_label, product, groceryItem) => {
+      const result = await client.callTool({
+        name: 'grocery_confirm_new_product',
+        arguments: { product, groceryItem },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(groceryService.confirmNewProduct).not.toHaveBeenCalled();
+      expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
+      expect(groceryService.confirmProductAlias).not.toHaveBeenCalled();
+      expect(inventoryService.recordEvent).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([true, false])(
+    'preserves boolean %s, fractional quantity and aliases',
+    async (isPerishable) => {
+      const product = { ...approvedSeasoning, isPerishable };
+      const groceryItem = { requestedQuantity: 1.5, unit: 'שקית' };
+      groceryService.confirmNewProduct.mockResolvedValue({
+        outcome: 'created',
+        createdItem: { ...item, requestedQuantity: 1.5 },
+        existingItems: [],
+        requestedAddition: {
+          productName: product.canonicalName,
+          requestedQuantity: 1.5,
+          unit: groceryItem.unit,
+          note: null,
+          ifPendingExists: PendingGroceryItemPolicy.return_existing,
+        },
+      });
+
+      const result = await client.callTool({
+        name: 'grocery_confirm_new_product',
+        arguments: { product, groceryItem },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(groceryService.confirmNewProduct).toHaveBeenCalledTimes(1);
+      expect(groceryService.confirmNewProduct).toHaveBeenCalledWith({
+        product,
+        groceryItem,
+        source: GroceryItemSource.mcp,
+      });
+    },
+  );
+
+  it.each([
+    [
+      'string quantity',
+      { productName: 'מרכך כביסה', groceryItem: { requestedQuantity: '1' } },
+    ],
+    [
+      'name-only creation',
+      {
+        productName: approvedSeasoning.canonicalName,
+        unknownProductPolicy: 'create_if_missing',
+        groceryItem: { unit: 'שקית' },
+      },
+    ],
+  ])(
+    'rejects grocery addition with %s before dispatch',
+    async (_label, args) => {
+      const result = await client.callTool({
+        name: 'grocery_add',
+        arguments: args,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(groceryService.addPolicyAwareItem).not.toHaveBeenCalled();
+      expect(groceryService.confirmNewProduct).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     ['grocery_add', { productName: 'milk', groceryItem: {}, source: 'api' }],

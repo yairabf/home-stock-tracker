@@ -185,6 +185,136 @@ describe('Policy-aware grocery MCP contract (e2e)', () => {
     expect(provider.generateStructured.mock.calls).toHaveLength(0);
   });
 
+  it.each([
+    'string boolean',
+    'string quantity',
+    'object aliases',
+    'name-only creation',
+  ])(
+    'preserves existing persistent state after %s rejection',
+    async (invalidShape) => {
+      await confirmNewProduct(`${prefix} earlier success`, 3);
+      const before = await persistentState();
+      const product = productInput(`${prefix} rejected`);
+      const groceryItem = { requestedQuantity: 1, unit: 'bag' };
+      const args = {
+        product: {
+          ...product,
+          ...(invalidShape === 'string boolean'
+            ? { isPerishable: 'false' }
+            : {}),
+          ...(invalidShape === 'object aliases'
+            ? { aliases: { item: `${prefix} alias` } }
+            : {}),
+        },
+        groceryItem: {
+          ...groceryItem,
+          ...(invalidShape === 'string quantity'
+            ? { requestedQuantity: '1' }
+            : {}),
+        },
+      };
+
+      const result = await client.callTool(
+        invalidShape === 'name-only creation'
+          ? {
+              name: 'grocery_add',
+              arguments: {
+                productName: product.canonicalName,
+                unknownProductPolicy: 'create_if_missing',
+                groceryItem,
+              },
+            }
+          : { name: 'grocery_confirm_new_product', arguments: args },
+      );
+
+      expect(result.isError).toBe(true);
+      await expect(persistentState()).resolves.toEqual(before);
+      expect(provider.generateStructured).not.toHaveBeenCalled();
+    },
+  );
+
+  it('persists one typed correction without repeating earlier successful work', async () => {
+    const earlier = await confirmNewProduct(`${prefix} already added`, 3);
+    const earlierId = createdProductId(earlier.structuredContent);
+    const approved = {
+      product: {
+        ...productInput(`${prefix} seasoning`),
+        aliases: [`${prefix} seasoning alias`],
+        productType: ProductType.pantry_staple,
+        category: 'spices',
+        typicalUnit: 'bag',
+      },
+      groceryItem: { requestedQuantity: 1, unit: 'bag' },
+    };
+    const before = await persistentState();
+    const rejected = await client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: {
+        product: {
+          ...approved.product,
+          isPerishable: 'false',
+          aliases: { item: approved.product.aliases[0] },
+        },
+        groceryItem: { ...approved.groceryItem, requestedQuantity: '1' },
+      },
+    });
+    expect(rejected.isError).toBe(true);
+    await expect(persistentState()).resolves.toEqual(before);
+
+    const corrected = await client.callTool({
+      name: 'grocery_confirm_new_product',
+      arguments: approved,
+    });
+    expect(corrected.isError).not.toBe(true);
+    expect(corrected.structuredContent).toMatchObject({
+      outcome: 'created',
+      createdItem: { requestedQuantity: 1, unit: 'bag' },
+    });
+    const productId = createdProductId(corrected.structuredContent);
+    const after = await persistentState();
+    expect(after.products.filter(({ id }) => id !== productId)).toEqual(
+      before.products,
+    );
+    expect(after.names.filter((name) => name.productId !== productId)).toEqual(
+      before.names,
+    );
+    expect(
+      after.groceries.filter((line) => line.productId !== productId),
+    ).toEqual(before.groceries);
+    expect(after.events).toEqual(before.events);
+    expect(after.products.filter(({ id }) => id === productId)).toEqual([
+      expect.objectContaining({
+        isPerishable: false,
+        productType: 'pantry_staple',
+        category: 'spices',
+        typicalUnit: 'bag',
+      }),
+    ]);
+    expect(
+      after.names
+        .filter((name) => name.productId === productId)
+        .map(({ displayName }) => displayName)
+        .sort(),
+    ).toEqual(
+      [approved.product.canonicalName, ...approved.product.aliases].sort(),
+    );
+    expect(
+      after.groceries.filter((line) => line.productId === productId),
+    ).toEqual([
+      expect.objectContaining({
+        requestedQuantity: 1,
+        unit: 'bag',
+        status: 'pending',
+        source: 'mcp',
+      }),
+    ]);
+    expect(
+      after.groceries.filter((line) => line.productId === earlierId),
+    ).toHaveLength(1);
+    expect(provider.generateStructured).not.toHaveBeenCalled();
+  });
+
   it('confirms an alias and keeps it when grocery quantity needs confirmation', async () => {
     const canonicalName = `${prefix} alias target`;
     const alias = `${prefix} approved alias`;
@@ -365,5 +495,15 @@ describe('Policy-aware grocery MCP contract (e2e)', () => {
       }),
     ]);
     return { products, names, groceries };
+  }
+
+  async function persistentState() {
+    const [products, names, groceries, events] = await Promise.all([
+      prisma.product.findMany({ orderBy: { id: 'asc' } }),
+      prisma.productName.findMany({ orderBy: { id: 'asc' } }),
+      prisma.groceryListItem.findMany({ orderBy: { id: 'asc' } }),
+      prisma.inventoryEvent.findMany({ orderBy: { id: 'asc' } }),
+    ]);
+    return { products, names, groceries, events };
   }
 });

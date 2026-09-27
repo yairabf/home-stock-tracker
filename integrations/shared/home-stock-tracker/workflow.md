@@ -145,6 +145,73 @@ fresh read before asking the user about any new write.
 
 ## Grocery conversation workflows
 
+### Construct typed grocery arguments
+
+Build a JSON object matching the advertised tool schema before every grocery
+call. Quantities are JSON numbers such as `1` or `1.5`; `isPerishable` is a JSON
+boolean such as `false`; `aliases` is an array of strings such as `["grill spice"]`
+or an explicitly approved empty array. Never send `"1"`, `"false"`, or
+`{ "item": "grill spice" }` in those fields. Do not stringify nested objects.
+
+For an ordinary name request, use proposal mode and inspect its result:
+
+```json
+{
+  "productName": "chicken grill seasoning",
+  "unknownProductPolicy": "propose_if_missing",
+  "groceryItem": { "requestedQuantity": 1, "unit": "bag" }
+}
+```
+
+For `grocery_confirm_new_product`, only after the user has approved every product
+fact and the original grocery intent, this is the correct argument shape:
+
+```json
+{
+  "product": {
+    "canonicalName": "chicken grill seasoning",
+    "aliases": ["chicken grill spice mix"],
+    "category": "spices",
+    "typicalUnit": "bag",
+    "productType": "pantry_staple",
+    "isPerishable": false
+  },
+  "groceryItem": { "requestedQuantity": 1, "unit": "bag" }
+}
+```
+
+These are shape examples, not permission to use those facts for another product.
+Copy the user's approved facts and requested quantity/unit. Reconstruct aliases
+as an array from the approved aliases; do not invent aliases or flatten arbitrary
+objects. `create_if_missing` requires complete `product` facts and must not be
+sent with only `productName`. If product facts are missing, follow proposal mode
+and the existing user-approval flow; do not guess them to bypass validation.
+
+### Recover within the current conversation after non-invocation
+
+For `grocery_add` or `grocery_confirm_new_product`, if a trustworthy tool-layer
+validation result explicitly says **the tool was not invoked**, and all required
+facts and the operation are already approved, correct the argument representation
+and make **one corrected attempt in the same conversation**. Recheck the entire
+argument schema, including booleans, numbers, arrays, and policy/payload pairing,
+rather than fixing only the first reported field. Preserve the approved meaning,
+identity, quantity, unit, and note. Do not request the same approval again just
+because argument encoding was wrong, defer until "the tool works again," or
+claim a service outage from pre-invocation validation.
+
+This exception only repairs a request that never ran. Do not repeat earlier
+successful additions or confirmations, restart the whole multi-item request,
+change approved facts, or route the user to a retailer workaround. If facts or
+approval are missing or ambiguous, ask a focused question without mutating. If
+the corrected attempt also fails validation, stop and explain the remaining
+error; do not keep trying variations.
+
+An `isError` result, a domain validation error such as `Product input must match
+unknownProductPolicy`, a timeout, or a missing response does **not** by itself
+establish non-invocation. Preserve the existing domain-error and transport
+uncertainty rules. For an unknown execution outcome, stop automatic mutations,
+report uncertainty, and read current state before discussing a fresh write.
+
 ### Add one item and handle an existing line
 
 For a clear request such as "add one milk," begin in proposal mode. MCP defaults
@@ -495,8 +562,9 @@ If no mapping is clear, ask rather than choosing the closest enum.
 - If `get_product` reports no exact product, call `search_products`. Present its
   bounded candidates or ask for more detail when empty. Do not create a product,
   add an alias, or mutate state from search results alone.
-- For a validation or not-found tool error, correct the request only from known
-  user facts or ask a question.
+- Follow the bounded non-invocation recovery above only when the tool layer
+  explicitly confirms no invocation. For other validation, domain, or not-found
+  errors, follow the tool-specific final-result rules or ask for a fresh decision.
 - After a mutation transport failure with an uncertain outcome, do not retry
   automatically. Report that the result is uncertain so duplicate writes are
   avoided. The sole exception is an identical `inventory_confirm_new_product`

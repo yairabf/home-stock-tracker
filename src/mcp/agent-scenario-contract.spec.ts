@@ -41,21 +41,103 @@ describe('executable agent scenario contract', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      'Validated 113 executable agent scenarios.',
+      'Validated 119 executable agent scenarios.',
     );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(113);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(113);
+    expect(fixture.scenarios).toHaveLength(119);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(119);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
       );
       expect(scenario.row).toHaveLength(4);
     }
+  });
+
+  it.each([
+    [
+      'non-invocation evidence',
+      "scenario.prerequisites = scenario.prerequisites.filter(value => value !== 'explicit-tool-not-invoked');",
+      'correction requires explicit-tool-not-invoked',
+    ],
+    [
+      'approved intent',
+      "scenario.prerequisites = scenario.prerequisites.filter(value => value !== 'approved-grocery-intent');",
+      'correction requires approved-grocery-intent',
+    ],
+    [
+      'product facts',
+      "scenario.prerequisites = scenario.prerequisites.filter(value => value !== 'complete-product-facts');",
+      'correction requires complete-product-facts',
+    ],
+    [
+      'approval',
+      "scenario.prerequisites = scenario.prerequisites.filter(value => value !== 'explicit-user-confirmation');",
+      'must require confirmation',
+    ],
+    [
+      'repeated attempts',
+      'scenario.calls.push(scenario.calls[0]);',
+      'correction must contain one corrected grocery call',
+    ],
+    [
+      'prior-success protection',
+      "scenario.safetyInvariants = scenario.safetyInvariants.filter(value => value !== 'preserve-prior-successes');",
+      'correction requires preserve-prior-successes',
+    ],
+    [
+      'uncertain execution',
+      "scenario.resultClass = 'transport-uncertain';",
+      'correction must contain one corrected grocery call',
+    ],
+  ])('rejects unsafe correction without %s', (_label, mutation, error) => {
+    const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8',
+      ));
+      const tools = JSON.parse(readFileSync(
+        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json', 'utf8',
+      ));
+      const scenario = contract.scenarios.find(
+        ({ id }) => id === 'noninvoked-confirmation-correction',
+      );
+      ${mutation}
+      validateScenarioContract(contract, tools);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', script],
+      {
+        cwd: root,
+        encoding: 'utf8',
+      },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(error);
+  });
+
+  it('stops when facts are missing or correction is exhausted', () => {
+    for (const id of [
+      'noninvoked-correction-missing-facts',
+      'noninvoked-correction-exhausted',
+      'creation-policy-mismatch',
+    ]) {
+      expect(scenarios.get(id)?.calls).toEqual([]);
+    }
+    expect(
+      scenarios
+        .get('correction-after-prior-success')
+        ?.calls.map(({ tool }) => tool),
+    ).toEqual(['grocery_confirm_new_product']);
+    expect(
+      scenarios.get('correction-after-prior-success')?.safetyInvariants,
+    ).toContain('preserve-prior-successes');
   });
 
   it.each(['hermes', 'openclaw'])(
@@ -215,7 +297,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -250,7 +332,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -394,7 +476,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -437,7 +519,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
       ${mutation}
       validateScenarioContract(contract, tools);

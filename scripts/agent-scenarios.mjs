@@ -30,6 +30,8 @@ const RESULT_CLASSES = [
   'silent',
 ];
 const PREREQUISITES = [
+  'explicit-tool-not-invoked',
+  'approved-grocery-intent',
   'complete-product-facts',
   'active-prediction-id',
   'explicit-household-context-request',
@@ -48,6 +50,8 @@ const PREREQUISITES = [
   'user-selected-product',
 ];
 const INVARIANTS = [
+  'bounded-noninvoked-correction',
+  'preserve-prior-successes',
   'atomic-catalog-and-stock-write',
   'no-grocery-mutation',
   'stable-confirmation-operation',
@@ -194,6 +198,35 @@ function validateCallOrder(scenario, path) {
     calls.includes(read) && calls.indexOf(read) < calls.indexOf(write);
   const hasPrerequisite = (prerequisite) =>
     scenario.prerequisites.includes(prerequisite);
+
+  if (scenario.safetyInvariants.includes('bounded-noninvoked-correction')) {
+    for (const prerequisite of [
+      'explicit-tool-not-invoked',
+      'approved-grocery-intent',
+    ]) {
+      if (!hasPrerequisite(prerequisite))
+        throw new Error(`${path} correction requires ${prerequisite}`);
+    }
+    if (
+      calls.length !== 1 ||
+      !['grocery_add', 'grocery_confirm_new_product'].includes(calls[0]) ||
+      scenario.resultClass !== 'success'
+    ) {
+      throw new Error(
+        `${path} correction must contain one corrected grocery call`,
+      );
+    }
+    for (const invariant of ['no-fact-invention', 'preserve-prior-successes']) {
+      if (!scenario.safetyInvariants.includes(invariant))
+        throw new Error(`${path} correction requires ${invariant}`);
+    }
+    if (
+      calls[0] === 'grocery_confirm_new_product' &&
+      !hasPrerequisite('complete-product-facts')
+    ) {
+      throw new Error(`${path} correction requires complete-product-facts`);
+    }
+  }
 
   if (
     calls.includes('grocery_remove') &&
