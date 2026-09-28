@@ -2185,6 +2185,11 @@
           "tool": "list_inventory",
           "argumentKeys": [],
           "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
         }
       ],
       "resultClass": "success",
@@ -2196,8 +2201,8 @@
       "row": [
         "Household inventory view",
         "The user asks what the household probably has.",
-        "Call `list_inventory({})` once; label `current` as estimated stock and keep `uncertain` separate.",
-        "Return only the materialized household view without treating omitted products as known absent."
+        "Call `list_inventory({})`, then `get_expiration_recommendations({})`; keep `current` and `uncertain` separate and append only populated expiry groups.",
+        "Do not treat omitted products as known absent or add a low-stock section or grocery mutation."
       ]
     },
     {
@@ -2238,6 +2243,11 @@
           "tool": "get_low_stock_predictions",
           "argumentKeys": [],
           "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
         }
       ],
       "resultClass": "success",
@@ -2249,8 +2259,164 @@
       "row": [
         "Combined grocery list and suggestions",
         "The user says, \"Show me the list.\"",
-        "Call `grocery_list({})` and `get_low_stock_predictions({})`; present committed items and suggestions as separate labeled groups.",
-        "No suggestion is represented as committed and no mutation occurs."
+        "Call `grocery_list({})`, `get_low_stock_predictions({})`, then `get_expiration_recommendations({})`; append populated expiry groups after the categorized list and suggestions.",
+        "Keep committed items, low-stock suggestions, and expiry advice separate; no mutation occurs."
+      ]
+    },
+    {
+      "id": "expiry-groups-and-multiple-purchases",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "list_inventory",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "no-mutation-from-read",
+        "preserve-returned-order",
+        "no-inventory-count-invention"
+      ],
+      "row": [
+        "Expiry groups with several purchases",
+        "The inventory read succeeds; expiry advice has an about-to-expire product and a possibly expired product with an older and newer purchase.",
+        "Append About to expire, then Possibly expired after inventory; show one entry per returned product with the earliest date, recorded or estimated source, confidence, and check-which-batch-remains caveat.",
+        "Suggest use or check soon without asserting an old batch is on hand or making a grocery write."
+      ]
+    },
+    {
+      "id": "empty-expiry-groups",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "empty",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-mutation-from-read",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "No eligible expiry advice",
+        "The grocery and low-stock reads succeed, but both expiry recommendation arrays are empty.",
+        "Show the normal categorized grocery and suggestion sections and omit both empty expiry headings.",
+        "Do not claim no household product can expire or add a grocery item."
+      ]
+    },
+    {
+      "id": "grocery-expiry-read-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-mutation-from-read",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Expiry advice unavailable with groceries",
+        "The grocery and low-stock reads succeed; the expiry recommendation read fails.",
+        "Present the committed and suggested groups normally, then say expiry advice is unavailable.",
+        "Do not say nothing is expiring, omit successful sections, or mutate groceries."
+      ]
+    },
+    {
+      "id": "inventory-expiry-read-failure",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "list_inventory",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": ["no-mutation-from-read", "preserve-returned-order"],
+      "row": [
+        "Expiry advice unavailable with inventory",
+        "The household inventory read succeeds; the expiry recommendation read fails.",
+        "Present current and uncertain inventory normally, then say expiry advice is unavailable.",
+        "Do not say nothing is expiring, omit successful inventory, or mutate groceries."
+      ]
+    },
+    {
+      "id": "depleted-product-outside-expiry-groups",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "grocery_list",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_low_stock_predictions",
+          "argumentKeys": [],
+          "enumValues": []
+        },
+        {
+          "tool": "get_expiration_recommendations",
+          "argumentKeys": [],
+          "enumValues": []
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "one-recommendation-read",
+        "no-mutation-from-read",
+        "preserve-returned-order"
+      ],
+      "row": [
+        "Depleted product is only a low-stock suggestion",
+        "A product with estimated zero stock appears in low-stock suggestions but is absent from both returned expiry arrays.",
+        "Keep its optional add-to-groceries suggestion separate and omit it from expiry groups.",
+        "Do not add it automatically or infer that an old batch remains."
       ]
     },
     {
@@ -2707,10 +2873,7 @@
     },
     {
       "id": "noninvoked-confirmation-correction",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
+      "platforms": ["hermes", "openclaw"],
       "prerequisites": [
         "explicit-tool-not-invoked",
         "approved-grocery-intent",
@@ -2750,14 +2913,8 @@
     },
     {
       "id": "noninvoked-grocery-quantity-correction",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
-      "prerequisites": [
-        "explicit-tool-not-invoked",
-        "approved-grocery-intent"
-      ],
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-tool-not-invoked", "approved-grocery-intent"],
       "calls": [
         {
           "tool": "grocery_add",
@@ -2784,13 +2941,8 @@
     },
     {
       "id": "noninvoked-correction-missing-facts",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
-      "prerequisites": [
-        "explicit-tool-not-invoked"
-      ],
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-tool-not-invoked"],
       "calls": [],
       "resultClass": "confirmation-required",
       "safetyInvariants": [
@@ -2807,14 +2959,8 @@
     },
     {
       "id": "noninvoked-correction-exhausted",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
-      "prerequisites": [
-        "explicit-tool-not-invoked",
-        "approved-grocery-intent"
-      ],
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["explicit-tool-not-invoked", "approved-grocery-intent"],
       "calls": [],
       "resultClass": "blocked",
       "safetyInvariants": [
@@ -2831,10 +2977,7 @@
     },
     {
       "id": "correction-after-prior-success",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
+      "platforms": ["hermes", "openclaw"],
       "prerequisites": [
         "explicit-tool-not-invoked",
         "approved-grocery-intent",
@@ -2845,10 +2988,7 @@
       "calls": [
         {
           "tool": "grocery_confirm_new_product",
-          "argumentKeys": [
-            "product",
-            "groceryItem"
-          ],
+          "argumentKeys": ["product", "groceryItem"],
           "enumValues": []
         }
       ],
@@ -2869,13 +3009,8 @@
     },
     {
       "id": "creation-policy-mismatch",
-      "platforms": [
-        "hermes",
-        "openclaw"
-      ],
-      "prerequisites": [
-        "prior-mutation-result"
-      ],
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["prior-mutation-result"],
       "calls": [],
       "resultClass": "confirmation-required",
       "safetyInvariants": [

@@ -241,18 +241,22 @@ describe('agent release contract', () => {
     );
   });
 
-  it('publishes the typed-argument recovery release with existing list features', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.7.1');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.17.1');
+  it('publishes additive expiration recommendations with existing list features', () => {
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.8.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.18.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',
         'materialized-inventory',
         'expiration-status-reads',
+        'expiration-recommendations',
         'category-aware-list-outputs',
       ]),
     );
     expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain('list_inventory');
+    expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain(
+      'get_expiration_recommendations',
+    );
     expect(AGENT_RELEASE_CONTRACT.requiredTools).toContain(
       'list_expiration_status',
     );

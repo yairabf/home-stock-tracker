@@ -1,4 +1,8 @@
 {
-  "status": "completed",
-  "activity": "Category-aware list outputs committed; awaiting merge approval"
+  "status": "waiting_for_input",
+  "activity": "Feature 19c archived and verified; awaiting squash-merge approval",
+  "skill": "complete",
+  "feature": "19c",
+  "reason": "Merge approval required by complete workflow",
+  "updated_at": "2026-09-28T13:23:26.000Z"
 }

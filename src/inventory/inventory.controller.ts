@@ -39,6 +39,8 @@ import { ExpirationBatchService } from './expiration-batch.service';
 import { RecordExpirationBatchDto } from './dto/record-expiration-batch.dto';
 import { ExpirationBatchResponseDto } from './dto/expiration-batch-response.dto';
 import { ExpirationStatusListResponseDto } from './dto/expiration-status-response.dto';
+import { ExpirationRecommendationService } from './expiration-recommendation.service';
+import { ExpirationRecommendationListResponseDto } from './dto/expiration-recommendation-response.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -47,6 +49,7 @@ export class InventoryController {
     private readonly predictionFeedbackService: PredictionFeedbackService,
     private readonly lowStockRecommendationService: LowStockRecommendationService,
     private readonly expirationBatchService: ExpirationBatchService,
+    private readonly expirationRecommendationService: ExpirationRecommendationService,
   ) {}
 
   @Get()
@@ -57,6 +60,13 @@ export class InventoryController {
   @Get('expiration')
   listExpirationStatuses(): Promise<ExpirationStatusListResponseDto> {
     return this.inventoryService.listExpirationStatuses();
+  }
+
+  @Get('expiration/recommendations')
+  async getExpirationRecommendations(): Promise<ExpirationRecommendationListResponseDto> {
+    return ExpirationRecommendationListResponseDto.fromDomain(
+      await this.expirationRecommendationService.getRecommendations(),
+    );
   }
 
   @Post('purchases/:purchaseEventId/expiration')

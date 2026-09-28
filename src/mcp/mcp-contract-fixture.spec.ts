@@ -1,5 +1,6 @@
 import type { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import type { ExpirationBatchService } from '../inventory/expiration-batch.service';
+import type { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -46,6 +47,7 @@ describe('MCP contract fixture', () => {
       {} as OperationalLogger,
       {} as StockProductConfirmationService,
       {} as ExpirationBatchService,
+      {} as ExpirationRecommendationService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -77,29 +79,23 @@ describe('MCP contract fixture', () => {
     );
   });
 
-  it('changes only the two grocery descriptions from contract 1.7.0', () => {
+  it('adds only the expiration recommendation tool after contract 1.7.1', () => {
     const previous = readMcpContractSnapshot(
       join(
         projectRoot,
-        'integrations/shared/home-stock-tracker/contracts/1.7.0/tools-list.json',
+        'integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
       ),
     );
-    const withoutDescriptions = (contract: McpContractSnapshot) =>
-      contract.tools.map(
-        ({ description: _description, ...definition }) => definition,
-      );
+    const previousNames = new Set(previous.tools.map(({ name }) => name));
 
-    expect(withoutDescriptions(snapshot)).toEqual(
-      withoutDescriptions(previous),
+    expect(snapshot.tools.filter(({ name }) => previousNames.has(name))).toEqual(
+      previous.tools,
     );
     expect(
       snapshot.tools
-        .filter(
-          (tool, index) =>
-            tool.description !== previous.tools[index].description,
-        )
+        .filter(({ name }) => !previousNames.has(name))
         .map(({ name }) => name),
-    ).toEqual(['grocery_add', 'grocery_confirm_new_product']);
+    ).toEqual(['get_expiration_recommendations']);
   });
 
   it('normalizes tool ordering before comparison', () => {

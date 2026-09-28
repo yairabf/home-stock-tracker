@@ -41,15 +41,15 @@ describe('executable agent scenario contract', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      'Validated 119 executable agent scenarios.',
+      'Validated 124 executable agent scenarios.',
     );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(119);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(119);
+    expect(fixture.scenarios).toHaveLength(124);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(124);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -102,7 +102,7 @@ describe('executable agent scenario contract', () => {
         './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json', 'utf8',
+        './integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json', 'utf8',
       ));
       const scenario = contract.scenarios.find(
         ({ id }) => id === 'noninvoked-confirmation-correction',
@@ -297,7 +297,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -332,7 +332,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -407,13 +407,17 @@ describe('executable agent scenario contract', () => {
       scenarios
         .get('combined-grocery-and-suggestions')
         ?.calls.map(({ tool }) => tool),
-    ).toEqual(['grocery_list', 'get_low_stock_predictions']);
+    ).toEqual([
+      'grocery_list',
+      'get_low_stock_predictions',
+      'get_expiration_recommendations',
+    ]);
     expect(
       scenarios.get('confirmed-suggestion-addition')?.prerequisites,
     ).toContain('explicit-user-confirmation');
     expect(
       scenarios.get('household-inventory-view')?.calls.map(({ tool }) => tool),
-    ).toEqual(['list_inventory']);
+    ).toEqual(['list_inventory', 'get_expiration_recommendations']);
     expect(scenarios.get('quantity-free-stock-confirmation')?.calls).toEqual(
       [],
     );
@@ -424,6 +428,89 @@ describe('executable agent scenario contract', () => {
     ]) {
       expect(scenarios.get(id)?.calls[0].tool).toBe('update_inventory');
     }
+  });
+
+  it('keeps expiry reads after successful primary reads and out of mutations', () => {
+    const groceryPath = [
+      'grocery_list',
+      'get_low_stock_predictions',
+      'get_expiration_recommendations',
+    ];
+    const inventoryPath = ['list_inventory', 'get_expiration_recommendations'];
+    for (const id of [
+      'combined-grocery-and-suggestions',
+      'empty-expiry-groups',
+      'grocery-expiry-read-failure',
+      'depleted-product-outside-expiry-groups',
+    ]) {
+      const scenario = scenarios.get(id);
+      expect(scenario?.calls.map(({ tool }) => tool)).toEqual(groceryPath);
+      expect(scenario?.safetyInvariants).toContain('no-mutation-from-read');
+    }
+    for (const id of [
+      'household-inventory-view',
+      'expiry-groups-and-multiple-purchases',
+      'inventory-expiry-read-failure',
+    ]) {
+      const scenario = scenarios.get(id);
+      expect(scenario?.calls.map(({ tool }) => tool)).toEqual(inventoryPath);
+      expect(scenario?.safetyInvariants).toContain('no-mutation-from-read');
+    }
+    expect(scenarios.get('empty-expiry-groups')?.row[2]).toContain(
+      'omit both empty expiry headings',
+    );
+    expect(
+      scenarios.get('expiry-groups-and-multiple-purchases')?.row[2],
+    ).toContain('check-which-batch-remains caveat');
+    for (const id of [
+      'grocery-expiry-read-failure',
+      'inventory-expiry-read-failure',
+    ]) {
+      expect(scenarios.get(id)?.row[2]).toContain(
+        'expiry advice is unavailable',
+      );
+      expect(scenarios.get(id)?.row[3]).toContain(
+        'Do not say nothing is expiring',
+      );
+    }
+    expect(
+      scenarios.get('depleted-product-outside-expiry-groups')?.row[2],
+    ).toContain('omit it from expiry groups');
+  });
+
+  it.each([
+    [
+      'an out-of-order expiry read',
+      'scenario.calls.reverse();',
+      'expiry read must follow the complete primary read path',
+    ],
+    [
+      'a grocery write after an expiry read',
+      "scenario.calls.push({ tool: 'grocery_add', argumentKeys: ['productName', 'groceryItem'], enumValues: [] });",
+      'expiry read must follow the complete primary read path',
+    ],
+    [
+      'a missing read-only invariant',
+      "scenario.safetyInvariants = scenario.safetyInvariants.filter((value) => value !== 'no-mutation-from-read');",
+      'expiry read must not cause a mutation',
+    ],
+  ])('rejects %s', (_label, mutation, expectedError) => {
+    const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json', 'utf8'));
+      const scenario = contract.scenarios.find(({ id }) => id === 'combined-grocery-and-suggestions');
+      ${mutation}
+      validateScenarioContract(contract, tools);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', script],
+      { cwd: root, encoding: 'utf8' },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(expectedError);
   });
 
   it('encodes atomic batch purchase success and stop paths', () => {
@@ -476,7 +563,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -519,7 +606,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
       ${mutation}
       validateScenarioContract(contract, tools);

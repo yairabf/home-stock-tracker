@@ -123,7 +123,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.17.1');
+      expect(skill).toContain('version: 1.18.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -160,12 +160,18 @@ describe('agent inventory skill contract', () => {
     ({ skill, scenarios }) => {
       expect(skill).toContain('exact\nreturned `category`');
       expect(skill).toContain('`ללא קטגוריה`');
-      expect(skill).toContain('Never derive, translate, normalize, or choose a');
+      expect(skill).toContain(
+        'Never derive, translate, normalize, or choose a',
+      );
       expect(skill).toContain('Category grouping never merges those top-level');
       expect(skill).toContain('one\nitem per line, never a Markdown table');
       expect(skill).toContain('quantity and unit at\nthe end');
-      expect(scenarios).toContain('groups only by each exact returned `category`');
-      expect(scenarios).toContain('without Markdown tables or\n  padded columns');
+      expect(scenarios).toContain(
+        'groups only by each exact returned `category`',
+      );
+      expect(scenarios).toContain(
+        'without Markdown tables or\n  padded columns',
+      );
     },
   );
 
@@ -176,7 +182,7 @@ describe('agent inventory skill contract', () => {
       expect(skill).toContain('The batch is all-or-nothing.');
       expect(skill).toContain("Preserve the user's item order");
       expect(skill).toContain('do not retry automatically');
-      expect(skill).toContain('committed grocery items and suggested items');
+      expect(skill).toMatch(/committed grocery items and\s+suggested items/);
       expect(skill).toMatch(
         /Never\s+present a suggestion as already committed\./,
       );
@@ -191,7 +197,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform limits household context reads to explicit questions',
     ({ skill, scenarios }) => {
-      expect(skill).toContain('version: 1.17.1');
+      expect(skill).toContain('version: 1.18.0');
       expect(skill).toMatch(/\| `get_household_context`\s+\|/);
       expect(skill).toContain(
         'Do not fetch household context as a hidden prerequisite',
@@ -272,7 +278,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.17.1');
+      expect(skill).toContain('version: 1.18.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -299,7 +305,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents actual purchase completion without invention',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 1.17.1');
+      expect(skill).toContain('version: 1.18.0');
       expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
       expect(skill).toContain('preferred inclusive `items` array');
       expect(skill).toContain('`actualQuantity`');
@@ -332,6 +338,31 @@ describe('agent inventory skill contract', () => {
       expect(scenarios).toContain('Expiration status view');
       expect(scenarios).toContain('Do not claim a batch is still on hand');
       expect(readme).toContain('`list_expiration_status`');
+    },
+  );
+
+  it.each(bundles)(
+    '$platform appends confidence-aware expiry advice without a grocery write',
+    ({ skill, scenarios }) => {
+      expect(skill).toMatch(/\| `get_expiration_recommendations`\s+\|/);
+      expect(skill).toContain(
+        '`grocery_list({})`, then `get_low_stock_predictions({})`, then',
+      );
+      expect(skill).toContain('`list_inventory({})`, then');
+      expect(skill).toContain('Append `About to expire`');
+      expect(skill).toContain('`Possibly expired`');
+      expect(skill).toContain('Omit an empty expiry heading');
+      expect(skill).toContain('`confidenceScore`');
+      expect(skill).toContain('check which batch remains');
+      expect(skill).toContain('expiry advice is unavailable');
+      expect(skill).toContain('a read never writes the grocery list');
+      expect(scenarios).toContain('| Expiry groups with several purchases');
+      expect(scenarios).toContain('| No eligible expiry advice');
+      expect(scenarios).toContain('| Expiry advice unavailable with groceries');
+      expect(scenarios).toContain('| Expiry advice unavailable with inventory');
+      expect(scenarios).toContain(
+        '| Depleted product is only a low-stock suggestion',
+      );
     },
   );
 

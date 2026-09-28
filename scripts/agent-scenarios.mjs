@@ -199,6 +199,24 @@ function validateCallOrder(scenario, path) {
   const hasPrerequisite = (prerequisite) =>
     scenario.prerequisites.includes(prerequisite);
 
+  if (calls.includes('get_expiration_recommendations')) {
+    const expected = calls.includes('grocery_list')
+      ? [
+          'grocery_list',
+          'get_low_stock_predictions',
+          'get_expiration_recommendations',
+        ]
+      : ['list_inventory', 'get_expiration_recommendations'];
+    if (JSON.stringify(calls) !== JSON.stringify(expected)) {
+      throw new Error(
+        `${path} expiry read must follow the complete primary read path`,
+      );
+    }
+    if (!scenario.safetyInvariants.includes('no-mutation-from-read')) {
+      throw new Error(`${path} expiry read must not cause a mutation`);
+    }
+  }
+
   if (scenario.safetyInvariants.includes('bounded-noninvoked-correction')) {
     for (const prerequisite of [
       'explicit-tool-not-invoked',

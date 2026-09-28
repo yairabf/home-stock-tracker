@@ -1,5 +1,6 @@
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { ExpirationBatchService } from '../inventory/expiration-batch.service';
+import { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
@@ -91,6 +92,9 @@ describe('McpServerFactory grocery tools', () => {
   let recommendationService: jest.Mocked<
     Pick<LowStockRecommendationService, 'getRecommendations'>
   >;
+  let expirationRecommendationService: jest.Mocked<
+    Pick<ExpirationRecommendationService, 'getRecommendations'>
+  >;
   let predictionFeedbackService: jest.Mocked<
     Pick<PredictionFeedbackService, 'submitFeedback'>
   >;
@@ -128,6 +132,7 @@ describe('McpServerFactory grocery tools', () => {
       completeGroceryPurchase: jest.fn(),
     };
     recommendationService = { getRecommendations: jest.fn() };
+    expirationRecommendationService = { getRecommendations: jest.fn() };
     predictionFeedbackService = { submitFeedback: jest.fn() };
     stockConfirmation = { confirm: jest.fn() };
     householdService = { getContext: jest.fn() };
@@ -143,6 +148,7 @@ describe('McpServerFactory grocery tools', () => {
       operationalLogger as OperationalLogger,
       stockConfirmation as StockProductConfirmationService,
       { record: jest.fn() } as unknown as ExpirationBatchService,
+      expirationRecommendationService as ExpirationRecommendationService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -211,6 +217,7 @@ describe('McpServerFactory grocery tools', () => {
       'get_inventory',
       'list_inventory',
       'list_expiration_status',
+      'get_expiration_recommendations',
       'list_inventory_events',
       'product_add_alias',
       'record_purchase',
@@ -1752,6 +1759,76 @@ describe('McpServerFactory grocery tools', () => {
 
     expect(result.isError).toBe(true);
     expect(inventoryService.listExpirationStatuses).not.toHaveBeenCalled();
+  });
+
+  it('publishes and dispatches a read-only expiration recommendation separately', async () => {
+    const purchasedAt = new Date('2026-09-20T10:00:00.000Z');
+    const expiresAt = new Date('2026-09-30T10:00:00.000Z');
+    const evaluatedAt = new Date('2026-09-28T10:00:00.000Z');
+    expirationRecommendationService.getRecommendations.mockResolvedValue({
+      evaluatedAt,
+      expiringSoon: [
+        {
+          productId: item.productId,
+          productName: 'Milk',
+          category: 'dairy',
+          purchaseEventId: item.id,
+          purchasedAt,
+          expiresAt,
+          expirySource: 'explicit',
+          stockConfidence: 0.8,
+          stockEvaluatedAt: evaluatedAt,
+          expiryConfidence: 1,
+          confidenceScore: 0.8,
+          batchPresenceUnconfirmed: true,
+        },
+      ],
+      possiblyExpired: [],
+    });
+
+    const tool = (await client.listTools()).tools.find(
+      ({ name }) => name === 'get_expiration_recommendations',
+    );
+    expect(tool?.annotations).toMatchObject({
+      readOnlyHint: true,
+      destructiveHint: false,
+    });
+    expect(tool?.inputSchema).toMatchObject({
+      type: 'object',
+      additionalProperties: false,
+    });
+
+    const result = await client.callTool({
+      name: 'get_expiration_recommendations',
+      arguments: {},
+    });
+
+    expect(result.isError).not.toBe(true);
+    expect(result.structuredContent).toEqual({
+      evaluatedAt: evaluatedAt.toISOString(),
+      expiringSoon: [
+        expect.objectContaining({
+          productId: item.productId,
+          expiresAt: expiresAt.toISOString(),
+          confidenceScore: 0.8,
+          batchPresenceUnconfirmed: true,
+        }),
+      ],
+      possiblyExpired: [],
+    });
+    expect(expirationRecommendationService.getRecommendations).toHaveBeenCalledTimes(1);
+    expect(inventoryService.listExpirationStatuses).not.toHaveBeenCalled();
+    expect(recommendationService.getRecommendations).not.toHaveBeenCalled();
+  });
+
+  it('rejects expiration recommendation arguments before dispatch', async () => {
+    const result = await client.callTool({
+      name: 'get_expiration_recommendations',
+      arguments: { limit: 10 },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(expirationRecommendationService.getRecommendations).not.toHaveBeenCalled();
   });
 
   it('lists filtered inventory history without exposing metadata', async () => {

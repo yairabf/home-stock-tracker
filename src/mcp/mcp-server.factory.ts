@@ -52,6 +52,8 @@ import {
 import { MAX_BATCH_PURCHASE_ITEMS } from '../inventory/types/purchase-contract';
 import { ExpirationBatchService } from '../inventory/expiration-batch.service';
 import { ExpirationBatchResponseDto } from '../inventory/dto/expiration-batch-response.dto';
+import { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
+import { ExpirationRecommendationListResponseDto } from '../inventory/dto/expiration-recommendation-response.dto';
 
 const groceryItemOutputSchema = z.object({
   id: z.string(),
@@ -397,6 +399,31 @@ const expirationStatusListOutputSchema = z
   .object({ items: z.array(expirationStatusItemOutputSchema) })
   .strict();
 
+const expirationRecommendationItemOutputSchema = z
+  .object({
+    productId: z.uuid(),
+    productName: z.string(),
+    category: z.string().nullable(),
+    purchaseEventId: z.uuid(),
+    purchasedAt: z.iso.datetime({ offset: true }),
+    expiresAt: z.iso.datetime({ offset: true }),
+    expirySource: z.enum(['explicit', 'shelf_life_policy']),
+    stockConfidence: z.number().finite().min(0).max(1),
+    stockEvaluatedAt: z.iso.datetime({ offset: true }),
+    expiryConfidence: z.number().finite().min(0).max(1),
+    confidenceScore: z.number().finite().min(0).max(1),
+    batchPresenceUnconfirmed: z.literal(true),
+  })
+  .strict();
+
+const expirationRecommendationListOutputSchema = z
+  .object({
+    evaluatedAt: z.iso.datetime({ offset: true }),
+    expiringSoon: z.array(expirationRecommendationItemOutputSchema),
+    possiblyExpired: z.array(expirationRecommendationItemOutputSchema),
+  })
+  .strict();
+
 const stockProjectionOutputSchema = z.object({
   productId: z.string(),
   unit: z.string(),
@@ -639,6 +666,7 @@ export class McpServerFactory {
     private readonly operationalLogger: OperationalLogger,
     private readonly stockConfirmation: StockProductConfirmationService,
     private readonly expirationBatchService: ExpirationBatchService,
+    private readonly expirationRecommendationService: ExpirationRecommendationService,
   ) {}
 
   create(): McpServer {
@@ -1030,6 +1058,30 @@ export class McpServerFactory {
       () =>
         this.runTool('list_expiration_status', async () =>
           this.toolResult(await this.inventoryService.listExpirationStatuses()),
+        ),
+    );
+
+    server.registerTool(
+      'get_expiration_recommendations',
+      {
+        description:
+          'Read product-level about-to-expire and possibly-expired suggestions from purchase dates, expiry evidence, and materialized stock. Dates and stock are estimates unless explicitly recorded; an individual batch is never confirmed on hand. Does not add groceries or change stock.',
+        inputSchema: z.object({}).strict(),
+        outputSchema: expirationRecommendationListOutputSchema,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+      },
+      () =>
+        this.runTool('get_expiration_recommendations', async () =>
+          this.toolResult(
+            ExpirationRecommendationListResponseDto.fromDomain(
+              await this.expirationRecommendationService.getRecommendations(),
+            ),
+          ),
         ),
     );
 

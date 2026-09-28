@@ -10,6 +10,7 @@ import { InventoryEventType } from '../generated/prisma/enums';
 import { PredictionFeedbackOutcome } from './dto/prediction-feedback.dto';
 import { StockMutationOperation } from './types/stock-mutation';
 import { ExpirationBatchService } from './expiration-batch.service';
+import { ExpirationRecommendationService } from './expiration-recommendation.service';
 
 describe('InventoryController low-stock recommendations', () => {
   let controller: InventoryController;
@@ -23,6 +24,7 @@ describe('InventoryController low-stock recommendations', () => {
         { provide: InventoryService, useValue: {} },
         { provide: PredictionFeedbackService, useValue: {} },
         { provide: ExpirationBatchService, useValue: {} },
+        { provide: ExpirationRecommendationService, useValue: {} },
         {
           provide: LowStockRecommendationService,
           useValue: recommendationService,
@@ -80,6 +82,7 @@ describe('InventoryController low-stock recommendations', () => {
 });
 
 describe('InventoryController provenance', () => {
+  const expirationRecommendationService = { getRecommendations: jest.fn() };
   const inventoryService = {
     recordEvent: jest.fn(),
     recordPurchase: jest.fn(),
@@ -97,6 +100,7 @@ describe('InventoryController provenance', () => {
     predictionFeedbackService as unknown as PredictionFeedbackService,
     {} as LowStockRecommendationService,
     {} as ExpirationBatchService,
+    expirationRecommendationService as unknown as ExpirationRecommendationService,
   );
 
   beforeEach(() => jest.clearAllMocks());
@@ -135,6 +139,36 @@ describe('InventoryController provenance', () => {
         InventoryController.prototype.listExpirationStatuses,
       ),
     ).toBe('expiration');
+  });
+
+  it('returns the separate expiration recommendations without changing inventory reads', async () => {
+    const evaluatedAt = new Date('2026-09-28T12:00:00.000Z');
+    expirationRecommendationService.getRecommendations.mockResolvedValue({
+      evaluatedAt,
+      expiringSoon: [],
+      possiblyExpired: [],
+    });
+
+    await expect(controller.getExpirationRecommendations()).resolves.toEqual({
+      evaluatedAt,
+      expiringSoon: [],
+      possiblyExpired: [],
+    });
+    expect(expirationRecommendationService.getRecommendations).toHaveBeenCalledTimes(1);
+    expect(inventoryService.listExpirationStatuses).not.toHaveBeenCalled();
+    expect(inventoryService.listInventory).not.toHaveBeenCalled();
+    expect(
+      Reflect.getMetadata(
+        PATH_METADATA,
+        InventoryController.prototype.getExpirationRecommendations,
+      ),
+    ).toBe('expiration/recommendations');
+    expect(
+      Reflect.getMetadata(
+        METHOD_METADATA,
+        InventoryController.prototype.getExpirationRecommendations,
+      ),
+    ).toBe(RequestMethod.GET);
   });
 
   it('supplies api provenance to inventory event writes', async () => {

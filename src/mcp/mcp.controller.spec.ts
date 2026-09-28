@@ -27,6 +27,7 @@ import { PredictionFeedbackService } from '../inventory/prediction-feedback.serv
 import { MCP_SERVER_INFO } from './agent-release-contract.generated';
 import { HouseholdService } from '../household/household.service';
 import { ExpirationBatchService } from '../inventory/expiration-batch.service';
+import { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
 
 @Controller()
 class TestRestController {
@@ -51,6 +52,7 @@ describe('McpController', () => {
     listItems: jest.fn(),
   };
   const recommendationService = { getRecommendations: jest.fn() };
+  const expirationRecommendationService = { getRecommendations: jest.fn() };
   const productService = { addAlias: jest.fn(), findOne: jest.fn() };
   const productSearchService = { search: jest.fn() };
   const inventoryService = {
@@ -111,6 +113,10 @@ describe('McpController', () => {
           provide: ExpirationBatchService,
           useValue: { record: jest.fn() },
         },
+        {
+          provide: ExpirationRecommendationService,
+          useValue: expirationRecommendationService,
+        },
       ],
     }).compile();
 
@@ -160,6 +166,7 @@ describe('McpController', () => {
         'get_inventory',
         'list_inventory',
         'list_expiration_status',
+        'get_expiration_recommendations',
         'list_inventory_events',
         'product_add_alias',
         'record_purchase',
@@ -294,6 +301,25 @@ describe('McpController', () => {
       await expect(
         client.callTool({ name: 'list_expiration_status', arguments: {} }),
       ).resolves.toMatchObject({ structuredContent: { items: [] } });
+
+      const evaluatedAt = new Date('2026-09-28T12:00:00.000Z');
+      expirationRecommendationService.getRecommendations.mockResolvedValue({
+        evaluatedAt,
+        expiringSoon: [],
+        possiblyExpired: [],
+      });
+      await expect(
+        client.callTool({
+          name: 'get_expiration_recommendations',
+          arguments: {},
+        }),
+      ).resolves.toMatchObject({
+        structuredContent: {
+          evaluatedAt: evaluatedAt.toISOString(),
+          expiringSoon: [],
+          possiblyExpired: [],
+        },
+      });
 
       const groceryItemId = '00000000-0000-4000-8000-000000000001';
       inventoryService.completeGroceryPurchase.mockResolvedValue({
