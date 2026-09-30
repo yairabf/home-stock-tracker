@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { PrismaService } from './../src/prisma/prisma.service';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { AUTH_TEST_BYPASS } from './auth-test-bypass';

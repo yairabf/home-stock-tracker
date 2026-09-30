@@ -61,3 +61,10 @@
 - [x] 34. **Online grocery store integration scaffold** - provide a repository-owned, fail-closed tutorial and generator for isolated vendor-cart skills that consume the existing grocery MCP contract without changing Home Stock Tracker domain behavior ✓ 2026-09-08
   - [x] 34a. **Store-skill contract and tutorial** - document the portable integration bundle, isolated browser architecture, private login handoff, exact product resolution, idempotent adapter contract, and live verification matrix ✓ 2026-09-08
   - [x] 34b. **Fail-closed store-skill scaffold** - generate an isolated starter skill with a non-secret preference registry, validation, overwrite protection, and automated scaffold tests ✓ 2026-09-08
+
+- [ ] 37. **Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation
+  - [x] 37a. **Jev transport foundation** - validated configuration, bounded HTTP requests, response validation, and failure handling ✓ 2026-09-30
+  - [ ] 37b. **Jev product matching** - task-specific advisor routing, candidate decisions, confirmation preservation, and provenance
+  - [ ] 37c. **Product-matching evaluation** - labeled fixtures, held-out metrics, setup, and rollout/rollback guidance
+  - [ ] 37d. **Jev stock prediction** - advisor routing, zero-history guard, deterministic precedence, conservative confidence, and provenance
+  - [ ] 37e. **Stock-prediction evaluation** - historical evidence replay, outcome metrics, and rollout/rollback guidance

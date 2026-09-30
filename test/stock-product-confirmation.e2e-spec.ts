@@ -8,7 +8,7 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { StockProductConfirmationService } from '../src/inventory/stock-product-confirmation.service';
 import { StockLedgerService } from '../src/inventory/stock-ledger.service';

@@ -105,6 +105,7 @@ Post-MVP extensions currently planned after the initial product-name namespace:
 - Require every grocery-list line to have a positive quantity, defaulting an omitted quantity to `1` only when a new line is created.
 - Expose an absolute quantity-setting operation with optimistic concurrency so agents and other clients can apply an explicit final quantity without server-side arithmetic.
 - Provide a portable external online-grocery store adapter scaffold and tutorial. Store authentication, catalog search, browser automation, carts, and checkout remain outside Home Stock Tracker; no specific vendor implementation is included.
+- Use TypeSafe Jev for bounded product matching and stock-state decisions, introducing each task only after evaluation while retaining OpenAI for generated product metadata and shelf-life inference.
 
 Explicit MVP exclusions:
 
@@ -337,10 +338,14 @@ Hermes should not contain business rules that belong in the inventory service.
 
 ### LLM Integration
 
-Define a provider-neutral LLM interface selected through dependency injection and
-`LLM_PROVIDER`. Product classification and prediction logic must depend only on
-that interface, never on a provider SDK. Each provider integration owns its API
-request, authentication, structured-output mechanism, and error translation.
+Define a provider-neutral structured-generation interface selected through
+dependency injection and `LLM_PROVIDER`. Product classification and shelf-life
+inference use this interface. Product resolution and stock reasoning use narrow
+injectable advisor interfaces selected independently through
+`PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both task selectors
+default to `openai`; TypeSafe Jev adapters handle bounded decisions. Domain
+services depend on these interfaces. Each adapter owns authentication, request
+mapping, response validation, and error translation.
 
 Use OpenAI as the first adapter through the OpenAI Responses API with structured
 outputs. Keep the model configurable through `LLM_MODEL`; the initial default is
@@ -355,6 +360,8 @@ Use dedicated abstractions such as:
 LlmProvider
 PredictionEngine
 ProductClassifier
+ProductResolutionAdvisor
+StockPredictionAdvisor
 
 ```
 
@@ -618,6 +625,10 @@ DATABASE_URL
 LLM_PROVIDER
 OPENAI_API_KEY
 LLM_MODEL
+PRODUCT_RESOLUTION_PROVIDER
+STOCK_PREDICTION_PROVIDER
+TYPESAFE_API_KEY
+JEV_MODEL
 
 MCP_ENABLED
 
@@ -640,6 +651,10 @@ PREDICTION_LLM_ENABLED
 `LLM_PROVIDER` is initially `openai`, and `LLM_MODEL` defaults to
 `gpt-5.6-sol`. Both remain explicit configuration so the integration can evolve
 without coupling domain services to OpenAI.
+
+Both task selectors accept `openai` or `typesafe` and default to `openai`.
+Selecting TypeSafe requires its private API key and an explicitly pinned supported
+Jev model. OpenAI configuration remains required for generative tasks.
 
 Secrets must never be committed to the repository.
 

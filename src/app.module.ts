@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type DynamicModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -15,6 +15,8 @@ import { ServiceAuthGuard } from './auth/service-auth.guard';
 import { ObservabilityModule } from './observability/observability.module';
 import { HealthModule } from './health/health.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import type { ModelConfig } from './config/application-config';
+import { ModelConfigModule } from './config/model-config.module';
 
 @Module({
   imports: [
@@ -40,4 +42,11 @@ import { ScheduleModule } from '@nestjs/schedule';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static register(modelConfig: ModelConfig): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [ModelConfigModule.register(modelConfig)],
+    };
+  }
+}

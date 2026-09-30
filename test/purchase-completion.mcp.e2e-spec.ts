@@ -9,7 +9,7 @@ import { Test } from '@nestjs/testing';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import {
   GroceryItemSource,
   GroceryItemStatus,

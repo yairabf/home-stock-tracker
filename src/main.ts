@@ -7,7 +7,7 @@ import { loadApplicationConfig } from './config/application-config';
 
 async function bootstrap() {
   const config = loadApplicationConfig();
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(AppModule.register(config), {
     logger: createApplicationLogger(config.logLevel),
   });
   app.setGlobalPrefix('api/v1', {

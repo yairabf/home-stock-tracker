@@ -4,7 +4,7 @@ import { type INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { LLM_PROVIDER, type LlmProvider } from '../src/llm/llm-provider';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ProductSearchService } from '../src/product/product-search.service';

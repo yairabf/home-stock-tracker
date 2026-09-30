@@ -2,7 +2,7 @@ import { type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { AppService } from '../src/app.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { InventoryEventType, ProductType } from '../src/generated/prisma/enums';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';

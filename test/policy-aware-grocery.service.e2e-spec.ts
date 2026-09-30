@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { GroceryItemSource, ProductType } from '../src/generated/prisma/enums';
 import { GroceryService } from '../src/grocery/grocery.service';
 import type { ConfirmNewProductGroceryAddition } from '../src/grocery/types/confirmed-grocery-catalog-decision';

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { LLM_PROVIDER, type LlmProvider } from '../src/llm/llm-provider';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { ProductResolutionService } from '../src/product/product-resolution.service';

@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { ProductNameKind } from '../src/generated/prisma/enums';
 import { PrismaService } from '../src/prisma/prisma.service';

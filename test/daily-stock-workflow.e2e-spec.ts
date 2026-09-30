@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import { ServiceAuthGuard } from '../src/auth/service-auth.guard';
 import { LLM_PROVIDER, type LlmProvider } from '../src/llm/llm-provider';
 import { PrismaService } from '../src/prisma/prisma.service';

@@ -6,16 +6,25 @@ const DEFAULT_PORT = 3000;
 const DEFAULT_LOG_LEVEL = 'log';
 const DEFAULT_LLM_PROVIDER = 'openai';
 
-export interface ApplicationConfig {
+export type DecisionProvider = 'openai' | 'typesafe';
+
+export interface ModelConfig {
+  llmProvider: 'openai';
+  llmModel: string;
+  openAiApiKey?: string;
+  productResolutionProvider: DecisionProvider;
+  stockPredictionProvider: DecisionProvider;
+  typesafeApiKey?: string;
+  jevModel?: string;
+}
+
+export interface ApplicationConfig extends ModelConfig {
   nodeEnv?: string;
   port: number;
   databaseUrl: string;
   apiAuthToken: string;
   logLevel: string;
   mcpEnabled: boolean;
-  llmProvider: string;
-  llmModel: string;
-  openAiApiKey?: string;
   stockWorkflow: StockWorkflowConfig;
 }
 
@@ -48,6 +57,22 @@ export function loadApplicationConfig(
     'MCP_ENABLED',
     false,
   );
+  const modelConfig = loadModelConfig(environment);
+  const stockWorkflow = loadStockWorkflowConfig(environment);
+
+  return {
+    nodeEnv,
+    port,
+    databaseUrl,
+    apiAuthToken,
+    logLevel,
+    mcpEnabled,
+    ...modelConfig,
+    stockWorkflow,
+  };
+}
+
+function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
   const llmProvider =
     optionalTrimmed(environment.LLM_PROVIDER, 'LLM_PROVIDER') ??
     DEFAULT_LLM_PROVIDER;
@@ -62,24 +87,87 @@ export function loadApplicationConfig(
     environment.OPENAI_API_KEY,
     'OPENAI_API_KEY',
   );
-  const stockWorkflow = loadStockWorkflowConfig(environment);
-
-  if (llmProvider === 'openai' && !openAiApiKey) {
+  if (!openAiApiKey) {
     throw new Error('OPENAI_API_KEY is required when LLM_PROVIDER is openai');
   }
 
+  const productResolutionProvider = parseDecisionProvider(
+    environment.PRODUCT_RESOLUTION_PROVIDER,
+    'PRODUCT_RESOLUTION_PROVIDER',
+  );
+  const stockPredictionProvider = parseDecisionProvider(
+    environment.STOCK_PREDICTION_PROVIDER,
+    'STOCK_PREDICTION_PROVIDER',
+  );
+  const typesafeApiKey = optionalTrimmed(
+    environment.TYPESAFE_API_KEY,
+    'TYPESAFE_API_KEY',
+  );
+  const jevModel = optionalTrimmed(environment.JEV_MODEL, 'JEV_MODEL');
+  if (jevModel !== undefined && !/^jev-\d+\.\d+\.\d+$/.test(jevModel)) {
+    throw new Error(
+      'JEV_MODEL must be a versioned ID: jev-<major>.<minor>.<patch>',
+    );
+  }
+  validateDecisionCapabilities(
+    productResolutionProvider,
+    stockPredictionProvider,
+    typesafeApiKey,
+    jevModel,
+  );
+
   return {
-    nodeEnv,
-    port,
-    databaseUrl,
-    apiAuthToken,
-    logLevel,
-    mcpEnabled,
     llmProvider,
     llmModel,
     openAiApiKey,
-    stockWorkflow,
+    productResolutionProvider,
+    stockPredictionProvider,
+    typesafeApiKey,
+    jevModel,
   };
+}
+
+function parseDecisionProvider(
+  value: string | undefined,
+  name: string,
+): DecisionProvider {
+  const provider = optionalTrimmed(value, name) ?? 'openai';
+  if (provider !== 'openai' && provider !== 'typesafe') {
+    throw new Error(`${name} must be openai or typesafe`);
+  }
+  return provider;
+}
+
+function validateDecisionCapabilities(
+  productResolutionProvider: DecisionProvider,
+  stockPredictionProvider: DecisionProvider,
+  typesafeApiKey: string | undefined,
+  jevModel: string | undefined,
+): void {
+  if (
+    productResolutionProvider !== 'typesafe' &&
+    stockPredictionProvider !== 'typesafe'
+  ) {
+    return;
+  }
+  if (!typesafeApiKey) {
+    throw new Error(
+      'TYPESAFE_API_KEY is required when a task provider is typesafe',
+    );
+  }
+  if (!jevModel) {
+    throw new Error('JEV_MODEL is required when a task provider is typesafe');
+  }
+  if (productResolutionProvider === 'typesafe') {
+    throw new Error(
+      'PRODUCT_RESOLUTION_PROVIDER typesafe adapter is not available',
+    );
+  }
+  if (stockPredictionProvider === 'typesafe') {
+    throw new Error(
+      'STOCK_PREDICTION_PROVIDER typesafe adapter is not available',
+    );
+  }
 }
 
 export function loadStockWorkflowConfig(

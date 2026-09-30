@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { type INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { TEST_APP_MODULE as AppModule } from './app-module-fixture';
 import {
   PREDICTION_ENGINE,
   type PredictionEngine,
