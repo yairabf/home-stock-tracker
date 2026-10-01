@@ -2,9 +2,14 @@
   "status": "ready",
   "command": "complete",
   "skill": "complete",
-  "feature": "37b",
-  "activity": "Feature 37b archived; completion commit prepared for merge approval",
-  "updated_at": "2026-09-30T17:37:54.806777+00:00",
-  "reason": "Complete skill requires explicit approval before squash merge",
-  "gate": "Final npm run verify passed (1328 tests and build)"
+  "feature": "37c",
+  "boundary": "reviewed",
+  "activity": "37b and 37c local squash merges approved and verified; push approval pending",
+  "updated_at": "2026-10-01T09:45:54.273105+00:00",
+  "gate": "Verify: 84 suites / 1397 tests and build passed; contract: 124 scenarios / 6 suites / 79 tests passed",
+  "progress": {
+    "completed": 6,
+    "total": 6
+  },
+  "next_action": "Ask for separate approval to push local main"
 }

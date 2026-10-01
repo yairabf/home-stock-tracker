@@ -210,3 +210,119 @@ If explicitly selected matching needs reverting, set
 `PRODUCT_RESOLUTION_PROVIDER=openai` and restart the backend. Preserve existing
 TypeSafe logs; no data deletion or reclassification is needed. Enabling matching
 in a real runtime remains a separate operator action after 37c evaluation.
+
+## Product-matching evaluation
+
+Feature 37c adds a local CLI. It never bootstraps the application, connects to
+PostgreSQL, writes inference logs or changes runtime provider selectors. The
+default mode requires an explicit offline replay file. Live requests require
+`--live`; credentials alone never trigger a provider request.
+
+Install the project's existing dependencies and generate Prisma types through
+the normal project setup. No new package or database is required for evaluation.
+From the repository root:
+
+```bash
+mkdir -p evaluation/product-matching/reports
+npm run eval:product-matching -- --recorded evaluation/product-matching/recorded-smoke.v1.json --output evaluation/product-matching/reports/offline.json
+```
+
+Output paths must be new; the CLI creates reports with mode 0600 and refuses
+overwriting an existing file. Local reports are ignored by Git. The supplied
+replay deliberately contains synthetic perfect answers: its 60/60 matching
+precision is harness evidence, not live model accuracy. Output is explicitly
+`offline`, with launch evidence `inconclusive`.
+
+Review [the corpus and label-review checklist](../evaluation/product-matching/README.md)
+before live evaluation. All initial labels are authored and unreviewed; do not
+mark them reviewed without a separate person's actual review. Dataset and
+selected-input hashes bind replay files and reports to the frozen inputs.
+
+### Private live setup
+
+Obtain a TypeSafe credential through your private account setup and store it as
+`TYPESAFE_API_KEY` in the invoking process environment. Set `JEV_MODEL` to a pinned
+version your account supports. The CLI accepts only `jev-<major>.<minor>.<patch>`;
+it deliberately rejects moving aliases. On 2026-10-01 the official documentation
+lists `jev-1.13.0`, and describes resolved response model IDs and account model
+listing. Check support for your account before using that pin.
+[TypeSafe models](https://docs.typesafe.ai/models).
+
+The CLI uses the shipped client and its Bearer-authenticated decision endpoint.
+It does not accept keys in command-line arguments, implicitly load `.env`, or
+require an OpenAI key, database URL or service auth token.
+[TypeSafe API](https://docs.typesafe.ai/api).
+
+After explicit operator authorization for paid provider requests, test one
+separate synthetic connectivity case:
+
+```bash
+npm run eval:product-matching -- --live --smoke --output evaluation/product-matching/reports/live-connectivity.json
+```
+
+This report always remains ineligible for launch. Then, after label review,
+freeze the corpus and evaluate tuning and held-out cases separately:
+
+```bash
+npm run eval:product-matching -- --live --split tuning --output evaluation/product-matching/reports/live-tuning.json
+npm run eval:product-matching -- --live --split held_out --output evaluation/product-matching/reports/live-held-out.json
+```
+
+Only context phrase and candidate identity facts enter the provider request.
+Labels, review metadata, split names and group IDs stay local. The runner is
+serial with at most 200 cases, uses the existing 10-second per-case deadline and
+at-most-one transport retry, and adds no wrapper retries or OpenAI fallback.
+On SIGINT/SIGTERM it stops after the bounded active call and writes an incomplete
+report (exit 130). Invalid input exits 1; failed accuracy/safety evidence exits 2;
+a completed inconclusive run exits 0. Exit 0 does not approve rollout.
+
+### Reading evidence and deciding rollout
+
+Reports retain safe decision summaries, IDs, confidence, elapsed time, validated
+token usage, model/version provenance, code revision and whether evaluation or
+adapter sources are dirty. They omit phrases, alias/reason text, catalog objects,
+raw responses/errors and credentials. Finish committing verified source changes
+before collecting launch evidence; dirty source or unknown revision blocks eligibility.
+
+Precision counts correct accepted targets divided by all accepted targets.
+Selecting a candidate on ambiguous/no-match truth is wrong. Coverage includes
+failed and skipped evaluated cases in its denominator; an interrupted run also
+shows the selected-case count and is incomplete. No accepted targets means null
+precision, not 100%. Reports include recall, clarification, null advice, unsafe
+selections, transport failures and p50/p95 attempted-call latency (nearest rank).
+Tokens sum validated successful calls only; failed-call usage is unknown, not
+estimated. Offline timing/token figures are fixture values; only live runs
+measure actual provider operation. Slice tags overlap and must not be added as a corpus total.
+
+Launch evidence requires reviewed complete live held-out inputs, eligible corpus
+counts, at least 50 accepted matches, precision >=98%, no unsafe ambiguous/no-match
+selections or provider failures, and a single resolved model equal to the pin.
+Review language slices, coverage, confidence intervals and authored-data limits
+even when the result says `eligible`. Eligibility is an operator review input.
+It never changes configuration. A model/prompt/mapping/gate change invalidates
+the preceding assessment and requires fresh frozen held-out evidence.
+
+After evidence review and separate deployment approval, set only
+`PRODUCT_RESOLUTION_PROVIDER=typesafe`, retain `STOCK_PREDICTION_PROVIDER=openai`
+and OpenAI generation, and restart through the existing deployment process.
+Check `/ready` and a read-only unresolved-product clarification response;
+proposals still require explicit catalog/grocery confirmation. Do not use an
+unconfirmed alias write as a health check.
+
+Rollback matching by setting `PRODUCT_RESOLUTION_PROVIDER=openai` and restarting.
+Preserve TypeSafe inference provenance and all domain data. No migration, deletion
+or historical reclassification is needed. Stock routing remains feature 37d/37e.
+
+### Verification
+
+```bash
+npm run test -- --runInBand src/evaluation/product-matching src/product/jev-product-resolution-advisor.service.spec.ts src/llm/typesafe
+npm run verify
+npm run contract:check
+```
+
+The evaluation tests mock provider HTTP and include a real offline subprocess
+without DB/provider credentials, deliberate wrong-match evidence and overwrite
+rejection. They do not establish live matching accuracy. If a restricted session
+cannot run existing socket-based checks, retain that failure and rerun the full
+gates in an environment allowing loopback listeners before completion.

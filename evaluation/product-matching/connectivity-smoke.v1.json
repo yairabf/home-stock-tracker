@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "connectivity-only-v1",
+  "cases": [
+    {
+      "id": "connectivity-only",
+      "split": "held_out",
+      "productGroupIds": [
+        "milk"
+      ],
+      "language": "other",
+      "tags": [
+        "typo_alias"
+      ],
+      "context": {
+        "requestedPhrase": "Tnuva whole mil 1 L",
+        "candidates": [
+          {
+            "id": "milk-small",
+            "canonicalName": "Tnuva whole milk 1 L",
+            "aliases": [],
+            "category": "dairy",
+            "typicalUnit": "1 L",
+            "productType": "fast_consumable",
+            "isPerishable": true
+          },
+          {
+            "id": "milk-variant",
+            "canonicalName": "Tnuva skim milk 1 L",
+            "aliases": [],
+            "category": "dairy",
+            "typicalUnit": "1 L",
+            "productType": "fast_consumable",
+            "isPerishable": true
+          }
+        ]
+      },
+      "expected": {
+        "kind": "match",
+        "productId": "milk-small"
+      },
+      "label": {
+        "source": "authored",
+        "rationale": "Synthetic connectivity test; never used as model-accuracy evidence.",
+        "author": "codex-authored",
+        "reviewStatus": "pending"
+      }
+    }
+  ]
+}

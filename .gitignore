@@ -40,3 +40,6 @@ graphify-out/.graphify_python
 graphify-out/.vocab.txt
 
 /src/generated/prisma
+
+# Local product-matching evaluation output
+evaluation/product-matching/reports/

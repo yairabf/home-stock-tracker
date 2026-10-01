@@ -1,0 +1,2685 @@
+{
+  "schemaVersion": 1,
+  "evidenceMode": "offline",
+  "datasetHash": "8e3d0f8ed62c65d134cdb6f95e7392af305e109a0c7c4f6c6ea0f744d980eadf",
+  "inputHash": "5a4057b4bfb7c6efb66a53a0e6ea46f11830bee10c3d9236e73d8d77ec3ab832",
+  "split": "held_out",
+  "configuredModel": "jev-1.13.0",
+  "rows": [
+    {
+      "caseId": "pasta-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "pasta-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "pasta-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "pasta-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "pasta-missing",
+      "elapsedMs": 10,
+      "transport": null
+    },
+    {
+      "caseId": "pasta-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "lentils-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chickpeas-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oats-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tuna-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tuna-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tuna-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tuna-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tuna-missing",
+      "elapsedMs": 10,
+      "transport": null
+    },
+    {
+      "caseId": "tuna-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "oliveoil-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "dishsoap-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toiletpaper-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toothpaste-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toothpaste-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toothpaste-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toothpaste-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "toothpaste-missing",
+      "elapsedMs": 10,
+      "transport": null
+    },
+    {
+      "caseId": "toothpaste-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "yogurt-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "tomato-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "peanut-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "shampoo-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "shampoo-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "shampoo-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "shampoo-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "shampoo-missing",
+      "elapsedMs": 10,
+      "transport": null
+    },
+    {
+      "caseId": "shampoo-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "detergent-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "bread-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "cheese-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "honey-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "honey-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "honey-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "honey-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "honey-missing",
+      "elapsedMs": 10,
+      "transport": null
+    },
+    {
+      "caseId": "honey-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "jam-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "chocolate-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-typo",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_0",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 1,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-size",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-mixed",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "candidate_1",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 1,
+          "ambiguous": 0,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-ambiguous",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "ambiguous",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "candidate_2": 0,
+          "ambiguous": 1,
+          "no_match": 0
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-missing",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    },
+    {
+      "caseId": "trashbags-related",
+      "elapsedMs": 10,
+      "transport": {
+        "status": "success",
+        "provider": "typesafe",
+        "task": "product_resolution",
+        "taskVersion": "jev-product-resolution-v1",
+        "model": "jev-1.13.0",
+        "choice": "no_match",
+        "confidence": 0.95,
+        "probabilities": {
+          "candidate_0": 0,
+          "candidate_1": 0,
+          "ambiguous": 0,
+          "no_match": 1
+        },
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      }
+    }
+  ]
+}
