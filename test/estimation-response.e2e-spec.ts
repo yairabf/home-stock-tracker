@@ -50,10 +50,20 @@ const baseResult: PredictionResult = {
 
 describe('Estimation response (e2e)', () => {
   let app: INestApplication<App>;
-  let predictionEngine: jest.Mocked<PredictionEngine>;
+  let predictionEngine: {
+    predictProduct: jest.Mock<
+      ReturnType<PredictionEngine['predictProduct']>,
+      [string]
+    >;
+  };
 
   beforeEach(async () => {
-    predictionEngine = { predictProduct: jest.fn() };
+    predictionEngine = {
+      predictProduct: jest.fn<
+        ReturnType<PredictionEngine['predictProduct']>,
+        [string]
+      >(),
+    };
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -122,6 +132,7 @@ describe('Estimation response (e2e)', () => {
       llmAttempt: {
         provider: 'private-provider',
         model: 'private-model',
+        taskVersion: 'prediction-reasoning-v1',
         accepted: true,
         value: {
           predictedState: PredictedState.probably_low,
@@ -141,7 +152,7 @@ describe('Estimation response (e2e)', () => {
       recommendedAction: null,
       llmContributed: false,
     });
-    expect(response.body.llmAttempt).toBeUndefined();
+    expect(response.body).not.toHaveProperty('llmAttempt');
     expect(JSON.stringify(response.body)).not.toContain('private-provider');
     expect(JSON.stringify(response.body)).not.toContain('private-model');
     expect(predictionEngine.predictProduct).not.toHaveBeenCalled();

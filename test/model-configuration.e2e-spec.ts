@@ -17,10 +17,18 @@ import { GroceryService } from '../src/grocery/grocery.service';
 import { LLM_PROVIDER, type LlmProvider } from '../src/llm/llm-provider';
 import { JevDecisionClient } from '../src/llm/typesafe/jev-decision.client';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { STOCK_PREDICTION_ADVISOR } from '../src/estimation/stock-prediction-advisor';
+import { PredictionReasoner } from '../src/estimation/prediction-reasoner.service';
+import { JevStockPredictionAdvisor } from '../src/estimation/jev-stock-prediction-advisor.service';
 
-describe.each(['openai', 'typesafe'])(
-  'Resolved %s model configuration (e2e)',
-  (selector) => {
+describe.each([
+  ['openai', 'openai'],
+  ['openai', 'typesafe'],
+  ['typesafe', 'openai'],
+  ['typesafe', 'typesafe'],
+])(
+  'Resolved matching=%s stock=%s model configuration (e2e)',
+  (selector, stockSelector) => {
     const config = loadApplicationConfig({
       DATABASE_URL: 'postgresql://test:test@localhost:5432/unused',
       API_AUTH_TOKEN: 'e2e-service-token',
@@ -28,6 +36,7 @@ describe.each(['openai', 'typesafe'])(
       TYPESAFE_API_KEY: 'fixture-typesafe-key',
       JEV_MODEL: 'jev-1.13.0',
       PRODUCT_RESOLUTION_PROVIDER: selector,
+      STOCK_PREDICTION_PROVIDER: stockSelector,
     });
     const listItems = jest.fn().mockResolvedValue([]);
     let app: INestApplication<App>;
@@ -78,6 +87,11 @@ describe.each(['openai', 'typesafe'])(
         selector === 'typesafe'
           ? JevProductResolutionAdvisor
           : OpenAiProductResolutionAdvisor,
+      );
+      expect(app.get(STOCK_PREDICTION_ADVISOR)).toBeInstanceOf(
+        stockSelector === 'typesafe'
+          ? JevStockPredictionAdvisor
+          : PredictionReasoner,
       );
       expect(fetchSpy).not.toHaveBeenCalled();
     });

@@ -5,6 +5,7 @@ import type { PredictionReasoningResult } from './prediction-reasoning';
 export interface LlmPredictionAttempt {
   provider: string;
   model: string;
+  taskVersion: string;
   value: PredictionReasoningResult;
   accepted: boolean;
 }

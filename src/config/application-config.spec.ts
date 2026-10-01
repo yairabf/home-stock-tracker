@@ -196,7 +196,7 @@ describe('loadApplicationConfig', () => {
         },
       );
 
-      it('selects resolution but still rejects the unavailable stock adapter', () => {
+      it('selects each task independently with required credentials', () => {
         const load = () =>
           loadApplicationConfig({
             ...typesafeEnvironment,
@@ -209,7 +209,10 @@ describe('loadApplicationConfig', () => {
             stockPredictionProvider: 'openai',
           });
         } else {
-          expect(load).toThrow(`${selector} typesafe adapter is not available`);
+          expect(load()).toMatchObject({
+            productResolutionProvider: 'openai',
+            stockPredictionProvider: 'typesafe',
+          });
         }
       });
     },

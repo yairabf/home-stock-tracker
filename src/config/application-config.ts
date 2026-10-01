@@ -158,11 +158,6 @@ function validateDecisionCapabilities(
   if (!jevModel) {
     throw new Error('JEV_MODEL is required when a task provider is typesafe');
   }
-  if (stockPredictionProvider === 'typesafe') {
-    throw new Error(
-      'STOCK_PREDICTION_PROVIDER typesafe adapter is not available',
-    );
-  }
 }
 
 export function loadStockWorkflowConfig(

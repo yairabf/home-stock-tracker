@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "blueprint/.state/run.json": {
-    "mtime": 1790838591.965461,
-    "seen": 1790838836.0869398,
-    "ast_hash": "47635d3c462133c907492c7bf3d5e516",
+    "mtime": 1790839743.4754162,
+    "seen": 1790840732.9755661,
+    "ast_hash": "4ec5c7ff3fa8a9319829cfa4f4c8ab08",
     "semantic_hash": ""
   },
   "blueprint/config.json": {
@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1790599211.159576,
-    "seen": 1790599319.980862,
-    "ast_hash": "b3ad7bcdd6ca1a1034610efdf67afab8",
+    "mtime": 1790840093.6155593,
+    "seen": 1790840732.975667,
+    "ast_hash": "900cde3a3c8584ea030ea1d73e1759f1",
     "semantic_hash": ""
   },
   "prisma.config.ts": {
@@ -2160,9 +2160,9 @@
     "semantic_hash": ""
   },
   "blueprint/context/current-feature.md": {
-    "mtime": 1790838651.9341605,
-    "seen": 1790838836.087734,
-    "ast_hash": "e7314e1f28afe0c51fc8b151a36760cf",
+    "mtime": 1790838911.4681077,
+    "seen": 1790840732.976363,
+    "ast_hash": "e012caa03bc85bf6a64d03939c2c30a1",
     "semantic_hash": ""
   },
   "blueprint/context/feature-plans/README.md": {
@@ -3846,9 +3846,9 @@
     "semantic_hash": ""
   },
   "docs/jev-integration.md": {
-    "mtime": 1790836073.5734022,
-    "seen": 1790838028.667584,
-    "ast_hash": "107ae27f462fe01087b1547131587d1b",
+    "mtime": 1790840532.2356136,
+    "seen": 1790840732.976481,
+    "ast_hash": "052746a9102f688eb14b2414cae3a14e",
     "semantic_hash": ""
   },
   "src/evaluation/product-matching/dataset.spec.ts": {
@@ -3882,15 +3882,87 @@
     "semantic_hash": ""
   },
   "src/evaluation/product-matching/report-contract.spec.ts": {
-    "mtime": 1790838723.134417,
-    "seen": 1790838836.087121,
-    "ast_hash": "8362ec16f841b3d45fe6627d8af1d2fe",
+    "mtime": 1790840209.854841,
+    "seen": 1790840732.975756,
+    "ast_hash": "a7847ea61e7b8a027142585adb2e1419",
     "semantic_hash": ""
   },
   "src/evaluation/product-matching/report-contract.ts": {
-    "mtime": 1790838723.1578093,
-    "seen": 1790838836.087122,
-    "ast_hash": "9ae7ed97a3944d1512c6f9e3247b662b",
+    "mtime": 1790840209.813997,
+    "seen": 1790840732.9757571,
+    "ast_hash": "8318f2a8410990a23f3d1a7305ece19e",
+    "semantic_hash": ""
+  },
+  "evaluation/product-matching/cases.v1.json": {
+    "mtime": 1790839876.3139362,
+    "seen": 1790840732.975577,
+    "ast_hash": "275851134245702bd1b9805f0ac156a2",
+    "semantic_hash": ""
+  },
+  "evaluation/product-matching/connectivity-smoke.v1.json": {
+    "mtime": 1790840093.618774,
+    "seen": 1790840732.97558,
+    "ast_hash": "7018711beec99214be048502cd6f85d9",
+    "semantic_hash": ""
+  },
+  "evaluation/product-matching/recorded-smoke.v1.json": {
+    "mtime": 1790840145.9258358,
+    "seen": 1790840732.975581,
+    "ast_hash": "4116cac7e0c55af38d7ed29960f8c28b",
+    "semantic_hash": ""
+  },
+  "scripts/evaluate-product-matching.ts": {
+    "mtime": 1790840094.7964256,
+    "seen": 1790840732.975699,
+    "ast_hash": "061fe1e314b40421e25ce627d857c16a",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/cli.spec.ts": {
+    "mtime": 1790840615.5668788,
+    "seen": 1790840732.975745,
+    "ast_hash": "ef31e03065d9d710011f0af16de4bd62",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/cli.ts": {
+    "mtime": 1790840336.198715,
+    "seen": 1790840732.9757462,
+    "ast_hash": "0cadf70b58074df87ae3cc7b6eeef9ef",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/corpus.spec.ts": {
+    "mtime": 1790839985.2006626,
+    "seen": 1790840732.975747,
+    "ast_hash": "47c8e015d686e611ed758338d8a068f1",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/runner.spec.ts": {
+    "mtime": 1790840336.4123993,
+    "seen": 1790840732.975758,
+    "ast_hash": "3b5ac566bf32ebbb9cf92a7ef54743c3",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/runner.ts": {
+    "mtime": 1790840209.934084,
+    "seen": 1790840732.97576,
+    "ast_hash": "1d3d4ceef78564be443e73d355d97fda",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/scoring.spec.ts": {
+    "mtime": 1790840664.1689236,
+    "seen": 1790840732.975761,
+    "ast_hash": "d0de99e142b078fe9235d6e1e439f827",
+    "semantic_hash": ""
+  },
+  "src/evaluation/product-matching/scoring.ts": {
+    "mtime": 1790840336.4942665,
+    "seen": 1790840732.975762,
+    "ast_hash": "58b7006a5785ed41fdb96d3f9e43fef4",
+    "semantic_hash": ""
+  },
+  "evaluation/product-matching/README.md": {
+    "mtime": 1790840532.1962001,
+    "seen": 1790840732.976484,
+    "ast_hash": "a1444ee1dccd0403ca00ab9dd46f236b",
     "semantic_hash": ""
   }
 }

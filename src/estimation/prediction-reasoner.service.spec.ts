@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { PredictedState, ProductType } from '../generated/prisma/enums';
-import { LLM_PROVIDER, type LlmProvider } from '../llm/llm-provider';
+import { LLM_PROVIDER } from '../llm/llm-provider';
 import { PredictionReasoner } from './prediction-reasoner.service';
 import type { DeterministicPredictionCandidate } from './types/prediction-result';
 
@@ -32,7 +32,7 @@ const candidate: DeterministicPredictionCandidate = {
 
 describe('PredictionReasoner', () => {
   let reasoner: PredictionReasoner;
-  let provider: jest.Mocked<LlmProvider>;
+  let provider: { name: string; generateStructured: jest.Mock };
 
   beforeEach(async () => {
     provider = {
@@ -58,11 +58,11 @@ describe('PredictionReasoner', () => {
     await reasoner.reason(candidate);
 
     expect(provider.generateStructured).toHaveBeenCalledWith(
-      expect.objectContaining({
+      expect.objectContaining<Record<string, unknown>>({
         task: 'inventory-prediction-reasoning',
-        input: expect.objectContaining({
+        input: expect.objectContaining<Record<string, unknown>>({
           deterministicCandidate: expect.any(Object),
-          signals: expect.not.objectContaining({
+          signals: expect.not.objectContaining<Record<string, unknown>>({
             productId: expect.anything(),
             eventId: expect.anything(),
           }),
@@ -89,5 +89,54 @@ describe('PredictionReasoner', () => {
       provider: 'test-provider',
       model: 'test-model',
     });
+  });
+
+  it('retains validated OpenAI output and the adapter version', async () => {
+    const value = {
+      predictedState: PredictedState.probably_low,
+      confidence: 0.65,
+      reason: 'Check recent purchases',
+      recommendedAction: 'Check the pantry',
+    };
+    provider.generateStructured.mockResolvedValue({
+      status: 'success',
+      provider: 'openai',
+      model: 'resolved-model',
+      value,
+    });
+    await expect(reasoner.reason(candidate)).resolves.toEqual({
+      status: 'success',
+      provider: 'openai',
+      model: 'resolved-model',
+      value,
+      taskVersion: 'prediction-reasoning-v1',
+    });
+    expect(provider.generateStructured).toHaveBeenCalledWith(
+      expect.objectContaining<Record<string, unknown>>({
+        promptVersion: 'prediction-reasoning-v1',
+        input: expect.objectContaining<Record<string, unknown>>({
+          signals: expect.objectContaining<Record<string, unknown>>({
+            lastPurchaseAt: '2026-08-20T10:00:00.000Z',
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('does not call generation for malformed evidence', async () => {
+    await expect(
+      reasoner.reason({ ...candidate, confidenceScore: NaN }),
+    ).rejects.toThrow();
+    expect(provider.generateStructured).not.toHaveBeenCalled();
+  });
+
+  it('preserves refusal metadata', async () => {
+    const refusal = {
+      status: 'refusal' as const,
+      provider: 'openai',
+      model: 'resolved-model',
+    };
+    provider.generateStructured.mockResolvedValue(refusal);
+    await expect(reasoner.reason(candidate)).resolves.toEqual(refusal);
   });
 });

@@ -1,8 +1,8 @@
-# Jev transport and product matching
+# Jev transport, product matching and stock advice
 
 Feature 37a exports an injectable `JevDecisionClient` from `LlmModule` for
 bounded decisions. Feature 37b adds task-specific product-resolution advisors.
-Stock prediction routing remains unavailable until 37d. Generation, including classification and shelf life, continues
+Feature 37d adds independently selected stock-prediction advice. Generation, including classification and shelf life, continues
 through the OpenAI `LlmProvider`. There are no new REST/MCP endpoints or database
 fields in this feature.
 
@@ -40,11 +40,11 @@ example pin is `jev-1.13.0`, checked against the
 
 Selecting `PRODUCT_RESOLUTION_PROVIDER=typesafe` requires the private key and
 pinned model and selects the Jev matching advisor. Selecting
-`STOCK_PREDICTION_PROVIDER=typesafe` still fails startup with
-`STOCK_PREDICTION_PROVIDER typesafe adapter is not available`; 37d owns that
-adapter. Supplying Jev credentials while both selectors remain OpenAI configures
+`STOCK_PREDICTION_PROVIDER=typesafe` selects the Jev stock advisor with the same
+key/model requirements. Supplying Jev credentials while both selectors remain OpenAI configures
 the transport but does not route domain calls to it. Keep runtime matching on
-OpenAI until the separate 37c evaluation and rollout review.
+OpenAI until reviewed 37c evidence, and stock on OpenAI until reviewed 37e
+stock evaluation. Selector support alone does not authorize runtime rollout.
 
 Bootstrap calls `loadApplicationConfig()` once and passes its result to
 `AppModule.register(config)`. Nested LLM factories consume `MODEL_CONFIG` rather
@@ -311,7 +311,7 @@ unconfirmed alias write as a health check.
 
 Rollback matching by setting `PRODUCT_RESOLUTION_PROVIDER=openai` and restarting.
 Preserve TypeSafe inference provenance and all domain data. No migration, deletion
-or historical reclassification is needed. Stock routing remains feature 37d/37e.
+or historical reclassification is needed. Stock rollout requires reviewed 37e evidence.
 
 ### Verification
 
@@ -326,3 +326,70 @@ without DB/provider credentials, deliberate wrong-match evidence and overwrite
 rejection. They do not establish live matching accuracy. If a restricted session
 cannot run existing socket-based checks, retain that failure and rerun the full
 gates in an environment allowing loopback listeners before completion.
+
+## Stock advice (37d)
+
+`StockPredictionAdvisor` is selected independently by
+`STOCK_PREDICTION_PROVIDER`. OpenAI remains the default. Jev uses task
+`stock_prediction`, question `stock_state`, version `jev-stock-prediction-v1`,
+and the four `PredictedState` choices including `uncertain`. It reuses the shared
+transport's abortable 15-second budget and bounded transient retry.
+
+The advisor belongs to `PredictionEngine.predictProduct`, the existing internal
+on-demand prediction capability. Inventory REST/MCP reads remain reads of
+materialized stock; they do not recalculate or call advisors. Daily stock
+materialization remains a separate deterministic workflow. Selecting Jev does
+not introduce a new endpoint, attach AI to reads, or change daily quantity math.
+Shelf-life inference and product classification continue through OpenAI generation.
+
+| Evidence/result | Behavior |
+| --- | --- |
+| Disabled prediction | Existing disabled result; no advisor call |
+| Zero valid relevant history events | Both providers return uncertain, confidence 0, action null, no advisor call, even with stale learned statistics |
+| Authoritative direct signal | Jev bypass; preserve deterministic result |
+| Non-uncertain deterministic confidence >= 0.8 | Existing bypass for both providers |
+| Jev confidence < 0.9 or choice uncertain | Preserve deterministic fallback; log validated rejected attempt |
+| Jev failure or malformed input/output | Preserve deterministic fallback; no validated attempt log |
+| Accepted Jev choice | Preserve any non-uncertain deterministic state; confidence is min(deterministic, Jev); code explains final state; action null |
+
+An uncertain nonzero cold start can adopt a Jev state only with at least two
+valid relevant events, a learned-statistics row with at least two observations,
+a finite positive purchase/need/consumption interval, and finite nonnegative
+elapsed purchase/restock time. Otherwise it stays uncertain. This predicate and
+the 0.9 gate are provisional service policies, not demonstrated accuracy.
+OpenAI keeps its existing 0.65 acceptance gate and 70/30 blend for eligible
+nonzero histories. Neither resulting confidence is a calibrated probability.
+
+Jev evidence contains validated deterministic facts and relevant signals, with
+ISO dates and household counts only. Child age groups and arbitrary household
+preferences are excluded. Minimized evidence is limited to 16,384 UTF-8 bytes;
+oversized evidence is rejected rather than truncated. Jev does not generate
+explanations, actions, quantities, or authorize grocery/event/recorded-stock writes.
+
+Accepted and rejected schema-valid answers use existing `LlmInferenceLog` fields:
+`modelProvider=typesafe`, actual resolved `modelVersion`,
+`promptVersion=jev-stock-prediction-v1`, returned confidence, and
+`structuredResponse={ status: 'validated', accepted, value }`, where `value` has
+the existing prediction-reasoning shape. Only accepted contributions populate
+`Prediction.llmResult` and `modelProviderVersion`. OpenAI retains its historical
+response shape and `prediction-reasoning-v1` version. No migration or historical
+rewrite is needed. A log failure does not discard an already saved prediction ID.
+No raw request/probability envelope, secrets or provider errors are persisted.
+New Jev prediction snapshots also retain household counts with empty age groups
+and null preferences; OpenAI's existing snapshots and historical rows stay intact.
+
+Use an isolated migrated local test database, never the household database:
+
+```bash
+npm run test:e2e -- --runInBand test/jev-stock-prediction.e2e-spec.ts test/model-configuration.e2e-spec.ts test/estimation.e2e-spec.ts test/estimation-response.e2e-spec.ts test/daily-stock-workflow.e2e-spec.ts
+npm run verify
+npm run contract:check
+```
+
+The stock suite mocks HTTP while testing real Nest advisor selection, persisted
+accepted/rejected provenance, zero-history behavior, unchanged REST/MCP reads,
+and deterministic daily materialization with OpenAI shelf-life generation.
+This establishes wiring and safety, not live stock accuracy. Feature 37e must
+replay evidence without future leakage and review outcomes before changing the
+runtime stock selector. Rollback selects `STOCK_PREDICTION_PROVIDER=openai` and
+restarts the service, retaining all provenance and domain data.

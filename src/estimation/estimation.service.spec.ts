@@ -9,15 +9,32 @@ import {
   ProductType,
 } from '../generated/prisma/enums';
 import { NotFoundException } from '@nestjs/common';
-import { PredictionReasoner } from './prediction-reasoner.service';
+import type { StockPredictionAdviceResult } from './stock-prediction-advisor';
+import type { DeterministicPredictionCandidate } from './types/prediction-result';
+import { STOCK_PREDICTION_ADVISOR } from './stock-prediction-advisor';
 import { OperationalLogger } from '../observability/operational-logger.service';
+
+function containing(expected: Record<string, unknown>): unknown {
+  return expect.objectContaining(expected) as unknown;
+}
 
 describe('EstimationService', () => {
   let service: EstimationService;
   let productService: jest.Mocked<ProductService>;
-  let prismaService: jest.Mocked<PrismaService>;
-  let householdService: jest.Mocked<HouseholdService>;
-  let predictionReasoner: jest.Mocked<PredictionReasoner>;
+  let prismaService: {
+    inventoryEvent: { findMany: jest.Mock };
+    prediction: { create: jest.Mock };
+    productStatistics: { findUnique: jest.Mock };
+    llmInferenceLog: { create: jest.Mock };
+  };
+  let householdService: { getOrCreate: jest.Mock };
+  let predictionReasoner: {
+    provider: string;
+    reason: jest.Mock<
+      Promise<StockPredictionAdviceResult>,
+      [DeterministicPredictionCandidate]
+    >;
+  };
   let operationalLogger: {
     predictionRun: jest.Mock;
     predictionPersistence: jest.Mock;
@@ -75,6 +92,7 @@ describe('EstimationService', () => {
       },
     };
     const mockPredictionReasoner = {
+      provider: 'openai',
       reason: jest.fn().mockResolvedValue({ status: 'unavailable' }),
     };
     operationalLogger = {
@@ -88,7 +106,7 @@ describe('EstimationService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ProductService, useValue: mockProductService },
         { provide: HouseholdService, useValue: mockHouseholdService },
-        { provide: PredictionReasoner, useValue: mockPredictionReasoner },
+        { provide: STOCK_PREDICTION_ADVISOR, useValue: mockPredictionReasoner },
         { provide: OperationalLogger, useValue: operationalLogger },
       ],
     }).compile();
@@ -97,7 +115,7 @@ describe('EstimationService', () => {
     productService = module.get(ProductService);
     prismaService = module.get(PrismaService);
     householdService = module.get(HouseholdService);
-    predictionReasoner = module.get(PredictionReasoner);
+    predictionReasoner = module.get(STOCK_PREDICTION_ADVISOR);
   });
 
   afterEach(() => {
@@ -445,7 +463,236 @@ describe('EstimationService', () => {
     });
   });
 
+  describe('Jev orchestration', () => {
+    const jevAdvice = (confidence = 0.95) => ({
+      status: 'success' as const,
+      provider: 'typesafe',
+      model: 'jev-1.14.0',
+      taskVersion: 'jev-stock-prediction-v1',
+      value: {
+        predictedState: PredictedState.probably_out,
+        confidence,
+        reason: 'Probably out',
+        recommendedAction: null,
+      },
+    });
+    beforeEach(() => {
+      Object.assign(predictionReasoner, { provider: 'typesafe' });
+      productService.findOne.mockResolvedValue(
+        mockProduct({ productType: null }),
+      );
+      predictionReasoner.reason.mockResolvedValue(jevAdvice());
+    });
+
+    it.each([
+      InventoryEventType.STOCK_LOW,
+      InventoryEventType.STOCK_OUT,
+      InventoryEventType.STOCK_CONFIRMED,
+    ])('never calls Jev for authoritative %s', async (eventType) => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(eventType, 1),
+      ]);
+      const result = await service.predictProduct('product-1');
+      expect(result.llmAttempt).toBeNull();
+      expect(predictionReasoner.reason).not.toHaveBeenCalled();
+    });
+
+    it('retains a non-uncertain state despite a conflicting Jev choice', async () => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 5),
+        mockEvent(InventoryEventType.PURCHASED, 20),
+      ]);
+      const result = await service.predictProduct('product-1');
+      expect(predictionReasoner.reason).toHaveBeenCalledTimes(1);
+      expect(result).toMatchObject({
+        predictedState: PredictedState.likely_available,
+        recommendedAction: null,
+        llmContributed: true,
+      });
+      expect(result.reason).toContain('likely available');
+      expect(result.reason).not.toContain('probably out');
+      expect(result.confidenceScore).toBeCloseTo(0.6);
+    });
+
+    it('rejects a one-event cold start even with a confident answer', async () => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 1),
+      ]);
+      expect(await service.predictProduct('product-1')).toMatchObject({
+        predictedState: PredictedState.uncertain,
+        llmAttempt: { accepted: false },
+      });
+    });
+
+    it('accepts a qualifying two-event learned cold start', async () => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 3),
+        mockEvent(InventoryEventType.PURCHASED, 5),
+      ]);
+      prismaService.productStatistics.findUnique.mockResolvedValue({
+        avgPurchaseIntervalDays: 3,
+        avgNeedIntervalDays: null,
+        estimatedConsumptionIntervalDays: null,
+        observationCount: 2,
+      });
+      expect(await service.predictProduct('product-1')).toMatchObject({
+        predictedState: PredictedState.probably_out,
+        llmContributed: true,
+        llmAttempt: { accepted: true },
+      });
+    });
+
+    it.each([0.89, 0.95])(
+      'persists actual Jev version and acceptance at confidence %s',
+      async (confidence) => {
+        prismaService.inventoryEvent.findMany.mockResolvedValue([
+          mockEvent(InventoryEventType.PURCHASED, 5),
+          mockEvent(InventoryEventType.PURCHASED, 20),
+        ]);
+        predictionReasoner.reason.mockResolvedValue(jevAdvice(confidence));
+        const result = await service.predictProduct('product-1');
+        expect(result.llmAttempt).toMatchObject({
+          taskVersion: 'jev-stock-prediction-v1',
+          accepted: confidence >= 0.9,
+        });
+        expect(prismaService.llmInferenceLog.create).toHaveBeenCalledWith({
+          data: containing({
+            predictionId: 'prediction-1',
+            modelProvider: 'typesafe',
+            modelVersion: 'jev-1.14.0',
+            promptVersion: 'jev-stock-prediction-v1',
+            structuredResponse: {
+              status: 'validated',
+              accepted: confidence >= 0.9,
+              value: jevAdvice(confidence).value,
+            },
+          }),
+        });
+        expect(prismaService.prediction.create).toHaveBeenCalledWith({
+          data: containing({
+            modelProviderVersion:
+              confidence >= 0.9 ? 'typesafe/jev-1.14.0' : null,
+            deterministicSignals: containing({
+              householdContext: {
+                adultsCount: 2,
+                childrenCount: 3,
+                childAgeGroups: [],
+                predictionPreferences: null,
+              },
+            }),
+          }),
+        });
+      },
+    );
+
+    it('retains saved prediction ID and calculated behavior when inference logging fails', async () => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 5),
+        mockEvent(InventoryEventType.PURCHASED, 20),
+      ]);
+      prismaService.llmInferenceLog.create.mockRejectedValue(
+        new Error('private log failure'),
+      );
+      expect(await service.predictProduct('product-1')).toMatchObject({
+        predictionId: 'prediction-1',
+        predictedState: PredictedState.likely_available,
+        llmContributed: true,
+      });
+      expect(operationalLogger.predictionPersistence).toHaveBeenCalledWith({
+        outcome: 'failure',
+        productId: 'product-1',
+        predictionId: 'prediction-1',
+        errorType: 'persistence_error',
+      });
+      expect(
+        JSON.stringify(operationalLogger.predictionPersistence.mock.calls),
+      ).not.toContain('private log failure');
+    });
+
+    it('isolates unavailable and thrown Jev results', async () => {
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, 1),
+      ]);
+      predictionReasoner.reason
+        .mockResolvedValueOnce({ status: 'unavailable' })
+        .mockRejectedValueOnce(new Error('private failure'));
+      for (let i = 0; i < 2; i++)
+        expect(await service.predictProduct('product-1')).toMatchObject({
+          predictedState: PredictedState.uncertain,
+          llmAttempt: null,
+        });
+    });
+
+    it.each([
+      { taskVersion: '' },
+      { model: '' },
+      { provider: 'openai' },
+      { taskVersion: 'wrong-version' },
+      { value: { ...jevAdvice().value, confidence: NaN } },
+    ])(
+      'rejects malformed advice metadata/output %j without logging',
+      async (changes) => {
+        prismaService.inventoryEvent.findMany.mockResolvedValue([
+          mockEvent(InventoryEventType.PURCHASED, 1),
+        ]);
+        predictionReasoner.reason.mockResolvedValue({
+          ...jevAdvice(),
+          ...changes,
+        });
+        expect(
+          (await service.predictProduct('product-1')).llmAttempt,
+        ).toBeNull();
+        expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
+      },
+    );
+  });
+
   describe('Edge cases', () => {
+    it.each(['openai', 'typesafe'])(
+      'returns uncertain/0 without %s calls for zero history even with stale statistics',
+      async (provider) => {
+        Object.assign(predictionReasoner, { provider });
+        productService.findOne.mockResolvedValue(mockProduct());
+        prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+        prismaService.productStatistics.findUnique.mockResolvedValue({
+          avgPurchaseIntervalDays: 5,
+          avgNeedIntervalDays: 6,
+          estimatedConsumptionIntervalDays: 5,
+          observationCount: 20,
+        });
+        const result = await service.predictProduct('product-1');
+        expect(result).toMatchObject({
+          predictedState: PredictedState.uncertain,
+          confidenceScore: 0,
+          recommendedAction: null,
+          llmAttempt: null,
+          llmContributed: false,
+        });
+        expect(predictionReasoner.reason).not.toHaveBeenCalled();
+        expect(prismaService.llmInferenceLog.create).not.toHaveBeenCalled();
+        expect(prismaService.prediction.create).toHaveBeenCalledWith({
+          data: containing({
+            confidenceScore: 0,
+            predictedState: PredictedState.uncertain,
+          }),
+        });
+      },
+    );
+
+    it('treats future-only history as zero valid events', async () => {
+      productService.findOne.mockResolvedValue(mockProduct());
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.PURCHASED, -1),
+      ]);
+      const result = await service.predictProduct('product-1');
+      expect(result).toMatchObject({
+        confidenceScore: 0,
+        predictedState: PredictedState.uncertain,
+        llmAttempt: null,
+      });
+      expect(predictionReasoner.reason).not.toHaveBeenCalled();
+    });
+
     it('captures product, learned statistics, and household context', async () => {
       productService.findOne.mockResolvedValue(
         mockProduct({ predictionStrategy: 'hybrid-v1' }),
@@ -536,6 +783,7 @@ describe('EstimationService', () => {
       status: 'success' as const,
       provider: 'test-provider',
       model: 'test-model',
+      taskVersion: 'prediction-reasoning-v1',
       value: {
         predictedState: PredictedState.probably_low,
         confidence,
@@ -560,7 +808,9 @@ describe('EstimationService', () => {
 
     it('uses valid LLM reasoning to resolve an uncertain candidate', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.9));
 
       const result = await service.predictProduct('product-1');
@@ -614,7 +864,9 @@ describe('EstimationService', () => {
       'keeps deterministic output for $status reasoning',
       async (llmResult) => {
         productService.findOne.mockResolvedValue(mockProduct());
-        prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+        prismaService.inventoryEvent.findMany.mockResolvedValue([
+          mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+        ]);
         predictionReasoner.reason.mockResolvedValue(llmResult);
 
         const result = await service.predictProduct('product-1');
@@ -632,7 +884,9 @@ describe('EstimationService', () => {
 
     it('keeps deterministic output when the provider throws', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       predictionReasoner.reason.mockRejectedValue(new Error('provider detail'));
 
       const result = await service.predictProduct('product-1');
@@ -652,7 +906,9 @@ describe('EstimationService', () => {
 
     it('retains but does not accept low-confidence LLM output', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.64));
 
       const result = await service.predictProduct('product-1');
@@ -674,12 +930,14 @@ describe('EstimationService', () => {
 
     it('persists deterministic-only predictions with nullable LLM fields', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
 
       const result = await service.predictProduct('product-1');
 
       expect(prismaService.prediction.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+        data: containing({
           recommendedAction: null,
           llmResult: undefined,
           modelProviderVersion: null,
@@ -696,13 +954,15 @@ describe('EstimationService', () => {
 
     it('persists accepted LLM metadata and a linked inference log', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.9));
 
       await service.predictProduct('product-1');
 
       expect(prismaService.prediction.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+        data: containing({
           recommendedAction: 'Check the pantry',
           llmResult: successfulReasoning(0.9).value,
           modelProviderVersion: 'test-provider/test-model',
@@ -722,19 +982,21 @@ describe('EstimationService', () => {
 
     it('logs valid low-confidence output without storing it as contributed', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       predictionReasoner.reason.mockResolvedValue(successfulReasoning(0.64));
 
       await service.predictProduct('product-1');
 
       expect(prismaService.prediction.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+        data: containing({
           llmResult: undefined,
           modelProviderVersion: null,
         }),
       });
       expect(prismaService.llmInferenceLog.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+        data: containing({
           predictionId: 'prediction-1',
           confidence: 0.64,
         }),
@@ -743,7 +1005,9 @@ describe('EstimationService', () => {
 
     it('does not change returned behavior when prediction persistence fails', async () => {
       productService.findOne.mockResolvedValue(mockProduct());
-      prismaService.inventoryEvent.findMany.mockResolvedValue([]);
+      prismaService.inventoryEvent.findMany.mockResolvedValue([
+        mockEvent(InventoryEventType.STOCK_CORRECTED, 8),
+      ]);
       prismaService.prediction.create.mockRejectedValue(
         new Error('database detail'),
       );

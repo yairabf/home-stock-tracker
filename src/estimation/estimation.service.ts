@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 import { HouseholdService } from '../household/household.service';
@@ -17,11 +17,14 @@ import type {
   PredictionResult,
 } from './types/prediction-result';
 import { Prisma } from '../generated/prisma/client';
-import {
-  PREDICTION_REASONING_PROMPT_VERSION,
-  PredictionReasoner,
-} from './prediction-reasoner.service';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import {
+  STOCK_PREDICTION_ADVISOR,
+  type StockPredictionAdvisor,
+} from './stock-prediction-advisor';
+import { predictionReasoningResultSchema } from './types/prediction-reasoning';
+import { composeJevStockAdvice } from './stock-prediction-policy';
+import { JEV_STOCK_PREDICTION_VERSION } from './jev-stock-prediction-advisor.service';
 
 const LLM_ELIGIBILITY_CONFIDENCE = 0.8;
 const LLM_ACCEPTANCE_CONFIDENCE = 0.65;
@@ -79,7 +82,8 @@ export class EstimationService implements PredictionEngine {
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
     private readonly householdService: HouseholdService,
-    private readonly predictionReasoner: PredictionReasoner,
+    @Inject(STOCK_PREDICTION_ADVISOR)
+    private readonly predictionReasoner: StockPredictionAdvisor,
     private readonly operationalLogger: OperationalLogger,
   ) {}
 
@@ -226,6 +230,23 @@ export class EstimationService implements PredictionEngine {
     candidate: DeterministicPredictionCandidate,
   ): Promise<HybridReasoningResult> {
     const deterministicResult = this.finalizeCandidate(productId, candidate);
+    if (candidate.signals.eventCount === 0) {
+      return {
+        result: {
+          ...deterministicResult,
+          predictedState: PredictedState.uncertain,
+          confidenceScore: 0,
+          reason: 'No valid stock history; availability is uncertain',
+        },
+        outcome: 'success',
+      };
+    }
+    if (
+      this.predictionReasoner.provider === 'typesafe' &&
+      candidate.authoritative
+    ) {
+      return { result: deterministicResult, outcome: 'success' };
+    }
     if (
       candidate.predictedState !== PredictedState.uncertain &&
       candidate.confidenceScore >= LLM_ELIGIBILITY_CONFIDENCE
@@ -239,10 +260,29 @@ export class EstimationService implements PredictionEngine {
         return { result: deterministicResult, outcome: 'fallback' };
       }
 
+      if (
+        !predictionReasoningResultSchema.safeParse(llmResult.value).success ||
+        !llmResult.model?.trim() ||
+        !llmResult.provider?.trim() ||
+        !llmResult.taskVersion?.trim()
+      ) {
+        return { result: deterministicResult, outcome: 'fallback' };
+      }
+      if (this.predictionReasoner.provider === 'typesafe') {
+        if (
+          llmResult.provider !== 'typesafe' ||
+          llmResult.taskVersion !== JEV_STOCK_PREDICTION_VERSION
+        ) {
+          return { result: deterministicResult, outcome: 'fallback' };
+        }
+        return composeJevStockAdvice(candidate, deterministicResult, llmResult);
+      }
+
       const accepted = llmResult.value.confidence >= LLM_ACCEPTANCE_CONFIDENCE;
       const llmAttempt = {
         provider: llmResult.provider,
         model: llmResult.model,
+        taskVersion: llmResult.taskVersion,
         value: llmResult.value,
         accepted,
       };
@@ -614,9 +654,16 @@ export class EstimationService implements PredictionEngine {
             householdContext: result.deterministicSignals.householdContext
               ? {
                   ...result.deterministicSignals.householdContext,
-                  predictionPreferences: result.deterministicSignals
-                    .householdContext
-                    .predictionPreferences as Prisma.InputJsonValue | null,
+                  childAgeGroups:
+                    this.predictionReasoner.provider === 'typesafe'
+                      ? []
+                      : result.deterministicSignals.householdContext
+                          .childAgeGroups,
+                  predictionPreferences:
+                    this.predictionReasoner.provider === 'typesafe'
+                      ? null
+                      : (result.deterministicSignals.householdContext
+                          .predictionPreferences as Prisma.InputJsonValue | null),
                 }
               : null,
             authoritativeDirectSignal:
@@ -625,18 +672,7 @@ export class EstimationService implements PredictionEngine {
         },
       });
 
-      if (result.llmAttempt) {
-        await this.prisma.llmInferenceLog.create({
-          data: {
-            predictionId: prediction.id,
-            modelProvider: result.llmAttempt.provider,
-            modelVersion: result.llmAttempt.model,
-            promptVersion: PREDICTION_REASONING_PROMPT_VERSION,
-            structuredResponse: result.llmAttempt.value,
-            confidence: result.llmAttempt.value.confidence,
-          },
-        });
-      }
+      await this.saveInferenceAttempt(prediction.id, result);
       this.operationalLogger.predictionPersistence({
         outcome: 'success',
         productId: result.productId,
@@ -650,6 +686,40 @@ export class EstimationService implements PredictionEngine {
         errorType: 'persistence_error',
       });
       return null;
+    }
+  }
+
+  private async saveInferenceAttempt(
+    predictionId: string,
+    result: EstimationResult,
+  ): Promise<void> {
+    const attempt = result.llmAttempt;
+    if (!attempt) return;
+    try {
+      await this.prisma.llmInferenceLog.create({
+        data: {
+          predictionId,
+          modelProvider: attempt.provider,
+          modelVersion: attempt.model,
+          promptVersion: attempt.taskVersion,
+          structuredResponse:
+            attempt.provider === 'typesafe'
+              ? {
+                  status: 'validated',
+                  accepted: attempt.accepted,
+                  value: attempt.value,
+                }
+              : attempt.value,
+          confidence: attempt.value.confidence,
+        },
+      });
+    } catch {
+      this.operationalLogger.predictionPersistence({
+        outcome: 'failure',
+        productId: result.productId,
+        predictionId,
+        errorType: 'persistence_error',
+      });
     }
   }
 
