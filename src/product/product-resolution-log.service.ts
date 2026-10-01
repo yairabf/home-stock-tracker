@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { LlmGenerationResult } from '../llm/types/structured-generation';
+import type { ProductResolutionAdviceResult } from './product-resolution-advisor';
 import type { LlmInferenceLogModel } from '../generated/prisma/models';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   PRODUCT_RESOLUTION_MIN_CONFIDENCE,
-  PRODUCT_RESOLUTION_PROMPT_VERSION,
   productResolutionProposalSchema,
-  type ProductResolutionProposal,
 } from './types/product-resolution';
 
 @Injectable()
@@ -14,20 +12,27 @@ export class ProductResolutionLogService {
   constructor(private readonly prisma: PrismaService) {}
 
   async record(
-    result: LlmGenerationResult<ProductResolutionProposal>,
+    result: ProductResolutionAdviceResult,
   ): Promise<LlmInferenceLogModel | null> {
-    if (result.status !== 'success') {
+    if (
+      result.status !== 'success' ||
+      typeof result.provider !== 'string' ||
+      typeof result.model !== 'string' ||
+      typeof result.taskVersion !== 'string'
+    ) {
       return null;
     }
 
     const parsed = productResolutionProposalSchema.safeParse(result.value);
     const provider = result.provider.trim();
     const model = result.model.trim();
+    const taskVersion = result.taskVersion.trim();
     if (
       !parsed.success ||
       parsed.data.confidence < PRODUCT_RESOLUTION_MIN_CONFIDENCE ||
       !provider ||
-      !model
+      !model ||
+      !taskVersion
     ) {
       return null;
     }
@@ -36,7 +41,7 @@ export class ProductResolutionLogService {
       data: {
         modelProvider: provider,
         modelVersion: model,
-        promptVersion: PRODUCT_RESOLUTION_PROMPT_VERSION,
+        promptVersion: taskVersion,
         confidence: parsed.data.confidence,
         structuredResponse: {
           status: 'validated',

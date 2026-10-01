@@ -196,14 +196,21 @@ describe('loadApplicationConfig', () => {
         },
       );
 
-      it('rejects the unavailable adapter after credentials pass validation', () => {
-        expect(() =>
+      it('selects resolution but still rejects the unavailable stock adapter', () => {
+        const load = () =>
           loadApplicationConfig({
             ...typesafeEnvironment,
             TYPESAFE_API_KEY: 'typesafe-test-key',
             JEV_MODEL: 'jev-1.13.0',
-          }),
-        ).toThrow(`${selector} typesafe adapter is not available`);
+          });
+        if (selector === 'PRODUCT_RESOLUTION_PROVIDER') {
+          expect(load()).toMatchObject({
+            productResolutionProvider: 'typesafe',
+            stockPredictionProvider: 'openai',
+          });
+        } else {
+          expect(load).toThrow(`${selector} typesafe adapter is not available`);
+        }
       });
     },
   );

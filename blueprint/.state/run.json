@@ -1,8 +1,10 @@
 {
-  "status": "idle",
-  "activity": "Feature 37a completed on main",
+  "status": "ready",
+  "command": "complete",
   "skill": "complete",
-  "feature": "37a",
-  "reason": "All implementation steps, completion checks and merge approved",
-  "updated_at": "2026-09-30T14:48:42.366568+00:00"
+  "feature": "37b",
+  "activity": "Feature 37b archived; completion commit prepared for merge approval",
+  "updated_at": "2026-09-30T17:37:54.806777+00:00",
+  "reason": "Complete skill requires explicit approval before squash merge",
+  "gate": "Final npm run verify passed (1328 tests and build)"
 }

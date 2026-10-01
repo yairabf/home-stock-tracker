@@ -64,7 +64,7 @@
 
 - [ ] 37. **Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation
   - [x] 37a. **Jev transport foundation** - validated configuration, bounded HTTP requests, response validation, and failure handling ✓ 2026-09-30
-  - [ ] 37b. **Jev product matching** - task-specific advisor routing, candidate decisions, confirmation preservation, and provenance
+  - [x] 37b. **Jev product matching** - task-specific advisor routing, candidate decisions, confirmation preservation, and provenance ✓ 2026-09-30
   - [ ] 37c. **Product-matching evaluation** - labeled fixtures, held-out metrics, setup, and rollout/rollback guidance
   - [ ] 37d. **Jev stock prediction** - advisor routing, zero-history guard, deterministic precedence, conservative confidence, and provenance
   - [ ] 37e. **Stock-prediction evaluation** - historical evidence replay, outcome metrics, and rollout/rollback guidance

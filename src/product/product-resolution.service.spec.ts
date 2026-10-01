@@ -1,3 +1,4 @@
+import { OpenAiProductResolutionAdvisor } from './openai-product-resolution-advisor.service';
 import { ProductType } from '../generated/prisma/enums';
 import { type LlmProvider } from '../llm/llm-provider';
 import type { StructuredGenerationRequest } from '../llm/types/structured-generation';
@@ -25,7 +26,7 @@ describe('ProductResolutionService', () => {
     resolutionLog = { record: jest.fn().mockResolvedValue(null) };
     service = new ProductResolutionService(
       searchService as ProductSearchService,
-      provider,
+      new OpenAiProductResolutionAdvisor(provider),
       resolutionLog as ProductResolutionLogService,
     );
     searchService.search.mockResolvedValue({
@@ -100,9 +101,10 @@ describe('ProductResolutionService', () => {
       proposal: { recommendation: 'add_alias' },
     });
     expect(resolutionLog.record.mock.calls).toHaveLength(1);
-    expect(resolutionLog.record.mock.calls[0][0]).toEqual(
-      success(validAlias()),
-    );
+    expect(resolutionLog.record.mock.calls[0][0]).toEqual({
+      ...success(validAlias()),
+      taskVersion: PRODUCT_RESOLUTION_PROMPT_VERSION,
+    });
   });
 
   it('does not log discarded advice', async () => {
@@ -225,6 +227,42 @@ describe('ProductResolutionService', () => {
 
     await expect(pending).resolves.toMatchObject({ proposal: null });
     jest.useRealTimers();
+  });
+
+  it('preserves OpenAI creation advice with no candidates', async () => {
+    searchService.search.mockResolvedValue({
+      exactMatch: null,
+      candidates: [],
+    });
+    const proposal: ProductResolutionProposal = {
+      recommendation: 'create_product',
+      newProduct: {
+        canonicalName: 'Milk',
+        aliases: [],
+        category: 'dairy',
+        typicalUnit: 'liter',
+        productType: ProductType.fast_consumable,
+        isPerishable: true,
+      },
+      confidence: 0.8,
+      reason: 'New product',
+    };
+    provider.generateStructured.mockResolvedValue(success(proposal));
+    await expect(service.resolve('milk')).resolves.toMatchObject({ proposal });
+    expect(provider.generateStructured.mock.calls).toHaveLength(1);
+  });
+
+  it('bypasses the advisor for malformed candidate context', async () => {
+    const product = { ...candidate('product-a'), canonicalName: '' };
+    searchService.search.mockResolvedValue({
+      exactMatch: null,
+      candidates: [product],
+    });
+    await expect(service.resolve('milk')).resolves.toMatchObject({
+      candidates: [product],
+      proposal: null,
+    });
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
   });
 
   it('calls the provider when complete context is exactly at the UTF-8 byte budget', async () => {

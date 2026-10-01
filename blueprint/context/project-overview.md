@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash b71dc95fba8f6e65564e8d93766cca2b0b6c899e9759da397589ad023f71c925 -->
+<!-- blueprint:source-hash 380d3810364b537dedb399379d2424e443b90979dbc3a227dee33dfb2eb25d8a -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,7 +17,7 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Feature 37a is complete; item 21 remains the first unchecked item in the general queue. Sub-features are separate branch/spec/review/archive units.
+Build-plan order and progress; unchecked means planned. Features 37a and 37b are complete; item 21 remains the first unchecked item in the general queue. Sub-features are separate branch/spec/review/archive units.
 
 - [x] **1. Grocery list management** - add, remove, and retrieve grocery list items through the service API.
 - [x] **2. Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
@@ -68,7 +68,7 @@ Build-plan order and progress; unchecked means planned. Feature 37a is complete;
   - [x] **34b. Fail-closed store-skill scaffold**.
 - [ ] **37. Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation.
   - [x] **37a. Jev transport foundation**.
-  - [ ] **37b. Jev product matching**.
+  - [x] **37b. Jev product matching**.
   - [ ] **37c. Product-matching evaluation**.
   - [ ] **37d. Jev stock prediction**.
   - [ ] **37e. Stock-prediction evaluation**.
@@ -203,7 +203,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **Node.js, TypeScript, NestJS** - modular backend, injected services, REST/JSON DTOs, OpenAPI, thin MCP tools.
 - **PostgreSQL and Prisma** - authoritative persistence and migrations; TypeORM only if a NestJS constraint requires it.
 - **Generation** - `LlmProvider` selected through DI and `LLM_PROVIDER`; OpenAI Responses API with validated output, private `OPENAI_API_KEY`, configurable `LLM_MODEL` (initial default `gpt-5.6-sol`). Product classification and shelf-life generation use this boundary. Adapters own requests, authentication, validation, errors; AI never writes directly to the database. Future OpenRouter/Anthropic adapters must preserve the domain boundary.
-- **Bounded decisions (37a transport; task adapters planned)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; TypeSafe Jev matching and stock decisions follow separate evaluations. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
+- **Bounded decisions (37a transport and 37b matching; stock adapter planned)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. Matching rollout awaits 37c evaluation; TypeSafe stock selection stays blocked until 37d. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
 - **Hybrid prediction** - history, elapsed time, household context, metadata, deterministic heuristics, optional model inference behind `PredictionEngine`. Python only if justified by statistical workloads.
 - **Jest/Nest testing utilities** - critical unit, PostgreSQL integration, API, prediction, and tool-contract coverage.
 - **Docker/Compose** - packaging, local development, environment configuration, migrations.

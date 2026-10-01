@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ProductType } from '../generated/prisma/enums';
-import type { LlmGenerationResult } from '../llm/types/structured-generation';
+import type { ProductResolutionAdviceResult } from './product-resolution-advisor';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductResolutionLogService } from './product-resolution-log.service';
 import {
@@ -60,7 +60,6 @@ describe('ProductResolutionLogService', () => {
   );
 
   it.each([
-    { status: 'refusal', provider: 'openai', model: 'test-model' },
     { status: 'unavailable', provider: 'openai', model: 'test-model' },
   ] as const)('does not persist a $status result', async (result) => {
     await expect(service.record(result)).resolves.toBeNull();
@@ -78,9 +77,31 @@ describe('ProductResolutionLogService', () => {
     } as ProductResolutionProposal),
     { ...success(aliasProposal()), provider: ' ' },
     { ...success(aliasProposal()), model: ' ' },
+    { ...success(aliasProposal()), taskVersion: ' ' },
+    {
+      ...success(aliasProposal()),
+      taskVersion: undefined as unknown as string,
+    },
   ])('does not persist malformed or unsafe output: %j', async (result) => {
     await expect(service.record(result)).resolves.toBeNull();
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it('persists actual TypeSafe adapter provenance without the request model', async () => {
+    await service.record({
+      ...success(aliasProposal()),
+      provider: 'typesafe',
+      model: 'jev-1.14.0',
+      taskVersion: 'jev-product-resolution-v1',
+    });
+    const calls = create.mock.calls as unknown as Array<
+      [{ data: Record<string, unknown> }]
+    >;
+    expect(calls[0][0].data).toMatchObject({
+      modelProvider: 'typesafe',
+      modelVersion: 'jev-1.14.0',
+      promptVersion: 'jev-product-resolution-v1',
+    });
   });
 
   it('surfaces persistence failure for the orchestrator to isolate', async () => {
@@ -129,11 +150,12 @@ function choiceProposal(): ProductResolutionProposal {
 
 function success(
   value: ProductResolutionProposal,
-): LlmGenerationResult<ProductResolutionProposal> {
+): ProductResolutionAdviceResult {
   return {
     status: 'success',
     provider: ' openai ',
     model: ' test-model ',
+    taskVersion: PRODUCT_RESOLUTION_PROMPT_VERSION,
     value,
   };
 }

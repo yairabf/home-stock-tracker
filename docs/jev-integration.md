@@ -1,8 +1,8 @@
-# Jev transport foundation
+# Jev transport and product matching
 
-Feature 37a exports an injectable `JevDecisionClient` from `LlmModule` for future
-bounded decisions. Product matching (37b) and stock prediction (37d) will supply
-their own adapters. Generation, including classification and shelf life, continues
+Feature 37a exports an injectable `JevDecisionClient` from `LlmModule` for
+bounded decisions. Feature 37b adds task-specific product-resolution advisors.
+Stock prediction routing remains unavailable until 37d. Generation, including classification and shelf life, continues
 through the OpenAI `LlmProvider`. There are no new REST/MCP endpoints or database
 fields in this feature.
 
@@ -38,11 +38,13 @@ availability for your account is determined by the provider at call time. The
 example pin is `jev-1.13.0`, checked against the
 [TypeSafe model documentation](https://docs.typesafe.ai/models) on 2026-09-30.
 
-Selecting `typesafe` first requires its key and pinned model, then fails startup
-with `<TASK_SELECTOR> typesafe adapter is not available`. Feature 37b will remove
-only the resolution guard; 37d will remove only the prediction guard. Supplying
-Jev credentials while both selectors remain OpenAI configures the transport but
-does not route domain calls to it.
+Selecting `PRODUCT_RESOLUTION_PROVIDER=typesafe` requires the private key and
+pinned model and selects the Jev matching advisor. Selecting
+`STOCK_PREDICTION_PROVIDER=typesafe` still fails startup with
+`STOCK_PREDICTION_PROVIDER typesafe adapter is not available`; 37d owns that
+adapter. Supplying Jev credentials while both selectors remain OpenAI configures
+the transport but does not route domain calls to it. Keep runtime matching on
+OpenAI until the separate 37c evaluation and rollout review.
 
 Bootstrap calls `loadApplicationConfig()` once and passes its result to
 `AppModule.register(config)`. Nested LLM factories consume `MODEL_CONFIG` rather
@@ -85,7 +87,7 @@ choice, confidence, probabilities and usage, or `status: 'unavailable'` with
 requested model when configured, task/version and a safe reason. Provider errors,
 headers, credentials and raw payloads are not included in results. Transport
 validation does not apply a domain confidence threshold or persist provenance.
-Future adapters own acceptance policies; confidence differs from the selected
+Task adapters own acceptance policies; confidence differs from the selected
 option probability and does not establish household outcome accuracy.
 
 ## Deadline and failures
@@ -140,5 +142,71 @@ configured Jev credentials. Contract checks cover the existing REST/MCP agent
 contracts. Other PostgreSQL end-to-end suites require an isolated migrated test
 database; see their repository harness before running the full suite.
 
-Live paid connectivity, task evaluation, rollout and persisted inference logs are
-outside 37a. Matching evaluation is 37c; prediction evaluation is 37e.
+Live paid connectivity, task evaluation and rollout are outside 37b. Matching
+evaluation is 37c; prediction evaluation is 37e.
+
+
+## Product matching policy (37b)
+
+`ProductResolutionService` runs the existing deterministic search first. Exact
+canonical/alias matches bypass both advisors. It retains the maximum 20 candidates
+and complete normalized context limit of 16,384 UTF-8 bytes. Invalid or oversized
+context preserves search results with null advice. The injectable
+`PRODUCT_RESOLUTION_ADVISOR` port selects OpenAI by default through `MODEL_CONFIG`;
+OpenAI keeps its existing 0.7 proposal gate and product-creation advice.
+
+The Jev adapter makes one bounded `product_resolution` Choice request, with version
+`jev-product-resolution-v1` and question `product_match`. Candidate tokens are
+`candidate_0`, `candidate_1`, etc., independent of catalog IDs; `ambiguous` and
+`no_match` are separate options. Only validated candidate identity facts and the
+requested phrase are sent. Brand, size, variant, category and units matter when
+provided. Related products need not be the same item. Text is evidence rather
+than instructions.
+
+| Validated decision | Advisory result |
+| --- | --- |
+| Known candidate, confidence >= 0.9 | `add_alias` for its supplied ID and the normalized requested phrase |
+| `ambiguous`, confidence >= 0.9, at least two candidates | `ask_user_to_choose` with all bounded candidates in search order |
+| `no_match`, lower confidence, insufficient candidates, invalid data or failure | Null proposal, original search results preserved |
+
+Zero candidates bypass Jev entirely. Duplicate candidate IDs and invalid context
+also bypass it. Reasons are fixed local text, not generated metadata. The 0.9 gate
+applies to matching and ambiguity; it is provisional service policy, not calibrated
+accuracy. The adapter reuses transport deadlines/retries and never falls back to
+an implicit OpenAI call or manufactures a `create_product` proposal.
+
+All proposals remain advice. Nonexact grocery additions return
+`product_resolution_required`, the original quantity/unit/note request echo,
+candidates and existing `allowedActions`. With no candidates, explicit
+create/cancel remains available; with candidates, selection and alias confirmation
+also remain available. Explicit grocery catalog confirmation and stock product
+confirmation retain their existing validation, transactions and conflict behavior.
+A Jev decision does not authorize a catalog, grocery, stock or purchase write.
+
+Accepted advice uses existing inference-log fields: provider `typesafe`, actual
+resolved response model, prompt version `jev-product-resolution-v1`, confidence,
+and `{ status: 'validated', proposal }`. OpenAI retains `product-resolution-v1`.
+No migration is required. No raw context, credentials, provider errors, or probability
+maps are persisted; log failures do not block advisory resolution.
+
+For focused verification, use the repository's isolated migrated PostgreSQL test
+setup with `DATABASE_URL` pointing only to that test database:
+
+```bash
+npm run test -- --runInBand src/product src/config/application-config.spec.ts src/llm/llm.module.spec.ts src/llm/typesafe
+npm run test:e2e -- --runInBand test/jev-product-matching.e2e-spec.ts test/model-configuration.e2e-spec.ts test/product-resolution.service.e2e-spec.ts test/policy-aware-grocery.service.e2e-spec.ts test/policy-aware-grocery.rest.e2e-spec.ts test/policy-aware-grocery.mcp.e2e-spec.ts test/confirmed-grocery-catalog.rest.e2e-spec.ts test/stock-product-confirmation.e2e-spec.ts
+npm run verify
+npm run contract:check
+```
+
+The Jev integration suite mocks provider HTTP while exercising real Nest routing,
+REST/MCP requests, confirmation, domain-state counts, and persisted provenance.
+This proves wiring and safety, not live model matching accuracy. Configuration
+HTTP tests cover both selectors without provider requests during startup,
+health/readiness or exact-match resolution. No public REST/MCP shape or agent
+bundle version changes in 37b.
+
+If explicitly selected matching needs reverting, set
+`PRODUCT_RESOLUTION_PROVIDER=openai` and restart the backend. Preserve existing
+TypeSafe logs; no data deletion or reclassification is needed. Enabling matching
+in a real runtime remains a separate operator action after 37c evaluation.

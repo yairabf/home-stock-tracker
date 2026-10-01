@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { LLM_PROVIDER, type LlmProvider } from '../llm/llm-provider';
-import type { LlmGenerationResult } from '../llm/types/structured-generation';
+import {
+  PRODUCT_RESOLUTION_ADVISOR,
+  type ProductResolutionAdvisor,
+  type ProductResolutionAdviceResult,
+} from './product-resolution-advisor';
 import { ProductSearchService } from './product-search.service';
 import { ProductResolutionLogService } from './product-resolution-log.service';
 import {
   PRODUCT_RESOLUTION_MAX_CANDIDATES,
   PRODUCT_RESOLUTION_MAX_CONTEXT_BYTES,
   PRODUCT_RESOLUTION_MIN_CONFIDENCE,
-  PRODUCT_RESOLUTION_PROMPT_VERSION,
-  PRODUCT_RESOLUTION_TIMEOUT_MS,
   productResolutionContextSchema,
   productResolutionProposalSchema,
   type ProductResolutionContext,
@@ -20,7 +21,8 @@ import {
 export class ProductResolutionService {
   constructor(
     private readonly productSearchService: ProductSearchService,
-    @Inject(LLM_PROVIDER) private readonly llmProvider: LlmProvider,
+    @Inject(PRODUCT_RESOLUTION_ADVISOR)
+    private readonly advisor: ProductResolutionAdvisor,
     private readonly resolutionLog: ProductResolutionLogService,
   ) {}
 
@@ -69,19 +71,9 @@ export class ProductResolutionService {
   private async generateProposal(
     context: ProductResolutionContext,
   ): Promise<ProductResolutionProposal | null> {
-    let result: LlmGenerationResult<ProductResolutionProposal>;
+    let result: ProductResolutionAdviceResult;
     try {
-      result = await this.withTimeout(
-        this.llmProvider.generateStructured({
-          task: 'product-resolution-advice',
-          instructions:
-            'Recommend one advisory product-resolution action using only the supplied phrase and candidate facts. Advice never performs or authorizes a write.',
-          input: context,
-          schemaName: 'product_resolution_proposal',
-          schema: productResolutionProposalSchema,
-          promptVersion: PRODUCT_RESOLUTION_PROMPT_VERSION,
-        }),
-      );
+      result = await this.advisor.advise(context);
     } catch {
       return null;
     }
@@ -118,23 +110,5 @@ export class ProductResolutionService {
       return proposal.candidateProductIds.every((id) => candidateIds.has(id));
     }
     return true;
-  }
-
-  private async withTimeout<T>(operation: Promise<T>): Promise<T> {
-    let timeout: NodeJS.Timeout | undefined;
-    const timeoutPromise = new Promise<never>((_resolve, reject) => {
-      timeout = setTimeout(
-        () => reject(new Error('Product resolution provider timed out')),
-        PRODUCT_RESOLUTION_TIMEOUT_MS,
-      );
-    });
-
-    try {
-      return await Promise.race([operation, timeoutPromise]);
-    } finally {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    }
   }
 }
