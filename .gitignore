@@ -43,3 +43,6 @@ graphify-out/.vocab.txt
 
 # Local product-matching evaluation output
 evaluation/product-matching/reports/
+
+# Private local stock-prediction evaluation reports
+evaluation/stock-prediction/reports/

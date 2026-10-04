@@ -1,0 +1,732 @@
+{
+  "schemaVersion": 1,
+  "version": "authored-safety-v1",
+  "replayVersion": "stock-history-replay-v1",
+  "cases": [
+    {
+      "id": "zero-history",
+      "productGroupId": "zero-history-group",
+      "episodeId": "zero-history-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "zero-history"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [],
+      "confirmations": [
+        {
+          "evidenceReference": "zero-history-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "disabled",
+      "productGroupId": "disabled-group",
+      "episodeId": "disabled-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "disabled"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": false,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "disabled-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "disabled-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "disabled-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "authoritative",
+      "productGroupId": "authoritative-group",
+      "episodeId": "authoritative-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "authoritative"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "direct-out",
+          "eventType": "STOCK_OUT",
+          "occurredAt": "2026-01-09T00:00:00Z",
+          "knownAt": "2026-01-09T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "authoritative-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "high-confidence",
+      "productGroupId": "high-confidence-group",
+      "episodeId": "high-confidence-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "high-confidence"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "recent-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-09T00:00:00Z",
+          "knownAt": "2026-01-09T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "recent-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "high-confidence-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "accepted-low",
+      "productGroupId": "accepted-low-group",
+      "episodeId": "accepted-low-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "accepted-low"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "accepted-low-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "accepted-low-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "accepted-low-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "false-prompt",
+      "productGroupId": "false-prompt-group",
+      "episodeId": "false-prompt-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "false-prompt"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "false-prompt-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "false-prompt-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "false-prompt-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "available",
+          "sourceType": "STOCK_CONFIRMED"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "low-confidence",
+      "productGroupId": "low-confidence-group",
+      "episodeId": "low-confidence-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "low-confidence"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "low-confidence-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "low-confidence-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "low-confidence-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "uncertain-choice",
+      "productGroupId": "uncertain-choice-group",
+      "episodeId": "uncertain-choice-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "uncertain-choice"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "uncertain-choice-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "uncertain-choice-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "uncertain-choice-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "cold-insufficient",
+      "productGroupId": "cold-insufficient-group",
+      "episodeId": "cold-insufficient-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "cold-insufficient"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "cold-insufficient-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "cold-insufficient-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "provider-failure",
+      "productGroupId": "provider-failure-group",
+      "episodeId": "provider-failure-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "provider-failure"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "provider-failure-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "provider-failure-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "provider-failure-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "missing-label",
+      "productGroupId": "missing-label-group",
+      "episodeId": "missing-label-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "missing-label"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "missing-label-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "missing-label-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "mutation-censored",
+      "productGroupId": "mutation-censored-group",
+      "episodeId": "mutation-censored-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "mutation-censored"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "mutation-censored-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "mutation-censored-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "later-purchase",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-10T06:00:00Z",
+          "knownAt": "2026-01-10T06:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "mutation-censored-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    },
+    {
+      "id": "cutoff-leakage",
+      "productGroupId": "cutoff-leakage-group",
+      "episodeId": "cutoff-leakage-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "cutoff-leakage"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "cutoff-leakage-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "cutoff-leakage-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "future-stock",
+          "eventType": "STOCK_OUT",
+          "occurredAt": "2026-01-11T00:00:00Z",
+          "knownAt": "2026-01-11T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "later-known",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-09T00:00:00Z",
+          "knownAt": "2026-01-11T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [
+        {
+          "evidenceReference": "cutoff-leakage-label",
+          "confirmedAt": "2026-01-10T12:00:00Z",
+          "state": "low",
+          "sourceType": "STOCK_LOW"
+        }
+      ],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": true
+      }
+    }
+  ]
+}

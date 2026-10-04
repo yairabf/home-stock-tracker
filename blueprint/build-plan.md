@@ -62,9 +62,9 @@
   - [x] 34a. **Store-skill contract and tutorial** - document the portable integration bundle, isolated browser architecture, private login handoff, exact product resolution, idempotent adapter contract, and live verification matrix ✓ 2026-09-08
   - [x] 34b. **Fail-closed store-skill scaffold** - generate an isolated starter skill with a non-secret preference registry, validation, overwrite protection, and automated scaffold tests ✓ 2026-09-08
 
-- [ ] 37. **Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation
+- [x] 37. **Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation ✓ 2026-10-02
   - [x] 37a. **Jev transport foundation** - validated configuration, bounded HTTP requests, response validation, and failure handling ✓ 2026-09-30
   - [x] 37b. **Jev product matching** - task-specific advisor routing, candidate decisions, confirmation preservation, and provenance ✓ 2026-09-30
   - [x] 37c. **Product-matching evaluation** - labeled fixtures, held-out metrics, setup, and rollout/rollback guidance ✓ 2026-10-01
   - [x] 37d. **Jev stock prediction** - advisor routing, zero-history guard, deterministic precedence, conservative confidence, and provenance ✓ 2026-10-01
-  - [ ] 37e. **Stock-prediction evaluation** - historical evidence replay, outcome metrics, and rollout/rollback guidance
+  - [x] 37e. **Stock-prediction evaluation** - historical evidence replay, outcome metrics, and rollout/rollback guidance ✓ 2026-10-02

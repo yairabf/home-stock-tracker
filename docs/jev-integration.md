@@ -393,3 +393,38 @@ This establishes wiring and safety, not live stock accuracy. Feature 37e must
 replay evidence without future leakage and review outcomes before changing the
 runtime stock selector. Rollback selects `STOCK_PREDICTION_PROVIDER=openai` and
 restarts the service, retaining all provenance and domain data.
+
+## Stock evaluation (37e)
+
+The local `eval:stock-prediction` command replays cutoff-safe historical inputs
+through shared statistics, candidate and hybrid calculations and the shipped
+Jev adapter. It never starts Nest or writes predictions, inference logs, events
+or statistics. Daily materialization and public REST/MCP reads retain their
+existing behavior. The fixed 0.9 acceptance gate, conservative confidence and
+cold-start evidence predicate remain unchanged.
+
+Start with the [authored offline safety corpus](../evaluation/stock-prediction/README.md):
+
+```sh
+npm run eval:stock-prediction -- --recorded evaluation/stock-prediction/recorded-safety.v1.json --output /private/tmp/stock-safety-report.json
+```
+
+This corpus intentionally includes failures and censored/missing outcomes. Its
+13-case result is inconclusive launch evidence, not real stock accuracy. No
+independently reviewed historical corpus or paid live held-out evidence has been
+collected for this feature. Both runtime selector defaults remain OpenAI.
+
+Follow the [historical review and stock-only rollout/rollback guide](../evaluation/stock-prediction/review-guide.md)
+to attest cutoff snapshots, freeze independently reviewed labels, preserve
+product groups/episodes across splits, collect private live evidence and inspect
+coverage and slices. The versioned 24-hour confirmation policy is a near-term
+proxy, with intervening balance mutations censored. Recomputed statistics measure
+historical evidence, not exact cache fidelity.
+
+Launch eligibility requires at least 95% binary accepted-final-low/out precision
+on at least 50 scored accepted episodes, complete live held-out historical data,
+frozen independent review, clean revision/model provenance and no provider
+failures or invalid safety states. Missing prerequisites are inconclusive. Report
+eligibility does not change configuration or authorize deployment. Only a separate
+operator decision may change `STOCK_PREDICTION_PROVIDER`; rollback restores it to
+`openai` and restarts while preserving matching configuration and historical data.

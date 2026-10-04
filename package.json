@@ -26,7 +26,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
-    "eval:product-matching": "ts-node scripts/evaluate-product-matching.ts"
+    "eval:product-matching": "ts-node scripts/evaluate-product-matching.ts",
+    "eval:stock-prediction": "ts-node scripts/evaluate-stock-prediction.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "version": "authored-connectivity-v1",
+  "replayVersion": "stock-history-replay-v1",
+  "cases": [
+    {
+      "id": "connectivity-smoke",
+      "productGroupId": "connectivity-smoke-group",
+      "episodeId": "connectivity-smoke-episode",
+      "split": "held_out",
+      "source": "authored",
+      "tags": [
+        "connectivity-smoke"
+      ],
+      "asOf": "2026-01-10T00:00:00Z",
+      "product": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "predictionEnabled": true,
+        "productType": null,
+        "isPerishable": true,
+        "predictionStrategy": null
+      },
+      "household": {
+        "knownAt": "2026-01-01T00:00:00Z",
+        "adultsCount": 2,
+        "childrenCount": 3
+      },
+      "events": [
+        {
+          "id": "connectivity-smoke-new",
+          "eventType": "PURCHASED",
+          "occurredAt": "2026-01-01T00:00:00Z",
+          "knownAt": "2026-01-01T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        },
+        {
+          "id": "connectivity-smoke-old",
+          "eventType": "PURCHASED",
+          "occurredAt": "2025-12-23T00:00:00Z",
+          "knownAt": "2025-12-23T00:00:00Z",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "confirmations": [],
+      "review": {
+        "author": "fixture-author",
+        "status": "pending",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null,
+        "episodeComplete": false
+      }
+    }
+  ]
+}

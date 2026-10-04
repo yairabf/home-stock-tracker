@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash ef80297dc0fce4c5f9db32029a0b5ac12257634d7b3f2c0d79eccedc7d8c9e05 -->
+<!-- blueprint:source-hash 79855fd04f29b51966d4350bcdc367b4a174280506452a23a3258e1d373c969d -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,7 +17,7 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Features 37a, 37b, 37c and 37d are complete; item 21 remains the first unchecked item in the general queue. Sub-features are separate branch/spec/review/archive units.
+Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 37a–37e are complete; item 21 remains the first unchecked item in the general queue. Sub-features are separate branch/spec/review/archive units.
 
 - [x] **1. Grocery list management** - add, remove, and retrieve grocery list items through the service API.
 - [x] **2. Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
@@ -66,12 +66,12 @@ Build-plan order and progress; unchecked means planned. Features 37a, 37b, 37c a
 - [x] **34. Online grocery store integration scaffold** - document and generate isolated vendor-cart skills using the grocery MCP contract.
   - [x] **34a. Store-skill contract and tutorial**.
   - [x] **34b. Fail-closed store-skill scaffold**.
-- [ ] **37. Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation.
+- [x] **37. Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation.
   - [x] **37a. Jev transport foundation**.
   - [x] **37b. Jev product matching**.
   - [x] **37c. Product-matching evaluation**.
   - [x] **37d. Jev stock prediction**.
-  - [ ] **37e. Stock-prediction evaluation**.
+  - [x] **37e. Stock-prediction evaluation**.
 
 **MVP exclusions:** dedicated UI/mobile app, exact real-time counts, OCR/barcodes, computer vision, built-in retailer integration, automatic purchasing, multi-tenancy, advanced ML/Python services, Redis without need, automatic grocery mutations from predictions. Post-MVP expiration and external adapter work are tracked separately.
 
@@ -203,7 +203,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **Node.js, TypeScript, NestJS** - modular backend, injected services, REST/JSON DTOs, OpenAPI, thin MCP tools.
 - **PostgreSQL and Prisma** - authoritative persistence and migrations; TypeORM only if a NestJS constraint requires it.
 - **Generation** - `LlmProvider` selected through DI and `LLM_PROVIDER`; OpenAI Responses API with validated output, private `OPENAI_API_KEY`, configurable `LLM_MODEL` (initial default `gpt-5.6-sol`). Product classification and shelf-life generation use this boundary. Adapters own requests, authentication, validation, errors; AI never writes directly to the database. Future OpenRouter/Anthropic adapters must preserve the domain boundary.
-- **Bounded decisions (37a transport, 37b matching and 37d stock advice)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. 37c evaluation tooling is complete; matching rollout awaits independently reviewed live held-out evidence; The Jev stock advisor is available for the internal on-demand prediction engine with zero-history safety, deterministic precedence, a 0.9 gate, conservative confidence, and versioned accepted/rejected provenance. Inventory reads and daily materialization remain deterministic; stock runtime rollout awaits reviewed 37e evidence. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
+- **Bounded decisions (37a transport, 37b matching and 37d stock advice)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. 37c evaluation tooling is complete; matching rollout awaits independently reviewed live held-out evidence; The Jev stock advisor is available for the internal on-demand prediction engine with zero-history safety, deterministic precedence, a 0.9 gate, conservative confidence, and versioned accepted/rejected provenance. Inventory reads and daily materialization remain deterministic; 37e stock evaluation tooling is complete with cutoff-safe replay, metrics, a private bounded CLI and an authored safety corpus. Stock runtime rollout awaits independently reviewed live historical held-out evidence; authored/offline evidence remains inconclusive. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
 - **Hybrid prediction** - history, elapsed time, household context, metadata, deterministic heuristics, optional model inference behind `PredictionEngine`. Python only if justified by statistical workloads.
 - **Jest/Nest testing utilities** - critical unit, PostgreSQL integration, API, prediction, and tool-contract coverage.
 - **Docker/Compose** - packaging, local development, environment configuration, migrations.

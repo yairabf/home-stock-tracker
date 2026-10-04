@@ -1,3 +1,9 @@
+import {
+  calculatePurchaseInterval,
+  calculateNeedInterval,
+  calculateTypicalPurchaseQuantity,
+  estimateConsumptionInterval,
+} from './statistics-calculation';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StatisticsService } from './statistics.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -32,12 +38,12 @@ describe('StatisticsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('calculatePurchaseInterval (via reflection)', () => {
+  describe('calculatePurchaseInterval (shared pure calculation)', () => {
     // Access private method for testing
     const callCalculatePurchaseInterval = (
       events: Array<{ eventType: InventoryEventType; timestamp: Date }>,
     ) => {
-      return (service as any).calculatePurchaseInterval(events);
+      return calculatePurchaseInterval(events);
     };
 
     it('should return null when fewer than 2 purchase events exist', () => {
@@ -176,12 +182,12 @@ describe('StatisticsService', () => {
     });
   });
 
-  describe('calculateNeedInterval (via reflection)', () => {
+  describe('calculateNeedInterval (shared pure calculation)', () => {
     // Access private method for testing
     const callCalculateNeedInterval = (
       events: Array<{ eventType: InventoryEventType; timestamp: Date }>,
     ) => {
-      return (service as any).calculateNeedInterval(events);
+      return calculateNeedInterval(events);
     };
 
     it('should return null when fewer than 2 need events exist', () => {
@@ -290,7 +296,7 @@ describe('StatisticsService', () => {
     });
   });
 
-  describe('calculateTypicalPurchaseQuantity (via reflection)', () => {
+  describe('calculateTypicalPurchaseQuantity (shared pure calculation)', () => {
     // Access private method for testing
     const callCalculateTypicalPurchaseQuantity = (
       events: Array<{
@@ -298,7 +304,7 @@ describe('StatisticsService', () => {
         quantity?: number | null;
       }>,
     ) => {
-      return (service as any).calculateTypicalPurchaseQuantity(events);
+      return calculateTypicalPurchaseQuantity(events);
     };
 
     it('should return null when no purchase events with quantities exist', () => {
@@ -388,13 +394,13 @@ describe('StatisticsService', () => {
     });
   });
 
-  describe('estimateConsumptionInterval (via reflection)', () => {
+  describe('estimateConsumptionInterval (shared pure calculation)', () => {
     const callEstimateConsumptionInterval = (
       avgPurchaseIntervalDays: number | null,
       typicalPurchaseQuantity: number | null,
       householdSize: number,
     ) => {
-      return (service as any).estimateConsumptionInterval(
+      return estimateConsumptionInterval(
         avgPurchaseIntervalDays,
         typicalPurchaseQuantity,
         householdSize,
@@ -456,7 +462,7 @@ describe('StatisticsService', () => {
     });
   });
 
-  describe('persistStatistics (via reflection)', () => {
+  describe('persistStatistics (shared pure calculation)', () => {
     const callPersistStatistics = async (productId: string, data: any) => {
       return (service as any).persistStatistics(productId, data);
     };

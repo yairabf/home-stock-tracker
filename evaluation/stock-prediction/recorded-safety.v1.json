@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "evidenceMode": "offline",
+  "datasetHash": "5b7867f8089776cde673c73aefc6391b7af68b51f38fbec24d1243bfe6fc7554",
+  "inputHash": "6291638cc4bee8c3c160885667d1992fbf84367dd9a0ac89d8c06aac8f1f26e7",
+  "split": "held_out",
+  "configuredModel": "jev-1.13.0",
+  "taskVersion": "jev-stock-prediction-v1",
+  "replayVersion": "stock-history-replay-v1",
+  "rows": [
+    {
+      "caseId": "zero-history",
+      "elapsedMs": 0,
+      "transport": null
+    },
+    {
+      "caseId": "disabled",
+      "elapsedMs": 0,
+      "transport": null
+    },
+    {
+      "caseId": "authoritative",
+      "elapsedMs": 0,
+      "transport": null
+    },
+    {
+      "caseId": "high-confidence",
+      "elapsedMs": 0,
+      "transport": null
+    },
+    {
+      "caseId": "accepted-low",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "false-prompt",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "low-confidence",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.89,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "uncertain-choice",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "uncertain",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.01,
+          "probably_out": 0.01,
+          "uncertain": 0.97
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "cold-insufficient",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "provider-failure",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "unavailable",
+        "reason": "network_error"
+      }
+    },
+    {
+      "caseId": "missing-label",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "mutation-censored",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    },
+    {
+      "caseId": "cutoff-leakage",
+      "elapsedMs": 15,
+      "transport": {
+        "provider": "typesafe",
+        "task": "stock_prediction",
+        "taskVersion": "jev-stock-prediction-v1",
+        "model": "jev-1.13.0",
+        "status": "success",
+        "choice": "probably_low",
+        "confidence": 0.95,
+        "probabilities": {
+          "likely_available": 0.01,
+          "probably_low": 0.97,
+          "probably_out": 0.01,
+          "uncertain": 0.01
+        },
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4
+        }
+      }
+    }
+  ]
+}
