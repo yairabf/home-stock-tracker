@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 79855fd04f29b51966d4350bcdc367b4a174280506452a23a3258e1d373c969d -->
+<!-- blueprint:source-hash d2e3cd1f298e1bd2e5199c636fec221f31c69acf253b66c59fa43fb2f6d9f4ad -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,61 +17,67 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 37a–37e are complete; item 21 remains the first unchecked item in the general queue. Sub-features are separate branch/spec/review/archive units.
+Build-plan order and progress; unchecked means planned. Feature 37 and sub-feature 38a are complete. The next target in the approved JEV-first scope is 38b; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
 
-- [x] **1. Grocery list management** - add, remove, and retrieve grocery list items through the service API.
-- [x] **2. Product catalog and normalization** - maintain canonical products and resolve common item names and aliases.
-- [x] **3. Inventory event tracking** - record structured household stock signals such as restocked, low, out, and still available.
-- [x] **4. Purchase and restock flow** - record purchased items, including completing all or part of the current grocery list.
-  - [x] **4a. Record purchases and restocks**.
-  - [x] **4b. Complete grocery items from a purchase**.
-  - [x] **4c. Partial grocery-list completion**.
-- [x] **5. Household profile** - store household composition and prediction preferences used when estimating consumption.
-- [x] **6. Inventory state estimation** - derive likely product availability from inventory events, purchases, and elapsed time.
-- [x] **7. Consumption pattern learning** - calculate product-specific purchase and need intervals from household history.
-- [x] **8. LLM-assisted product understanding** - use structured LLM inference to classify and enrich products when deterministic data is insufficient.
-- [x] **9. Hybrid low-stock prediction** - combine household history, product characteristics, deterministic signals, and LLM reasoning into confidence-scored stock predictions.
-- [x] **10. Prediction feedback** - record accepted, rejected, and corrected predictions so future estimates can improve.
-- [x] **11. Low-stock recommendations** - expose actionable high-confidence suggestions while suppressing uncertain or unnecessary recommendations.
-- [x] **12. MCP tool interface** - expose the inventory service's core grocery, stock, purchase, and prediction capabilities as agent-callable tools.
-- [x] **13. Hermes inventory skill** - teach Hermes to map natural-language household requests to the appropriate inventory tools.
-- [x] **14. Hermes grocery conversations** - support natural WhatsApp flows such as "add milk", "what do we need?", and "I bought everything except toilet paper".
-- [x] **15. Proactive stock checks** - let Hermes periodically request low-stock predictions and send useful recommendations through WhatsApp.
-- [x] **16. Service authentication** - protect REST and MCP access with private service-to-service authentication.
-- [x] **17. Operational visibility** - expose health checks and structured logs for inventory actions, predictions, and integration failures.
-- [x] **18. Deployment readiness** - containerize the NestJS service, configure PostgreSQL migrations and environment variables, and verify the production deployment.
-- [x] **36. Issue #3: Typed MCP grocery arguments and same-conversation recovery** - publish native JSON argument examples and bounded recovery guidance; archive records verification limits.
-- [x] **35. Category-aware list outputs** - expose stored product categories in grocery and inventory reads, publish the additive MCP contract, and render returned categories safely in agent list responses.
-- [x] **19. Expiration tracking** - record expiration information and surface products likely to expire soon.
-  - [x] **19a. Expiration-batch foundation**.
-  - [x] **19b. Expiration status and reads**.
-  - [x] **19c. Expiring-soon recommendations**.
-- [ ] **21. Product-specific automation policies** - allow selected products to be suggested, ignored, or automatically added based on prediction confidence.
-- [ ] **22. Advanced prediction engine** - improve forecasting with richer statistical models and introduce a Python prediction service only if justified.
-- [ ] **23. Background job infrastructure** - add Redis and a job queue when asynchronous or distributed prediction workloads require them.
-- [ ] **24. Receipt and barcode ingestion** - use receipts or barcode scans as additional purchase and inventory signals.
-- [ ] **26. Management dashboard** - add a web interface for reviewing inventory state, predictions, history, and manual corrections if conversational control proves insufficient.
-- [x] **27. Product name namespace** - store canonical names and aliases in one globally unique normalized namespace for deterministic indexed lookup.
-- [x] **28. Grocery quantity contract** - require a positive quantity on every grocery line and expose an absolute, concurrency-safe quantity-setting operation.
-- [x] **29. Product search and resolution proposals** - provide deterministic read-only product discovery and optional non-mutating LLM advice.
-- [x] **30. Policy-aware grocery additions** - make unknown-product handling explicit for deterministic and assisted clients.
-- [x] **31. Confirmed grocery catalog decisions** - apply user-approved product creation or alias decisions and safely complete the original grocery addition.
-- [x] **32. Verifiable agent integration contract** - version MCP/skill compatibility with fixtures, drift checks, safety scenarios, probes, and release manifests.
-- [x] **33. Household stock ledger and daily estimation** - materialize explicit and daily estimated stock and expose it through REST, MCP, recommendations, and agents.
-  - [x] **33a. Stock ledger foundation**.
-  - [x] **33b. Stock mutation and batch purchase APIs**.
-  - [x] **33c. Daily stock estimation workflow**.
-  - [x] **33d. Materialized inventory reads and recommendations**.
-  - [x] **33e. Agent integration and contract release**.
-- [x] **34. Online grocery store integration scaffold** - document and generate isolated vendor-cart skills using the grocery MCP contract.
-  - [x] **34a. Store-skill contract and tutorial**.
-  - [x] **34b. Fail-closed store-skill scaffold**.
-- [x] **37. Jev bounded-decision integration** - use TypeSafe Jev for evaluated product matching and stock decisions while retaining OpenAI generation.
-  - [x] **37a. Jev transport foundation**.
-  - [x] **37b. Jev product matching**.
-  - [x] **37c. Product-matching evaluation**.
-  - [x] **37d. Jev stock prediction**.
-  - [x] **37e. Stock-prediction evaluation**.
+- [x] **1. Grocery list management**
+- [x] **2. Product catalog and normalization**
+- [x] **3. Inventory event tracking**
+- [x] **4. Purchase and restock flow**
+  - [x] **4a. Record purchases and restocks**
+  - [x] **4b. Complete grocery items from a purchase**
+  - [x] **4c. Partial grocery-list completion**
+- [x] **5. Household profile**
+- [x] **6. Inventory state estimation**
+- [x] **7. Consumption pattern learning**
+- [x] **8. LLM-assisted product understanding**
+- [x] **9. Hybrid low-stock prediction**
+- [x] **10. Prediction feedback**
+- [x] **11. Low-stock recommendations**
+- [x] **12. MCP tool interface**
+- [x] **13. Hermes inventory skill**
+- [x] **14. Hermes grocery conversations**
+- [x] **15. Proactive stock checks**
+- [x] **16. Service authentication**
+- [x] **17. Operational visibility**
+- [x] **18. Deployment readiness**
+- [x] **36. Issue #3: Typed MCP grocery arguments and same-conversation recovery**
+- [x] **35. Category-aware list outputs**
+- [x] **19. Expiration tracking**
+  - [x] **19a. Expiration-batch foundation**
+  - [x] **19b. Expiration status and reads**
+  - [x] **19c. Expiring-soon recommendations**
+- [ ] **21. Product-specific automation policies**
+- [ ] **22. Advanced prediction engine**
+- [ ] **23. Background job infrastructure**
+- [ ] **24. Receipt and barcode ingestion**
+- [ ] **26. Management dashboard**
+- [x] **27. Product name namespace**
+- [x] **28. Grocery quantity contract**
+- [x] **29. Product search and resolution proposals**
+- [x] **30. Policy-aware grocery additions**
+- [x] **31. Confirmed grocery catalog decisions**
+- [x] **32. Verifiable agent integration contract**
+- [x] **33. Household stock ledger and daily estimation**
+  - [x] **33a. Stock ledger foundation**
+  - [x] **33b. Stock mutation and batch purchase APIs**
+  - [x] **33c. Daily stock estimation workflow**
+  - [x] **33d. Materialized inventory reads and recommendations**
+  - [x] **33e. Agent integration and contract release**
+- [x] **34. Online grocery store integration scaffold**
+  - [x] **34a. Store-skill contract and tutorial**
+  - [x] **34b. Fail-closed store-skill scaffold**
+- [x] **37. Jev bounded-decision integration**
+  - [x] **37a. Jev transport foundation**
+  - [x] **37b. Jev product matching**
+  - [x] **37c. Product-matching evaluation**
+  - [x] **37d. Jev stock prediction**
+  - [x] **37e. Stock-prediction evaluation**
+- [ ] **38. JEV-first application inference**
+  - [x] **38a. Task routing and choice vocabulary**
+  - [ ] **38b. JEV product understanding**
+  - [ ] **38c. JEV shelf-life policies**
+  - [ ] **38d. Stock predictions in application workflows**
+  - [ ] **38e. Evaluation and dual-provider rollout**
 
 **MVP exclusions:** dedicated UI/mobile app, exact real-time counts, OCR/barcodes, computer vision, built-in retailer integration, automatic purchasing, multi-tenancy, advanced ML/Python services, Redis without need, automatic grocery mutations from predictions. Post-MVP expiration and external adapter work are tracked separately.
 
@@ -95,10 +101,10 @@ Single-row table for the MVP household; schema should not assume single-row fore
 
 - `id` (string, UUID) - primary key.
 - `names` (`ProductName[]`) - the authoritative canonical name and explicit aliases.
-- `category` (string).
+- `category` (string, nullable).
 - `typicalUnit` (string, optional) - e.g. "liter", "unit".
-- `productType` (enum: `fast_consumable` | `pantry_staple` | `household_consumable` | `discrete_consumable`).
-- `isPerishable` (boolean).
+- `productType` (nullable enum: `fast_consumable` | `pantry_staple` | `household_consumable` | `discrete_consumable`).
+- `isPerishable` (boolean, nullable; unknown is not false).
 - `predictionStrategy` (string/enum, optional) - which estimation approach applies.
 - `predictionEnabled` (boolean).
 - `config` (JSON, optional) - product-specific overrides.
@@ -204,6 +210,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **PostgreSQL and Prisma** - authoritative persistence and migrations; TypeORM only if a NestJS constraint requires it.
 - **Generation** - `LlmProvider` selected through DI and `LLM_PROVIDER`; OpenAI Responses API with validated output, private `OPENAI_API_KEY`, configurable `LLM_MODEL` (initial default `gpt-5.6-sol`). Product classification and shelf-life generation use this boundary. Adapters own requests, authentication, validation, errors; AI never writes directly to the database. Future OpenRouter/Anthropic adapters must preserve the domain boundary.
 - **Bounded decisions (37a transport, 37b matching and 37d stock advice)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. 37c evaluation tooling is complete; matching rollout awaits independently reviewed live held-out evidence; The Jev stock advisor is available for the internal on-demand prediction engine with zero-history safety, deterministic precedence, a 0.9 gate, conservative confidence, and versioned accepted/rejected provenance. Inventory reads and daily materialization remain deterministic; 37e stock evaluation tooling is complete with cutoff-safe replay, metrics, a private bounded CLI and an authored safety corpus. Stock runtime rollout awaits independently reviewed live historical held-out evidence; authored/offline evidence remains inconclusive. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
+- **Planned JEV-first routing (38)** - deterministic evidence first; JEV for bounded category, type, unit, perishability, shelf-life policy and stock choices; OpenAI only for unsupported required generation. Preserve entered names and confirmed aliases. Low confidence and failures do not automatically invoke OpenAI. Versioned vocabularies and per-field unknowns precede adapters; accepted stock advice must feed projections with race protection. Task evaluation precedes rollout. See the [approved detailed plan](feature-plans/jev-first-application-inference.md).
 - **Hybrid prediction** - history, elapsed time, household context, metadata, deterministic heuristics, optional model inference behind `PredictionEngine`. Python only if justified by statistical workloads.
 - **Jest/Nest testing utilities** - critical unit, PostgreSQL integration, API, prediction, and tool-contract coverage.
 - **Docker/Compose** - packaging, local development, environment configuration, migrations.
@@ -234,3 +241,5 @@ No dedicated MVP UI. Hermes maps grocery, purchase, and stock requests to tools 
 - Exact deployment host remains unspecified; does not block Jev transport planning.
 - Project-plan section 3 summarizes extensions while build-plan tracks additional detailed post-MVP outcomes and splits. Use build-plan for progress.
 - Jev matching and prediction require separate evaluation before runtime rollout. PRD thresholds and precision targets are proposed policies, not demonstrated accuracy.
+
+- Project-plan describes the existing OpenAI generation split; approved feature 38 extends it to JEV-first choices. Current routing is unchanged until implementation/evaluation. Category/unit choices and shelf-life policies are finalized in the respective specs; no catalog relabeling is implied.

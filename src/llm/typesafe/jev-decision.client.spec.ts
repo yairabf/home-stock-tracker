@@ -85,6 +85,49 @@ describe('JevDecisionClient HTTP', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it.each(['product_understanding', 'shelf_life_policy'] as const)(
+    'preserves the Choice envelope and provenance for %s',
+    async (task) => {
+      const request: JevChoiceRequest = {
+        ...REQUEST,
+        task,
+        taskVersion: `jev-${task}-v1`,
+      };
+      fetcher.mockResolvedValueOnce(successResponse(request));
+      expect(await client.choose(request)).toMatchObject({
+        status: 'success',
+        task,
+        taskVersion: request.taskVersion,
+        model: 'jev-2.0.0',
+        usage: { input_tokens: 20, output_tokens: 3 },
+      });
+      expect(JSON.parse(requestBody())).toEqual({
+        model: CONFIG.jevModel,
+        state: request.state,
+        questions: {
+          match: {
+            type: 'choice',
+            instructions: request.instructions,
+            criteria: request.criteria,
+          },
+        },
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('rejects an unsupported task without fetching or allocating a deadline timer', async () => {
+    const request = {
+      ...REQUEST,
+      task: 'unsupported',
+    } as unknown as JevChoiceRequest;
+    expect(await client.choose(request)).toEqual(
+      unavailable('invalid_request', request),
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
   it('sends one authenticated Choice question with redirects disabled', async () => {
     fetcher.mockImplementationOnce((_url, init) => {
       expect(init?.signal?.aborted).toBe(false);
@@ -259,6 +302,8 @@ describe('JevDecisionClient HTTP', () => {
 
   describe.each([
     ['product_resolution', 'jev-product-resolution-v1', 10_000],
+    ['product_understanding', 'jev-product-understanding-v1', 10_000],
+    ['shelf_life_policy', 'jev-shelf-life-policy-v1', 15_000],
     ['stock_prediction', 'jev-stock-prediction-v1', 15_000],
   ] as const)('%s deadline', (task, taskVersion, budget) => {
     const request: JevChoiceRequest = { ...REQUEST, task, taskVersion };

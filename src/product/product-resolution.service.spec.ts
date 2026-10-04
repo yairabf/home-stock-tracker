@@ -3,6 +3,8 @@ import { ProductType } from '../generated/prisma/enums';
 import { type LlmProvider } from '../llm/llm-provider';
 import type { StructuredGenerationRequest } from '../llm/types/structured-generation';
 import { ProductResolutionService } from './product-resolution.service';
+import { JevProductResolutionAdvisor } from './jev-product-resolution-advisor.service';
+import type { JevDecisionClient } from '../llm/typesafe/jev-decision.client';
 import type { ProductResolutionLogService } from './product-resolution-log.service';
 import type { ProductSearchService } from './product-search.service';
 import {
@@ -49,6 +51,28 @@ describe('ProductResolutionService', () => {
       limit: 20,
     });
     expect(provider.generateStructured.mock.calls).toHaveLength(0);
+  });
+
+  it('bypasses JEV advice and inference logging for an exact saved name or alias', async () => {
+    const choose = jest.fn();
+    const jev = new JevProductResolutionAdvisor({
+      choose,
+    } as unknown as JevDecisionClient);
+    const resolver = new ProductResolutionService(
+      searchService as ProductSearchService,
+      jev,
+      resolutionLog as ProductResolutionLogService,
+    );
+    const exactMatch = candidate('product-a');
+    searchService.search.mockResolvedValue({ exactMatch, candidates: [] });
+    await expect(resolver.resolve('saved alias')).resolves.toEqual({
+      exactMatch,
+      candidates: [],
+      proposal: null,
+    });
+    expect(choose).not.toHaveBeenCalled();
+    expect(provider.generateStructured.mock.calls).toHaveLength(0);
+    expect(resolutionLog.record).not.toHaveBeenCalled();
   });
 
   it.each([

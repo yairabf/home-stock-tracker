@@ -61,7 +61,10 @@ mocked responses instead.
 
 [`JevChoiceRequest`](../src/llm/typesafe/jev-decision.types.ts) contains `task`,
 `taskVersion`, `questionKey`, `state`, `instructions` and `criteria`. Tasks are
-`product_resolution` or `stock_prediction`. Version, question and instructions
+`product_resolution`, `product_understanding`, `shelf_life_policy` or
+`stock_prediction`. Product-understanding and shelf-life choices have foundational
+transport support from 38a; their domain adapters ship in
+38b and 38c. Version, question and instructions
 must be nonblank; state is a finite JSON object. Criteria contain 2-255 nonblank
 option tokens with string, JSON object/array, or null rubrics. Validation rejects
 cycles and non-JSON values before networking.
@@ -92,8 +95,9 @@ option probability and does not establish household outcome accuracy.
 
 ## Deadline and failures
 
-The single monotonic budget is 10,000 ms for resolution and 15,000 ms for
-prediction, including preparation, fetch, body consumption and retry delay.
+The single monotonic budget is 10,000 ms for product resolution and product
+understanding, and 15,000 ms for stock prediction and shelf-life policy choices,
+including preparation, fetch, body consumption and retry delay.
 AbortController cancels fetch/body work on expiry. Timers are cleared on exit,
 and late promise rejections are contained.
 
@@ -428,3 +432,106 @@ failures or invalid safety states. Missing prerequisites are inconclusive. Repor
 eligibility does not change configuration or authorize deployment. Only a separate
 operator decision may change `STOCK_PREDICTION_PROVIDER`; rollback restores it to
 `openai` and restarts while preserving matching configuration and historical data.
+
+## JEV-first routing foundation (38a)
+
+38a adds internal policy, choice vocabulary and provenance contracts. It does
+not wire new adapters into application writes, schedule extra inference, change
+provider defaults or enable JEV-driven recommendations. The existing generation
+and decision selectors above retain their behavior. See the
+[approved feature 38 plan](../blueprint/context/feature-plans/jev-first-application-inference.md)
+for the domain adapters, stock projection integration and evaluated rollout.
+
+### Capability routing
+
+`decideModelRoute` validates a task, enabled flag, generation-attempt count and
+unique per-field outcomes. Adapters retain domain values separately; routing
+does not replace supplied values or accept provider-generated field names.
+
+| Evidence | Policy |
+| --- | --- |
+| Supplied, deterministic or accepted validated value | No model call for that field |
+| Required unresolved field with supported choices | JEV before eligible generation |
+| Required information outside supported choices, explicitly suitable for generation | OpenAI for only those unresolved fields |
+| Unknown, low confidence, ambiguity, rejected schema or provider failure | Unresolved; no automatic OpenAI escalation |
+| Optional missing field or disabled task | No model call |
+| A generation attempt already used | No further OpenAI generation for the operation |
+
+JEV choices are allowed for product matching, category, typical unit, product
+type, perishability, shelf-life policy and stock state. Unsupported required
+generation is allowed only for category, typical unit and shelf-life policy.
+Canonical names and aliases are excluded from both choice and generation in
+the product-understanding policy: keep the entered name and use explicit alias
+confirmation. Existing application behavior changes with the later adapters,
+not merely by importing this policy.
+
+`unknown` does not establish that no allowed category fits. The domain adapter
+must distinguish insufficient evidence from a supported determination that the
+needed value cannot be represented by its choices. It must not turn every
+abstention into `unsupported`. Accepted/supplied fields are never included in
+OpenAI generation. Logical attempt limits do not override provider SDK retries;
+integrated adapters must bound those HTTP attempts and the overall deadline.
+
+### Versioned choice vocabulary
+
+`buildChoiceVocabulary` accepts category/unit labels and a finite JSON context.
+It returns a complete vocabulary or an explicit unsupported reason, never a
+truncated subset. Existing labels retain their exact display spelling. Exact
+duplicates collapse; distinct labels with the same NFKC/lowercase/whitespace
+normalization return `ambiguous_labels` for review. Ordering is locale-independent.
+
+Empty inputs use `product-category-v1` (12 household category seeds) or
+`product-unit-v1` (`item`, `pack`, `kg`, `g`, `liter`, `ml`). Nonempty inputs use
+only the supplied labels. These manifests are choice options, not database
+enums, category migrations or restrictions on explicit legacy units. Changing
+the seed definitions requires a vocabulary version change and fresh evaluation.
+
+Domain labels map to opaque `choice_N` tokens. The separate `unknown` token maps
+to null; a real stored label such as `unknown` or `__proto__` still gets its own
+opaque domain token. `resolveVocabularyChoice` returns a resolved exact label,
+unknown, or invalid choice; it never accepts an unrequested answer token.
+
+The limit is 254 domain options plus unknown. Prepared `{ state, criteria }`
+must fit 16,384 UTF-8 bytes, including option labels. Oversized options/context,
+normalization collisions and malformed input return explicit unsupported results.
+Adapters must recheck their complete prepared context if they add evidence or
+criteria. Returned evidence is detached from caller mutation. Builders do not
+query or modify the database or call either provider.
+
+### Safe attempt provenance
+
+`validateDecisionAttemptProvenance` validates operation/field identities, local
+routing reason, task/vocabulary version, status, provider/model, elapsed time and
+optional validated token usage. It rejects unrelated/raw payload fields, duplicate
+or wrong-task fields, nonfinite numbers, invalid token counts, accessors and
+non-JSON values. Accepted/rejected TypeSafe answers require a pinned resolved
+model and validated usage. Unavailable attempts require a safe reason and omit
+resolved model/usage; failed-call usage remains unknown. OpenAI usage may be
+omitted because the current generation interface does not expose token counts.
+Persistence adapters must use the validated shape; 38a adds no database logging
+or migration. No monetary savings are inferred without an explicit price table.
+
+### Future selectors and rollback
+
+38b will introduce `PRODUCT_UNDERSTANDING_PROVIDER`; 38c will introduce
+`SHELF_LIFE_POLICY_PROVIDER`. Both are planned to accept `openai|typesafe`, default
+to `openai`, and enforce private TypeSafe credentials plus a pinned model when
+selected. They are not parsed or active in 38a. Keep them out of runtime setup
+until the matching adapters are available. `LLM_PROVIDER=openai` and the private
+OpenAI key remain required for generation fallback. Feature 38e reviews and
+enables validated task-specific JEV routing, with independent rollback controls.
+
+### Verify the foundation without paid calls
+
+```sh
+npm run test -- --runInBand src/llm/decision-routing src/llm/typesafe src/product
+npm run verify
+npm run contract:check
+npm run test:e2e -- --runInBand test/model-configuration.e2e-spec.ts
+```
+
+The dispatch regression harness verifies policy-selected provider call counts
+and field scopes using stubs. It does not claim integrated application routing
+or model accuracy. Real resolver tests prove exact matches bypass OpenAI and
+JEV advice. The configuration HTTP suite uses stubbed persistence and tests
+unchanged defaults, selectors and no-call bootstrap/read behavior.

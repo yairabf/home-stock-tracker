@@ -1,6 +1,6 @@
 # Queued feature plans
 
-No queued feature plans.
+- [38. JEV-first application inference](jev-first-application-inference.md): approved five-part scope; 38a is complete; 38b is the next target in this scope.
 
 Completed plans are preserved as implemented specifications under
 `blueprint/history/features/`; they are not duplicated in active context.

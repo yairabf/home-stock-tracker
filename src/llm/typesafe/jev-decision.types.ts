@@ -1,4 +1,11 @@
-export type JevTask = 'product_resolution' | 'stock_prediction';
+export const JEV_TASKS = [
+  'product_resolution',
+  'product_understanding',
+  'shelf_life_policy',
+  'stock_prediction',
+] as const;
+
+export type JevTask = (typeof JEV_TASKS)[number];
 
 export type JevJsonValue =
   null | string | boolean | number | JevJsonObject | JevJsonValue[];
@@ -41,16 +48,19 @@ export interface JevDecisionSuccess extends JevValidatedChoiceResponse {
   taskVersion: string;
 }
 
-export type JevUnavailableReason =
-  | 'not_configured'
-  | 'invalid_request'
-  | 'deadline_exceeded'
-  | 'authentication_error'
-  | 'request_rejected'
-  | 'rate_limited'
-  | 'provider_error'
-  | 'network_error'
-  | 'invalid_response';
+export const JEV_UNAVAILABLE_REASONS = [
+  'not_configured',
+  'invalid_request',
+  'deadline_exceeded',
+  'authentication_error',
+  'request_rejected',
+  'rate_limited',
+  'provider_error',
+  'network_error',
+  'invalid_response',
+] as const;
+
+export type JevUnavailableReason = (typeof JEV_UNAVAILABLE_REASONS)[number];
 
 export interface JevDecisionUnavailable {
   status: 'unavailable';

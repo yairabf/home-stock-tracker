@@ -35,16 +35,18 @@ function responseFixture(
 }
 
 describe('validateJevChoiceRequest', () => {
-  it.each(['product_resolution', 'stock_prediction'] as const)(
-    'accepts the %s task',
-    (task) => {
-      const request = { ...REQUEST, task };
-      expect(validateJevChoiceRequest(request)).toEqual({
-        status: 'valid',
-        value: request,
-      });
-    },
-  );
+  it.each([
+    'product_resolution',
+    'product_understanding',
+    'shelf_life_policy',
+    'stock_prediction',
+  ] as const)('accepts the %s task', (task) => {
+    const request = { ...REQUEST, task };
+    expect(validateJevChoiceRequest(request)).toEqual({
+      status: 'valid',
+      value: request,
+    });
+  });
 
   it.each([
     ['task', 'other'],

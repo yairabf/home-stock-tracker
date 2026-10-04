@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { JEV_TASKS } from './jev-decision.types';
 import type {
   JevChoiceCriteria,
   JevChoiceRequest,
@@ -25,12 +26,10 @@ const ANSWER_FIELDS = ['type', 'choice', 'confidence', 'probabilities'];
 const PROBABILITY_SUM_TOLERANCE = 0.001;
 
 const requestSchema = z.object({
-  task: z.enum(['product_resolution', 'stock_prediction']),
+  task: z.enum(JEV_TASKS),
   taskVersion: nonblankString,
   questionKey: nonblankString,
-  state: z.custom<JevJsonObject>(
-    (value) => isRecord(value) && isFiniteJsonValue(value),
-  ),
+  state: z.custom<JevJsonObject>(validateJevJsonObject),
   instructions: nonblankString,
   criteria: z.custom<JevChoiceCriteria>(isChoiceCriteria),
 });
@@ -45,6 +44,14 @@ const responseSchema = z.object({
   }),
   usage: z.object({ input_tokens: tokenCount, output_tokens: tokenCount }),
 });
+
+export function validateJevJsonObject(value: unknown): value is JevJsonObject {
+  try {
+    return isRecord(value) && isFiniteJsonValue(value);
+  } catch {
+    return false;
+  }
+}
 
 export function validateJevChoiceRequest(
   value: unknown,

@@ -68,3 +68,10 @@
   - [x] 37c. **Product-matching evaluation** - labeled fixtures, held-out metrics, setup, and rollout/rollback guidance ✓ 2026-10-01
   - [x] 37d. **Jev stock prediction** - advisor routing, zero-history guard, deterministic precedence, conservative confidence, and provenance ✓ 2026-10-01
   - [x] 37e. **Stock-prediction evaluation** - historical evidence replay, outcome metrics, and rollout/rollback guidance ✓ 2026-10-02
+
+- [ ] 38. **JEV-first application inference** - deterministic-first routing, JEV bounded product and stock decisions, OpenAI generation only for unsupported required information, evaluated dual-provider rollout
+  - [x] 38a. **Task routing and choice vocabulary** - define capability-based fallback rules, versioned category/unit options, provenance, and private configuration
+  - [ ] 38b. **JEV product understanding** - choose category, type, unit, and perishability; preserve names and confirmation; avoid default alias generation
+  - [ ] 38c. **JEV shelf-life policies** - select reviewed applicable policies and generate missing policies only when necessary
+  - [ ] 38d. **Stock predictions in application workflows** - invoke JEV for eligible stock evidence and connect accepted advice to materialized recommendations
+  - [ ] 38e. **Evaluation and dual-provider rollout** - review accuracy, abstention and usage, then enable validated task routing with independent rollback switches
