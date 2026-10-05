@@ -6,16 +6,21 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { ProductNameKind } from '../generated/prisma/enums';
-import type { LlmGenerationResult } from '../llm/types/structured-generation';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddProductAliasDto } from './dto/add-product-alias.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { productNameConflict, productNotFound } from './product-name.exception';
-import { normalizeProductName, toProductNameValue } from './product-name.util';
-import { ProductClassificationLogService } from './product-classification-log.service';
-import { ProductClassifier } from './product-classifier.service';
-import type { ProductClassificationResult } from './types/product-classification';
+import { toProductNameValue } from './product-name.util';
+import { ProductUnderstandingLogService } from './product-understanding-log.service';
+import { ProductUnderstandingRunner } from './product-understanding-runner.service';
+import {
+  acceptedMetadata,
+  initialUnderstanding,
+  type ProductMetadataSnapshot,
+  type ProductUnderstandingResult,
+  type UnderstandingField,
+} from './product-understanding';
 import type { ExplicitProductCreationInput } from './types/explicit-product-creation';
 import type { ProductNameValue } from './types/product-name';
 import {
@@ -31,18 +36,18 @@ interface PreparedProductNames {
 }
 
 interface ProductMetadata {
-  category?: string;
+  category?: string | null;
   typicalUnit?: string | null;
-  productType?: ProductClassificationResult['productType'];
-  isPerishable?: boolean;
+  productType?: ProductMetadataSnapshot['productType'];
+  isPerishable?: boolean | null;
 }
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly productClassifier: ProductClassifier,
-    private readonly classificationLog: ProductClassificationLogService,
+    private readonly understanding: ProductUnderstandingRunner,
+    private readonly understandingLog: ProductUnderstandingLogService,
     private readonly operationalLogger: OperationalLogger,
   ) {}
 
@@ -218,105 +223,77 @@ export class ProductService {
       return deterministicMatch;
     }
 
-    const classification = await this.classifySafely(normalizedName);
-    await this.recordClassificationSafely(classification);
-
+    const empty: ProductMetadataSnapshot = {
+      category: null,
+      typicalUnit: null,
+      productType: null,
+      isPerishable: null,
+    };
+    const result = await this.understandSafely(
+      requestedName.displayName,
+      empty,
+    );
+    const metadata = acceptedMetadata(empty, result);
     try {
-      return await this.runSerializable(async (tx) => {
+      const saved = await this.runSerializable(async (tx) => {
         const concurrentMatch =
           await this.findProductByNormalizedNameWithinTransaction(
             tx,
             normalizedName,
           );
-        if (concurrentMatch) {
-          return concurrentMatch;
-        }
-
-        if (classification.status === 'success') {
-          const inferredMatch = await this.findByClassification(
-            tx,
-            classification.value,
-          );
-          if (inferredMatch) {
-            return this.addAliasWithinTransaction(
-              tx,
-              inferredMatch,
-              requestedName,
-            );
-          }
-
-          const names = this.prepareProductNames(
-            classification.value.canonicalName,
-            [...classification.value.aliases, requestedName.displayName],
-            'canonicalName',
-          );
-          return this.createProductWithinTransaction(tx, names, {
-            category: classification.value.category,
-            typicalUnit: classification.value.typicalUnit,
-            productType: classification.value.productType,
-            isPerishable: classification.value.isPerishable,
-          });
-        }
-
+        if (concurrentMatch)
+          return { product: concurrentMatch, applied: false };
         const names = this.prepareProductNames(
           requestedName.displayName,
           undefined,
           'canonicalName',
         );
-        return this.createProductWithinTransaction(tx, names, {});
+        return {
+          product: await this.createProductWithinTransaction(
+            tx,
+            names,
+            metadata,
+          ),
+          applied: true,
+        };
       });
+      await this.recordUnderstandingSafely(
+        result,
+        saved.applied ? (Object.keys(metadata) as UnderstandingField[]) : [],
+        saved.applied ? 'applied' : 'reused',
+      );
+      return saved.product;
     } catch (error) {
-      if (!this.isProductNameWriteConflict(error)) {
-        throw error;
-      }
-
+      if (!this.isProductNameWriteConflict(error)) throw error;
       const concurrentMatch =
         await this.findProductByNormalizedName(normalizedName);
-      if (concurrentMatch) {
-        return concurrentMatch;
-      }
-      throw productNameConflict();
+      if (!concurrentMatch) throw productNameConflict();
+      await this.recordUnderstandingSafely(result, [], 'reused');
+      return concurrentMatch;
     }
   }
 
-  private async classifySafely(
-    normalizedName: string,
-  ): Promise<LlmGenerationResult<ProductClassificationResult>> {
+  private async understandSafely(
+    rawName: string,
+    metadata: ProductMetadataSnapshot,
+  ): Promise<ProductUnderstandingResult> {
     try {
-      return await this.productClassifier.classify({ rawName: normalizedName });
+      return await this.understanding.understand(rawName, metadata);
     } catch {
-      return { status: 'unavailable' };
+      return initialUnderstanding(metadata);
     }
   }
 
-  private async recordClassificationSafely(
-    result: LlmGenerationResult<ProductClassificationResult>,
+  private async recordUnderstandingSafely(
+    result: ProductUnderstandingResult,
+    applied: UnderstandingField[],
+    outcome: 'applied' | 'reused',
   ): Promise<void> {
     try {
-      await this.classificationLog.record(result);
+      await this.understandingLog.record(result, applied, outcome);
     } catch {
-      // Classification logging is diagnostic and must not block product resolution.
+      /* Diagnostic logging must not block product creation. */
     }
-  }
-
-  private async findByClassification(
-    tx: Prisma.TransactionClient,
-    classification: ProductClassificationResult,
-  ): Promise<ProductWithNames | null> {
-    const inferredNames = [
-      classification.canonicalName,
-      ...classification.aliases,
-    ];
-    for (const rawName of inferredNames) {
-      const product = await this.findProductByNormalizedNameWithinTransaction(
-        tx,
-        normalizeProductName(rawName),
-      );
-      if (product) {
-        return product;
-      }
-    }
-    return null;
   }
 
   private async createProductWithinTransaction(

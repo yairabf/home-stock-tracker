@@ -44,7 +44,7 @@ export interface HouseholdPredictionContext {
 
 export interface ProductPredictionContext {
   productType: ProductType | null;
-  isPerishable: boolean;
+  isPerishable: boolean | null;
   predictionStrategy: string | null;
 }
 

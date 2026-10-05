@@ -15,7 +15,7 @@ export class DeterministicSignalsDto {
   avgNeedIntervalDays: number | null;
   estimatedConsumptionIntervalDays: number | null;
   observationCount: number;
-  isPerishable: boolean;
+  isPerishable: boolean | null;
   predictionStrategy: string | null;
   householdContext: {
     adultsCount: number;

@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash d2e3cd1f298e1bd2e5199c636fec221f31c69acf253b66c59fa43fb2f6d9f4ad -->
+<!-- blueprint:source-hash 628891c34d5b612e001befb63ca349ac3fbdab1955061509d6fb2696e60424d2 -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,7 +17,7 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Feature 37 and sub-feature 38a are complete. The next target in the approved JEV-first scope is 38b; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
+Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 38a and 38b are complete. The next target in the approved JEV-first scope is 38c; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
 
 - [x] **1. Grocery list management**
 - [x] **2. Product catalog and normalization**
@@ -74,7 +74,7 @@ Build-plan order and progress; unchecked means planned. Feature 37 and sub-featu
   - [x] **37e. Stock-prediction evaluation**
 - [ ] **38. JEV-first application inference**
   - [x] **38a. Task routing and choice vocabulary**
-  - [ ] **38b. JEV product understanding**
+  - [x] **38b. JEV product understanding**
   - [ ] **38c. JEV shelf-life policies**
   - [ ] **38d. Stock predictions in application workflows**
   - [ ] **38e. Evaluation and dual-provider rollout**

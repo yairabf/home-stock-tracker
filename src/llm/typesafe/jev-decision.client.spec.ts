@@ -80,6 +80,52 @@ describe('JevDecisionClient HTTP', () => {
     return body;
   }
 
+  it.each([0, -1, NaN, Infinity])(
+    'does not fetch with exhausted or invalid budget %p',
+    async (budget) => {
+      expect(await client.choose(REQUEST, budget)).toEqual(
+        unavailable('deadline_exceeded'),
+      );
+      expect(fetcher).not.toHaveBeenCalled();
+    },
+  );
+
+  it('caps a caller budget at the existing task deadline', async () => {
+    fetcher.mockImplementation(() => new Promise(() => {}));
+    const pending = client.choose(REQUEST, 60_000);
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(await pending).toEqual(unavailable('deadline_exceeded'));
+    expect(requestSignal().aborted).toBe(true);
+  });
+
+  it('shares one caller deadline between successive decisions and cancels pending fetch', async () => {
+    fetcher.mockResolvedValueOnce(successResponse());
+    const deadline = performance.now() + 1_000;
+    expect(
+      (await client.choose(REQUEST, deadline - performance.now())).status,
+    ).toBe('success');
+    await jest.advanceTimersByTimeAsync(800);
+    fetcher.mockImplementationOnce(() => new Promise(() => {}));
+    const pending = client.choose(REQUEST, deadline - performance.now());
+    await jest.advanceTimersByTimeAsync(200);
+    expect(await pending).toEqual(unavailable('deadline_exceeded'));
+    expect(fetcher.mock.calls[1][1]?.signal?.aborted).toBe(true);
+    expect(await client.choose(REQUEST, deadline - performance.now())).toEqual(
+      unavailable('deadline_exceeded'),
+    );
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it('will not retry beyond the remaining caller budget', async () => {
+    fetcher.mockResolvedValueOnce(
+      new Response('', { status: 429, headers: { 'Retry-After': '1' } }),
+    );
+    expect(await client.choose(REQUEST, 500)).toEqual(
+      unavailable('deadline_exceeded'),
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it('constructs without fetching', () => {
     expect(client.configured).toBe(true);
     expect(fetcher).not.toHaveBeenCalled();

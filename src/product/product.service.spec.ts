@@ -1,23 +1,27 @@
 import { Prisma } from '../generated/prisma/client';
 import { ProductNameKind, ProductType } from '../generated/prisma/enums';
-import type { LlmGenerationResult } from '../llm/types/structured-generation';
 import type { OperationalLogger } from '../observability/operational-logger.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import {
   PRODUCT_NAME_CONFLICT,
   PRODUCT_NOT_FOUND,
 } from './product-name.exception';
-import type { ProductClassificationLogService } from './product-classification-log.service';
-import type { ProductClassifier } from './product-classifier.service';
+import type { ProductUnderstandingLogService } from './product-understanding-log.service';
+import type { ProductUnderstandingRunner } from './product-understanding-runner.service';
 import { ProductService } from './product.service';
-import type { ProductClassificationResult } from './types/product-classification';
+import {
+  initialUnderstanding,
+  type ProductUnderstandingResult,
+} from './product-understanding';
 import type { ProductWithNames } from './types/product-with-names';
 
 describe('ProductService', () => {
   let service: ProductService;
-  let productClassifier: jest.Mocked<Pick<ProductClassifier, 'classify'>>;
-  let classificationLog: jest.Mocked<
-    Pick<ProductClassificationLogService, 'record'>
+  let understandingRunner: jest.Mocked<
+    Pick<ProductUnderstandingRunner, 'understand'>
+  >;
+  let understandingLog: jest.Mocked<
+    Pick<ProductUnderstandingLogService, 'record'>
   >;
   let outerProductFindMany: jest.Mock;
   let outerFindUnique: jest.Mock;
@@ -35,23 +39,41 @@ describe('ProductService', () => {
     Pick<OperationalLogger, 'catalogIntegrity'>
   >;
 
-  const classification: ProductClassificationResult = {
-    canonicalName: 'milk',
-    aliases: ['whole milk'],
-    category: 'dairy',
-    typicalUnit: 'liter',
-    productType: ProductType.fast_consumable,
-    isPerishable: true,
-    confidence: 0.95,
+  const successfulUnderstanding: ProductUnderstandingResult = {
+    fields: {
+      category: {
+        status: 'resolved',
+        source: 'jev',
+        value: 'dairy',
+        confidence: 0.95,
+      },
+      typicalUnit: {
+        status: 'resolved',
+        source: 'jev',
+        value: 'liter',
+        confidence: 0.95,
+      },
+      productType: {
+        status: 'resolved',
+        source: 'jev',
+        value: ProductType.fast_consumable,
+        confidence: 0.95,
+      },
+      isPerishable: {
+        status: 'resolved',
+        source: 'jev',
+        value: true,
+        confidence: 0.95,
+      },
+    },
+    attempts: [],
   };
-
-  const successfulClassification: LlmGenerationResult<ProductClassificationResult> =
-    {
-      status: 'success',
-      provider: 'openai',
-      model: 'test-model',
-      value: classification,
-    };
+  const emptyMetadata = {
+    category: null,
+    typicalUnit: null,
+    productType: null,
+    isPerishable: null,
+  };
 
   beforeEach(() => {
     outerProductFindMany = jest.fn().mockResolvedValue([]);
@@ -93,13 +115,13 @@ describe('ProductService', () => {
       },
       $transaction: transaction,
     } as unknown as PrismaService;
-    productClassifier = { classify: jest.fn() };
-    classificationLog = { record: jest.fn().mockResolvedValue(null) };
+    understandingRunner = { understand: jest.fn() };
+    understandingLog = { record: jest.fn().mockResolvedValue(null) };
     operationalLogger = { catalogIntegrity: jest.fn() };
     service = new ProductService(
       prisma,
-      productClassifier as unknown as ProductClassifier,
-      classificationLog as unknown as ProductClassificationLogService,
+      understandingRunner as unknown as ProductUnderstandingRunner,
+      understandingLog as unknown as ProductUnderstandingLogService,
       operationalLogger as unknown as OperationalLogger,
     );
   });
@@ -147,8 +169,8 @@ describe('ProductService', () => {
           },
         }),
       );
-      expect(productClassifier.classify).not.toHaveBeenCalled();
-      expect(classificationLog.record).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
+      expect(understandingLog.record).not.toHaveBeenCalled();
     });
 
     it('reuses an exact explicit identity without applying creation metadata', async () => {
@@ -174,7 +196,7 @@ describe('ProductService', () => {
         }),
       ).resolves.toBe(existing);
       expect(createProduct).not.toHaveBeenCalled();
-      expect(productClassifier.classify).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
     });
 
     it('reuses a confirmed identity only when every supplied name is compatible', async () => {
@@ -204,7 +226,7 @@ describe('ProductService', () => {
         }),
       ).resolves.toBe(existing);
       expect(createProduct).not.toHaveBeenCalled();
-      expect(productClassifier.classify).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
       expect(transactionNameFindMany).toHaveBeenLastCalledWith({
         where: { normalizedName: { in: ['milk', 'whole milk'] } },
         select: { normalizedName: true, productId: true },
@@ -536,8 +558,8 @@ describe('ProductService', () => {
         },
       });
       expect(outerProductFindMany).not.toHaveBeenCalled();
-      expect(productClassifier.classify).not.toHaveBeenCalled();
-      expect(classificationLog.record).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
+      expect(understandingLog.record).not.toHaveBeenCalled();
       expect(createProduct).not.toHaveBeenCalled();
     });
 
@@ -557,8 +579,8 @@ describe('ProductService', () => {
         await expect(service.findByExactOrAliasName(rawName)).resolves.toBe(
           existing,
         );
-        expect(productClassifier.classify).not.toHaveBeenCalled();
-        expect(classificationLog.record).not.toHaveBeenCalled();
+        expect(understandingRunner.understand).not.toHaveBeenCalled();
+        expect(understandingLog.record).not.toHaveBeenCalled();
         expect(createProduct).not.toHaveBeenCalled();
         expect(updateProduct).not.toHaveBeenCalled();
       },
@@ -570,7 +592,7 @@ describe('ProductService', () => {
       );
       expect(outerNameFindMany).not.toHaveBeenCalled();
       expect(outerProductFindMany).not.toHaveBeenCalled();
-      expect(productClassifier.classify).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
       expect(createProduct).not.toHaveBeenCalled();
       expect(updateProduct).not.toHaveBeenCalled();
     });
@@ -579,8 +601,8 @@ describe('ProductService', () => {
       await expect(service.findByExactOrAliasName('Oat Milk')).rejects.toThrow(
         'No product named "oat milk"',
       );
-      expect(productClassifier.classify).not.toHaveBeenCalled();
-      expect(classificationLog.record).not.toHaveBeenCalled();
+      expect(understandingRunner.understand).not.toHaveBeenCalled();
+      expect(understandingLog.record).not.toHaveBeenCalled();
       expect(createProduct).not.toHaveBeenCalled();
       expect(updateProduct).not.toHaveBeenCalled();
     });
@@ -615,18 +637,19 @@ describe('ProductService', () => {
       expect(JSON.stringify(integrityEvent)).not.toContain('milk');
     });
 
-    it('creates and logs an enriched product with namespace rows', async () => {
-      productClassifier.classify.mockResolvedValue(successfulClassification);
-
+    it('creates metadata while preserving entered spelling and creating no aliases', async () => {
+      understandingRunner.understand.mockResolvedValue(successfulUnderstanding);
+      createProduct.mockResolvedValue(product({ canonicalName: 'Moo Juice' }));
       await expect(
-        service.findOrCreateByExactOrAliasMatch('moo juice'),
+        service.findOrCreateByExactOrAliasMatch(' Moo Juice '),
       ).resolves.toMatchObject({
-        names: [expect.objectContaining({ displayName: 'milk' })],
+        names: [expect.objectContaining({ displayName: 'Moo Juice' })],
       });
-      expect(classificationLog.record).toHaveBeenCalledWith(
-        successfulClassification,
+      expect(understandingRunner.understand).toHaveBeenCalledWith(
+        'Moo Juice',
+        emptyMetadata,
       );
-      expect(createProduct).toHaveBeenLastCalledWith(
+      expect(createProduct).toHaveBeenCalledWith(
         expect.objectContaining({
           data: {
             category: 'dairy',
@@ -636,104 +659,82 @@ describe('ProductService', () => {
             names: {
               create: [
                 {
-                  displayName: 'milk',
-                  normalizedName: 'milk',
-                  kind: ProductNameKind.canonical,
-                },
-                {
-                  displayName: 'whole milk',
-                  normalizedName: 'whole milk',
-                  kind: ProductNameKind.alias,
-                },
-                {
-                  displayName: 'moo juice',
+                  displayName: 'Moo Juice',
                   normalizedName: 'moo juice',
-                  kind: ProductNameKind.alias,
+                  kind: ProductNameKind.canonical,
                 },
               ],
             },
           },
         }),
       );
-    });
-
-    it('reuses an inferred existing product and adds the raw name as an alias', async () => {
-      const existing = product({ id: 'existing-id', canonicalName: 'milk' });
-      productClassifier.classify.mockResolvedValue(successfulClassification);
-      const updated = product({
-        id: 'existing-id',
-        canonicalName: 'milk',
-        aliases: ['moo juice'],
-      });
-      transactionNameFindMany
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([{ productId: existing.id }])
-        .mockResolvedValueOnce([]);
-      transactionNameFindUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ product: existing });
-      transactionFindUnique.mockResolvedValue(updated);
-
-      await service.findOrCreateByExactOrAliasMatch('moo juice');
-
-      expect(createName).toHaveBeenCalledWith({
-        data: {
-          productId: 'existing-id',
-          displayName: 'moo juice',
-          normalizedName: 'moo juice',
-          kind: ProductNameKind.alias,
-        },
-      });
-      expect(transactionFindUnique).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 'existing-id' } }),
+      expect(createName).not.toHaveBeenCalled();
+      expect(transactionNameFindUnique).toHaveBeenCalledTimes(1);
+      expect(understandingLog.record).toHaveBeenCalledWith(
+        successfulUnderstanding,
+        ['category', 'productType', 'typicalUnit', 'isPerishable'],
+        'applied',
       );
-      expect(updateProduct).not.toHaveBeenCalled();
-      expect(createProduct).not.toHaveBeenCalled();
     });
-
-    it('returns a concurrent raw-name match without creating a duplicate', async () => {
-      const concurrent = product({ canonicalName: 'moo juice' });
-      productClassifier.classify.mockResolvedValue(successfulClassification);
+    it('runs inference before the transaction and does not search inferred names', async () => {
+      understandingRunner.understand.mockImplementation(() => {
+        expect(transaction).not.toHaveBeenCalled();
+        return Promise.resolve(successfulUnderstanding);
+      });
+      await service.findOrCreateByExactOrAliasMatch('moo juice');
+      expect(transactionNameFindUnique).toHaveBeenCalledTimes(1);
+      expect(transactionNameFindUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { normalizedName: 'moo juice' } }),
+      );
+      expect(createName).not.toHaveBeenCalled();
+    });
+    it('returns a concurrent exact match without changing names or metadata', async () => {
+      const concurrent = product({ canonicalName: 'Moo Juice' });
+      understandingRunner.understand.mockResolvedValue(successfulUnderstanding);
       transactionNameFindMany.mockResolvedValueOnce([
         { productId: concurrent.id },
       ]);
       transactionNameFindUnique.mockResolvedValueOnce({ product: concurrent });
-
       await expect(
-        service.findOrCreateByExactOrAliasMatch('moo juice'),
+        service.findOrCreateByExactOrAliasMatch('Moo Juice'),
       ).resolves.toBe(concurrent);
-      expect(updateProduct).not.toHaveBeenCalled();
       expect(createProduct).not.toHaveBeenCalled();
+      expect(createName).not.toHaveBeenCalled();
+      expect(understandingLog.record).toHaveBeenCalledWith(
+        successfulUnderstanding,
+        [],
+        'reused',
+      );
     });
-
-    it('resolves a uniqueness race through the requested namespace key', async () => {
+    it('resolves a uniqueness race through only the requested namespace key', async () => {
       const concurrent = product({
         id: 'concurrent-id',
-        canonicalName: 'milk',
+        canonicalName: 'Moo Juice',
       });
-      productClassifier.classify.mockResolvedValue(successfulClassification);
+      understandingRunner.understand.mockResolvedValue(successfulUnderstanding);
       createProduct.mockRejectedValue(prismaError('P2002'));
       outerNameFindMany
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([{ productId: concurrent.id }]);
       outerNameFindUnique.mockResolvedValueOnce({ product: concurrent });
-
       await expect(
-        service.findOrCreateByExactOrAliasMatch('moo juice'),
+        service.findOrCreateByExactOrAliasMatch('Moo Juice'),
       ).resolves.toBe(concurrent);
+      expect(createName).not.toHaveBeenCalled();
     });
-
-    it.each([
-      { status: 'refusal', provider: 'openai', model: 'test-model' },
-      { status: 'unavailable', provider: 'openai', model: 'test-model' },
-    ] as const)(
-      'creates the deterministic fallback for $status',
-      async (result) => {
-        productClassifier.classify.mockResolvedValue(result);
-
+    it.each(['unknown', 'throw'])(
+      'creates safely after %s metadata',
+      async (mode) => {
+        if (mode === 'throw')
+          understandingRunner.understand.mockRejectedValue(
+            new Error('private provider detail'),
+          );
+        else
+          understandingRunner.understand.mockResolvedValue(
+            initialUnderstanding(emptyMetadata),
+          );
         await service.findOrCreateByExactOrAliasMatch('Moo Juice');
-
-        expect(createProduct).toHaveBeenLastCalledWith(
+        expect(createProduct).toHaveBeenCalledWith(
           expect.objectContaining({
             data: {
               names: {
@@ -750,43 +751,14 @@ describe('ProductService', () => {
         );
       },
     );
-
-    it('creates the deterministic fallback when classification throws', async () => {
-      productClassifier.classify.mockRejectedValue(
-        new Error('provider detail'),
+    it('continues when diagnostic logging fails', async () => {
+      understandingRunner.understand.mockResolvedValue(successfulUnderstanding);
+      understandingLog.record.mockRejectedValue(
+        new Error('private database detail'),
       );
-
-      await service.findOrCreateByExactOrAliasMatch('Moo Juice');
-
-      expect(classificationLog.record).toHaveBeenCalledWith({
-        status: 'unavailable',
-      });
-      expect(createProduct).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            names: {
-              create: [
-                {
-                  displayName: 'Moo Juice',
-                  normalizedName: 'moo juice',
-                  kind: ProductNameKind.canonical,
-                },
-              ],
-            },
-          },
-        }),
-      );
-    });
-
-    it('continues product creation when inference logging fails', async () => {
-      productClassifier.classify.mockResolvedValue(successfulClassification);
-      classificationLog.record.mockRejectedValue(new Error('database detail'));
-
       await expect(
-        service.findOrCreateByExactOrAliasMatch('moo juice'),
-      ).resolves.toMatchObject({
-        names: [expect.objectContaining({ displayName: 'milk' })],
-      });
+        service.findOrCreateByExactOrAliasMatch('Moo Juice'),
+      ).resolves.toBeDefined();
       expect(createProduct).toHaveBeenCalled();
     });
   });

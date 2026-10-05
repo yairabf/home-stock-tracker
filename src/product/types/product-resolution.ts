@@ -52,7 +52,7 @@ export const productResolutionCandidateSchema = z
     category: boundedString(PRODUCT_RESOLUTION_MAX_CATEGORY_LENGTH).nullable(),
     typicalUnit: boundedString(PRODUCT_RESOLUTION_MAX_UNIT_LENGTH).nullable(),
     productType: z.enum(ProductType).nullable(),
-    isPerishable: z.boolean(),
+    isPerishable: z.boolean().nullable(),
   })
   .strict();
 

@@ -76,7 +76,7 @@ describe('agent skill generator', () => {
     'scenarios.md',
     'manifest.json',
     'release/README.md',
-    'contracts/1.8.0/tools-list.json',
+    'contracts/2.0.0/tools-list.json',
   ])('fails closed when generated %s was hand-edited', (artifact) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-skills-'));
 
@@ -147,9 +147,9 @@ describe('agent skill generator', () => {
           ),
           'utf8',
         ),
-      );
-      contract.mcp.contractVersion = '1.99.0';
-      contract.mcp.toolsFixture = 'contracts/1.99.0/tools-list.json';
+      ) as { mcp: { contractVersion: string; toolsFixture: string } };
+      contract.mcp.contractVersion = '2.99.0';
+      contract.mcp.toolsFixture = 'contracts/2.99.0/tools-list.json';
       writeFileSync(
         join(shared, 'release-contract.json'),
         JSON.stringify(contract),
@@ -171,7 +171,7 @@ describe('agent skill generator', () => {
           join(temporaryRoot, 'src/mcp/agent-release-contract.generated.ts'),
           'utf8',
         ),
-      ).toContain("contractVersion: '1.99.0'");
+      ).toContain("contractVersion: '2.99.0'");
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }

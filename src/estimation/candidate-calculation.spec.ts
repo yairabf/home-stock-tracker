@@ -29,6 +29,20 @@ const calculate = (events: ProductEvent[]) =>
     now,
   );
 describe('historical deterministic candidate', () => {
+  it('preserves unknown perishability without changing direct stock precedence', () => {
+    const result = calculateCandidate(
+      summarizeHistory('product', [event('STOCK_OUT', 1)]),
+      null,
+      { ...product, isPerishable: null },
+      household,
+      now,
+    );
+    expect(result.signals.isPerishable).toBeNull();
+    expect(result).toMatchObject({
+      predictedState: 'probably_out',
+      authoritative: true,
+    });
+  });
   it('uses an explicit clock for recent confirmation and cold starts', () => {
     expect(calculate([event('STOCK_CONFIRMED', 3)])).toMatchObject({
       predictedState: 'likely_available',

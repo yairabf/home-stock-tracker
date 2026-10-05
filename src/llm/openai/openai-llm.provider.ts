@@ -28,14 +28,7 @@ export class OpenAiLlmProvider implements LlmProvider {
     }
 
     try {
-      const response = await this.client.responses.parse({
-        model: this.model,
-        instructions: request.instructions,
-        input: JSON.stringify(request.input),
-        text: {
-          format: zodTextFormat(request.schema, request.schemaName),
-        },
-      });
+      const response = await this.parseResponse(request);
 
       if (response.output_parsed !== null) {
         return {
@@ -65,6 +58,44 @@ export class OpenAiLlmProvider implements LlmProvider {
     } catch {
       this.logFailure();
       return this.unavailable();
+    }
+  }
+
+  private async parseResponse<T>(request: StructuredGenerationRequest<T>) {
+    const client = this.client;
+    if (!client) throw new Error('Provider unavailable');
+    const body = {
+      model: this.model,
+      instructions: request.instructions,
+      input: JSON.stringify(request.input),
+      text: { format: zodTextFormat(request.schema, request.schemaName) },
+    };
+    if (request.budgetMs === undefined) return client.responses.parse(body);
+    if (
+      !Number.isFinite(request.budgetMs) ||
+      request.budgetMs <= 0 ||
+      request.budgetMs > 10_000
+    )
+      throw new Error('Invalid generation budget');
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new Error('Generation deadline exceeded'));
+      }, request.budgetMs);
+    });
+    try {
+      return await Promise.race([
+        client.responses.parse(body, {
+          timeout: request.budgetMs,
+          maxRetries: 0,
+          signal: controller.signal,
+        }),
+        expired,
+      ]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 

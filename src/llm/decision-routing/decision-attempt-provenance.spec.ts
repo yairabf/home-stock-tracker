@@ -25,6 +25,28 @@ describe('validateDecisionAttemptProvenance', () => {
     },
   );
 
+  it('validates independent confidence and selected probability for accepted or rejected attempts', () => {
+    expect(
+      validateDecisionAttemptProvenance({
+        ...ATTEMPT,
+        status: 'rejected',
+        confidence: 0.95,
+        selectedProbability: 0.89,
+      }),
+    ).toMatchObject({ confidence: 0.95, selectedProbability: 0.89 });
+    for (const invalid of [NaN, Infinity, -1, 1.1]) {
+      expect(
+        validateDecisionAttemptProvenance({ ...ATTEMPT, confidence: invalid }),
+      ).toBeNull();
+      expect(
+        validateDecisionAttemptProvenance({
+          ...ATTEMPT,
+          selectedProbability: invalid,
+        }),
+      ).toBeNull();
+    }
+  });
+
   it('preserves missing failed-call usage as unknown', () => {
     const attempt = {
       operationId: 'operation-1',

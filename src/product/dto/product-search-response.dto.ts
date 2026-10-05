@@ -11,7 +11,7 @@ export class ProductSearchProductResponseDto {
   category: string | null;
   typicalUnit: string | null;
   productType: ProductType | null;
-  isPerishable: boolean;
+  isPerishable: boolean | null;
   predictionEnabled: boolean;
 
   static fromContract(

@@ -1,3 +1,4 @@
+import { ProductEnrichmentService } from './product-enrichment.service';
 import { RequestMethod } from '@nestjs/common';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { Test } from '@nestjs/testing';
@@ -15,6 +16,7 @@ describe('ProductController search', () => {
     const module = await Test.createTestingModule({
       controllers: [ProductController],
       providers: [
+        { provide: ProductEnrichmentService, useValue: {} },
         { provide: ProductService, useValue: {} },
         { provide: ProductSearchService, useValue: searchService },
       ],

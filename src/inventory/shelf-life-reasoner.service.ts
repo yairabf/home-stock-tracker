@@ -23,7 +23,7 @@ export class ShelfLifeReasoner {
     const result = await this.llmProvider.generateStructured({
       task: 'product-shelf-life-inference',
       instructions:
-        'Classify intrinsic product shelf life. Return finite days for perishable or degrading goods, otherwise nonperishable with null days. Do not adjust for household size.',
+        'Classify intrinsic product shelf life. Return finite days for perishable or degrading goods, otherwise nonperishable with null days. Do not adjust for household size. Null perishability is unknown, not evidence of nonperishability; use identifiable product evidence.',
       input: validatedInput,
       schemaName: 'product_shelf_life_policy',
       schema: shelfLifeInferenceResultSchema,

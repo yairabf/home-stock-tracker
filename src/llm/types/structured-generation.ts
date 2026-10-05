@@ -7,6 +7,7 @@ export interface StructuredGenerationRequest<T> {
   schemaName: string;
   schema: z.ZodType<T>;
   promptVersion?: string;
+  budgetMs?: number;
 }
 
 interface LlmResultMetadata {

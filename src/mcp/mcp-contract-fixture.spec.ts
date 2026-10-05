@@ -79,23 +79,41 @@ describe('MCP contract fixture', () => {
     );
   });
 
-  it('adds only the expiration recommendation tool after contract 1.7.1', () => {
+  it('widens only approved perishability outputs after contract 1.8.0', () => {
     const previous = readMcpContractSnapshot(
       join(
         projectRoot,
-        'integrations/shared/home-stock-tracker/contracts/1.7.1/tools-list.json',
+        'integrations/shared/home-stock-tracker/contracts/1.8.0/tools-list.json',
       ),
     );
-    const previousNames = new Set(previous.tools.map(({ name }) => name));
-
-    expect(snapshot.tools.filter(({ name }) => previousNames.has(name))).toEqual(
-      previous.tools,
-    );
-    expect(
-      snapshot.tools
-        .filter(({ name }) => !previousNames.has(name))
-        .map(({ name }) => name),
-    ).toEqual(['get_expiration_recommendations']);
+    const widened: string[] = [];
+    function widen(oldValue: unknown, current: unknown, path = ''): unknown {
+      if (Array.isArray(oldValue))
+        return oldValue.map((value, index) =>
+          widen(value, (current as unknown[])[index], `${path}/${index}`),
+        );
+      if (!oldValue || typeof oldValue !== 'object') return oldValue;
+      const oldObject = oldValue as Record<string, unknown>;
+      const newObject = current as Record<string, unknown>;
+      if (
+        path.endsWith('/isPerishable') &&
+        path.includes('/outputSchema/') &&
+        JSON.stringify(newObject) ===
+          JSON.stringify({ anyOf: [{ type: 'boolean' }, { type: 'null' }] })
+      ) {
+        expect(oldObject).toEqual({ type: 'boolean' });
+        widened.push(path);
+        return newObject;
+      }
+      return Object.fromEntries(
+        Object.entries(oldObject).map(([key, value]) => [
+          key,
+          widen(value, newObject?.[key], `${path}/${key}`),
+        ]),
+      );
+    }
+    expect(widen(previous.tools, snapshot.tools)).toEqual(snapshot.tools);
+    expect(widened.length).toBeGreaterThan(0);
   });
 
   it('normalizes tool ordering before comparison', () => {

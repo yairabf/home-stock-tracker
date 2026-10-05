@@ -113,7 +113,7 @@ describe('Estimation response (e2e)', () => {
       deterministicSignals: {
         estimatedConsumptionIntervalDays: null,
         observationCount: 0,
-        isPerishable: false,
+        isPerishable: null,
         householdContext: null,
         authoritativeDirectSignal: false,
       },

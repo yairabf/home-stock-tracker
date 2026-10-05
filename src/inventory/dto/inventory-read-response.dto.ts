@@ -99,7 +99,7 @@ export class InventoryEstimateResponseDto extends InventoryItemResponseDto {
     dto.llmContributed = projection?.prediction?.llmResult != null;
     dto.deterministicSignals =
       (projection?.prediction
-        ?.deterministicSignals as unknown as DeterministicSignalsDto) ??
+        ?.deterministicSignals as DeterministicSignalsDto) ??
       emptyDeterministicSignals();
     return dto;
   }
@@ -149,7 +149,7 @@ function emptyDeterministicSignals(): DeterministicSignalsDto {
     avgNeedIntervalDays: null,
     estimatedConsumptionIntervalDays: null,
     observationCount: 0,
-    isPerishable: false,
+    isPerishable: null,
     predictionStrategy: null,
     householdContext: null,
     authoritativeDirectSignal: false,

@@ -185,7 +185,7 @@ export function buildDisabledResult(
       avgNeedIntervalDays: null,
       estimatedConsumptionIntervalDays: null,
       observationCount: 0,
-      isPerishable: false,
+      isPerishable: null,
       predictionStrategy: null,
       householdContext: null,
       authoritativeDirectSignal: false,

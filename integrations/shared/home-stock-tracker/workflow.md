@@ -717,3 +717,5 @@ bundled with any other new products. Ask which yogurt was meant without changing
 After approval, confirm milk with a retained operation UUID. If the response is lost,
 retry that exact confirmation. Report rice/milk successes and unresolved yogurt.
 All grocery entries remain unchanged, even matching pending products.
+
+Product and prediction outputs may return `isPerishable: null` for unknown metadata. Do not interpret null as false. Explicit confirmed creation still requires an approved boolean.

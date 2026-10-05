@@ -1,0 +1,3 @@
+ALTER TABLE "Product"
+  ALTER COLUMN "isPerishable" DROP NOT NULL,
+  ALTER COLUMN "isPerishable" DROP DEFAULT;

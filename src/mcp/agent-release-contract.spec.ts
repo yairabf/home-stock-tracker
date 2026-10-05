@@ -129,7 +129,7 @@ describe('agent release contract', () => {
     const unsupported = mutableContract();
     unsupported.skill.compatibleMcpRange = '^1.0.0';
     const incompatible = mutableContract();
-    incompatible.skill.compatibleMcpRange = '>=2.0.0 <3.0.0';
+    incompatible.skill.compatibleMcpRange = '>=1.0.0 <2.0.0';
 
     expect(validate(unsupported).stderr).toContain(
       'must use the format >=x.y.z <x.y.z',
@@ -242,8 +242,8 @@ describe('agent release contract', () => {
   });
 
   it('publishes additive expiration recommendations with existing list features', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('1.8.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('1.18.0');
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('2.0.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('2.0.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',

@@ -76,7 +76,7 @@ export const caseSchema = z
         knownAt: date,
         predictionEnabled: z.boolean(),
         productType: z.enum(ProductType).nullable(),
-        isPerishable: z.boolean(),
+        isPerishable: z.boolean().nullable(),
         predictionStrategy: idSchema.nullable(),
       })
       .strict(),

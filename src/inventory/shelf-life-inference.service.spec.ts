@@ -78,6 +78,16 @@ describe('ShelfLifeInferenceService', () => {
     });
   });
 
+  it('passes unknown perishability as null instead of false', async () => {
+    findMany.mockResolvedValue([{ ...product('unknown'), isPerishable: null }]);
+    infer.mockResolvedValue({ status: 'unavailable' });
+    await service.inferMissingPolicies();
+    expect(infer).toHaveBeenCalledWith(
+      expect.objectContaining({ isPerishable: null }),
+    );
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('isolates failures and leaves unavailable or malformed products retryable', async () => {
     findMany.mockResolvedValue([
       product('failed'),

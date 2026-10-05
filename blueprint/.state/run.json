@@ -2,14 +2,7 @@
   "status": "ready",
   "command": "complete",
   "skill": "complete",
-  "feature": "37e",
-  "boundary": "reviewed",
-  "activity": "37e completed on local main; push approval pending",
-  "updated_at": "2026-10-04T10:24:35.709223+00:00",
-  "gate": "Verify: 94 suites / 1562 tests and build; contract: 124 scenarios / 6 suites / 79 tests passed",
-  "progress": {
-    "completed": 9,
-    "total": 9
-  },
-  "next_action": "Ask for separate approval to push local main to origin/main"
+  "feature": "38b",
+  "activity": "38b completed locally; squash merge approved; awaiting separate push approval",
+  "updated_at": "2026-10-05T05:27:49.969573+00:00"
 }

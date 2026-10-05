@@ -699,3 +699,22 @@ For "I bought everything except toilet paper," list pending items, require one
 exact match per named item, and call `complete_grocery_purchase` once with
 `items: [{ groceryItemId: <returned id> }, ...]` for only the rows actually
 purchased.
+
+### Unknown product perishability
+
+Product reads, search candidates and prediction signals return `isPerishable`
+as `true`, `false`, or `null`. Null means unknown and must not be interpreted as
+false. Explicit confirmed product creation still requires an approved boolean.
+MCP output consumers need contract 2.0.0 and its compatible complete agent bundle.
+Existing stored booleans are preserved; the nullable migration performs no backfill.
+
+### Explicit product enrichment
+
+`POST /api/v1/products/:id/enrich` requires the normal bearer token and accepts
+no body or `{}`. It fills only missing category, typical unit, product type and
+perishability, returning the existing product response with HTTP 200. Supplied
+metadata and all names/aliases remain unchanged. Unknown or unavailable model
+results leave fields null and still return the product; missing IDs return 404.
+Nonempty bodies are rejected with 400. Concurrent metadata or name changes cause
+stale inferred values to be discarded. Complete products and all GET/list reads
+invoke no provider. There is no new MCP enrichment tool.

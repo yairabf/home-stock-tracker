@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { EmptyEnrichmentBodyPipe } from './empty-enrichment-body.pipe';
+import { ProductEnrichmentService } from './product-enrichment.service';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { AddProductAliasDto } from './dto/add-product-alias.dto';
@@ -12,12 +22,23 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly productSearchService: ProductSearchService,
+    private readonly enrichment: ProductEnrichmentService,
   ) {}
 
   @Post()
   async create(@Body() dto: CreateProductDto): Promise<ProductResponseDto> {
     const product = await this.productService.create(dto);
     return ProductResponseDto.fromEntity(product);
+  }
+
+  @Post(':id/enrich')
+  @HttpCode(200)
+  async enrich(
+    @Param('id') id: string,
+    @Body(EmptyEnrichmentBodyPipe) _body: unknown,
+  ): Promise<ProductResponseDto> {
+    void _body;
+    return ProductResponseDto.fromEntity(await this.enrichment.enrich(id));
   }
 
   @Get()

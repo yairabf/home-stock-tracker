@@ -41,7 +41,7 @@ model Product {
   category           String?
   typicalUnit        String?
   productType        ProductType?
-  isPerishable       Boolean      @default(false)
+  isPerishable       Boolean?
   predictionStrategy String?
   predictionEnabled  Boolean      @default(true)
   config             Json?

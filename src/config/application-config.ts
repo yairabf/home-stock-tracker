@@ -14,6 +14,7 @@ export interface ModelConfig {
   openAiApiKey?: string;
   productResolutionProvider: DecisionProvider;
   stockPredictionProvider: DecisionProvider;
+  productUnderstandingProvider?: DecisionProvider;
   typesafeApiKey?: string;
   jevModel?: string;
 }
@@ -99,6 +100,10 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     environment.STOCK_PREDICTION_PROVIDER,
     'STOCK_PREDICTION_PROVIDER',
   );
+  const productUnderstandingProvider = parseDecisionProvider(
+    environment.PRODUCT_UNDERSTANDING_PROVIDER,
+    'PRODUCT_UNDERSTANDING_PROVIDER',
+  );
   const typesafeApiKey = optionalTrimmed(
     environment.TYPESAFE_API_KEY,
     'TYPESAFE_API_KEY',
@@ -112,6 +117,7 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
   validateDecisionCapabilities(
     productResolutionProvider,
     stockPredictionProvider,
+    productUnderstandingProvider,
     typesafeApiKey,
     jevModel,
   );
@@ -122,6 +128,7 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     openAiApiKey,
     productResolutionProvider,
     stockPredictionProvider,
+    productUnderstandingProvider,
     typesafeApiKey,
     jevModel,
   };
@@ -141,12 +148,14 @@ function parseDecisionProvider(
 function validateDecisionCapabilities(
   productResolutionProvider: DecisionProvider,
   stockPredictionProvider: DecisionProvider,
+  productUnderstandingProvider: DecisionProvider,
   typesafeApiKey: string | undefined,
   jevModel: string | undefined,
 ): void {
   if (
     productResolutionProvider !== 'typesafe' &&
-    stockPredictionProvider !== 'typesafe'
+    stockPredictionProvider !== 'typesafe' &&
+    productUnderstandingProvider !== 'typesafe'
   ) {
     return;
   }

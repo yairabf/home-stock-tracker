@@ -21,6 +21,7 @@ describe('loadApplicationConfig', () => {
       openAiApiKey: REQUIRED_ENVIRONMENT.OPENAI_API_KEY,
       productResolutionProvider: 'openai',
       stockPredictionProvider: 'openai',
+      productUnderstandingProvider: 'openai',
       typesafeApiKey: undefined,
       jevModel: undefined,
       stockWorkflow: {
@@ -29,6 +30,33 @@ describe('loadApplicationConfig', () => {
         timezone: 'Asia/Jerusalem',
       },
     });
+  });
+
+  it('selects product understanding independently', () => {
+    expect(
+      loadApplicationConfig({
+        ...REQUIRED_ENVIRONMENT,
+        PRODUCT_UNDERSTANDING_PROVIDER: 'typesafe',
+        TYPESAFE_API_KEY: 'private-test-key',
+        JEV_MODEL: 'jev-1.13.0',
+      }),
+    ).toMatchObject({
+      productUnderstandingProvider: 'typesafe',
+      productResolutionProvider: 'openai',
+      stockPredictionProvider: 'openai',
+    });
+  });
+  it.each([
+    { PRODUCT_UNDERSTANDING_PROVIDER: 'other' },
+    { PRODUCT_UNDERSTANDING_PROVIDER: 'typesafe' },
+    {
+      PRODUCT_UNDERSTANDING_PROVIDER: 'typesafe',
+      TYPESAFE_API_KEY: 'private-test-key',
+    },
+  ])('rejects invalid or incomplete understanding setup %p', (settings) => {
+    expect(() =>
+      loadApplicationConfig({ ...REQUIRED_ENVIRONMENT, ...settings }),
+    ).toThrow();
   });
 
   it('parses explicit supported values', () => {

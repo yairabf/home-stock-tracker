@@ -89,7 +89,7 @@ describe('Product search REST API (e2e)', () => {
           category: 'dairy',
           typicalUnit: 'carton',
           productType: null,
-          isPerishable: false,
+          isPerishable: null,
           predictionEnabled: false,
         },
         candidates: [],

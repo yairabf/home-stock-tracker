@@ -39,8 +39,25 @@ export class JevDecisionClient {
     return this.configuration.jevModel;
   }
 
-  async choose(request: JevChoiceRequest): Promise<JevDecisionResult> {
-    const expiresAt = performance.now() + TASK_BUDGET_MS[request.task];
+  async choose(
+    request: JevChoiceRequest,
+    remainingBudgetMs?: number,
+  ): Promise<JevDecisionResult> {
+    const maximum = TASK_BUDGET_MS[request.task];
+    if (maximum === undefined)
+      return this.unavailable(request, 'invalid_request');
+    if (
+      remainingBudgetMs !== undefined &&
+      (!Number.isFinite(remainingBudgetMs) || remainingBudgetMs <= 0)
+    )
+      return this.unavailable(request, 'deadline_exceeded');
+    const budget =
+      remainingBudgetMs === undefined
+        ? maximum
+        : Math.min(maximum, remainingBudgetMs);
+    if (!Number.isFinite(budget) || budget <= 0)
+      return this.unavailable(request, 'deadline_exceeded');
+    const expiresAt = performance.now() + budget;
     if (!this.configured) return this.unavailable(request, 'not_configured');
     const parsed = validateJevChoiceRequest(request);
     if (parsed.status === 'invalid')

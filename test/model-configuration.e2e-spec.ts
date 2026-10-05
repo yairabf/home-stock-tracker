@@ -1,3 +1,6 @@
+import { PRODUCT_UNDERSTANDING } from '../src/product/product-understanding';
+import { JevProductUnderstanding } from '../src/product/jev-product-understanding.service';
+import { OpenAiProductUnderstanding } from '../src/product/openai-product-understanding.service';
 import {
   PRODUCT_RESOLUTION_ADVISOR,
   type ProductResolutionAdvisor,
@@ -36,6 +39,7 @@ describe.each([
       TYPESAFE_API_KEY: 'fixture-typesafe-key',
       JEV_MODEL: 'jev-1.13.0',
       PRODUCT_RESOLUTION_PROVIDER: selector,
+      PRODUCT_UNDERSTANDING_PROVIDER: selector,
       STOCK_PREDICTION_PROVIDER: stockSelector,
     });
     const listItems = jest.fn().mockResolvedValue([]);
@@ -76,6 +80,14 @@ describe.each([
     afterAll(async () => {
       await app?.close();
       fetchSpy.mockRestore();
+    });
+
+    it('resolves the task-specific metadata port from the independent selector', () => {
+      expect(app.get(PRODUCT_UNDERSTANDING)).toBeInstanceOf(
+        selector === 'typesafe'
+          ? JevProductUnderstanding
+          : OpenAiProductUnderstanding,
+      );
     });
 
     it('shares the bootstrap configuration across nested LLM modules', () => {

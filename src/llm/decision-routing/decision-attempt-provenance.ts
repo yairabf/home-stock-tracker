@@ -28,6 +28,8 @@ const attemptSchema = z
     configuredModel: nonblank.optional(),
     resolvedModel: nonblank.optional(),
     elapsedMs: z.number().nonnegative(),
+    confidence: z.number().finite().min(0).max(1).optional(),
+    selectedProbability: z.number().finite().min(0).max(1).optional(),
     usage: z
       .object({ input_tokens: tokenCount, output_tokens: tokenCount })
       .strict()
@@ -46,7 +48,9 @@ const attemptSchema = z
       return (
         attempt.unavailableReason !== undefined &&
         attempt.usage === undefined &&
-        attempt.resolvedModel === undefined
+        attempt.resolvedModel === undefined &&
+        attempt.confidence === undefined &&
+        attempt.selectedProbability === undefined
       );
     if (attempt.unavailableReason !== undefined || !attempt.resolvedModel)
       return false;

@@ -94,6 +94,8 @@ export interface DecisionAttemptProvenance {
   configuredModel?: string;
   resolvedModel?: string;
   elapsedMs: number;
+  confidence?: number;
+  selectedProbability?: number;
   usage?: JevTokenUsage;
   unavailableReason?: JevUnavailableReason;
 }

@@ -10,7 +10,7 @@ export const shelfLifeInferenceInputSchema = z
     category: nonBlankString.nullable(),
     typicalUnit: nonBlankString.nullable(),
     productType: z.enum(ProductType).nullable(),
-    isPerishable: z.boolean(),
+    isPerishable: z.boolean().nullable(),
   })
   .strict();
 

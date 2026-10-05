@@ -67,6 +67,58 @@ describe('OpenAiLlmProvider', () => {
     });
   });
 
+  it('caps the metadata operation, cancels hanging parsing and disables SDK retries', async () => {
+    jest.useFakeTimers();
+    try {
+      parse.mockImplementation(() => new Promise(() => {}));
+      const pending = provider.generateStructured({
+        ...request,
+        budgetMs: 100,
+      });
+      const calls = parse.mock.calls as unknown as Array<
+        [unknown, { signal: AbortSignal; timeout: number; maxRetries: number }]
+      >;
+      expect(calls[0][1]).toMatchObject({ timeout: 100, maxRetries: 0 });
+      await jest.advanceTimersByTimeAsync(100);
+      expect(await pending).toEqual({
+        status: 'unavailable',
+        provider: 'openai',
+        model,
+      });
+      expect(calls[0][1].signal.aborted).toBe(true);
+      expect(parse).toHaveBeenCalledTimes(1);
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+  it.each([0, -1, Infinity, 10_001])(
+    'rejects invalid bounded generation budget %p without requests',
+    async (budgetMs) => {
+      expect(
+        (await provider.generateStructured({ ...request, budgetMs })).status,
+      ).toBe('unavailable');
+      expect(parse).not.toHaveBeenCalled();
+    },
+  );
+  it('disposes the task deadline after success and preserves unbounded legacy request options', async () => {
+    jest.useFakeTimers();
+    try {
+      parse.mockResolvedValue({ output_parsed: parsedResult, output: [] });
+      expect(
+        (await provider.generateStructured({ ...request, budgetMs: 10_000 }))
+          .status,
+      ).toBe('success');
+      expect(jest.getTimerCount()).toBe(0);
+      parse.mockClear();
+      await provider.generateStructured(request);
+      const calls = parse.mock.calls as unknown[][];
+      expect(calls[0]).toHaveLength(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('returns unavailable when configuration has no API client', async () => {
     provider = new OpenAiLlmProvider(
       null,

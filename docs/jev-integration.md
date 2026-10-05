@@ -535,3 +535,47 @@ and field scopes using stubs. It does not claim integrated application routing
 or model accuracy. Real resolver tests prove exact matches bypass OpenAI and
 JEV advice. The configuration HTTP suite uses stubbed persistence and tests
 unchanged defaults, selectors and no-call bootstrap/read behavior.
+
+## Nullable product metadata (38b)
+
+Apply the committed nullable-perishability migration before running this version.
+Existing true/false values remain unchanged; new missing perishability is null.
+Product/search and prediction outputs use MCP contract 2.0.0. Upgrade the complete
+agent bundle together with the backend; explicit confirmed creation still requires
+an approved boolean. Shelf-life and stock evidence carry null as unknown rather
+than assuming nonperishable.
+
+### Product understanding routing and review
+
+`PRODUCT_UNDERSTANDING_PROVIDER=openai|typesafe` defaults to `openai` until
+38e evaluation and rollout. Selecting `typesafe` requires `TYPESAFE_API_KEY` and
+a pinned `JEV_MODEL`; existing OpenAI generation credentials remain required.
+Explicit creation and reads never enrich automatically. Use the authenticated
+REST enrichment action when deliberate metadata enrichment is needed.
+
+JEV chooses each missing field independently: category and unit use the versioned
+complete vocabulary; product type and perishability use fixed choices with unknown.
+Acceptance requires both confidence and selected-option probability >= 0.90.
+Unknown perishability remains null, distinct from false. Up to four logical field
+decisions (eight HTTP attempts including the existing retry policy) share ten
+seconds. Unknown, low confidence, invalid choices and failures never invoke OpenAI.
+
+The selected OpenAI mode makes one metadata-only structured generation for missing
+fields, with a 0.80 per-field confidence gate, a ten-second deadline and no SDK
+retries for this task. Other generation tasks retain their current options.
+Neither mode generates canonical names or aliases. Assisted internal creation
+uses entered display spelling and namespace uniqueness; aliases still require the
+existing explicit write or confirmed grocery transaction.
+
+Validated per-field attempt logs record routing reason, acceptance, confidence,
+selected probability when available, provider/model/vocabulary versions, usage
+when known, and applied/stale/reused outcomes separately. No prompts or raw catalog
+context are logged. OpenAI token usage is unknown with the current generation
+port and is omitted. Count OpenAI logical generations by operation ID; JEV field
+decisions by operation ID plus field. Missing metadata and transport failures
+remain explicit; no historical false values are guessed into unknown.
+
+All new acceptance evidence is mocked for provider output and uses isolated local
+PostgreSQL for persistence and REST/MCP flows. It proves validation, call selection
+and write safety, not live classification accuracy. Threshold review, paid held-out
+evaluation and provider enablement remain feature 38e. No rollout is implied.

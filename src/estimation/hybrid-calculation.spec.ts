@@ -71,7 +71,7 @@ describe('shared hybrid calculation', () => {
         productType: 'fast_consumable',
         eventCount: 0,
         householdContext: null,
-        isPerishable: false,
+        isPerishable: null,
       },
     });
   });

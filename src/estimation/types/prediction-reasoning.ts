@@ -30,7 +30,7 @@ export const predictionReasoningInputSchema = z
         avgNeedIntervalDays: nullableNonNegativeNumber,
         estimatedConsumptionIntervalDays: nullableNonNegativeNumber,
         observationCount: z.number().int().nonnegative(),
-        isPerishable: z.boolean(),
+        isPerishable: z.boolean().nullable(),
         predictionStrategy: nonBlankString.nullable(),
         householdContext: z
           .object({

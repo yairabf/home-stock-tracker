@@ -224,7 +224,7 @@ describe('read-only agent installation probe', () => {
   it('distinguishes wrong server identity and version', async () => {
     state.serverInfo = { ...canonicalFixture.serverInfo, name: 'wrong-server' };
     const identity = await runProbe();
-    state.serverInfo = { ...canonicalFixture.serverInfo, version: '2.0.0' };
+    state.serverInfo = { ...canonicalFixture.serverInfo, version: '3.0.0' };
     const version = await runProbe();
 
     expect(identity.status).toBe(25);

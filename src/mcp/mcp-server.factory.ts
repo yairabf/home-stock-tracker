@@ -1,6 +1,6 @@
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { stockProductConfirmationSchema } from '../inventory/types/stock-product-confirmation';
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { GroceryService } from '../grocery/grocery.service';
@@ -80,7 +80,7 @@ const productOutputSchema = z.object({
   category: z.string().nullable(),
   typicalUnit: z.string().nullable(),
   productType: z.enum(ProductType).nullable(),
-  isPerishable: z.boolean(),
+  isPerishable: z.boolean().nullable(),
   predictionStrategy: z.string().nullable(),
   predictionEnabled: z.boolean(),
   config: z.json().nullable(),
@@ -302,7 +302,7 @@ const deterministicSignalsOutputSchema = z.object({
   avgNeedIntervalDays: z.number().nullable(),
   estimatedConsumptionIntervalDays: z.number().nullable(),
   observationCount: z.number(),
-  isPerishable: z.boolean(),
+  isPerishable: z.boolean().nullable(),
   predictionStrategy: z.string().nullable(),
   householdContext: householdContextSchema.nullable(),
   authoritativeDirectSignal: z.boolean(),

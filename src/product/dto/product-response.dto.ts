@@ -12,7 +12,7 @@ export class ProductResponseDto {
   category: string | null;
   typicalUnit: string | null;
   productType: ProductType | null;
-  isPerishable: boolean;
+  isPerishable: boolean | null;
   predictionStrategy: string | null;
   predictionEnabled: boolean;
   config: unknown;
