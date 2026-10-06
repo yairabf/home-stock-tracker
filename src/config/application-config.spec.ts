@@ -22,6 +22,7 @@ describe('loadApplicationConfig', () => {
       productResolutionProvider: 'openai',
       stockPredictionProvider: 'openai',
       productUnderstandingProvider: 'openai',
+      shelfLifePolicyProvider: 'openai',
       typesafeApiKey: undefined,
       jevModel: undefined,
       stockWorkflow: {
@@ -296,5 +297,29 @@ describe('loadApplicationConfig', () => {
     } catch (error) {
       expect(String(error)).not.toContain(secret);
     }
+  });
+});
+
+describe('shelf-life task configuration', () => {
+  const settings = {
+    ...REQUIRED_ENVIRONMENT,
+    SHELF_LIFE_POLICY_PROVIDER: 'typesafe',
+    TYPESAFE_API_KEY: 'test-key',
+    JEV_MODEL: 'jev-1.0.0',
+  };
+  it('selects shelf life independently', () => {
+    expect(loadApplicationConfig(settings)).toMatchObject({
+      shelfLifePolicyProvider: 'typesafe',
+      productUnderstandingProvider: 'openai',
+      productResolutionProvider: 'openai',
+      stockPredictionProvider: 'openai',
+    });
+  });
+  it.each([
+    { SHELF_LIFE_POLICY_PROVIDER: 'invalid' },
+    { TYPESAFE_API_KEY: undefined },
+    { JEV_MODEL: undefined },
+  ])('rejects invalid or incomplete setup', (invalid) => {
+    expect(() => loadApplicationConfig({ ...settings, ...invalid })).toThrow();
   });
 });

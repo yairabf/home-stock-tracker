@@ -579,3 +579,27 @@ All new acceptance evidence is mocked for provider output and uses isolated loca
 PostgreSQL for persistence and REST/MCP flows. It proves validation, call selection
 and write safety, not live classification accuracy. Threshold review, paid held-out
 evaluation and provider enablement remain feature 38e. No rollout is implied.
+
+## Shelf-life policies (38c)
+
+`SHELF_LIFE_POLICY_PROVIDER=openai|typesafe` independently selects product policy inference and defaults to `openai`. TypeSafe selection requires `TYPESAFE_API_KEY` and a pinned `JEV_MODEL`. JEV selects reviewed identities under supplied storage facts. Missing facts and ambiguous identity remain unresolved; no automatic generation follows low confidence or provider failure. Both adapters retain a ten-second provider-phase budget. Runtime enablement awaits 38e evaluation.
+
+### Reviewed registry and storage evidence
+
+The initial `shelf-life-policies-v1` registry contains raw refrigerated shell eggs (21 days), raw refrigerated chicken/turkey (1 day), and durable plain toilet paper/empty plastic refuse bags (nonperishable). Finite durations use the conservative end of [FoodSafety.gov cold-storage ranges](https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts), checked 2026-10-05. These are inventory estimates under their recorded assumptions, not assurances of safe consumption.
+
+The optional internal `Product.config.shelfLifeContext` namespace is strict:
+
+```json
+{"version":1,"storage":"refrigerated","maxTemperatureC":4,"preparation":"raw","form":"shell"}
+```
+
+Storage accepts refrigerated, ambient, frozen or unknown; temperature is finite or null; preparation is raw, cooked or unknown; form is shell, whole_or_pieces or unknown. Malformed/missing/version-mismatched context becomes unknown. No public writer or automatic context population is added. Unrelated configuration is untouched.
+
+Applicability uses a conservative normalized exact Hebrew/English identity allowlist plus storage facts. Missing facts, broader names, incompatible variants and conflicting metadata abstain. JEV chooses a policy token or unknown, not a number; both confidence and selected probability must reach 0.90. Known policies need no OpenAI call. Raw salmon/cod/trout with sufficient raw refrigerated facts and explicit perishability are the initial locally identifiable unsupported finite-policy examples; only these may invoke required generation in TypeSafe mode. Generated days are validated without rounding into registry entries, and nonperishable fallback claims are rejected. All calls share a ten-second per-product deadline; generation retries are disabled.
+
+Existing stored policies are reused, never refreshed by reads or reruns. A short serializable transaction locks product/name evidence and rechecks it after inference; concurrent metadata/name/context changes discard the proposal. Competing policy inserts are reused instead of overwritten. Explicit expiration dates remain per-batch authority and never become a global policy. A dated batch does not determine the policy for unrelated undated stock.
+
+`LlmInferenceLog.structuredResponse` uses `shelf-life-policy-log-v1`, with validated attempts, policy/registry identity when applicable, and applied/stale/reused/unresolved write outcome. Provider acceptance does not imply application. Product text and raw errors are omitted. JEV usage is validated; absent OpenAI usage is omitted, and its configured model identity is marked as unresolved by the provider response. An unavailable attempt without model identity uses the local `unresolved` marker, never a claimed provider model.
+
+For reproducible mocked review, run `test/shelf-life-policy.e2e-spec.ts` against the dedicated local `home_stock_38c_test` database. It exercises real Nest routing, both selectors, repeat calls, competing writes, metadata/name/context corrections, failures and authenticated expiration/inventory reads. Runtime rollout and live accuracy review remain 38e.

@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 628891c34d5b612e001befb63ca349ac3fbdab1955061509d6fb2696e60424d2 -->
+<!-- blueprint:source-hash 750673958eda586283474cf8f84bc8eef820cc49e9d0756fda660b390be7fc96 -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,7 +17,7 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 38a and 38b are complete. The next target in the approved JEV-first scope is 38c; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
+Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 38a through 38c are complete. The next target in the approved JEV-first scope is 38d; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
 
 - [x] **1. Grocery list management**
 - [x] **2. Product catalog and normalization**
@@ -75,7 +75,7 @@ Build-plan order and progress; unchecked means planned. Feature 37 and sub-featu
 - [ ] **38. JEV-first application inference**
   - [x] **38a. Task routing and choice vocabulary**
   - [x] **38b. JEV product understanding**
-  - [ ] **38c. JEV shelf-life policies**
+  - [x] **38c. JEV shelf-life policies**
   - [ ] **38d. Stock predictions in application workflows**
   - [ ] **38e. Evaluation and dual-provider rollout**
 
@@ -210,6 +210,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **PostgreSQL and Prisma** - authoritative persistence and migrations; TypeORM only if a NestJS constraint requires it.
 - **Generation** - `LlmProvider` selected through DI and `LLM_PROVIDER`; OpenAI Responses API with validated output, private `OPENAI_API_KEY`, configurable `LLM_MODEL` (initial default `gpt-5.6-sol`). Product classification and shelf-life generation use this boundary. Adapters own requests, authentication, validation, errors; AI never writes directly to the database. Future OpenRouter/Anthropic adapters must preserve the domain boundary.
 - **Bounded decisions (37a transport, 37b matching and 37d stock advice)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. 37c evaluation tooling is complete; matching rollout awaits independently reviewed live held-out evidence; The Jev stock advisor is available for the internal on-demand prediction engine with zero-history safety, deterministic precedence, a 0.9 gate, conservative confidence, and versioned accepted/rejected provenance. Inventory reads and daily materialization remain deterministic; 37e stock evaluation tooling is complete with cutoff-safe replay, metrics, a private bounded CLI and an authored safety corpus. Stock runtime rollout awaits independently reviewed live historical held-out evidence; authored/offline evidence remains inconclusive. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
+- **Shelf-life policies (38c)** - independent `SHELF_LIFE_POLICY_PROVIDER=openai|typesafe`, default `openai`; reviewed applicable policy identities and explicit storage context precede bounded choices. Unknown/low-confidence/failure abstains; locally identified required finite-policy gaps alone permit generation. Create-only writes recheck locked product/name evidence; safe attempt logs distinguish acceptance from application. Stored policies and explicit batch-date reads issue no model calls. Live evaluation and enablement remain 38e.
 - **Planned JEV-first routing (38)** - deterministic evidence first; JEV for bounded category, type, unit, perishability, shelf-life policy and stock choices; OpenAI only for unsupported required generation. Preserve entered names and confirmed aliases. Low confidence and failures do not automatically invoke OpenAI. Versioned vocabularies and per-field unknowns precede adapters; accepted stock advice must feed projections with race protection. Task evaluation precedes rollout. See the [approved detailed plan](feature-plans/jev-first-application-inference.md).
 - **Hybrid prediction** - history, elapsed time, household context, metadata, deterministic heuristics, optional model inference behind `PredictionEngine`. Python only if justified by statistical workloads.
 - **Jest/Nest testing utilities** - critical unit, PostgreSQL integration, API, prediction, and tool-contract coverage.

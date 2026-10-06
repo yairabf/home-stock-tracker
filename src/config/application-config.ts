@@ -15,6 +15,7 @@ export interface ModelConfig {
   productResolutionProvider: DecisionProvider;
   stockPredictionProvider: DecisionProvider;
   productUnderstandingProvider?: DecisionProvider;
+  shelfLifePolicyProvider?: DecisionProvider;
   typesafeApiKey?: string;
   jevModel?: string;
 }
@@ -108,6 +109,10 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     environment.TYPESAFE_API_KEY,
     'TYPESAFE_API_KEY',
   );
+  const shelfLifePolicyProvider = parseDecisionProvider(
+    environment.SHELF_LIFE_POLICY_PROVIDER,
+    'SHELF_LIFE_POLICY_PROVIDER',
+  );
   const jevModel = optionalTrimmed(environment.JEV_MODEL, 'JEV_MODEL');
   if (jevModel !== undefined && !/^jev-\d+\.\d+\.\d+$/.test(jevModel)) {
     throw new Error(
@@ -118,6 +123,7 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     productResolutionProvider,
     stockPredictionProvider,
     productUnderstandingProvider,
+    shelfLifePolicyProvider,
     typesafeApiKey,
     jevModel,
   );
@@ -129,6 +135,7 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     productResolutionProvider,
     stockPredictionProvider,
     productUnderstandingProvider,
+    shelfLifePolicyProvider,
     typesafeApiKey,
     jevModel,
   };
@@ -149,13 +156,15 @@ function validateDecisionCapabilities(
   productResolutionProvider: DecisionProvider,
   stockPredictionProvider: DecisionProvider,
   productUnderstandingProvider: DecisionProvider,
+  shelfLifePolicyProvider: DecisionProvider,
   typesafeApiKey: string | undefined,
   jevModel: string | undefined,
 ): void {
   if (
     productResolutionProvider !== 'typesafe' &&
     stockPredictionProvider !== 'typesafe' &&
-    productUnderstandingProvider !== 'typesafe'
+    productUnderstandingProvider !== 'typesafe' &&
+    shelfLifePolicyProvider !== 'typesafe'
   ) {
     return;
   }

@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { ProductNameKind } from '../generated/prisma/enums';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import { SHELF_LIFE_POLICY, type ShelfLifePolicy } from './shelf-life-policy';
 import {
-  ShelfLifeReasoner,
-  SHELF_LIFE_INFERENCE_PROMPT_VERSION,
-} from './shelf-life-reasoner.service';
+  POLICY_PRODUCT_SELECT,
+  policyInput,
+  ShelfLifePolicyWriter,
+} from './shelf-life-policy-writer.service';
 import type { ShelfLifeInferenceSummary } from './types/shelf-life-inference';
+import { ShelfLifePolicyLog } from './shelf-life-policy-log.service';
 
 @Injectable()
 export class ShelfLifeInferenceService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly reasoner: ShelfLifeReasoner,
+    @Inject(SHELF_LIFE_POLICY) private readonly reasoner: ShelfLifePolicy,
     private readonly operationalLogger: OperationalLogger,
+    private readonly writer: ShelfLifePolicyWriter,
+    private readonly policyLog: ShelfLifePolicyLog,
   ) {}
 
   async inferMissingPolicies(
@@ -25,18 +29,7 @@ export class ShelfLifeInferenceService {
         shelfLifePolicy: null,
         ...(productIds ? { id: { in: productIds } } : {}),
       },
-      select: {
-        id: true,
-        category: true,
-        typicalUnit: true,
-        productType: true,
-        isPerishable: true,
-        names: {
-          where: { kind: ProductNameKind.canonical },
-          select: { displayName: true },
-          take: 1,
-        },
-      },
+      select: POLICY_PRODUCT_SELECT,
     });
     const summary: ShelfLifeInferenceSummary = {
       processed: products.length,
@@ -47,34 +40,15 @@ export class ShelfLifeInferenceService {
 
     for (const product of products) {
       try {
-        const canonicalName = product.names[0]?.displayName;
-        if (!canonicalName) {
+        const input = policyInput(product);
+        if (!input) {
           summary.skipped += 1;
           continue;
         }
-        const result = await this.reasoner.infer({
-          productId: product.id,
-          canonicalName,
-          category: product.category,
-          typicalUnit: product.typicalUnit,
-          productType: product.productType,
-          isPerishable: product.isPerishable,
-        });
-        if (result.status !== 'success') {
-          summary.skipped += 1;
-          continue;
-        }
-        await this.prisma.productShelfLifePolicy.create({
-          data: {
-            productId: product.id,
-            ...result.value,
-            modelProvider: result.provider,
-            modelVersion: result.model,
-            promptVersion: SHELF_LIFE_INFERENCE_PROMPT_VERSION,
-            evaluatedAt,
-          },
-        });
-        summary.succeeded += 1;
+        const result = await this.reasoner.infer(input);
+        const outcome = await this.writer.write(input, result, evaluatedAt);
+        await this.recordSafely(result, outcome);
+        summary[outcome === 'applied' ? 'succeeded' : 'skipped'] += 1;
       } catch {
         summary.failed += 1;
         this.operationalLogger.stockWorkflow({
@@ -86,5 +60,16 @@ export class ShelfLifeInferenceService {
       }
     }
     return summary;
+  }
+
+  private async recordSafely(
+    result: Parameters<ShelfLifePolicyLog['record']>[0],
+    outcome: Parameters<ShelfLifePolicyLog['record']>[1],
+  ): Promise<void> {
+    try {
+      await this.policyLog.record(result, outcome);
+    } catch {
+      /* Diagnostics must not change policy workflow outcomes. */
+    }
   }
 }

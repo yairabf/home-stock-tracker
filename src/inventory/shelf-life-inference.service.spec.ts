@@ -3,7 +3,10 @@ import {
   ShelfLifePolicyKind,
 } from '../generated/prisma/enums';
 import { ShelfLifeInferenceService } from './shelf-life-inference.service';
-import type { ShelfLifeReasoner } from './shelf-life-reasoner.service';
+import type {
+  ShelfLifePolicyInput,
+  ShelfLifePolicyResult,
+} from './shelf-life-policy';
 
 function firstCall<T>(mock: jest.Mock): T {
   return (mock.mock.calls as unknown as Array<[T]>)[0][0];
@@ -14,14 +17,18 @@ describe('ShelfLifeInferenceService', () => {
   const create = jest.fn();
   const infer = jest.fn();
   const stockWorkflow = jest.fn();
+  const write = jest.fn();
+  const record = jest.fn();
   const prisma = {
     product: { findMany },
     productShelfLifePolicy: { create },
   };
   const service = new ShelfLifeInferenceService(
     prisma as never,
-    { infer } as unknown as ShelfLifeReasoner,
+    { infer },
     { stockWorkflow } as never,
+    { write } as never,
+    { record } as never,
   );
   const product = (id: string, canonicalName = `Product ${id}`) => ({
     id,
@@ -34,13 +41,19 @@ describe('ShelfLifeInferenceService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    create.mockResolvedValue({});
+    record.mockReset();
+    write.mockImplementation(
+      (_input: ShelfLifePolicyInput, result: ShelfLifePolicyResult) =>
+        Promise.resolve(
+          result.status === 'resolved' ? 'applied' : 'unresolved',
+        ),
+    );
   });
 
   it('selects policy-free products and persists successful provenance', async () => {
     findMany.mockResolvedValue([product('one')]);
     infer.mockResolvedValue({
-      status: 'success',
+      status: 'resolved',
       provider: 'test-provider',
       model: 'test-model',
       value: {
@@ -66,27 +79,61 @@ describe('ShelfLifeInferenceService', () => {
     expect(findQuery.select.names.where).toEqual({
       kind: ProductNameKind.canonical,
     });
-    const createInput = firstCall<{
-      data: Record<string, unknown>;
-    }>(create);
-    expect(createInput.data).toMatchObject({
-      productId: 'one',
-      modelProvider: 'test-provider',
-      modelVersion: 'test-model',
-      promptVersion: 'shelf-life-inference-v1',
+    expect(write).toHaveBeenCalledWith(
+      expect.objectContaining({ productId: 'one', context: null }),
+      expect.objectContaining({
+        status: 'resolved',
+        provider: 'test-provider',
+        model: 'test-model',
+      }),
       evaluatedAt,
-    });
+    );
   });
 
   it('passes unknown perishability as null instead of false', async () => {
     findMany.mockResolvedValue([{ ...product('unknown'), isPerishable: null }]);
-    infer.mockResolvedValue({ status: 'unavailable' });
+    infer.mockResolvedValue({ status: 'unresolved' });
     await service.inferMissingPolicies();
     expect(infer).toHaveBeenCalledWith(
       expect.objectContaining({ isPerishable: null }),
     );
     expect(create).not.toHaveBeenCalled();
   });
+  it('does not invoke providers for an empty missing-policy query', async () => {
+    findMany.mockResolvedValue([]);
+    expect(await service.inferMissingPolicies()).toEqual({
+      processed: 0,
+      succeeded: 0,
+      skipped: 0,
+      failed: 0,
+    });
+    expect(infer).not.toHaveBeenCalled();
+  });
+  it('isolates logger failures after applying a valid policy', async () => {
+    findMany.mockResolvedValue([product('one')]);
+    infer.mockResolvedValue({ status: 'resolved' });
+    record.mockRejectedValue(new Error('log unavailable'));
+    expect(await service.inferMissingPolicies()).toEqual({
+      processed: 1,
+      succeeded: 1,
+      skipped: 0,
+      failed: 0,
+    });
+  });
+  it.each(['reused', 'stale'])(
+    'counts %s policies as skipped',
+    async (outcome) => {
+      findMany.mockResolvedValue([product('one')]);
+      infer.mockResolvedValue({ status: 'resolved' });
+      write.mockResolvedValue(outcome);
+      expect(await service.inferMissingPolicies()).toEqual({
+        processed: 1,
+        succeeded: 0,
+        skipped: 1,
+        failed: 0,
+      });
+    },
+  );
 
   it('isolates failures and leaves unavailable or malformed products retryable', async () => {
     findMany.mockResolvedValue([
@@ -97,9 +144,9 @@ describe('ShelfLifeInferenceService', () => {
     ]);
     infer
       .mockRejectedValueOnce(new Error('provider failed'))
-      .mockResolvedValueOnce({ status: 'unavailable' })
+      .mockResolvedValueOnce({ status: 'unresolved' })
       .mockResolvedValueOnce({
-        status: 'success',
+        status: 'resolved',
         provider: 'test-provider',
         model: 'test-model',
         value: {
@@ -116,11 +163,11 @@ describe('ShelfLifeInferenceService', () => {
       skipped: 2,
       failed: 1,
     });
-    expect(create).toHaveBeenCalledTimes(1);
-    const createInput = firstCall<{
-      data: { productId: string };
-    }>(create);
-    expect(createInput.data.productId).toBe('success');
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(
+      (write.mock.calls as unknown as Array<[ShelfLifePolicyInput]>)[1][0]
+        .productId,
+    ).toBe('success');
     expect(stockWorkflow).toHaveBeenCalledWith({
       stage: 'product_failure',
       outcome: 'failure',

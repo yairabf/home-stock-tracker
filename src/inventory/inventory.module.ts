@@ -12,7 +12,15 @@ import { StatisticsModule } from '../statistics/statistics.module';
 import { StockMaterializationService } from './stock-materialization.service';
 import { LlmModule } from '../llm/llm.module';
 import { ShelfLifeReasoner } from './shelf-life-reasoner.service';
+import { JevShelfLifePolicy } from './jev-shelf-life-policy.service';
+import {
+  OpenAiShelfLifePolicy,
+  RequiredShelfLifeGeneration,
+} from './openai-shelf-life-policy.service';
+import { shelfLifePolicyProvider } from './shelf-life-policy.provider';
 import { ShelfLifeInferenceService } from './shelf-life-inference.service';
+import { ShelfLifePolicyWriter } from './shelf-life-policy-writer.service';
+import { ShelfLifePolicyLog } from './shelf-life-policy-log.service';
 import { DailyStockMaterializationService } from './daily-stock-materialization.service';
 import {
   STOCK_WORKFLOW_CONFIG,
@@ -40,7 +48,13 @@ import { ExpirationRecommendationService } from './expiration-recommendation.ser
     StockLedgerService,
     StockMaterializationService,
     ShelfLifeReasoner,
+    OpenAiShelfLifePolicy,
+    RequiredShelfLifeGeneration,
+    JevShelfLifePolicy,
+    shelfLifePolicyProvider,
     ShelfLifeInferenceService,
+    ShelfLifePolicyWriter,
+    ShelfLifePolicyLog,
     DailyStockMaterializationService,
     DailyStockWorkflowService,
     StockWorkflowSchedulerService,

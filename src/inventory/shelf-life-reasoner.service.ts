@@ -18,6 +18,7 @@ export class ShelfLifeReasoner {
 
   async infer(
     input: ShelfLifeInferenceInput,
+    budgetMs = 10_000,
   ): Promise<LlmGenerationResult<ShelfLifeInferenceResult>> {
     const validatedInput = shelfLifeInferenceInputSchema.parse(input);
     const result = await this.llmProvider.generateStructured({
@@ -28,6 +29,7 @@ export class ShelfLifeReasoner {
       schemaName: 'product_shelf_life_policy',
       schema: shelfLifeInferenceResultSchema,
       promptVersion: SHELF_LIFE_INFERENCE_PROMPT_VERSION,
+      budgetMs,
     });
 
     if (result.status !== 'success') return result;
