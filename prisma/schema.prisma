@@ -37,14 +37,15 @@ enum GroceryItemSource {
 }
 
 model Product {
-  id                 String       @id @default(uuid())
-  category           String?
-  typicalUnit        String?
-  productType        ProductType?
-  isPerishable       Boolean?
-  predictionStrategy String?
-  predictionEnabled  Boolean      @default(true)
-  config             Json?
+  stockAdviceAttempts StockAdviceAttempt[]
+  id                  String               @id @default(uuid())
+  category            String?
+  typicalUnit         String?
+  productType         ProductType?
+  isPerishable        Boolean?
+  predictionStrategy  String?
+  predictionEnabled   Boolean              @default(true)
+  config              Json?
 
   names             ProductName[]
   groceryListItems  GroceryListItem[]
@@ -164,20 +165,21 @@ model Household {
 }
 
 model Prediction {
-  id                   String            @id @default(uuid())
+  stockAdviceAttempts  StockAdviceAttempt[]
+  id                   String               @id @default(uuid())
   productId            String
-  product              Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product              Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
   predictedState       PredictedState
   confidenceScore      Float
-  predictedAt          DateTime          @default(now())
+  predictedAt          DateTime             @default(now())
   recommendedAction    String?
   deterministicSignals Json
   llmResult            Json?
   reason               String
   modelProviderVersion String?
-  feedbackStatus       FeedbackStatus    @default(pending)
+  feedbackStatus       FeedbackStatus       @default(pending)
   llmInferenceLogs     LlmInferenceLog[]
-  stockProjections     StockProjection[] @relation("StockProjectionPrediction")
+  stockProjections     StockProjection[]    @relation("StockProjectionPrediction")
 
   @@index([productId])
   @@index([predictedAt])
@@ -217,6 +219,7 @@ model ProductStatistics {
 }
 
 model StockProjection {
+  revision          Int            @default(0)
   id                String         @id @default(uuid())
   productId         String         @unique
   product           Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -262,4 +265,26 @@ model StockProductConfirmation {
   requestPayload  Json
   responsePayload Json
   createdAt       DateTime @default(now())
+}
+
+model StockAdviceAttempt {
+  id                  String      @id @default(uuid())
+  productId           String
+  product             Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fingerprint         String
+  taskVersion         String
+  configuredModel     String
+  status              String      @default("reserved")
+  applicationStatus   String      @default("not_applied")
+  response            Json?
+  resolvedModel       String?
+  confidence          Float?
+  reason              String?
+  createdAt           DateTime    @default(now())
+  completedAt         DateTime?
+  appliedPredictionId String?
+  appliedPrediction   Prediction? @relation(fields: [appliedPredictionId], references: [id], onDelete: SetNull)
+
+  @@unique([productId, fingerprint])
+  @@index([productId, createdAt])
 }

@@ -13,7 +13,7 @@ import {
 
 const CHOICE_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 const RETRYABLE_STATUSES = new Set([429, 529, 500, 502, 503, 504]);
-const TASK_BUDGET_MS: Record<JevTask, number> = {
+export const TASK_BUDGET_MS: Record<JevTask, number> = {
   product_resolution: 10_000,
   product_understanding: 10_000,
   shelf_life_policy: 15_000,

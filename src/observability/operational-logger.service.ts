@@ -27,7 +27,7 @@ interface WorkflowPhaseCounts {
 export interface StockWorkflowLog {
   stage: 'start' | 'end' | 'product_failure';
   outcome: 'success' | 'failure';
-  phase?: 'shelf_life' | 'evaluation';
+  phase?: 'shelf_life' | 'evaluation' | 'stock_advice';
   productId?: string;
   durationMs?: number;
   shelfLife?: WorkflowPhaseCounts;
@@ -103,7 +103,7 @@ interface OperationalEvent {
   errorType?:
     IntegrationErrorType | 'persistence_error' | 'multiple_name_owners';
   stage?: 'start' | 'end' | 'product_failure';
-  phase?: 'shelf_life' | 'evaluation';
+  phase?: 'shelf_life' | 'evaluation' | 'stock_advice';
   durationMs?: number;
   shelfLife?: WorkflowPhaseCounts;
   evaluation?: WorkflowPhaseCounts;

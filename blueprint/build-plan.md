@@ -73,5 +73,5 @@
   - [x] 38a. **Task routing and choice vocabulary** - define capability-based fallback rules, versioned category/unit options, provenance, and private configuration
   - [x] 38b. **JEV product understanding** - choose category, type, unit, and perishability; preserve names and confirmation; avoid default alias generation
   - [x] 38c. **JEV shelf-life policies** - select reviewed applicable policies and generate missing policies only when necessary ✓ 2026-10-06
-  - [ ] 38d. **Stock predictions in application workflows** - invoke JEV for eligible stock evidence and connect accepted advice to materialized recommendations
+  - [x] 38d. **Stock predictions in application workflows** - invoke JEV for eligible stock evidence and connect accepted advice to materialized recommendations ✓ 2026-10-06
   - [ ] 38e. **Evaluation and dual-provider rollout** - review accuracy, abstention and usage, then enable validated task routing with independent rollback switches

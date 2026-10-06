@@ -31,6 +31,8 @@ export interface ApplicationConfig extends ModelConfig {
 }
 
 export interface StockWorkflowConfig {
+  adviceEnabled: boolean;
+  adviceMaxProducts: number;
   enabled: boolean;
   cron: string;
   timezone: string;
@@ -181,7 +183,23 @@ function validateDecisionCapabilities(
 export function loadStockWorkflowConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): StockWorkflowConfig {
+  const adviceLimit = environment.STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS;
+  if (
+    adviceLimit !== undefined &&
+    (!/^\d+$/.test(adviceLimit) ||
+      Number(adviceLimit) < 1 ||
+      Number(adviceLimit) > 100)
+  )
+    throw new Error(
+      'STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS must be an integer from 1 to 100',
+    );
   const config = {
+    adviceEnabled: parseBoolean(
+      environment.STOCK_WORKFLOW_ADVICE_ENABLED,
+      'STOCK_WORKFLOW_ADVICE_ENABLED',
+      false,
+    ),
+    adviceMaxProducts: adviceLimit === undefined ? 20 : Number(adviceLimit),
     enabled: parseBoolean(
       environment.STOCK_WORKFLOW_ENABLED,
       'STOCK_WORKFLOW_ENABLED',

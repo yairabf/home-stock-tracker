@@ -339,10 +339,10 @@ gates in an environment allowing loopback listeners before completion.
 and the four `PredictedState` choices including `uncertain`. It reuses the shared
 transport's abortable 15-second budget and bounded transient retry.
 
-The advisor belongs to `PredictionEngine.predictProduct`, the existing internal
+The 37d advisor was introduced through `PredictionEngine.predictProduct`, the internal
 on-demand prediction capability. Inventory REST/MCP reads remain reads of
 materialized stock; they do not recalculate or call advisors. Daily stock
-materialization remains a separate deterministic workflow. Selecting Jev does
+materialization starts with deterministic calculations; 38d adds the opt-in advice phase described below. Selecting Jev alone does
 not introduce a new endpoint, attach AI to reads, or change daily quantity math.
 Shelf-life inference and product classification continue through OpenAI generation.
 
@@ -603,3 +603,30 @@ Existing stored policies are reused, never refreshed by reads or reruns. A short
 `LlmInferenceLog.structuredResponse` uses `shelf-life-policy-log-v1`, with validated attempts, policy/registry identity when applicable, and applied/stale/reused/unresolved write outcome. Provider acceptance does not imply application. Product text and raw errors are omitted. JEV usage is validated; absent OpenAI usage is omitted, and its configured model identity is marked as unresolved by the provider response. An unavailable attempt without model identity uses the local `unresolved` marker, never a claimed provider model.
 
 For reproducible mocked review, run `test/shelf-life-policy.e2e-spec.ts` against the dedicated local `home_stock_38c_test` database. It exercises real Nest routing, both selectors, repeat calls, competing writes, metadata/name/context corrections, failures and authenticated expiration/inventory reads. Runtime rollout and live accuracy review remain 38e.
+
+
+## Stock advice in application workflows (38d)
+
+Daily evaluation can now call the selected JEV advisor after successful deterministic materialization. Scheduled and manual `DailyStockWorkflowService.run()` calls share this phase. Inventory and recommendation REST/MCP reads never infer. There is no new public evaluation endpoint.
+
+The phase requires both `STOCK_WORKFLOW_ADVICE_ENABLED=true` and `STOCK_PREDICTION_PROVIDER=typesafe`, plus the existing private key and pinned JEV model. The flag defaults to false; selecting OpenAI retains deterministic daily evaluation and legacy on-demand OpenAI behavior. Keep these defaults until 38e evidence review. No private runtime or rollout is changed by this feature.
+
+`STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS` defaults to 20 and accepts integers from 1 to 100. Each run examines at most this many successfully materialized projections in product-ID order, including bypassed products. All selected projections still receive deterministic evaluation. Use a scoped manual run for later product IDs when the catalog exceeds the cap. At most one logical JEV call is made per examined product; the existing transport permits two physical attempts within a 15-second total stock deadline. The default maximum is 40 HTTP attempts and 300 seconds of model waiting per run, with no OpenAI stock fallback. Separate concurrent runs have separate run budgets; durable claims suppress identical requests across them.
+
+Direct stock signals, expiration, depleted quantities, zero valid history, disabled products, confident deterministic states and insufficient cold-start evidence bypass advice. JEV confidence must reach 0.90 and the answer must be non-uncertain. Only an uncertain non-authoritative daily state can change. Confidence is the minimum of daily, history and JEV confidence, never an uplift. Quantity arithmetic, recorded facts, units, grocery lines and expiration policies remain application-owned. Existing household confidence thresholds and pending-grocery suppression still apply, so accepted advice can remain below the recommendation threshold.
+
+The additive migration adds `StockProjection.revision` and `StockAdviceAttempt`. Every projection write increments revision. Model calls happen outside transactions; a short parent-first serializable transaction locks evidence, rechecks the fingerprint and revision, then atomically creates the accepted Prediction and projection link. Stale results retain acceptance provenance with an unapplied outcome. Publication failures leave the committed deterministic estimate in place. Advice failures do not count as failed deterministic evaluations; inspect attempts and sanitized stock-advice/persistence diagnostics separately.
+
+A unique product/evidence fingerprint reserves spending before calls. It includes relevant events, statistics, product metadata, recorded facts, policy, minimized household counts, deterministic baseline, UTC evaluation day and model/task version. Same-day unchanged evaluations reuse validated completed responses, including after deterministic reevaluation resets the saved state. Rejected and unavailable attempts are suppressed. Interrupted reservations older than the 15-second transport budget are abandoned on the next encounter and are never automatically retried for the same fingerprint. New evidence or a new UTC day permits a new attempt. Failure to persist a reservation prevents a call; failure to persist its response prevents publication.
+
+Accepted applied Predictions retain actual model provenance and immutable deterministic/advice evidence. `LlmInferenceLog.structuredResponse` discriminates new attempts with `version: daily-stock-advice-v1`, acceptance and application status. Unavailable attempts explicitly distinguish configured from unresolved model identity. Public inventory signals expose the existing signal contract; internal attempt IDs, fingerprints and daily provenance do not become new public fields. Raw transport envelopes, errors, credentials, ages and preferences are omitted. Logging failure does not undo an applied prediction; durable attempts remain the primary record.
+
+To roll back, disable `STOCK_WORKFLOW_ADVICE_ENABLED` or select `STOCK_PREDICTION_PROVIDER=openai`, restart, then run deterministic evaluation. Switching future routing alone leaves previously saved estimates intact until reevaluation. Retain attempt/prediction history. Rollout and real accuracy review remain 38e.
+
+Mocked verification against an isolated migrated PostgreSQL database:
+
+```bash
+npm run test:e2e -- --runInBand test/stock-advice-storage.e2e-spec.ts test/stock-advice-publication.e2e-spec.ts test/stock-advice-workflow.e2e-spec.ts
+```
+
+These tests exercise actual Nest/adapter routing, the scheduled callback, authenticated REST/MCP recommendations, unchanged read-time call counts, rejection, cache reuse, budget bounds, reservations, guarded publication and concurrent corrections. They establish wiring and safety, not live accuracy or calibrated stock probabilities. Run `npm run verify` and `npm run contract:check` before review.

@@ -1,3 +1,7 @@
+import { StockAdviceAttempts } from './stock-advice-attempts.service';
+import { StockAdviceSnapshot } from './stock-advice-snapshot.service';
+import { StockAdviceExecutor } from './stock-advice-executor.service';
+import { StockAdviceWriter } from './stock-advice-writer.service';
 import { StockProductConfirmationService } from './stock-product-confirmation.service';
 import { Module } from '@nestjs/common';
 import { InventoryController } from './inventory.controller';
@@ -57,6 +61,10 @@ import { ExpirationRecommendationService } from './expiration-recommendation.ser
     ShelfLifePolicyLog,
     DailyStockMaterializationService,
     DailyStockWorkflowService,
+    StockAdviceAttempts,
+    StockAdviceSnapshot,
+    StockAdviceExecutor,
+    StockAdviceWriter,
     StockWorkflowSchedulerService,
     ExpirationBatchService,
     ExpirationRecommendationService,

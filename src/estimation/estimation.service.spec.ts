@@ -1,3 +1,4 @@
+import { StockEvidenceService } from './stock-evidence.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EstimationService } from './estimation.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -103,6 +104,7 @@ describe('EstimationService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EstimationService,
+        StockEvidenceService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ProductService, useValue: mockProductService },
         { provide: HouseholdService, useValue: mockHouseholdService },

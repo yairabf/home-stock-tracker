@@ -12,6 +12,7 @@ function firstCall<T>(mock: jest.Mock): T {
 describe('DailyStockMaterializationService', () => {
   const projection = {
     id: 'projection-1',
+    revision: 4,
     productId: 'product-1',
     estimatedQuantity: 3,
     recordedAt: new Date('2026-09-01T02:00:00.000Z'),
@@ -89,10 +90,12 @@ describe('DailyStockMaterializationService', () => {
     expect(stockProjection.updateMany).toHaveBeenCalledWith({
       where: {
         id: projection.id,
+        revision: projection.revision,
         recordedEventId: projection.recordedEventId,
         evaluatedAt: projection.evaluatedAt,
       },
       data: {
+        revision: { increment: 1 },
         estimatedQuantity: 2.5,
         estimatedState: PredictedState.likely_available,
         confidence: 0.9,

@@ -2,24 +2,13 @@ import {
   applyHybridReasoning,
   buildDisabledResult,
 } from './hybrid-calculation';
-import {
-  calculateCandidate,
-  STOCK_HISTORY_EVENT_TYPES,
-  summarizeHistory,
-  type LearnedStatistics,
-} from './candidate-calculation';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { StockEvidenceService } from './stock-evidence.service';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
-import { HouseholdService } from '../household/household.service';
 import { EstimationResult } from './types/estimation-result';
-import { ProductEventHistory } from './types/product-event-history';
 import type { PredictionEngine } from './prediction-engine';
-import type { ProductWithNames } from '../product/types/product-with-names';
-import type {
-  DeterministicPredictionCandidate,
-  PredictionResult,
-} from './types/prediction-result';
+import type { PredictionResult } from './types/prediction-result';
 import { Prisma } from '../generated/prisma/client';
 import { OperationalLogger } from '../observability/operational-logger.service';
 import {
@@ -29,35 +18,14 @@ import {
 
 @Injectable()
 export class EstimationService implements PredictionEngine {
-  private readonly logger = new Logger(EstimationService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
-    private readonly householdService: HouseholdService,
+    private readonly evidence: StockEvidenceService,
     @Inject(STOCK_PREDICTION_ADVISOR)
     private readonly predictionReasoner: StockPredictionAdvisor,
     private readonly operationalLogger: OperationalLogger,
   ) {}
-
-  /**
-   * Fetch learned statistics for a product, if available.
-   */
-  private async fetchProductStatistics(
-    productId: string,
-  ): Promise<LearnedStatistics | null> {
-    const stats = await this.prisma.productStatistics.findUnique({
-      where: { productId },
-      select: {
-        avgPurchaseIntervalDays: true,
-        avgNeedIntervalDays: true,
-        estimatedConsumptionIntervalDays: true,
-        observationCount: true,
-      },
-    });
-
-    return stats;
-  }
 
   async estimateProductState(productId: string): Promise<PredictionResult> {
     return this.predictProduct(productId);
@@ -68,7 +36,7 @@ export class EstimationService implements PredictionEngine {
     const prediction = product.predictionEnabled
       ? await applyHybridReasoning(
           productId,
-          await this.buildDeterministicCandidate(product),
+          (await this.evidence.build(product)).candidate,
           this.predictionReasoner,
         )
       : {
@@ -84,58 +52,6 @@ export class EstimationService implements PredictionEngine {
       predictionId: predictionId ?? undefined,
     });
     return { ...prediction.result, predictionId };
-  }
-
-  private async buildDeterministicCandidate(
-    product: ProductWithNames,
-  ): Promise<DeterministicPredictionCandidate> {
-    const [eventHistory, learnedStats, household] = await Promise.all([
-      this.fetchProductEventHistory(product.id),
-      this.fetchProductStatistics(product.id),
-      this.householdService.getOrCreate(),
-    ]);
-    return calculateCandidate(
-      eventHistory,
-      learnedStats,
-      product,
-      household,
-      Date.now(),
-    );
-  }
-
-  private async fetchProductEventHistory(
-    productId: string,
-  ): Promise<ProductEventHistory> {
-    const now = Date.now();
-    const events = await this.prisma.inventoryEvent.findMany({
-      where: {
-        productId,
-        eventType: { in: STOCK_HISTORY_EVENT_TYPES },
-      },
-      orderBy: { timestamp: 'desc' },
-      take: 20,
-    });
-
-    const validEvents = events.filter((e) => {
-      const isValid = e.timestamp.getTime() <= now;
-      if (!isValid) {
-        this.logger.warn(
-          `Ignoring future-dated event ${e.id} for product ${productId} with timestamp ${e.timestamp.toISOString()}`,
-        );
-      }
-      return isValid;
-    });
-
-    return summarizeHistory(
-      productId,
-      validEvents.map((e) => ({
-        id: e.id,
-        eventType: e.eventType,
-        timestamp: e.timestamp,
-        quantity: e.quantity ?? undefined,
-        unit: e.unit ?? undefined,
-      })),
-    );
   }
 
   private async savePrediction(

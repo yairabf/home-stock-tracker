@@ -75,7 +75,7 @@ export class StockLedgerService {
     return tx.stockProjection.upsert({
       where: { productId: input.productId },
       create: { productId: input.productId, ...data },
-      update: data,
+      update: { ...data, revision: { increment: 1 } },
     });
   }
 
@@ -100,7 +100,7 @@ export class StockLedgerService {
     return tx.stockProjection.upsert({
       where: { productId: input.productId },
       create: { productId: input.productId, ...data },
-      update: data,
+      update: { ...data, revision: { increment: 1 } },
     });
   }
 
@@ -134,6 +134,7 @@ export class StockLedgerService {
     return tx.stockProjection.update({
       where: { productId: input.productId },
       data: {
+        revision: { increment: 1 },
         estimatedQuantity,
         estimatedState:
           estimatedQuantity === 0
@@ -169,7 +170,7 @@ export class StockLedgerService {
     return tx.stockProjection.upsert({
       where: { productId: input.productId },
       create: { productId: input.productId, ...data },
-      update: data,
+      update: { ...data, revision: { increment: 1 } },
     });
   }
 
@@ -211,7 +212,7 @@ export class StockLedgerService {
         estimatedQuantity: null,
         ...estimate,
       },
-      update: estimate,
+      update: { ...estimate, revision: { increment: 1 } },
     });
   }
 
@@ -236,7 +237,7 @@ export class StockLedgerService {
     return tx.stockProjection.upsert({
       where: { productId: input.productId },
       create: { productId: input.productId, ...data },
-      update: data,
+      update: { ...data, revision: { increment: 1 } },
     });
   }
 

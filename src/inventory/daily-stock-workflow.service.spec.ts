@@ -9,16 +9,25 @@ describe('DailyStockWorkflowService', () => {
   const inferMissingPolicies = jest.fn();
   const evaluateProduct = jest.fn();
   const stockWorkflow = jest.fn();
+  const advice = { enabled: false, execute: jest.fn() };
+  const adviceWriter = { publish: jest.fn() };
+  const config = { adviceMaxProducts: 20 };
   const service = new DailyStockWorkflowService(
     { stockProjection: { findMany } } as never,
     { inferMissingPolicies } as unknown as ShelfLifeInferenceService,
     { evaluateProduct } as unknown as DailyStockMaterializationService,
     { stockWorkflow } as unknown as OperationalLogger,
+    advice as never,
+    adviceWriter as never,
+    config as never,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
     calls.length = 0;
+    advice.enabled = false;
+    config.adviceMaxProducts = 20;
+    advice.execute.mockResolvedValue({ accepted: true });
     inferMissingPolicies.mockImplementation(() => {
       calls.push('inference');
       return Promise.resolve({
@@ -105,5 +114,39 @@ describe('DailyStockWorkflowService', () => {
       failed: 1,
     });
     expect(summary.evaluation.succeeded).toBe(2);
+  });
+  it('bounds advice snapshots without limiting deterministic evaluation', async () => {
+    advice.enabled = true;
+    config.adviceMaxProducts = 1;
+    await service.run();
+    expect(findMany).toHaveBeenCalledWith({
+      select: { productId: true },
+      orderBy: { productId: 'asc' },
+    });
+    expect(advice.execute).toHaveBeenCalledTimes(1);
+    expect(evaluateProduct).toHaveBeenCalledTimes(2);
+    expect(adviceWriter.publish).toHaveBeenCalledTimes(1);
+  });
+  it('isolates advice failures after successful deterministic writes', async () => {
+    advice.enabled = true;
+    advice.execute
+      .mockRejectedValueOnce(new Error('provider'))
+      .mockResolvedValueOnce({ accepted: true });
+    const summary = await service.run();
+    expect(summary.evaluation).toEqual({
+      processed: 2,
+      succeeded: 2,
+      skipped: 0,
+      failed: 0,
+    });
+    expect(advice.execute).toHaveBeenCalledTimes(2);
+    expect(adviceWriter.publish).toHaveBeenCalledTimes(1);
+    expect(stockWorkflow).toHaveBeenCalledWith(
+      expect.objectContaining({ phase: 'stock_advice', outcome: 'failure' }),
+    );
+  });
+  it('keeps default daily evaluation inference-free for stock advice', async () => {
+    await service.run();
+    expect(advice.execute).not.toHaveBeenCalled();
   });
 });

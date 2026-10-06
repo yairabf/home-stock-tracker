@@ -1,3 +1,5 @@
+import { serializePredictionEvidence } from '../../estimation/prediction-reasoning-input';
+import { stockCandidate } from '../../estimation/stock-prediction.fixture';
 import { PredictedState } from '../../generated/prisma/enums';
 import {
   InventoryEstimateResponseDto,
@@ -96,4 +98,51 @@ describe('InventoryItemResponseDto', () => {
       deterministicSignals: { coldStart: true, eventCount: 0 },
     });
   });
+  it.each([false, true])(
+    'maps daily provenance to the published signal contract (advice %s)',
+    (advice) => {
+      const candidate = stockCandidate();
+      candidate.signals.householdContext = null;
+      const result = InventoryEstimateResponseDto.fromEntity({
+        id: 'p',
+        category: null,
+        names: [{ displayName: 'Fixture' }],
+        stockProjection: {
+          unit: 'unit',
+          recordedQuantity: null,
+          recordedAt,
+          recordedSource: 'api',
+          recordedEventId: 'event',
+          estimatedQuantity: null,
+          estimatedState: 'probably_low',
+          confidence: 0.6,
+          reason: 'fixture',
+          predictionId: 'prediction',
+          evaluatedAt,
+          prediction: {
+            recommendedAction: null,
+            llmResult: advice ? {} : null,
+            deterministicSignals: {
+              source: 'daily_stock_workflow',
+              estimatedConsumptionIntervalDays: 3,
+              ...(advice
+                ? {
+                    stockAdvice: {
+                      candidate: serializePredictionEvidence(candidate),
+                      attemptId: 'private-internal-id',
+                    },
+                  }
+                : {}),
+            },
+          },
+        },
+      });
+      expect(result.deterministicSignals.eventCount).toBe(advice ? 2 : 0);
+      expect(result.deterministicSignals).not.toHaveProperty('stockAdvice');
+      expect(result.deterministicSignals).not.toHaveProperty('source');
+      expect(result.deterministicSignals.estimatedConsumptionIntervalDays).toBe(
+        advice ? null : 3,
+      );
+    },
+  );
 });

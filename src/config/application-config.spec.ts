@@ -26,11 +26,40 @@ describe('loadApplicationConfig', () => {
       typesafeApiKey: undefined,
       jevModel: undefined,
       stockWorkflow: {
+        adviceEnabled: false,
+        adviceMaxProducts: 20,
         enabled: true,
         cron: '0 2 * * *',
         timezone: 'Asia/Jerusalem',
       },
     });
+  });
+
+  it.each(['0', '101', '-1', '2.5', '20x', ''])(
+    'rejects invalid advice bounds %s',
+    (limit) => {
+      expect(() =>
+        loadApplicationConfig({
+          ...REQUIRED_ENVIRONMENT,
+          STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS: limit,
+        }),
+      ).toThrow('STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS');
+    },
+  );
+  it('validates advice enablement and accepts bounded overrides', () => {
+    expect(() =>
+      loadApplicationConfig({
+        ...REQUIRED_ENVIRONMENT,
+        STOCK_WORKFLOW_ADVICE_ENABLED: 'yes',
+      }),
+    ).toThrow('STOCK_WORKFLOW_ADVICE_ENABLED');
+    expect(
+      loadApplicationConfig({
+        ...REQUIRED_ENVIRONMENT,
+        STOCK_WORKFLOW_ADVICE_ENABLED: 'true',
+        STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS: '3',
+      }).stockWorkflow,
+    ).toMatchObject({ adviceEnabled: true, adviceMaxProducts: 3 });
   });
 
   it('selects product understanding independently', () => {

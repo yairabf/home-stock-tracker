@@ -18,6 +18,7 @@ export class DailyStockMaterializationService {
       where: { productId },
       select: {
         id: true,
+        revision: true,
         productId: true,
         estimatedQuantity: true,
         recordedAt: true,
@@ -95,10 +96,12 @@ export class DailyStockMaterializationService {
       const updated = await tx.stockProjection.updateMany({
         where: {
           id: projection.id,
+          revision: projection.revision,
           recordedEventId: projection.recordedEventId,
           evaluatedAt: projection.evaluatedAt,
         },
         data: {
+          revision: { increment: 1 },
           estimatedQuantity: result.estimatedQuantity,
           estimatedState: result.estimatedState,
           confidence: result.confidence,
@@ -110,7 +113,13 @@ export class DailyStockMaterializationService {
       if (updated.count !== 1) {
         throw new Error('Stock projection changed during daily evaluation');
       }
-      return { ...result, predictionId: prediction.id };
+      return {
+        ...result,
+        productId,
+        projectionId: projection.id,
+        revision: projection.revision + 1,
+        predictionId: prediction.id,
+      };
     });
   }
 }

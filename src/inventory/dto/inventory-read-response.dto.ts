@@ -1,3 +1,4 @@
+import { predictionReasoningInputSchema } from '../../estimation/types/prediction-reasoning';
 import { PredictedState } from '../../generated/prisma/enums';
 import type { DeterministicSignalsDto } from './estimation-response.dto';
 
@@ -97,10 +98,9 @@ export class InventoryEstimateResponseDto extends InventoryItemResponseDto {
     dto.reason = projection?.reason ?? 'Stock is not tracked';
     dto.recommendedAction = projection?.prediction?.recommendedAction ?? null;
     dto.llmContributed = projection?.prediction?.llmResult != null;
-    dto.deterministicSignals =
-      (projection?.prediction
-        ?.deterministicSignals as DeterministicSignalsDto) ??
-      emptyDeterministicSignals();
+    dto.deterministicSignals = materializedSignals(
+      projection?.prediction?.deterministicSignals,
+    );
     return dto;
   }
 }
@@ -154,4 +154,52 @@ function emptyDeterministicSignals(): DeterministicSignalsDto {
     householdContext: null,
     authoritativeDirectSignal: false,
   };
+}
+
+function materializedSignals(value: unknown): DeterministicSignalsDto {
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    'source' in value &&
+    value.source === 'daily_stock_workflow'
+  ) {
+    const provenance = 'stockAdvice' in value ? value.stockAdvice : null;
+    const input =
+      provenance && typeof provenance === 'object' && 'candidate' in provenance
+        ? provenance.candidate
+        : null;
+    const parsed = predictionReasoningInputSchema.safeParse(input);
+    if (parsed.success) {
+      const signals = parsed.data.signals;
+      return {
+        ...signals,
+        lastPurchaseAt: signals.lastPurchaseAt
+          ? new Date(signals.lastPurchaseAt)
+          : null,
+        lastLowStockSignalAt: signals.lastLowStockSignalAt
+          ? new Date(signals.lastLowStockSignalAt)
+          : null,
+        lastStockConfirmationAt: signals.lastStockConfirmationAt
+          ? new Date(signals.lastStockConfirmationAt)
+          : null,
+      };
+    }
+    const interval =
+      'estimatedConsumptionIntervalDays' in value
+        ? value.estimatedConsumptionIntervalDays
+        : null;
+    return {
+      ...emptyDeterministicSignals(),
+      estimatedConsumptionIntervalDays:
+        typeof interval === 'number' &&
+        Number.isFinite(interval) &&
+        interval > 0
+          ? interval
+          : null,
+    };
+  }
+  return (
+    (value as DeterministicSignalsDto | null) ?? emptyDeterministicSignals()
+  );
 }

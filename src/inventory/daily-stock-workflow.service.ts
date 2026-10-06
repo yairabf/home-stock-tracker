@@ -1,5 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { OperationalLogger } from '../observability/operational-logger.service';
+import {
+  STOCK_WORKFLOW_CONFIG,
+  type StockWorkflowConfig,
+} from '../config/application-config';
+import { StockAdviceExecutor } from './stock-advice-executor.service';
+import { StockAdviceWriter } from './stock-advice-writer.service';
+import type { DailyAdviceBaseline } from './stock-advice-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import { DailyStockMaterializationService } from './daily-stock-materialization.service';
 import { ShelfLifeInferenceService } from './shelf-life-inference.service';
@@ -16,6 +23,9 @@ export class DailyStockWorkflowService {
     private readonly shelfLifeInference: ShelfLifeInferenceService,
     private readonly stockMaterialization: DailyStockMaterializationService,
     private readonly operationalLogger: OperationalLogger,
+    private readonly advice: StockAdviceExecutor,
+    private readonly adviceWriter: StockAdviceWriter,
+    @Inject(STOCK_WORKFLOW_CONFIG) private readonly config: StockWorkflowConfig,
   ) {}
 
   async run(
@@ -71,6 +81,7 @@ export class DailyStockWorkflowService {
       projections = await this.prisma.stockProjection.findMany({
         ...(productIds ? { where: { productId: { in: productIds } } } : {}),
         select: { productId: true },
+        orderBy: { productId: 'asc' },
       });
     } catch {
       return { processed: 0, succeeded: 0, skipped: 0, failed: 1 };
@@ -81,6 +92,7 @@ export class DailyStockWorkflowService {
       skipped: 0,
       failed: 0,
     };
+    let adviceProducts = 0;
     for (const projection of projections) {
       try {
         const result = await this.stockMaterialization.evaluateProduct(
@@ -88,6 +100,14 @@ export class DailyStockWorkflowService {
           evaluatedAt,
         );
         summary[result === null ? 'skipped' : 'succeeded'] += 1;
+        if (
+          result &&
+          this.advice.enabled &&
+          adviceProducts < this.config.adviceMaxProducts
+        ) {
+          adviceProducts++;
+          await this.adviseProduct(result);
+        }
       } catch {
         summary.failed += 1;
         this.operationalLogger.stockWorkflow({
@@ -99,5 +119,18 @@ export class DailyStockWorkflowService {
       }
     }
     return summary;
+  }
+  private async adviseProduct(baseline: DailyAdviceBaseline): Promise<void> {
+    try {
+      const result = await this.advice.execute(baseline);
+      if (result) await this.adviceWriter.publish(result);
+    } catch {
+      this.operationalLogger.stockWorkflow({
+        stage: 'product_failure',
+        outcome: 'failure',
+        phase: 'stock_advice',
+        productId: baseline.productId,
+      });
+    }
   }
 }

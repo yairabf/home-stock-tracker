@@ -451,6 +451,36 @@ describe('StockLedgerService', () => {
     },
   );
 
+  it.each(['reset', 'set', 'decrement', 'out', 'low', 'observation_out'])(
+    'invalidates advice on a same-timestamp %s write',
+    async (operation) => {
+      stockProjection.findUnique.mockResolvedValue({
+        productId: 'product-1',
+        unit: 'item',
+        estimatedQuantity: 3,
+        evaluatedAt: baseFact.occurredAt,
+      });
+      if (operation === 'reset')
+        await service.resetWithinTransaction(tx, baseFact);
+      if (operation === 'set') await service.setWithinTransaction(tx, baseFact);
+      if (operation === 'decrement')
+        await service.decrementWithinTransaction(tx, baseFact);
+      if (operation === 'out')
+        await service.markOutWithinTransaction(tx, baseFact);
+      if (operation === 'low' || operation === 'observation_out')
+        await service.applyObservationWithinTransaction(tx, {
+          ...baseFact,
+          state:
+            operation === 'low'
+              ? PredictedState.probably_low
+              : PredictedState.probably_out,
+        });
+      const update =
+        operation === 'decrement' ? lastUpdate().data : lastUpsert().update;
+      expect(update.revision).toEqual({ increment: 1 });
+    },
+  );
+
   function lastUpsert(): UpsertArguments {
     const calls = stockProjection.upsert.mock.calls as unknown as Array<
       [UpsertArguments]

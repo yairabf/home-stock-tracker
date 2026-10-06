@@ -1,3 +1,4 @@
+import { StockEvidenceService } from './stock-evidence.service';
 import { Module } from '@nestjs/common';
 import { EstimationService } from './estimation.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -15,6 +16,7 @@ import type { ModelConfig } from '../config/application-config';
   imports: [PrismaModule, ProductModule, HouseholdModule, LlmModule],
   providers: [
     EstimationService,
+    StockEvidenceService,
     PredictionReasoner,
     JevStockPredictionAdvisor,
     {
@@ -31,6 +33,11 @@ import type { ModelConfig } from '../config/application-config';
       useExisting: EstimationService,
     },
   ],
-  exports: [EstimationService, PREDICTION_ENGINE],
+  exports: [
+    EstimationService,
+    PREDICTION_ENGINE,
+    StockEvidenceService,
+    STOCK_PREDICTION_ADVISOR,
+  ],
 })
 export class EstimationModule {}
