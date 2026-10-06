@@ -1,8 +1,25 @@
 {
-  "status": "ready",
   "command": "complete",
-  "skill": "complete",
-  "feature": "38d",
-  "activity": "38d squash-merged locally; awaiting separate push approval",
-  "updated_at": "2026-10-06T07:44:39.586354+00:00"
+  "status": "ready",
+  "boundary": "reviewed",
+  "feature": "38e",
+  "step": "merge",
+  "completedSteps": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6a",
+    "6b",
+    "6c",
+    "7",
+    "7a",
+    "7b",
+    "7c",
+    "7d",
+    "7e",
+    "8"
+  ],
+  "updatedAt": "2026-10-06T17:54:59.717234+00:00"
 }

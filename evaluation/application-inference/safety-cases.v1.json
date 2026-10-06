@@ -1,0 +1,811 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "application-safety-v1",
+  "frozenAt": "2026-10-06T00:00:00Z",
+  "cases": [
+    {
+      "caseId": "understanding-0",
+      "semanticGroupId": "understanding-group-0",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "empty_vocabulary"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "milk",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-1",
+      "semanticGroupId": "understanding-group-1",
+      "split": "held_out",
+      "source": "authored",
+      "language": "he",
+      "tags": [
+        "hebrew"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "חלב",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-2",
+      "semanticGroupId": "understanding-group-2",
+      "split": "held_out",
+      "source": "authored",
+      "language": "mixed",
+      "tags": [
+        "mixed"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "milk חלב",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-3",
+      "semanticGroupId": "understanding-group-3",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "typo",
+        "brand_size"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "mllk 2L brand",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-4",
+      "semanticGroupId": "understanding-group-4",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "unknown_category",
+        "unknown_unit",
+        "ambiguous"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "unknown zqx",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-5",
+      "semanticGroupId": "understanding-group-5",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "supplied_fields"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "paper",
+        "metadata": {
+          "category": "paper",
+          "productType": "household_consumable",
+          "typicalUnit": "pack",
+          "isPerishable": false
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "values",
+          "values": [
+            "paper"
+          ]
+        },
+        "productType": {
+          "kind": "values",
+          "values": [
+            "household_consumable"
+          ]
+        },
+        "typicalUnit": {
+          "kind": "values",
+          "values": [
+            "pack"
+          ]
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [
+            false
+          ]
+        }
+      }
+    },
+    {
+      "caseId": "understanding-6",
+      "semanticGroupId": "understanding-group-6",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "catalog_vocabulary"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "milk",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [
+          "dairy"
+        ],
+        "units": [
+          "liter"
+        ]
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-7",
+      "semanticGroupId": "understanding-group-7",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "provider_failure",
+        "invalid_output"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "milk",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "understanding-8",
+      "semanticGroupId": "understanding-group-8",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "unsupported_vocabulary"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "milk",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [
+          "Milk",
+          "milk"
+        ],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "policy-0",
+      "semanticGroupId": "policy-group-0",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "reviewed_policy"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-0",
+        "canonicalName": "eggs",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "shell"
+        }
+      },
+      "expected": {
+        "kind": "policies",
+        "policyIds": [
+          "raw-shell-eggs-refrigerated"
+        ],
+        "durationEvidence": "authored-eggs-assumption"
+      }
+    },
+    {
+      "caseId": "policy-1",
+      "semanticGroupId": "policy-group-1",
+      "split": "held_out",
+      "source": "authored",
+      "language": "he",
+      "tags": [
+        "hebrew"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-1",
+        "canonicalName": "ביצים",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "shell"
+        }
+      },
+      "expected": {
+        "kind": "policies",
+        "policyIds": [
+          "raw-shell-eggs-refrigerated"
+        ],
+        "durationEvidence": "authored-eggs-assumption"
+      }
+    },
+    {
+      "caseId": "policy-2",
+      "semanticGroupId": "policy-group-2",
+      "split": "held_out",
+      "source": "authored",
+      "language": "mixed",
+      "tags": [
+        "mixed",
+        "ambiguous"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-2",
+        "canonicalName": "eggs ביצים",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "shell"
+        }
+      },
+      "expected": {
+        "kind": "abstain"
+      }
+    },
+    {
+      "caseId": "policy-3",
+      "semanticGroupId": "policy-group-3",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "missing_storage"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-3",
+        "canonicalName": "eggs",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": null
+      },
+      "expected": {
+        "kind": "abstain"
+      }
+    },
+    {
+      "caseId": "policy-4",
+      "semanticGroupId": "policy-group-4",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "reviewed_policy"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-4",
+        "canonicalName": "chicken",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "whole_or_pieces"
+        }
+      },
+      "expected": {
+        "kind": "policies",
+        "policyIds": [
+          "raw-poultry-refrigerated"
+        ],
+        "durationEvidence": "authored-poultry-assumption"
+      }
+    },
+    {
+      "caseId": "policy-5",
+      "semanticGroupId": "policy-group-5",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "unsupported_policy",
+        "required_generation"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-5",
+        "canonicalName": "salmon",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "whole_or_pieces"
+        }
+      },
+      "expected": {
+        "kind": "generation",
+        "minDays": 1,
+        "maxDays": 2,
+        "durationEvidence": "authored-fish-assumption"
+      }
+    },
+    {
+      "caseId": "policy-6",
+      "semanticGroupId": "policy-group-6",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "nonperishable"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-6",
+        "canonicalName": "toilet paper",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "household_consumable",
+        "isPerishable": false,
+        "context": {
+          "version": 1,
+          "storage": "ambient",
+          "maxTemperatureC": null,
+          "preparation": "unknown",
+          "form": "unknown"
+        }
+      },
+      "expected": {
+        "kind": "policies",
+        "policyIds": [
+          "stable-household-paper-plastic"
+        ],
+        "durationEvidence": "authored-nonfood-assumption"
+      }
+    },
+    {
+      "caseId": "policy-7",
+      "semanticGroupId": "policy-group-7",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "contradictory_identity"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-7",
+        "canonicalName": "eggs",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "household_consumable",
+        "isPerishable": false,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "shell"
+        }
+      },
+      "expected": {
+        "kind": "abstain"
+      }
+    },
+    {
+      "caseId": "policy-8",
+      "semanticGroupId": "policy-group-8",
+      "split": "held_out",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "provider_failure"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-8",
+        "canonicalName": "eggs",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": {
+          "version": 1,
+          "storage": "refrigerated",
+          "maxTemperatureC": 4,
+          "preparation": "raw",
+          "form": "shell"
+        }
+      },
+      "expected": {
+        "kind": "abstain"
+      }
+    },
+    {
+      "caseId": "understanding-4-tuning",
+      "semanticGroupId": "understanding-group-4-tuning",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "unknown_category",
+        "unknown_unit",
+        "ambiguous"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "unknown zqx",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "abstain"
+        },
+        "productType": {
+          "kind": "abstain"
+        },
+        "typicalUnit": {
+          "kind": "abstain"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "policy-3-tuning",
+      "semanticGroupId": "policy-group-3-tuning",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": [
+        "missing_storage"
+      ],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "shelf_life_policy",
+      "input": {
+        "productId": "fixture-3",
+        "canonicalName": "eggs",
+        "category": null,
+        "typicalUnit": null,
+        "productType": "fast_consumable",
+        "isPerishable": true,
+        "context": null
+      },
+      "expected": {
+        "kind": "abstain"
+      }
+    }
+  ]
+}

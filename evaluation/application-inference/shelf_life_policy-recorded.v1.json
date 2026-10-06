@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "datasetHash": "eaa14bab3c7dd5c7227fd64ba5fc2c4ff347b6a43e646f98d948c1e72100ef5f",
+  "inputHash": "5b9263746059f341da53a384e2d221bfade9ef352e9982887cade7dc2a875860",
+  "task": "shelf_life_policy",
+  "split": "held_out",
+  "configuredModel": "jev-1.13.0",
+  "versions": {
+    "policy": "application-launch-v1",
+    "adapter": "jev-shelf-life-policy-v1",
+    "vocabulary": {
+      "category": "product-category-v1",
+      "unit": "product-unit-v1"
+    },
+    "registry": "shelf-life-policies-v1"
+  },
+  "rows": [
+    {
+      "caseId": "policy-0",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "059b2628b706f1d2e63fc2929432e80249333316f9d9b4c92013744dc52a0f9d",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "policy_0",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 0,
+              "policy_0": 1
+            },
+            "usage": {
+              "input_tokens": 12,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "policy-1",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "7c9b89f7997ce951b9a21a1f5d8b288b6acbd18f6f81e622efa22cf06c9d85bd",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "policy_0",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 0,
+              "policy_0": 1
+            },
+            "usage": {
+              "input_tokens": 12,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "policy-2",
+      "calls": []
+    },
+    {
+      "caseId": "policy-3",
+      "calls": []
+    },
+    {
+      "caseId": "policy-4",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "9592a3b8f5bea685b68ad1cf59a6450a2c111635b767941535d6728aa6178a3e",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "policy_0",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 0,
+              "policy_0": 1
+            },
+            "usage": {
+              "input_tokens": 12,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "policy-5",
+      "calls": [
+        {
+          "provider": "openai",
+          "requestHash": "b0ef57870cacc6a07575c3dc1e77db4658362edaef52e0b1641f9339df04d811",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "provider": "openai",
+            "model": "authored-configured-model",
+            "value": {
+              "kind": "finite",
+              "shelfLifeDays": 1,
+              "confidence": 0.99,
+              "rationale": "Authored fixture for evaluator verification only"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "policy-6",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "94e0625f56ddc101968f47e66a76b829736b4d14e5e5256811ef27fe9b285d93",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "policy_0",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 0,
+              "policy_0": 1
+            },
+            "usage": {
+              "input_tokens": 12,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "policy-7",
+      "calls": []
+    },
+    {
+      "caseId": "policy-8",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "059b2628b706f1d2e63fc2929432e80249333316f9d9b4c92013744dc52a0f9d",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        }
+      ]
+    }
+  ]
+}

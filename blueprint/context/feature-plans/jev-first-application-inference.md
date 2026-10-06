@@ -37,9 +37,9 @@ OpenAI fallback receives only unresolved fields and necessary context. Previousl
 
 ## Tracked build-plan feature
 
-Feature 38 and sub-features 38a through 38e are tracked in [the build plan](../../build-plan.md). Completed feature 37 remains unchanged.
+Feature 38 and sub-features 38a through 38g are tracked in [the build plan](../../build-plan.md). Completed feature 37 remains unchanged.
 
-This is incremental scope; no project-plan direction change is proposed. 38a is complete; build 38b next on its own branch and spec. Each sub-feature has its own review and verification cycle.
+This is incremental scope; no project-plan direction change is proposed. 38a through 38e are complete; qualifying evidence (38f) and runtime rollout (38g) remain pending. The user approved splitting qualifying evidence into 38f and runtime rollout into 38g on 2026-10-06. Each sub-feature has its own review and verification cycle.
 
 ## Implementation and acceptance details
 
@@ -73,17 +73,25 @@ Use a projection version or existing optimistic concurrency predicate so a purch
 
 Done when scheduled/manual evaluation exercises real Nest routing, saved accepted/rejected provenance is observable, accepted eligible advice is visible to recommendation selection, zero history makes no call, uncertain outputs remain suppressed, and concurrency tests prove newer explicit stock cannot be overwritten by stale inference.
 
-### 38e: evaluation and enablement
+### 38e: evaluation tooling and perishability repair
 
-Extend the existing CLI evaluation approach for category/type/unit/perishability and shelf-life selection. Review labels independently and include Hebrew, English, mixed names, unknown categories, ambiguous variants, unsupported policies, and provider failures. Freeze tuning and held-out inputs separately. Reuse the existing matching and cutoff-safe historical stock review gates; proposed thresholds are not measured accuracy. Evaluate end-to-end recommendation false positives, recall, acceptance/abstention and model-call coverage, not only raw decision accuracy.
+Extend the existing CLI evaluation approach for category/type/unit/perishability and shelf-life selection. Provide independent label-review instructions and include Hebrew, English, mixed names, unknown categories, ambiguous variants, unsupported policies, and provider failures. Freeze tuning and held-out inputs separately. Reuse the existing matching and cutoff-safe historical stock review gates; proposed thresholds are not measured accuracy. Evaluate end-to-end recommendation false positives, recall, acceptance/abstention and model-call coverage, not only raw decision accuracy.
 
 Run focused tests, npm run verify, npm run contract:check, and affected PostgreSQL REST/MCP end-to-end suites against an isolated migrated database. Public output/tool changes require the existing versioned contract and generated bundle workflow. Additional paid evaluations need a separately specified bounded case budget; the two-case smoke authorization does not authorize an unlimited corpus run.
+
+Add a focused versioned perishability question, target-free supporting evidence and explicit three-choice definitions. Preserve current 0.90 acceptance gates and supplied metadata. Retain bounded diagnostic reports, raw errors and rejected outcomes; tuning and small catalog diagnostics remain launch-inconclusive. Completion of 38e establishes tooling and repair behavior, not qualifying live accuracy.
+
+### 38f: qualifying evidence
+
+Collect independently reviewed observed held-out inputs disjoint from tuning groups and cutoff-safe historical stock/workflow outcomes. Preserve the launch policy defined in the 38e spec and rollout guide: matching reuses 37c; understanding needs at least 100 cases, at least 30 Hebrew/mixed cases and at least 50 scored accepted inferred values per field at 95% precision; policy and stock/workflow retain their existing denominators, precision and safety requirements. Freeze review, labels, source, model and policy versions before separately authorized bounded live calls. Keep incomplete, failed and inconclusive reports; unavailable qualifying data keeps this feature pending. Do not pad with synthetic cases or replace independent review with model agreement.
+
+### 38g: validated dual-provider rollout
 
 After evidence review, enable JEV for validated bounded tasks and retain OpenAI for generation fallback. Validate private credentials and pinned models, restart the approved runtime, then check readiness and representative flows. Keep independent task rollback to OpenAI or deterministic-only behavior and retain provenance. Deployment/remote changes require separate approval.
 
 ## Critique incorporated
 
-- Split the work into five reviewable features rather than a single global provider switch.
+- Split the work into seven reviewable features rather than a single global provider switch.
 - Added vocabulary/bootstrap handling because current categories and units are free text.
 - Replaced whole-object classification with per-field outcomes so unknown perishability is not incorrectly stored as false.
 - Included the stock projection connection and race protection; selector-only rollout would not affect recommendations.

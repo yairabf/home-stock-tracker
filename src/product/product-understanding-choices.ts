@@ -1,4 +1,5 @@
 import { ProductType } from '../generated/prisma/enums';
+import { perishabilityChoices } from './perishability-question';
 import type {
   JevChoiceCriteria,
   JevJsonObject,
@@ -23,6 +24,7 @@ export function understandingChoices(
   field: UnderstandingField,
   input: ProductUnderstandingInput,
 ): UnderstandingChoices | { status: 'unsupported' } {
+  if (field === 'isPerishable') return perishabilityChoices(input);
   const context = { rawName: input.rawName, metadata: { ...input.metadata } };
   if (field === 'category' || field === 'typicalUnit') {
     const vocabulary = buildChoiceVocabulary({
@@ -34,15 +36,12 @@ export function understandingChoices(
       ? vocabulary
       : { status: 'unsupported' };
   }
-  const values: UnderstandingChoices['values'] =
-    field === 'productType'
-      ? {
-          unknown: null,
-          ...Object.fromEntries(
-            Object.values(ProductType).map((value) => [value, value]),
-          ),
-        }
-      : { unknown: null, perishable: true, nonperishable: false };
+  const values: UnderstandingChoices['values'] = {
+    unknown: null,
+    ...Object.fromEntries(
+      Object.values(ProductType).map((value) => [value, value]),
+    ),
+  };
   const criteria = Object.fromEntries(
     Object.keys(values).map((token) => [
       token,

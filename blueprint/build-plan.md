@@ -74,4 +74,6 @@
   - [x] 38b. **JEV product understanding** - choose category, type, unit, and perishability; preserve names and confirmation; avoid default alias generation
   - [x] 38c. **JEV shelf-life policies** - select reviewed applicable policies and generate missing policies only when necessary ✓ 2026-10-06
   - [x] 38d. **Stock predictions in application workflows** - invoke JEV for eligible stock evidence and connect accepted advice to materialized recommendations ✓ 2026-10-06
-  - [ ] 38e. **Evaluation and dual-provider rollout** - review accuracy, abstention and usage, then enable validated task routing with independent rollback switches
+  - [x] 38e. **Evaluation tooling and perishability repair** - private bounded evaluation, actual workflow replay, versioned perishability question and controlled diagnostic results ✓ 2026-10-06
+  - [ ] 38f. **Qualifying JEV evidence** - independently review and freeze representative held-out and historical datasets, collect bounded live evidence and assess each existing launch gate
+  - [ ] 38g. **Validated dual-provider rollout** - enable only qualifying task routes on an approved runtime, verify representative flows and independent rollback while retaining OpenAI generation

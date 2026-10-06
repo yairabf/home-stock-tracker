@@ -1,5 +1,10 @@
 # Deployment
 
+JEV task enablement requires the separately reviewed
+[application rollout packet](jev-application-rollout.md); evaluator success does
+not authorize changing runtime configuration or restarting a deployment.
+
+
 ## Published images
 
 After a passing push to `main`, GitHub Actions publishes the public image

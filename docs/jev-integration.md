@@ -1,5 +1,10 @@
 # Jev transport, product matching and stock advice
 
+For application metadata, shelf-life and materialized stock rollout, use the
+[evidence and rollback guide](jev-application-rollout.md). All task selectors
+remain independently opt-in pending reviewed live evidence.
+
+
 Feature 37a exports an injectable `JevDecisionClient` from `LlmModule` for
 bounded decisions. Feature 37b adds task-specific product-resolution advisors.
 Feature 37d adds independently selected stock-prediction advice. Generation, including classification and shelf life, continues

@@ -46,3 +46,6 @@ evaluation/product-matching/reports/
 
 # Private local stock-prediction evaluation reports
 evaluation/stock-prediction/reports/
+
+# Private household catalog export
+/docs/household-products-export.json

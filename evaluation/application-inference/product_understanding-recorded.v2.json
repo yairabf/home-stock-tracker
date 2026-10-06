@@ -1,0 +1,725 @@
+{
+  "schemaVersion": 1,
+  "datasetHash": "eaa14bab3c7dd5c7227fd64ba5fc2c4ff347b6a43e646f98d948c1e72100ef5f",
+  "inputHash": "14258120b8a590383a96c2bf1e3b13f1b349b68fdabf3c82606304333a14288f",
+  "task": "product_understanding",
+  "split": "held_out",
+  "configuredModel": "jev-1.13.0",
+  "versions": {
+    "policy": "application-launch-v1",
+    "adapter": "jev-product-understanding-v2",
+    "vocabulary": {
+      "category": "product-category-v1",
+      "unit": "product-unit-v1"
+    },
+    "registry": "shelf-life-policies-v1"
+  },
+  "rows": [
+    {
+      "caseId": "understanding-0",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "c490d23805ad772a4ce4f84537fdd3887959a66ed8bbcf103a4ded73d47adad5",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0,
+              "choice_6": 0,
+              "choice_7": 0,
+              "choice_8": 0,
+              "choice_9": 0,
+              "choice_10": 0,
+              "choice_11": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "570948ba09a263f4ead5b1fd3a6cbcb26a55551659581e4e7f3f76ffd34a2f54",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "7f8f32ea8aed9788a3ec98f4eb472fbbf46ba9b8bc5c4ffb151d2681eb468583",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "43d6bea72d45000276371b0315837167c3f0887366a35482446c6f013f7c3a22",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-1",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "24ad1eea58f16d36cc046764018fcaaac59de100bc9e5ba81e6ca7ff2282b97b",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0,
+              "choice_6": 0,
+              "choice_7": 0,
+              "choice_8": 0,
+              "choice_9": 0,
+              "choice_10": 0,
+              "choice_11": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "e88033f57898d87d1e6520f090506aae37acbd61b2e30d7837182d53c2d26dce",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "8898db76e682e2871beaab940b9dc8a35494e90e2f59295fa72d361f3fc66369",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "3b077e414bc8a771c31e4b69362882d9b880cd6f102e5fc3ffef0410e10594af",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-2",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "119d0d6ee97f076a51d4bbffc6797ccc75c6af2335cde569790783e3a68a0c75",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0,
+              "choice_6": 0,
+              "choice_7": 0,
+              "choice_8": 0,
+              "choice_9": 0,
+              "choice_10": 0,
+              "choice_11": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "022752b71cf438ece16ada599e6bd19accdd8ee0b947d223432ece4820525dea",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "d6397a1b7e7e9337eda9d23b514ac3ec94c0d89b92cf9f03e2f2b57ab9105844",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "2a9086870ed4ca922b5200b302c1fdcaa0844f6728755bb9009c966822b94593",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-3",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "479d33c0c969f8b08b095163ed732eba70420ab39f7a62f68fe98d8335b34489",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0,
+              "choice_6": 0,
+              "choice_7": 0,
+              "choice_8": 0,
+              "choice_9": 0,
+              "choice_10": 0,
+              "choice_11": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "a907b8114ea16fb62ce5133678fc872fdc5cdc9599675744ac5aef237e7e3e6a",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "88196a55b8e388f8b03ae8847dccba3f7cabcc70d7ccca9ca98e66230eb863e6",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "4dd3f3a27ae2c67b0fc7e65c19aa09826cc9a862f38e66eb8ab44f2459321d55",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-4",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "4f142fe2dcb7b6c3464856610ff6f805c4808eac75fe31ff37f826324f569f7b",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0,
+              "choice_6": 0,
+              "choice_7": 0,
+              "choice_8": 0,
+              "choice_9": 0,
+              "choice_10": 0,
+              "choice_11": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "2573106dcebba09f2150d40e159d1573a2480924461c60e64a82a3cad31234fb",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "7b659d2f1927a10682bd690f6ba7b1f00ef35683add3f9d91ac39b859e91f12d",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "287ac4609203ac83521d27fb10d951c3af95276c1d983962c2971a94155d5479",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-5",
+      "calls": []
+    },
+    {
+      "caseId": "understanding-6",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "bc141f1b3b25dca57b1d95538a78a7cca4169a6ddbe01d5e2240e7f00075959d",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "570948ba09a263f4ead5b1fd3a6cbcb26a55551659581e4e7f3f76ffd34a2f54",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "110e6d8baee1e5509c3b1840cc3119b9d756435ef98a781ff4fed51c52123bfc",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "43d6bea72d45000276371b0315837167c3f0887366a35482446c6f013f7c3a22",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-7",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "c490d23805ad772a4ce4f84537fdd3887959a66ed8bbcf103a4ded73d47adad5",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "570948ba09a263f4ead5b1fd3a6cbcb26a55551659581e4e7f3f76ffd34a2f54",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "7f8f32ea8aed9788a3ec98f4eb472fbbf46ba9b8bc5c4ffb151d2681eb468583",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "43d6bea72d45000276371b0315837167c3f0887366a35482446c6f013f7c3a22",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "understanding-8",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "570948ba09a263f4ead5b1fd3a6cbcb26a55551659581e4e7f3f76ffd34a2f54",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "fast_consumable": 0,
+              "pantry_staple": 0,
+              "household_consumable": 0,
+              "discrete_consumable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "7f8f32ea8aed9788a3ec98f4eb472fbbf46ba9b8bc5c4ffb151d2681eb468583",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "choice_0": 0,
+              "choice_1": 0,
+              "choice_2": 0,
+              "choice_3": 0,
+              "choice_4": 0,
+              "choice_5": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        },
+        {
+          "provider": "typesafe",
+          "requestHash": "43d6bea72d45000276371b0315837167c3f0887366a35482446c6f013f7c3a22",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "unknown",
+            "confidence": 0.99,
+            "probabilities": {
+              "unknown": 1,
+              "perishable": 0,
+              "nonperishable": 0
+            },
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

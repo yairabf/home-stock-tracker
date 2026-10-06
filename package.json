@@ -27,7 +27,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
     "eval:product-matching": "ts-node scripts/evaluate-product-matching.ts",
-    "eval:stock-prediction": "ts-node scripts/evaluate-stock-prediction.ts"
+    "eval:stock-prediction": "ts-node scripts/evaluate-stock-prediction.ts",
+    "eval:application-inference": "ts-node scripts/evaluate-application-inference.ts",
+    "eval:stock-workflow": "node dist/scripts/evaluate-stock-workflow.js",
+    "eval:perishability-comparison": "ts-node scripts/evaluate-perishability-comparison.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

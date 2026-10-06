@@ -1,0 +1,695 @@
+{
+  "schemaVersion": 1,
+  "version": "workflow-safety-v1",
+  "workflowVersion": "stock-workflow-replay-v1",
+  "frozenAt": "2026-01-11T00:00:00Z",
+  "history": {
+    "schemaVersion": 1,
+    "version": "workflow-safety-history-v1",
+    "replayVersion": "stock-history-replay-v1",
+    "cases": [
+      {
+        "id": "workflow-accepted_low",
+        "productGroupId": "workflow-group-0",
+        "episodeId": "workflow-episode-0",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "accepted_low"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-0",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-pending_grocery",
+        "productGroupId": "workflow-group-1",
+        "episodeId": "workflow-episode-1",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "pending_grocery"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-1",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-high_threshold",
+        "productGroupId": "workflow-group-2",
+        "episodeId": "workflow-episode-2",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "high_threshold"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-2",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-uncertain_advice",
+        "productGroupId": "workflow-group-3",
+        "episodeId": "workflow-episode-3",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "uncertain_advice"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-3",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-provider_failure",
+        "productGroupId": "workflow-group-4",
+        "episodeId": "workflow-episode-4",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "provider_failure"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-4",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-explicit_out",
+        "productGroupId": "workflow-group-5",
+        "episodeId": "workflow-episode-5",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "explicit_out"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          },
+          {
+            "id": "explicit-signal",
+            "eventType": "STOCK_OUT",
+            "occurredAt": "2026-01-10T00:00:00Z",
+            "knownAt": "2026-01-10T00:00:00Z",
+            "quantity": null,
+            "unit": null
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-5",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "out",
+            "sourceType": "STOCK_OUT"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-expired",
+        "productGroupId": "workflow-group-6",
+        "episodeId": "workflow-episode-6",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "expired"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-6",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "out",
+            "sourceType": "STOCK_OUT"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      },
+      {
+        "id": "workflow-zero_history",
+        "productGroupId": "workflow-group-7",
+        "episodeId": "workflow-episode-7",
+        "split": "held_out",
+        "source": "authored",
+        "tags": [
+          "zero_history"
+        ],
+        "asOf": "2026-01-10T00:00:00Z",
+        "product": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "predictionEnabled": true,
+          "productType": null,
+          "isPerishable": null,
+          "predictionStrategy": null
+        },
+        "household": {
+          "knownAt": "2026-01-01T00:00:00Z",
+          "adultsCount": 2,
+          "childrenCount": 3
+        },
+        "events": [
+          {
+            "id": "older-purchase",
+            "eventType": "GROCERY_ADDED",
+            "occurredAt": "2025-12-22T00:00:00Z",
+            "knownAt": "2025-12-22T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "recorded-event",
+            "eventType": "GROCERY_ADDED",
+            "occurredAt": "2026-01-01T00:00:00Z",
+            "knownAt": "2026-01-01T00:00:00Z",
+            "quantity": null,
+            "unit": "unit"
+          },
+          {
+            "id": "future-purchase",
+            "eventType": "PURCHASED",
+            "occurredAt": "2026-01-12T00:00:00Z",
+            "knownAt": "2026-01-12T00:00:00Z",
+            "quantity": 5,
+            "unit": "unit"
+          }
+        ],
+        "confirmations": [
+          {
+            "evidenceReference": "authored-confirmation-7",
+            "confirmedAt": "2026-01-10T01:00:00Z",
+            "state": "low",
+            "sourceType": "STOCK_LOW"
+          }
+        ],
+        "review": {
+          "author": "fixture-author",
+          "status": "pending",
+          "reviewer": null,
+          "reviewedAt": null,
+          "evidenceReference": null,
+          "episodeComplete": false
+        }
+      }
+    ]
+  },
+  "snapshots": [
+    {
+      "caseId": "workflow-accepted_low",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-pending_grocery",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": true,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-high_threshold",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.9,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-uncertain_advice",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-provider_failure",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-explicit_out",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    },
+    {
+      "caseId": "workflow-expired",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "finite",
+        "shelfLifeDays": 1,
+        "confidence": 1,
+        "rationale": "Authored expiration fixture"
+      }
+    },
+    {
+      "caseId": "workflow-zero_history",
+      "knownAt": "2026-01-01T00:00:00Z",
+      "unit": "unit",
+      "recordedEventId": "recorded-event",
+      "recordedAt": "2026-01-01T00:00:00Z",
+      "previousEvaluatedAt": "2026-01-01T00:00:00Z",
+      "recordedQuantity": null,
+      "estimatedQuantity": null,
+      "revision": 0,
+      "confidenceThreshold": 0.5,
+      "pendingGrocery": false,
+      "policy": {
+        "kind": "nonperishable",
+        "shelfLifeDays": null,
+        "confidence": 1,
+        "rationale": "Authored nonfood fixture"
+      }
+    }
+  ]
+}

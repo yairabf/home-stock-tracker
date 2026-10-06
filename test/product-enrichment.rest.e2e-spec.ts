@@ -14,6 +14,8 @@ import type {
   JevDecisionResult,
 } from '../src/llm/typesafe/jev-decision.types';
 import { type UnderstandingField } from '../src/product/product-understanding';
+import { JEV_UNDERSTANDING_VERSION } from '../src/product/jev-product-understanding.service';
+import { PERISHABILITY_QUESTION_VERSION } from '../src/product/perishability-question';
 
 const token = 'e2e-service-token';
 const facts = {
@@ -135,6 +137,10 @@ describe.each(['openai', 'typesafe'] as const)(
       expect(product.isPerishable).toBeNull();
       expect(choose).not.toHaveBeenCalled();
       expect(generateStructured).not.toHaveBeenCalled();
+      const priorLogs = await prisma.llmInferenceLog.findMany({
+        where: { promptVersion: JEV_UNDERSTANDING_VERSION },
+        select: { id: true },
+      });
       const response = await request(app.getHttpServer())
         .post(`/api/v1/products/${product.id}/enrich`)
         .auth(token, { type: 'bearer' })
@@ -149,6 +155,29 @@ describe.each(['openai', 'typesafe'] as const)(
       expect(generateStructured).toHaveBeenCalledTimes(
         selector === 'openai' ? 1 : 0,
       );
+      if (selector === 'typesafe') {
+        const logs = await prisma.llmInferenceLog.findMany({
+          where: {
+            promptVersion: JEV_UNDERSTANDING_VERSION,
+            id: { notIn: priorLogs.map((log) => log.id) },
+          },
+        });
+        expect(logs).toHaveLength(2);
+        expect(logs.map((log) => log.structuredResponse)).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              appliedFields: ['isPerishable'],
+              writeOutcome: 'applied',
+              attempt: expect.objectContaining({
+                taskVersion: JEV_UNDERSTANDING_VERSION,
+                vocabularyVersion: PERISHABILITY_QUESTION_VERSION,
+                fields: ['isPerishable'],
+                status: 'accepted',
+              }),
+            }),
+          ]),
+        );
+      }
       choose.mockClear();
       generateStructured.mockClear();
       await request(app.getHttpServer())
@@ -171,6 +200,39 @@ describe.each(['openai', 'typesafe'] as const)(
       expect(choose).not.toHaveBeenCalled();
       expect(generateStructured).not.toHaveBeenCalled();
     });
+    it.each([true, false])(
+      'preserves supplied perishability %s while enriching missing product type',
+      async (isPerishable) => {
+        const product = await create(`supplied ${isPerishable}`);
+        await prisma.product.update({
+          where: { id: product.id },
+          data: { isPerishable },
+        });
+        const response = await request(app.getHttpServer())
+          .post(`/api/v1/products/${product.id}/enrich`)
+          .auth(token, { type: 'bearer' })
+          .send({})
+          .expect(200);
+        expect(response.body).toMatchObject({
+          ...facts,
+          isPerishable,
+          canonicalName: product.canonicalName,
+          aliases: product.aliases,
+        });
+        if (selector === 'typesafe') {
+          expect(choose).toHaveBeenCalledTimes(1);
+          expect(choose.mock.calls[0][0].questionKey).toBe('productType');
+          expect(generateStructured).not.toHaveBeenCalled();
+        } else {
+          expect(
+            generateStructured.mock.calls[0][0].input.requestedFields,
+          ).toEqual(['productType']);
+        }
+        expect(
+          await prisma.product.findUnique({ where: { id: product.id } }),
+        ).toMatchObject({ isPerishable });
+      },
+    );
     it('returns unknown as nullable metadata without automatic fallback', async () => {
       const product = await create('Unknown');
       unknown = true;

@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 1,
+  "datasetVersion": "authored-perishability-diagnostic-v1",
+  "frozenAt": "2026-10-06T00:00:00Z",
+  "cases": [
+    {
+      "caseId": "fresh-banana",
+      "semanticGroupId": "fresh-banana",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "בננה טרייה",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [true]
+        }
+      }
+    },
+    {
+      "caseId": "fresh-milk",
+      "semanticGroupId": "milk-form",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "חלב טרי",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [true]
+        }
+      }
+    },
+    {
+      "caseId": "fresh-chicken",
+      "semanticGroupId": "fresh-chicken",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "fresh raw chicken",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [true]
+        }
+      }
+    },
+    {
+      "caseId": "dry-rice",
+      "semanticGroupId": "dry-rice",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "dry rice",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [false]
+        }
+      }
+    },
+    {
+      "caseId": "toilet-paper",
+      "semanticGroupId": "toilet-paper",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "נייר טואלט",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [false]
+        }
+      }
+    },
+    {
+      "caseId": "canned-beans",
+      "semanticGroupId": "canned-beans",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["clear", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "sealed canned beans",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "values",
+          "values": [false]
+        }
+      }
+    },
+    {
+      "caseId": "brand-only",
+      "semanticGroupId": "brand-only",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "Acme",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "ambiguous-cheese",
+      "semanticGroupId": "ambiguous-cheese",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "גבינה ללא מידע על הסוג",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "unresolved-milk-form",
+      "semanticGroupId": "milk-form",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "Milk, unspecified whether fresh or shelf-stable",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "conflicting-form",
+      "semanticGroupId": "milk-form",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "חלב טרי או חלב עמיד, לא צוין איזה מהם",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "unidentified-code",
+      "semanticGroupId": "unidentified-code",
+      "split": "tuning",
+      "source": "authored",
+      "language": "en",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "SKU-123",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    },
+    {
+      "caseId": "unidentified-item",
+      "semanticGroupId": "unidentified-item",
+      "split": "tuning",
+      "source": "authored",
+      "language": "he",
+      "tags": ["ambiguous", "perishability_diagnostic"],
+      "review": {
+        "author": "fixture-author",
+        "reviewer": null,
+        "reviewedAt": null,
+        "evidenceReference": null
+      },
+      "task": "product_understanding",
+      "input": {
+        "rawName": "המוצר הזה",
+        "metadata": {
+          "category": null,
+          "productType": null,
+          "typicalUnit": null,
+          "isPerishable": null
+        },
+        "categories": [],
+        "units": []
+      },
+      "expected": {
+        "category": {
+          "kind": "unscored"
+        },
+        "productType": {
+          "kind": "unscored"
+        },
+        "typicalUnit": {
+          "kind": "unscored"
+        },
+        "isPerishable": {
+          "kind": "abstain"
+        }
+      }
+    }
+  ]
+}

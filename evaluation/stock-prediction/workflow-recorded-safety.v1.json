@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "datasetHash": "0f88b16b36b9016e98d6f4b4930fcb9e9f5a4bd5fda4d697b92f44ab3678a196",
+  "inputHash": "310ec858896f2f972d428b901d1f1afa1a3b720f32ce37af52661dfb29c77a4c",
+  "workflowVersion": "stock-workflow-replay-v1",
+  "taskVersion": "jev-stock-prediction-v1",
+  "configuredModel": "jev-1.13.0",
+  "split": "held_out",
+  "rows": [
+    {
+      "caseId": "workflow-accepted_low",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "eee23c20568788a11f08ef931b8f909b826bd6e30afacbcc8575db2db7e7d08c",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "probably_low",
+            "confidence": 0.95,
+            "probabilities": {
+              "likely_available": 0,
+              "probably_low": 1,
+              "probably_out": 0,
+              "uncertain": 0
+            },
+            "usage": {
+              "input_tokens": 20,
+              "output_tokens": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "workflow-pending_grocery",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "eee23c20568788a11f08ef931b8f909b826bd6e30afacbcc8575db2db7e7d08c",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "probably_low",
+            "confidence": 0.95,
+            "probabilities": {
+              "likely_available": 0,
+              "probably_low": 1,
+              "probably_out": 0,
+              "uncertain": 0
+            },
+            "usage": {
+              "input_tokens": 20,
+              "output_tokens": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "workflow-high_threshold",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "eee23c20568788a11f08ef931b8f909b826bd6e30afacbcc8575db2db7e7d08c",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "probably_low",
+            "confidence": 0.95,
+            "probabilities": {
+              "likely_available": 0,
+              "probably_low": 1,
+              "probably_out": 0,
+              "uncertain": 0
+            },
+            "usage": {
+              "input_tokens": 20,
+              "output_tokens": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "workflow-uncertain_advice",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "eee23c20568788a11f08ef931b8f909b826bd6e30afacbcc8575db2db7e7d08c",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "success",
+            "model": "jev-1.13.0",
+            "choice": "uncertain",
+            "confidence": 0.95,
+            "probabilities": {
+              "likely_available": 0,
+              "probably_low": 0,
+              "probably_out": 0,
+              "uncertain": 1
+            },
+            "usage": {
+              "input_tokens": 20,
+              "output_tokens": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "workflow-provider_failure",
+      "calls": [
+        {
+          "provider": "typesafe",
+          "requestHash": "eee23c20568788a11f08ef931b8f909b826bd6e30afacbcc8575db2db7e7d08c",
+          "elapsedMs": 10,
+          "transport": {
+            "status": "unavailable",
+            "reason": "invalid_response"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "workflow-explicit_out",
+      "calls": []
+    },
+    {
+      "caseId": "workflow-expired",
+      "calls": []
+    },
+    {
+      "caseId": "workflow-zero_history",
+      "calls": []
+    }
+  ]
+}
