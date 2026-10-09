@@ -123,6 +123,7 @@ contents into logs, or bake it into an image.
 | `LLM_MODEL` | Optional, default `gpt-5.6-sol` | OpenAI model override. |
 | `MCP_ENABLED` | Optional, default `false` | Set exactly `true` to expose `/mcp`. |
 | `LOG_LEVEL` | Optional, default `log` | One of `fatal`, `error`, `warn`, `log`, `debug`, or `verbose`. |
+| `PRODUCT_UNDERSTANDING_CAPTURE_ENABLED` | Optional, default `false` | Save exact pre-inference product inputs in the private diagnostic table. See [capture and export](jev-real-request-collection/backend-capture.md). Does not change provider routing. |
 | `STOCK_WORKFLOW_ENABLED` | Optional, default `true` | Enables the internal daily stock workflow. Use one enabled replica only. |
 | `STOCK_WORKFLOW_CRON` | Optional, default `0 2 * * *` | Cron expression for stock evaluation. |
 | `STOCK_WORKFLOW_TIMEZONE` | Optional, default `Asia/Jerusalem` | IANA timezone for the stock cron. |

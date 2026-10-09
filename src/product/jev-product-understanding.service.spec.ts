@@ -92,13 +92,13 @@ describe('JEV product understanding', () => {
     const choices = understandingChoices('category', empty);
     expect(choices).toMatchObject({
       status: 'complete',
-      version: 'product-category-v1',
+      version: 'category-question-v2',
     });
     expect(empty.categories).toEqual([]);
   });
   it("retains other fields' instructions, evidence and choices except the adapter version", async () => {
     await adapter.understand(input);
-    for (const field of ['category', 'productType', 'typicalUnit'] as const) {
+    for (const field of ['typicalUnit'] as const) {
       const request = choose.mock.calls.find(
         ([request]) => request.questionKey === field,
       )![0];
@@ -108,19 +108,9 @@ describe('JEV product understanding', () => {
       expect(request.state).toEqual({
         evidence: { rawName: input.rawName, metadata: input.metadata },
       });
-      if (field === 'productType')
-        expect(request.criteria).toEqual({
-          unknown: 'Insufficient evidence to select an option.',
-          fast_consumable: 'fast_consumable',
-          pantry_staple: 'pantry_staple',
-          household_consumable: 'household_consumable',
-          discrete_consumable: 'discrete_consumable',
-        });
-      else
-        expect(understandingChoices(field, input)).toMatchObject({
-          version:
-            field === 'category' ? 'product-category-v1' : 'product-unit-v1',
-        });
+      expect(understandingChoices(field, input)).toMatchObject({
+        version: 'product-unit-v1',
+      });
     }
   });
   it('bypasses populated fields including false', async () => {

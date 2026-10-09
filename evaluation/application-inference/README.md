@@ -52,7 +52,7 @@ be a regular nonsymlink file no larger than 5 MiB with at most 200 cases. Stdout
 contains only aggregate counts.
 
 ```sh
-npm run eval:application-inference -- --task product_understanding --dataset evaluation/application-inference/safety-cases.v1.json --recorded evaluation/application-inference/product_understanding-recorded.v2.json --output /private/tmp/understanding-review.json
+npm run eval:application-inference -- --task product_understanding --dataset evaluation/application-inference/safety-cases.v1.json --recorded evaluation/application-inference/product_understanding-recorded.v4.json --output /private/tmp/understanding-review.json
 npm run eval:application-inference -- --task shelf_life_policy --dataset evaluation/application-inference/safety-cases.v1.json --recorded evaluation/application-inference/shelf_life_policy-recorded.v1.json --output /private/tmp/policy-review.json
 ```
 
@@ -61,10 +61,11 @@ or credentials. They should produce inconclusive launch evidence. Use a new outp
 filename each time. Unknown and injected invalid responses exercise safe failure;
 selection and generation examples exercise acceptance without proving accuracy.
 
-The v2 understanding recording is newly generated mocked evidence for
-`jev-product-understanding-v2` and its dedicated perishability question. The old
-v1 fixture is preserved for historical binding checks and is rejected by the
-current adapter. Neither fixture is a measured live before/after result.
+The v4 understanding recording is mocked evidence for
+`jev-product-understanding-v4`, with defined category and product-type choices and the existing
+perishability question. The v1/v2/v3 fixtures are preserved for historical binding
+checks and are rejected by the current adapter. None of these fixtures is a
+measured live before/after result.
 
 After separate paid-run authorization, live mode requires exact private JEV
 credentials and explicit request/time bounds. Required-generation cases also need
@@ -86,8 +87,17 @@ Exit 0 means execution succeeded, and may be inconclusive; 1 indicates invalid i
 or execution; 2 indicates failed qualifying evidence or deadline interruption;
 130 indicates operator cancellation. Always inspect the report's launch status.
 
+If post-run validation fails, the private output retains
+`{ "validation": "failed", "candidateReport": ... }` and execution still fails.
+This candidate preserves normalized observations for investigation; it is not a
+validated report and must not be counted as qualifying evidence.
+
 `parseReport(report, dataset)` replays normalized calls against exact request hashes
 and recomputes outcomes, counts, slices and verdicts. Hashes do not authenticate
 provider calls or reviewer identity. Retain private review records separately.
 Offline replay remains offline evidence. Inspect all slice denominators and sample
 concentration before enablement. Missing usage is unknown; no cost claim is made.
+
+Real observed request export and independent label review templates are in
+[`docs/jev-real-request-collection`](../../docs/jev-real-request-collection/README.md).
+The empty scaffold is not evaluation evidence.

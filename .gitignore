@@ -49,3 +49,12 @@ evaluation/stock-prediction/reports/
 
 # Private household catalog export
 /docs/household-products-export.json
+
+# Private household evidence exports
+/docs/home-stock-current-settings.json
+/docs/home-stock-evidence-manifest.json
+/docs/home-stock-grocery-state.json
+/docs/home-stock-inventory-history.json
+/docs/home-stock-product-operations.json
+/docs/home-stock-shelf-life-evidence.json
+/docs/home-stock-stock-projections.json

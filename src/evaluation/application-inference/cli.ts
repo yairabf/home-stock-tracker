@@ -83,7 +83,19 @@ export async function runCli(
         physicalRequests: budget?.requests ?? null,
       },
     );
-    await parseReport(report, dataset);
+    try {
+      await parseReport(report, dataset);
+    } catch (error) {
+      writeFileSync(
+        output,
+        JSON.stringify(
+          { validation: 'failed', candidateReport: report },
+          null,
+          2,
+        ) + '\n',
+      );
+      throw error;
+    }
     writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
     (runtime.print ?? console.log)(
       `${report.run.evidenceMode} ${options.task}: ${rows.length}/${cases.length} cases; worst-case requests ${worst}; safety violations ${report.metrics.safetyViolations}; launch ${report.launchEvidence}`,

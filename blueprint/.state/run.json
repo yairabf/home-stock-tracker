@@ -1,25 +1,44 @@
 {
-  "command": "complete",
-  "status": "ready",
-  "boundary": "reviewed",
-  "feature": "38e",
-  "step": "merge",
+  "command": "implement",
+  "status": "running",
+  "boundary": "verified_trial_source_publication",
+  "feature": "38f",
+  "step": "merge_push_verify_docker_publication",
   "completedSteps": [
     "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6a",
-    "6b",
-    "6c",
-    "7",
-    "7a",
-    "7b",
-    "7c",
-    "7d",
-    "7e",
-    "8"
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7"
   ],
-  "updatedAt": "2026-10-06T17:54:59.717234+00:00"
+  "updatedAt": "2026-10-09T10:20:56.351005+00:00",
+  "proposal": "/private/tmp/38f-synthetic-category-repair-v1/paid-run-proposal.json",
+  "approval": "/private/tmp/38f-synthetic-category-repair-v1/approval.json",
+  "maximumPhysicalRequests": {
+    "typesafe": 1856,
+    "openai": 0
+  },
+  "comparison": "/private/tmp/38f-synthetic-category-repair-v1/comparison-complete.md",
+  "retainedCases": 240,
+  "plannedCases": 240,
+  "nextAction": "Review and publish repaired v4 source; server agent then follows trial guide using actual backend access. Collector remains optional.",
+  "checkpoint": "23d32f1",
+  "approvedRerunActualPhysicalRequests": {
+    "typesafe": 312,
+    "openai": 0
+  },
+  "diagnosis": "/private/tmp/38f-category-investigation-v1/diagnosis.md",
+  "exportInstructions": "/private/tmp/38f-category-investigation-v1/real-request-export-instructions.md",
+  "diagnosticNetworkRequests": 0,
+  "collectionPackage": "docs/jev-real-request-collection/README.md",
+  "actualPhysicalRequests": {
+    "typesafe": 928,
+    "openai": 0
+  },
+  "accessAssessment": "/private/tmp/38f-real-source-access-v1/extraction-manifest.json",
+  "captureInstallPacket": "/private/tmp/38f-backend-capture-install-v1/installation-manifest.json",
+  "trialGuide": "docs/jev-product-classification-trial.md"
 }

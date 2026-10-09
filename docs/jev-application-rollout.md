@@ -9,6 +9,57 @@ repair in 38e, qualifying independently reviewed evidence in 38f, and separately
 approved runtime enablement and rollback verification in 38g. Completing 38e
 does not satisfy the launch gates below or authorize enablement.
 
+## 38f source readiness
+
+The 38f source inventory has reviewed the committed corpora and the named local
+38e diagnostic artifacts. No qualifying source or independent reviewer has been
+identified in that scope. The committed datasets remain authored safety fixtures;
+the prior live comparisons are tuning diagnostics. A current catalog export has
+no independently confirmed fields and cannot supply historical stock outcomes.
+
+Qualifying collection remains pending new observed held-out operations,
+independently supported shelf-life labels and cutoff-safe historical episodes.
+The private intake checklist records semantic exclusions from prior tuning and
+the missing source/reviewer prerequisites for each route. No additional live call
+or runtime change is authorized by that preparation.
+
+Use the existing 37c matching corpus minimum: 100 total cases, 60 held-out,
+30 Hebrew/mixed across the corpus, required scenarios in both splits and
+50 accepted held-out matches. An older private readiness note incorrectly stated
+100 held-out matching cases; it does not change the shipped policy. Understanding
+retains its separate 100 observed held-out requirement.
+
+## Synthetic classification diagnostic (2026-10-07)
+
+After the user approved the concrete bounded run, actual `jev-1.13.0` evaluated
+240 authored cases through the shipped product-understanding adapter. All three
+80-case batches completed with 928 TypeSafe physical requests and zero OpenAI
+calls. Five responses failed validation; they remain in the evidence. All reports
+were reparsed through recorded-response runtime replay and metric recomputation.
+
+| Field | Correct accepted / scored accepted | Correct accepted / answerable targets |
+| --- | --- | --- |
+| Category | 116/116 | 116/224 |
+| Product type | No accepted answers | 0/224 |
+| Unit | 209/209 | 209/224 |
+| Perishability | 205/205 | 205/206 |
+
+Product type was withheld for every classification case: 178 unknown outcomes,
+53 low-confidence rejections and one unavailable response. Category had 105
+low-confidence rejections; raw scored choices matched references in 227/229 cases
+(including must-abstain controls). The observed category bottleneck is acceptance,
+whereas product type also frequently selects unknown. This does not establish
+the cause; review the type definitions/question separately before any repair.
+
+Eight unidentified controls abstained and eight supplied-field controls preserved
+all values without model calls. No accepted disagreement with the frozen references
+was observed. Results are agreement with author-generated answers, not independently
+verified accuracy: 216 cases are language variants of 72 core families, unit clues
+are explicit, some product types allow alternatives, and 18 frozen-food perishability
+targets are unscored. The diagnostic exposes useful limitations but leaves the
+existing observed/historical launch gates inconclusive. No prompt, threshold,
+selector, runtime configuration or production data changed.
+
 ## Evidence packet
 
 Before enabling a route, retain its exact dataset/version/hash, independent source

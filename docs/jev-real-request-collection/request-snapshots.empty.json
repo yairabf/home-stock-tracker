@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "product-understanding-capture-v1",
+  "exportedAt": "2026-10-07T00:00:00Z",
+  "records": [],
+  "missingFields": [
+    "Original requests not yet collected; replace exportedAt with actual extraction time"
+  ],
+  "truncated": false
+}

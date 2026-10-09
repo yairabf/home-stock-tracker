@@ -22,6 +22,7 @@ describe('loadApplicationConfig', () => {
       productResolutionProvider: 'openai',
       stockPredictionProvider: 'openai',
       productUnderstandingProvider: 'openai',
+      productUnderstandingCaptureEnabled: false,
       shelfLifePolicyProvider: 'openai',
       typesafeApiKey: undefined,
       jevModel: undefined,
@@ -60,6 +61,21 @@ describe('loadApplicationConfig', () => {
         STOCK_WORKFLOW_ADVICE_MAX_PRODUCTS: '3',
       }).stockWorkflow,
     ).toMatchObject({ adviceEnabled: true, adviceMaxProducts: 3 });
+  });
+
+  it('requires explicit valid capture enablement', () => {
+    expect(
+      loadApplicationConfig({
+        ...REQUIRED_ENVIRONMENT,
+        PRODUCT_UNDERSTANDING_CAPTURE_ENABLED: 'true',
+      }).productUnderstandingCaptureEnabled,
+    ).toBe(true);
+    expect(() =>
+      loadApplicationConfig({
+        ...REQUIRED_ENVIRONMENT,
+        PRODUCT_UNDERSTANDING_CAPTURE_ENABLED: 'yes',
+      }),
+    ).toThrow('PRODUCT_UNDERSTANDING_CAPTURE_ENABLED');
   });
 
   it('selects product understanding independently', () => {

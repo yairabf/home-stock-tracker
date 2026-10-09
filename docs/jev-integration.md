@@ -565,6 +565,16 @@ Unknown perishability remains null, distinct from false. Up to four logical fiel
 decisions (eight HTTP attempts including the existing retry policy) share ten
 seconds. Unknown, low confidence, invalid choices and failures never invoke OpenAI.
 
+Adapter `jev-product-understanding-v3` uses `product-type-question-v2` definitions
+and precedence: non-food household supplies, fresh short-lived food, individually
+portioned ready-to-eat food, then longer-lasting pantry food/drink. Criteria include
+examples and exclusions. Ordinary product knowledge is permitted; household rates,
+quantities and opening/storage conditions are not invented. Type evidence excludes
+the target field and missing supporting metadata, preserving supplied false values.
+Category, unit and perishability questions and both 0.90 acceptance gates remain
+unchanged. Prior v1/v2 recordings retain their original bindings and cannot qualify
+the v3 adapter; the newly bound v3 recording is a mocked wiring fixture only.
+
 The selected OpenAI mode makes one metadata-only structured generation for missing
 fields, with a 0.80 per-field confidence gate, a ten-second deadline and no SDK
 retries for this task. Other generation tasks retain their current options.
@@ -635,3 +645,19 @@ npm run test:e2e -- --runInBand test/stock-advice-storage.e2e-spec.ts test/stock
 ```
 
 These tests exercise actual Nest/adapter routing, the scheduled callback, authenticated REST/MCP recommendations, unchanged read-time call counts, rejection, cache reuse, budget bounds, reservations, guarded publication and concurrent corrections. They establish wiring and safety, not live accuracy or calibrated stock probabilities. Run `npm run verify` and `npm run contract:check` before review.
+
+
+### Defined category question (understanding v4)
+
+The category question adds definitions and boundary guidance for exact default
+category labels. Custom labels retain their literal meanings and original display
+values; no invented definitions or translated aliases are attached. The evidence
+omits the category target and missing supporting metadata, preserves explicit
+false, and uses recognizable product knowledge without inventing household facts.
+This changes category request semantics, not the shared resolution vocabulary,
+unit/type/perishability prompts, or the 0.90 acceptance gates. The adapter is
+`jev-product-understanding-v4`; the category question is `category-question-v2`.
+A fresh live comparison is required to measure improvement.
+
+Real-data collection instructions and independent review templates are in
+[the collection package](jev-real-request-collection/README.md).

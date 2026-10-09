@@ -12,6 +12,7 @@ import { safetyDataset } from './fixture';
 import { parseReport } from './report';
 import { RequestBudget } from './request-budget';
 import { binding } from './recording';
+import * as reportModule from './report';
 
 describe('Bounded application evaluation CLI', () => {
   let directory: string;
@@ -236,6 +237,47 @@ describe('Bounded application evaluation CLI', () => {
       expired.fetch('openai', fetcher)('https://fixture.invalid'),
     ).rejects.toThrow();
     expired.dispose();
+  });
+  it('retains a private failed candidate when post-run validation rejects it', async () => {
+    const { path } = dataset();
+    const output = join(directory, 'failed.json');
+    const validation = jest
+      .spyOn(reportModule, 'parseReport')
+      .mockRejectedValueOnce(new Error('private validation detail'));
+    try {
+      await expect(
+        runCli(
+          [
+            '--live',
+            '--task',
+            'product_understanding',
+            '--dataset',
+            path,
+            '--output',
+            output,
+            '--max-requests',
+            '8',
+            '--max-duration-ms',
+            '5000',
+          ],
+          environment,
+          { fetcher: jest.fn(response) },
+        ),
+      ).rejects.toThrow('private validation detail');
+    } finally {
+      validation.mockRestore();
+    }
+    const bytes = readFileSync(output, 'utf8');
+    const retained = JSON.parse(bytes);
+    expect(retained.validation).toBe('failed');
+    expect(retained.candidateReport.observations).toHaveLength(1);
+    expect(retained.candidateReport.observations[0].calls).toHaveLength(4);
+    expect(retained.candidateReport.run.physicalRequests).toEqual({
+      typesafe: 4,
+      openai: 0,
+    });
+    expect(bytes).not.toContain('private validation detail');
+    expect(statSync(output).mode & 0o777).toBe(0o600);
   });
   it('rejects malformed inputs and a mismatched recording before touching network', async () => {
     const { d, path } = dataset();

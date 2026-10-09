@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { ProductUnderstandingCaptureService } from './product-understanding-capture.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   PRODUCT_UNDERSTANDING,
@@ -14,6 +15,7 @@ export class ProductUnderstandingRunner {
     private readonly prisma: PrismaService,
     @Inject(PRODUCT_UNDERSTANDING)
     private readonly adapter: ProductUnderstanding,
+    private readonly captures: ProductUnderstandingCaptureService,
   ) {}
 
   async understand(
@@ -35,12 +37,14 @@ export class ProductUnderstandingRunner {
           distinct: ['typicalUnit'],
         }),
       ]);
-      return await this.adapter.understand({
+      const input = {
         rawName,
         metadata,
         categories: categories.map((row) => row.category).filter(nonblank),
         units: units.map((row) => row.typicalUnit).filter(nonblank),
-      });
+      };
+      await this.captures.record(input);
+      return await this.adapter.understand(input);
     } catch {
       return initialUnderstanding(metadata);
     }

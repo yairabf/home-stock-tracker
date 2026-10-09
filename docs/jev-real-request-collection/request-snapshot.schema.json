@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original pre-inference product-understanding snapshots",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "exportedAt",
+    "records",
+    "missingFields",
+    "truncated"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "product-understanding-capture-v1"
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "missingFields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/record"
+      }
+    }
+  },
+  "definitions": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "semanticGroupId",
+        "receivedAt",
+        "language",
+        "capturePhase",
+        "sourceReference",
+        "input"
+      ],
+      "properties": {
+        "caseId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,199}$"
+        },
+        "semanticGroupId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,199}$"
+        },
+        "receivedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "language": {
+          "enum": [
+            "he",
+            "en",
+            "mixed"
+          ]
+        },
+        "capturePhase": {
+          "const": "before_inference"
+        },
+        "sourceReference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rawName",
+            "metadata",
+            "categories",
+            "units"
+          ],
+          "properties": {
+            "rawName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "category",
+                "productType",
+                "typicalUnit",
+                "isPerishable"
+              ],
+              "properties": {
+                "category": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1
+                },
+                "productType": {
+                  "enum": [
+                    null,
+                    "fast_consumable",
+                    "pantry_staple",
+                    "household_consumable",
+                    "discrete_consumable"
+                  ]
+                },
+                "typicalUnit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1
+                },
+                "isPerishable": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "units": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "categoryMeanings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

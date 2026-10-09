@@ -15,6 +15,7 @@ export interface ModelConfig {
   productResolutionProvider: DecisionProvider;
   stockPredictionProvider: DecisionProvider;
   productUnderstandingProvider?: DecisionProvider;
+  productUnderstandingCaptureEnabled?: boolean;
   shelfLifePolicyProvider?: DecisionProvider;
   typesafeApiKey?: string;
   jevModel?: string;
@@ -137,6 +138,11 @@ function loadModelConfig(environment: NodeJS.ProcessEnv): ModelConfig {
     productResolutionProvider,
     stockPredictionProvider,
     productUnderstandingProvider,
+    productUnderstandingCaptureEnabled: parseBoolean(
+      environment.PRODUCT_UNDERSTANDING_CAPTURE_ENABLED,
+      'PRODUCT_UNDERSTANDING_CAPTURE_ENABLED',
+      false,
+    ),
     shelfLifePolicyProvider,
     typesafeApiKey,
     jevModel,

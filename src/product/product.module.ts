@@ -1,5 +1,6 @@
 import { EmptyEnrichmentBodyPipe } from './empty-enrichment-body.pipe';
 import { ProductEnrichmentService } from './product-enrichment.service';
+import { ProductUnderstandingCaptureService } from './product-understanding-capture.service';
 import { ProductUnderstandingRunner } from './product-understanding-runner.service';
 import { ProductUnderstandingLogService } from './product-understanding-log.service';
 import { PRODUCT_UNDERSTANDING } from './product-understanding';
@@ -25,6 +26,7 @@ import { ProductResolutionLogService } from './product-resolution-log.service';
     EmptyEnrichmentBodyPipe,
     ProductEnrichmentService,
     ProductUnderstandingRunner,
+    ProductUnderstandingCaptureService,
     ProductUnderstandingLogService,
     OpenAiProductUnderstanding,
     JevProductUnderstanding,
