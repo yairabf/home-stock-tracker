@@ -41,15 +41,15 @@ describe('executable agent scenario contract', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      'Validated 124 executable agent scenarios.',
+      'Validated 136 executable agent scenarios.',
     );
     expect(result.stderr).toBe('');
   });
 
   it('records explicit platform applicability and human-readable rows', () => {
     expect(fixture.schemaVersion).toBe(1);
-    expect(fixture.scenarios).toHaveLength(124);
-    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(124);
+    expect(fixture.scenarios).toHaveLength(136);
+    expect(new Set(fixture.scenarios.map(({ id }) => id)).size).toBe(136);
     for (const scenario of fixture.scenarios) {
       expect([['hermes', 'openclaw'], ['hermes']]).toContainEqual(
         scenario.platforms,
@@ -102,7 +102,7 @@ describe('executable agent scenario contract', () => {
         './integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json', 'utf8',
+        './integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json', 'utf8',
       ));
       const scenario = contract.scenarios.find(
         ({ id }) => id === 'noninvoked-confirmation-correction',
@@ -224,6 +224,14 @@ describe('executable agent scenario contract', () => {
         );
         continue;
       }
+      if (
+        scenario.calls.length > 0 &&
+        scenario.calls.every(({ tool }) => tool === 'apply_household_items')
+      ) {
+        expect(scenario.prerequisites).toContain('retained-assisted-request');
+        expect(scenario.safetyInvariants).toContain('stable-assisted-request');
+        continue;
+      }
       expect(scenario.safetyInvariants).toContain('no-automatic-retry');
       expect(scenario.safetyInvariants).toContain('stop-on-uncertain-mutation');
     }
@@ -297,7 +305,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json',
         'utf8',
       ));
       const scenario = contract.scenarios.find(
@@ -332,7 +340,7 @@ describe('executable agent scenario contract', () => {
           'utf8',
         ));
         const tools = JSON.parse(readFileSync(
-          './integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json',
+          './integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json',
           'utf8',
         ));
         const scenario = contract.scenarios.find(
@@ -499,7 +507,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'combined-grocery-and-suggestions');
       ${mutation}
       validateScenarioContract(contract, tools);
@@ -563,7 +571,7 @@ describe('executable agent scenario contract', () => {
         'utf8',
       ));
       const tools = JSON.parse(readFileSync(
-        './integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json',
+        './integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json',
         'utf8',
       ));
       ${mutation}
@@ -606,7 +614,7 @@ describe('executable agent scenario contract', () => {
       import { readFileSync } from 'node:fs';
       import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
       const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
-      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json', 'utf8'));
       const scenario = contract.scenarios.find(({ id }) => id === 'stock-confirm-replay');
       ${mutation}
       validateScenarioContract(contract, tools);
@@ -620,4 +628,72 @@ describe('executable agent scenario contract', () => {
       expect(result.stderr).toContain(error);
     },
   );
+  it('routes ordinary assisted success through exactly one action without confirmation', () => {
+    const assisted = fixture.scenarios.filter(({ id }) =>
+      id.startsWith('assisted-'),
+    );
+    expect(assisted).toHaveLength(12);
+    for (const scenario of assisted) {
+      expect(scenario.calls.map(({ tool }) => tool)).toEqual([
+        'apply_household_items',
+      ]);
+      expect(scenario.safetyInvariants).toEqual(
+        expect.arrayContaining([
+          'server-owned-classification',
+          'original-product-phrases',
+          'stable-assisted-request',
+          'no-routine-catalog-confirmation',
+        ]),
+      );
+      if (scenario.resultClass !== 'success')
+        expect(scenario.safetyInvariants).toContain(
+          'no-success-claim-on-error',
+        );
+    }
+  });
+
+  it.each([
+    [
+      'catalog confirmation',
+      "scenario.calls.push({ tool: 'grocery_confirm_new_product', argumentKeys: [], enumValues: [] });",
+      'forbids follow-up tools',
+    ],
+    [
+      'missing request ID',
+      "scenario.calls[0].argumentKeys = scenario.calls[0].argumentKeys.filter(key => key !== 'requestId');",
+      'requires requestId',
+    ],
+    [
+      'lost replay payload',
+      'scenario.prerequisites = []; scenario.calls.push(scenario.calls[0]);',
+      'requires retained-assisted-request',
+    ],
+    [
+      'invented failure success',
+      "scenario.safetyInvariants = scenario.safetyInvariants.filter(value => value !== 'no-success-claim-on-error');",
+      'forbids success claims',
+    ],
+    [
+      'agent naming',
+      "scenario.safetyInvariants = scenario.safetyInvariants.filter(value => value !== 'server-owned-classification');",
+      'requires server-owned-classification',
+    ],
+  ])('rejects assisted scenario drift: %s', (_name, mutation, error) => {
+    const script = `
+      import { readFileSync } from 'node:fs';
+      import { validateScenarioContract } from './scripts/agent-scenarios.mjs';
+      const contract = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/scenarios/grocery-catalog.json', 'utf8'));
+      const tools = JSON.parse(readFileSync('./integrations/shared/home-stock-tracker/contracts/2.1.0/tools-list.json', 'utf8'));
+      const scenario = contract.scenarios.find(({ id }) => id === 'assisted-lost-response');
+      ${mutation}
+      validateScenarioContract(contract, tools);
+    `;
+    const result = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', script],
+      { cwd: root, encoding: 'utf8' },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(error);
+  });
 });

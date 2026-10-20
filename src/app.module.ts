@@ -1,3 +1,4 @@
+import { AssistedActionModule } from './assisted-action/assisted-action.module';
 import { Module, type DynamicModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +24,7 @@ import { ModelConfigModule } from './config/model-config.module';
     ScheduleModule.forRoot(),
     PrismaModule,
     GroceryModule,
+    AssistedActionModule,
     ProductModule,
     InventoryModule,
     HouseholdModule,

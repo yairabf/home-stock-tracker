@@ -334,17 +334,22 @@ or downgrade only the service or skill side. If no compatible pair is
 available, restore the previous service release and its complete bundle as one
 deployment change.
 
-## Confirming unknown products while setting stock
+## AI-assisted named grocery and stock actions
 
-For absolute stock requests, agents resolve products read-only and apply known exact
-sets immediately. Unknown products require explicit approval of complete product
-facts and the requested quantity/unit before `inventory_confirm_new_product`.
-Creation and stock setting commit atomically without changing grocery entries.
-Never use grocery-addition tools to stage a stock update. Hold ambiguous identities
-or uncertain package conversions for clarification; brand details stay with the agent.
+Routine additions, positive absolute stock sets and measured purchases use
+`apply_household_items` in one homogeneous batch. Send original product phrases;
+the service chooses generic names and classifies missing metadata through AI.
+Do not strip brands, infer categories, convert packages or ask for routine catalog
+approval. Stock and purchase quantities remain explicit user facts.
 
-Each approved line carries a retained operation UUID. An identical confirmation retry
-returns the original receipt without another write, including after newer stock changes.
-Changed payloads and incompatible existing product facts/units require clarification.
-This exception does not make ordinary stock updates or purchase tools safe to replay.
-See the generated skill and scenarios for mixed requests, partial failures, and declines.
+Retain a fresh requestId and exact payload for each new action. Summarize only
+applied receipts, including unchanged returned_existing grocery lines. needs_input
+and unavailable write nothing. Ask one consolidated question for indexed issues;
+corrected content gets a new requestId. An unchanged retry or lost response uses
+the original ID and payload, bounded to one retry per conversation. Never bypass
+a conflict by silently issuing a new ID. Replay reports the original result.
+
+Legacy catalog confirmation tools remain available for explicitly selected flows
+or pending approvals, with their existing confirmation and replay rules. They
+are not prerequisites for assisted actions. Grocery-list completion, decrement,
+mark-out, and prediction feedback keep their dedicated tools.

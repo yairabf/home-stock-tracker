@@ -76,7 +76,7 @@ describe('agent skill generator', () => {
     'scenarios.md',
     'manifest.json',
     'release/README.md',
-    'contracts/2.0.0/tools-list.json',
+    'contracts/2.1.0/tools-list.json',
   ])('fails closed when generated %s was hand-edited', (artifact) => {
     const temporaryRoot = mkdtempSync(join(tmpdir(), 'agent-skills-'));
 

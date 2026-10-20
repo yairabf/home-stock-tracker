@@ -321,61 +321,9 @@ export class InventoryService {
 
   async updateStock(input: StockMutation): Promise<StockMutationResponseDto> {
     const occurredAt = new Date();
-    const result = await this.runStockTransaction(async (tx) => {
-      const product = await tx.product.findUnique({
-        where: { id: input.productId },
-        select: { id: true, typicalUnit: true },
-      });
-      if (!product) {
-        throw new NotFoundException(`No product with id "${input.productId}"`);
-      }
-
-      const event = await tx.inventoryEvent.create({
-        data: {
-          productId: input.productId,
-          eventType: this.stockMutationEventType(input.operation),
-          quantity:
-            input.operation === StockMutationOperation.mark_out
-              ? 0
-              : input.quantity,
-          unit:
-            input.operation === StockMutationOperation.mark_out
-              ? undefined
-              : input.unit,
-          timestamp: occurredAt,
-          source: input.source,
-        },
-      });
-
-      const common = {
-        productId: input.productId,
-        eventId: event.id,
-        occurredAt,
-        source: input.source,
-        typicalUnit: product.typicalUnit,
-      };
-      const stock =
-        input.operation === StockMutationOperation.set
-          ? await this.stockLedgerService.setWithinTransaction(tx, {
-              ...common,
-              quantity: input.quantity,
-              explicitUnit: input.unit,
-              reason: 'stock_set',
-            })
-          : input.operation === StockMutationOperation.decrement
-            ? await this.stockLedgerService.decrementWithinTransaction(tx, {
-                ...common,
-                quantity: input.quantity,
-                explicitUnit: input.unit,
-                reason: 'stock_decremented',
-              })
-            : await this.stockLedgerService.markOutWithinTransaction(tx, {
-                ...common,
-                reason: 'stock_marked_out',
-              });
-
-      return { event, stock };
-    });
+    const result = await this.runStockTransaction((tx) =>
+      this.updateStockWithinTransaction(tx, input, occurredAt),
+    );
 
     await this.recalculateStatisticsAfterCommit(result.event.productId);
     this.operationalLogger.inventoryAction({
@@ -391,83 +339,75 @@ export class InventoryService {
     };
   }
 
+  async updateStockWithinTransaction(
+    tx: Prisma.TransactionClient,
+    input: StockMutation,
+    occurredAt: Date,
+  ): Promise<{ event: InventoryEvent; stock: StockProjection }> {
+    const product = await tx.product.findUnique({
+      where: { id: input.productId },
+      select: { id: true, typicalUnit: true },
+    });
+    if (!product) {
+      throw new NotFoundException(`No product with id "${input.productId}"`);
+    }
+
+    const event = await tx.inventoryEvent.create({
+      data: {
+        productId: input.productId,
+        eventType: this.stockMutationEventType(input.operation),
+        quantity:
+          input.operation === StockMutationOperation.mark_out
+            ? 0
+            : input.quantity,
+        unit:
+          input.operation === StockMutationOperation.mark_out
+            ? undefined
+            : input.unit,
+        timestamp: occurredAt,
+        source: input.source,
+      },
+    });
+
+    const common = {
+      productId: input.productId,
+      eventId: event.id,
+      occurredAt,
+      source: input.source,
+      typicalUnit: product.typicalUnit,
+    };
+    const stock =
+      input.operation === StockMutationOperation.set
+        ? await this.stockLedgerService.setWithinTransaction(tx, {
+            ...common,
+            quantity: input.quantity,
+            explicitUnit: input.unit,
+            reason: 'stock_set',
+          })
+        : input.operation === StockMutationOperation.decrement
+          ? await this.stockLedgerService.decrementWithinTransaction(tx, {
+              ...common,
+              quantity: input.quantity,
+              explicitUnit: input.unit,
+              reason: 'stock_decremented',
+            })
+          : await this.stockLedgerService.markOutWithinTransaction(tx, {
+              ...common,
+              reason: 'stock_marked_out',
+            });
+
+    return { event, stock };
+  }
+
   async recordPurchases(input: {
     items: RecordPurchaseBatchItemDto[];
     purchasedAt?: string;
     source: string;
   }): Promise<RecordPurchasesResponseDto> {
     const receivedAt = new Date();
-    const result = await this.runStockTransaction(async (tx) => {
-      this.assertBatchPurchaseItems(input.items);
-      const purchasedAts = this.resolveBatchPurchaseTimestamps(
-        input.items,
-        input.purchasedAt,
-        receivedAt,
-      );
-      const productIds = input.items.map((item) => item.productId);
-      const products = await tx.product.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, typicalUnit: true },
-      });
-      const productsById = new Map(
-        products.map((product) => [product.id, product]),
-      );
-      const missingProductId = productIds.find(
-        (productId) => !productsById.has(productId),
-      );
-      if (missingProductId) {
-        throw new NotFoundException(`No product with id "${missingProductId}"`);
-      }
-
-      const items: Array<{
-        event: InventoryEvent;
-        stock: StockProjection;
-      }> = [];
-      for (const [index, item] of input.items.entries()) {
-        const quantity = item.quantity ?? 1;
-        if (!Number.isFinite(quantity) || quantity <= 0) {
-          throw new BadRequestException({
-            code: 'INVALID_PURCHASE_QUANTITY',
-            message: 'Purchase quantity must be a finite positive number',
-          });
-        }
-        const product = productsById.get(item.productId)!;
-        const purchasedAt = purchasedAts[index];
-        const event = await tx.inventoryEvent.create({
-          data: {
-            productId: item.productId,
-            eventType: InventoryEventType.PURCHASED,
-            quantity,
-            unit: item.unit,
-            timestamp: purchasedAt,
-            source: input.source,
-          },
-        });
-        const materialization =
-          await this.stockMaterializationService.materializePurchaseWithinTransaction(
-            tx,
-            {
-              productId: item.productId,
-              quantity,
-              purchasedAt,
-              receivedAt,
-            },
-          );
-        const stock = await this.stockLedgerService.resetWithinTransaction(tx, {
-          productId: item.productId,
-          eventId: event.id,
-          quantity,
-          occurredAt: purchasedAt,
-          source: input.source,
-          reason: 'purchase_recorded',
-          explicitUnit: item.unit,
-          typicalUnit: product.typicalUnit,
-          materialization,
-        });
-        items.push({ event, stock });
-      }
-      return { items, productIds };
-    });
+    const result = await this.runStockTransaction((tx) =>
+      this.recordPurchasesWithinTransaction(tx, input, receivedAt),
+    );
 
     await Promise.all(
       result.productIds.map((productId) =>
@@ -486,6 +426,95 @@ export class InventoryService {
         stock: StockProjectionResponseDto.fromEntity(stock),
       })),
     };
+  }
+
+  async recordPurchasesWithinTransaction(
+    tx: Prisma.TransactionClient,
+    input: {
+      items: RecordPurchaseBatchItemDto[];
+      purchasedAt?: string;
+      source: string;
+    },
+    receivedAt: Date,
+  ): Promise<{
+    items: Array<{ event: InventoryEvent; stock: StockProjection }>;
+    productIds: string[];
+  }> {
+    this.assertBatchPurchaseItems(input.items);
+    const purchasedAts = this.resolveBatchPurchaseTimestamps(
+      input.items,
+      input.purchasedAt,
+      receivedAt,
+    );
+    const productIds = input.items.map((item) => item.productId);
+    const products = await tx.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, typicalUnit: true },
+    });
+    const productsById = new Map(
+      products.map((product) => [product.id, product]),
+    );
+    const missingProductId = productIds.find(
+      (productId) => !productsById.has(productId),
+    );
+    if (missingProductId) {
+      throw new NotFoundException(`No product with id "${missingProductId}"`);
+    }
+
+    const items: Array<{
+      event: InventoryEvent;
+      stock: StockProjection;
+    }> = [];
+    for (const [index, item] of input.items.entries()) {
+      const quantity = item.quantity ?? 1;
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        throw new BadRequestException({
+          code: 'INVALID_PURCHASE_QUANTITY',
+          message: 'Purchase quantity must be a finite positive number',
+        });
+      }
+      const product = productsById.get(item.productId)!;
+      const purchasedAt = purchasedAts[index];
+      const event = await tx.inventoryEvent.create({
+        data: {
+          productId: item.productId,
+          eventType: InventoryEventType.PURCHASED,
+          quantity,
+          unit: item.unit,
+          timestamp: purchasedAt,
+          source: input.source,
+        },
+      });
+      const materialization =
+        await this.stockMaterializationService.materializePurchaseWithinTransaction(
+          tx,
+          {
+            productId: item.productId,
+            quantity,
+            purchasedAt,
+            receivedAt,
+          },
+        );
+      const stock = await this.stockLedgerService.resetWithinTransaction(tx, {
+        productId: item.productId,
+        eventId: event.id,
+        quantity,
+        occurredAt: purchasedAt,
+        source: input.source,
+        reason: 'purchase_recorded',
+        explicitUnit: item.unit,
+        typicalUnit: product.typicalUnit,
+        materialization,
+      });
+      items.push({ event, stock });
+    }
+    return { items, productIds };
+  }
+
+  async afterAssistedStockCommit(productIds: string[]): Promise<void> {
+    await Promise.all(
+      productIds.map((id) => this.recalculateStatisticsAfterCommit(id)),
+    );
   }
 
   private async runStockTransaction<T>(

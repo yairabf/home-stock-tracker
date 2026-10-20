@@ -1,3 +1,4 @@
+import { AssistedActionModule } from '../assisted-action/assisted-action.module';
 import { Module } from '@nestjs/common';
 import { McpController } from './mcp.controller';
 import { McpServerFactory } from './mcp-server.factory';
@@ -10,6 +11,7 @@ import { HouseholdModule } from '../household/household.module';
 
 @Module({
   imports: [
+    AssistedActionModule,
     PrismaModule,
     GroceryModule,
     ProductModule,

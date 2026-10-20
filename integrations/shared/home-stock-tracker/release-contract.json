@@ -5,8 +5,8 @@
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "2.0.0",
-    "toolsFixture": "contracts/2.0.0/tools-list.json",
+    "contractVersion": "2.1.0",
+    "toolsFixture": "contracts/2.1.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -16,8 +16,8 @@
   "skill": {
     "name": "home-stock-tracker",
     "description": "Use the household grocery and inventory MCP tools",
-    "version": "2.0.0",
-    "compatibleMcpRange": ">=2.0.0 <3.0.0",
+    "version": "2.1.0",
+    "compatibleMcpRange": ">=2.1.0 <3.0.0",
     "author": "Home Stock Tracker",
     "tags": [
       "household",
@@ -51,7 +51,8 @@
     "purchase-recording",
     "stock-mutations",
     "stock-signals",
-    "stock-product-confirmation"
+    "stock-product-confirmation",
+    "assisted-household-items"
   ],
   "requiredTools": [
     "grocery_add",
@@ -78,7 +79,8 @@
     "get_expiration_recommendations",
     "inventory_confirm_new_product",
     "complete_grocery_purchase",
-    "get_low_stock_predictions"
+    "get_low_stock_predictions",
+    "apply_household_items"
   ],
   "platforms": [
     "hermes",

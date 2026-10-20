@@ -1,3 +1,17 @@
+import { AssistedActionService } from '../assisted-action/assisted-action.service';
+import {
+  assistedActionMcpInputSchema,
+  assistedActionMcpOutputSchema,
+} from '../assisted-action/assisted-action-mcp.schema';
+import {
+  PUBLISHED_INVENTORY_EVENT_TYPES,
+  groceryItemOutputSchema,
+  productSearchProductOutputSchema,
+  productOutputSchema,
+  inventoryEventOutputSchema,
+  stockMutationOutputSchema,
+} from '../common/operation-response.schema';
+export { PUBLISHED_INVENTORY_EVENT_TYPES } from '../common/operation-response.schema';
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { stockProductConfirmationSchema } from '../inventory/types/stock-product-confirmation';
 import { HttpException, Injectable } from '@nestjs/common';
@@ -55,35 +69,8 @@ import { ExpirationBatchResponseDto } from '../inventory/dto/expiration-batch-re
 import { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
 import { ExpirationRecommendationListResponseDto } from '../inventory/dto/expiration-recommendation-response.dto';
 
-const groceryItemOutputSchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  productName: z.string(),
-  category: z.string().nullable(),
-  requestedQuantity: z.number().positive().finite(),
-  unit: z.string().nullable(),
-  dateAdded: z.string(),
-  status: z.enum(GroceryItemStatus),
-  note: z.string().nullable(),
-  source: z.enum(GroceryItemSource),
-  relatedInventoryEventId: z.string().nullable(),
-});
-
 const groceryListOutputSchema = z.object({
   items: z.array(groceryItemOutputSchema),
-});
-
-const productOutputSchema = z.object({
-  id: z.string(),
-  canonicalName: z.string(),
-  aliases: z.array(z.string()),
-  category: z.string().nullable(),
-  typicalUnit: z.string().nullable(),
-  productType: z.enum(ProductType).nullable(),
-  isPerishable: z.boolean().nullable(),
-  predictionStrategy: z.string().nullable(),
-  predictionEnabled: z.boolean(),
-  config: z.json().nullable(),
 });
 
 const productAddAliasInputSchema = z
@@ -93,31 +80,10 @@ const productAddAliasInputSchema = z
   })
   .strict();
 
-const productSearchProductOutputSchema = productOutputSchema.omit({
-  predictionStrategy: true,
-  config: true,
-});
-
 const productSearchOutputSchema = z.object({
   exactMatch: productSearchProductOutputSchema.nullable(),
   candidates: z.array(productSearchProductOutputSchema),
 });
-
-export const PUBLISHED_INVENTORY_EVENT_TYPES = [
-  InventoryEventType.GROCERY_ADDED,
-  InventoryEventType.GROCERY_REMOVED,
-  InventoryEventType.PURCHASED,
-  InventoryEventType.RESTOCKED,
-  InventoryEventType.STOCK_LOW,
-  InventoryEventType.STOCK_OUT,
-  InventoryEventType.STOCK_CONFIRMED,
-  InventoryEventType.STOCK_CORRECTED,
-  InventoryEventType.PREDICTION_ACCEPTED,
-  InventoryEventType.PREDICTION_REJECTED,
-  InventoryEventType.INFERRED_LOW_STOCK,
-  InventoryEventType.STOCK_SET,
-  InventoryEventType.STOCK_CONSUMED,
-] as const;
 
 const groceryAdditionItemInputSchema = z
   .object({
@@ -343,18 +309,6 @@ const householdInventoryOutputSchema = z
   })
   .strict();
 
-const inventoryEventOutputSchema = z.object({
-  id: z.string(),
-  productId: z.string(),
-  eventType: z.enum(PUBLISHED_INVENTORY_EVENT_TYPES),
-  quantity: z.number().nullable(),
-  unit: z.string().nullable(),
-  timestamp: z.string(),
-  source: z.string(),
-  confidence: z.number().nullable(),
-  metadata: z.json().nullable(),
-});
-
 const purchasedAtSchema = z.iso
   .datetime({ offset: true })
   .describe('ISO 8601 timestamp with an explicit timezone; must not be future');
@@ -423,26 +377,6 @@ const expirationRecommendationListOutputSchema = z
     possiblyExpired: z.array(expirationRecommendationItemOutputSchema),
   })
   .strict();
-
-const stockProjectionOutputSchema = z.object({
-  productId: z.string(),
-  unit: z.string(),
-  recordedQuantity: z.number().nullable(),
-  recordedAt: z.string(),
-  recordedSource: z.string(),
-  recordedEventId: z.string(),
-  estimatedQuantity: z.number().nullable(),
-  estimatedState: z.enum(PredictedState),
-  confidence: z.number(),
-  reason: z.string(),
-  predictionId: z.string().nullable(),
-  evaluatedAt: z.string(),
-});
-
-const stockMutationOutputSchema = z.object({
-  event: inventoryEventOutputSchema,
-  stock: stockProjectionOutputSchema,
-});
 
 const updateInventoryInputSchema = z
   .object({
@@ -667,11 +601,13 @@ export class McpServerFactory {
     private readonly stockConfirmation: StockProductConfirmationService,
     private readonly expirationBatchService: ExpirationBatchService,
     private readonly expirationRecommendationService: ExpirationRecommendationService,
+    private readonly assistedActions: AssistedActionService,
   ) {}
 
   create(): McpServer {
     const server = new McpServer(MCP_SERVER_INFO);
 
+    this.registerAssistedActionTool(server);
     this.registerGroceryTools(server);
     this.registerReadTools(server);
     this.registerProductWriteTool(server);
@@ -681,6 +617,28 @@ export class McpServerFactory {
     this.registerGroceryPurchaseCompletionTool(server);
     this.registerRecommendationTool(server);
     return server;
+  }
+
+  private registerAssistedActionTool(server: McpServer): void {
+    server.registerTool(
+      'apply_household_items',
+      {
+        description:
+          'Apply one atomic grocery_add, stock_set, or purchase batch. Pass original product phrases; the server uses AI to resolve generic catalog names, retain aliases, and fill missing metadata. Supply quantities for stock/purchases and never invent units or dates. Reuse requestId only for the same action retry. Applied receipts mean committed success; needs_input and unavailable write nothing. Clarify indexed needs_input issues; retry unchanged retryable failures with the same requestId. Ordinary successful classification needs no catalog confirmation.',
+        inputSchema: assistedActionMcpInputSchema,
+        outputSchema: assistedActionMcpOutputSchema,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,
+          openWorldHint: true,
+        },
+      },
+      (input) =>
+        this.runTool('apply_household_items', async () =>
+          this.toolResult(await this.assistedActions.apply(input, 'mcp')),
+        ),
+    );
   }
 
   private registerExpirationBatchTool(server: McpServer): void {

@@ -1,15 +1,15 @@
 # Home Stock Tracker Hermes release contract
 
 This generated release metadata belongs to the `hermes` bundle. Keep
-`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/2.0.0/tools-list.json`
+`manifest.json`, `SKILL.md`, `scenarios.md`, and the `contracts/2.1.0/tools-list.json`
 fixture from the same generated release.
 
 ## Compatibility
 
-- Skill version: `2.0.0`
+- Skill version: `2.1.0`
 - MCP server: `home-stock-tracker`
-- MCP contract: `2.0.0`
-- Compatible MCP range: `>=2.0.0 <3.0.0`
+- MCP contract: `2.1.0`
+- Compatible MCP range: `>=2.1.0 <3.0.0`
 
 ## Prerequisites
 
@@ -49,6 +49,7 @@ fixture from the same generated release.
 - `inventory_confirm_new_product`
 - `complete_grocery_purchase`
 - `get_low_stock_predictions`
+- `apply_household_items`
 
 ## Verification
 

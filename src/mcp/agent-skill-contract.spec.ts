@@ -123,7 +123,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe inventory-event history reads',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 2.0.0');
+      expect(skill).toContain('version: 2.1.0');
       expect(skill).toMatch(/\| `list_inventory_events`\s+\|/);
       expect(readme).toContain('`list_inventory_events`');
       expect(skill).toContain('Results are newest first.');
@@ -186,8 +186,8 @@ describe('agent inventory skill contract', () => {
       expect(skill).toMatch(
         /Never\s+present a suggestion as already committed\./,
       );
-      expect(skill).toContain('normal `grocery_add` workflow');
-      expect(readme).toContain('`record_purchases` once');
+      expect(skill).toContain('normal assisted grocery workflow');
+      expect(readme).toContain('`apply_household_items` once');
       expect(readme).toContain(
         '`grocery_list` and `get_low_stock_predictions`',
       );
@@ -197,7 +197,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform limits household context reads to explicit questions',
     ({ skill, scenarios }) => {
-      expect(skill).toContain('version: 2.0.0');
+      expect(skill).toContain('version: 2.1.0');
       expect(skill).toMatch(/\| `get_household_context`\s+\|/);
       expect(skill).toContain(
         'Do not fetch household context as a hidden prerequisite',
@@ -278,7 +278,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents safe prediction feedback workflows',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 2.0.0');
+      expect(skill).toContain('version: 2.1.0');
       expect(skill).toMatch(/\| `record_prediction_feedback`\s+\|/);
       expect(readme).toContain('`record_prediction_feedback`');
       expect(skill).toContain('active interaction');
@@ -305,7 +305,7 @@ describe('agent inventory skill contract', () => {
   it.each(bundles)(
     '$platform documents actual purchase completion without invention',
     ({ skill, scenarios, readme }) => {
-      expect(skill).toContain('version: 2.0.0');
+      expect(skill).toContain('version: 2.1.0');
       expect(skill).toMatch(/\| `complete_grocery_purchase`\s+\|/);
       expect(skill).toContain('preferred inclusive `items` array');
       expect(skill).toContain('`actualQuantity`');
@@ -421,4 +421,21 @@ describe('agent inventory skill contract', () => {
     );
     expect(openClawSection).not.toContain('integrations/hermes');
   });
+  it.each(bundles)(
+    '$platform routes routine names to server AI with durable replay',
+    ({ skill, readme }) => {
+      expect(skill).toContain(
+        'Use `apply_household_items` for ordinary grocery additions',
+      );
+      expect(skill).toContain('Pass the original product phrase unchanged');
+      expect(skill).toContain('Routine success requires no follow-up');
+      expect(skill).toContain('the entire request wrote nothing');
+      expect(skill).toContain('Corrected content uses a new requestId');
+      expect(skill).toContain('retry that identical request at most once');
+      expect(skill).toContain('with its unchanged quantity');
+      expect(skill).not.toContain('normalize to generic 3% milk');
+      expect(skill).not.toContain('Simplify the supplied description');
+      expect(readme).toContain('`apply_household_items` once');
+    },
+  );
 });

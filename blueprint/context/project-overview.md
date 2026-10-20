@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 3c280e345d5bfff0a10313cf7bc858e7fa70b5e418ab640a576562d1d8349720 -->
+<!-- blueprint:source-hash 1a2a31ddb532c85b8a16898d7d7273c196f7590ce59a910210010ebc1afd6eb3 -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -17,7 +17,7 @@ Private single-household tool. Multi-household accounts, member profiles, and sh
 
 ## Features
 
-Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 38a through 38e are complete. The next target in the approved JEV-first scope is 38f (qualifying evidence); runtime rollout remains 38g; item 21 remains the first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
+Build-plan order and progress; unchecked means planned. Feature 37 and sub-features 38a through 38e are complete. Feature 39 (AI-driven catalog normalization and enrichment) is complete. Feature 38f qualifying evidence remains unfinished and is preserved in `feature-plans/38f-qualifying-evidence-paused.md`; runtime rollout remains 38g; item 21 remains first unchecked in the general queue. Sub-features have separate spec/review/archive cycles.
 
 - [x] **1. Grocery list management**
 - [x] **2. Product catalog and normalization**
@@ -80,6 +80,8 @@ Build-plan order and progress; unchecked means planned. Feature 37 and sub-featu
   - [x] **38e. Evaluation tooling and perishability repair**
   - [ ] **38f. Qualifying JEV evidence**
   - [ ] **38g. Validated dual-provider rollout**
+
+- [x] **39. AI-driven catalog normalization and enrichment** - AI chooses generic names, resolves existing products, retains input aliases and fills metadata within grocery and bulk stock actions.
 
 **MVP exclusions:** dedicated UI/mobile app, exact real-time counts, OCR/barcodes, computer vision, built-in retailer integration, automatic purchasing, multi-tenancy, advanced ML/Python services, Redis without need, automatic grocery mutations from predictions. Post-MVP expiration and external adapter work are tracked separately.
 
@@ -219,7 +221,7 @@ Debugging record for LLM-assisted calls; must not retain unrelated WhatsApp conv
 - **Bounded decisions (37a transport, 37b matching and 37d stock advice)** - `ProductResolutionAdvisor` and `StockPredictionAdvisor`, independently selected by `PRODUCT_RESOLUTION_PROVIDER` and `STOCK_PREDICTION_PROVIDER`. Both default to `openai`; the Jev matching advisor is available with a 0.9 gate, existing confirmation, and resolved-model/version provenance. 37c evaluation tooling is complete; matching rollout awaits independently reviewed live held-out evidence; The Jev stock advisor is available for the internal on-demand prediction engine with zero-history safety, deterministic precedence, a 0.9 gate, conservative confidence, and versioned accepted/rejected provenance. Inventory reads use saved estimates and issue no inference; daily materialization begins with deterministic estimates; 37e stock evaluation tooling is complete with cutoff-safe replay, metrics, a private bounded CLI and an authored safety corpus. Stock runtime rollout awaits independently reviewed live historical held-out evidence; authored/offline evidence remains inconclusive. Require private `TYPESAFE_API_KEY` and pinned supported `JEV_MODEL` for TypeSafe routing; OpenAI remains required for generation. Preserve confirmed writes and public contracts. The PRD defines transport, mapping, provenance, and rollout criteria.
 - **Shelf-life policies (38c)** - independent `SHELF_LIFE_POLICY_PROVIDER=openai|typesafe`, default `openai`; reviewed applicable policy identities and explicit storage context precede bounded choices. Unknown/low-confidence/failure abstains; locally identified required finite-policy gaps alone permit generation. Create-only writes recheck locked product/name evidence; safe attempt logs distinguish acceptance from application. Stored policies and explicit batch-date reads issue no model calls. Qualifying live evaluation remains 38f; enablement remains 38g.
 - **Workflow stock advice (38d)** - opt-in `STOCK_WORKFLOW_ADVICE_ENABLED=false` by default, requiring TypeSafe stock routing. Manual and scheduled evaluation share a capped post-materialization phase (default 20 products). Cutoff-safe evidence, durable daily fingerprints and reusable validated results bound calls; revision and locked evidence checks publish accepted advice atomically. The 0.9 acceptance gate preserves authoritative states and quantities and never increases deterministic confidence. Saved advice feeds existing threshold-based recommendations; failures retain the baseline with no OpenAI fallback. Disabling advice and reevaluating restores deterministic estimates. Qualifying live evaluation remains 38f; enablement remains 38g.
-- **Planned JEV-first routing (38)** - deterministic evidence first; JEV for bounded category, type, unit, perishability, shelf-life policy and stock choices; OpenAI only for unsupported required generation. Preserve entered names and confirmed aliases. Low confidence and failures do not automatically invoke OpenAI. Versioned vocabularies and per-field unknowns precede adapters; accepted stock advice must feed projections with race protection. Task evaluation precedes rollout. See the [approved detailed plan](feature-plans/jev-first-application-inference.md).
+- **Planned JEV-first routing (38)** - deterministic evidence first; JEV for bounded category, type, unit, perishability, shelf-life policy and stock choices; OpenAI only for unsupported required generation. Feature 38 preserves entered names and confirmed aliases. Completed feature 39 adds an assisted action path where AI chooses generic names and supplied-name aliases without routine confirmation; existing explicit paths retain their contracts. Low confidence and failures do not automatically invoke OpenAI. Versioned vocabularies and per-field unknowns precede adapters; accepted stock advice must feed projections with race protection. Task evaluation precedes rollout. See the [approved detailed plan](feature-plans/jev-first-application-inference.md).
 - **Hybrid prediction** - history, elapsed time, household context, metadata, deterministic heuristics, optional model inference behind `PredictionEngine`. Python only if justified by statistical workloads.
 - **Jest/Nest testing utilities** - critical unit, PostgreSQL integration, API, prediction, and tool-contract coverage.
 - **Docker/Compose** - packaging, local development, environment configuration, migrations.
@@ -252,3 +254,5 @@ No dedicated MVP UI. Hermes maps grocery, purchase, and stock requests to tools 
 - Jev matching and prediction require separate evaluation before runtime rollout. PRD thresholds and precision targets are proposed policies, not demonstrated accuracy.
 
 - Project-plan describes the existing OpenAI generation split; approved feature 38 extends it to JEV-first choices. Implemented task adapters remain opt-in pending qualifying evaluation in 38f and enablement in 38g. Category/unit choices and shelf-life policies are finalized in the respective specs; no catalog relabeling is implied.
+
+- Feature 39 is an incremental extension of product normalization and agent flows in project-plan; build-plan carries its detailed scope. AI chooses semantic names; deterministic normalization only maintains lookup keys. Existing catalog names are not bulk renamed. The earlier confirmation-only behavior remains available to explicit clients.

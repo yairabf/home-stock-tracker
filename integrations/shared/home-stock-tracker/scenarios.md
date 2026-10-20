@@ -7,6 +7,15 @@ tool result, never from the model.
 
 <!-- EXECUTABLE_GROCERY_CATALOG_SCENARIOS -->
 
+## Assisted action review
+
+Assisted rows are the routine named-item workflow. Rows explicitly labeled legacy
+exercise compatibility or existing decisions; do not start those flows for a
+routine assisted success. Pass original phrases and retain requestId plus exact
+payload. No follow-up catalog confirmation is allowed on applied. needs_input
+and unavailable mean no writes; never invent success. New corrected intent uses
+a fresh ID; an unchanged retry keeps its ID. Optional null metadata needs no question.
+
 ## Review record
 
 For each row, verify:
@@ -39,7 +48,7 @@ For each row, verify:
 - history responses are described as recorded events, never as estimated
   current stock, and omitted metadata is never reconstructed;
 - history review alone never triggers a correction or another mutation;
-- uncertain grocery-addition names begin with `propose_if_missing`, whether explicit or through
+- In explicitly selected legacy flows, uncertain grocery-addition names begin with `propose_if_missing`, whether explicit or through
   the MCP default, and always include nested `groceryItem`;
 - `product_resolution_required` never causes a product, alias, or grocery write;
 - proposal advice remains non-authoritative and every product choice comes from
@@ -53,9 +62,9 @@ For each row, verify:
   and moves quantity handling to the separate quantity workflow;
 - `create_if_missing` is used only with complete, deliberate product facts;
 - every persisted grocery quantity is finite, positive, and non-null;
-- ambiguous stock lines stay untouched while other clear lines may proceed;
-- ordinary uncertain mutations stop; only identical stock confirmation retries
-  with the retained operation ID and approved payload may be replayed;
+- Assisted batches are all-or-nothing; ambiguity leaves every line untouched.
+- Ordinary uncertain mutations stop; assisted requests and legacy stock confirmations
+  alone permit unchanged retries with their retained request or operation IDs.
 - specific prediction corrections use one `record_prediction_feedback` call
   and never a second `record_stock_signal` call;
 - general stock corrections without a prediction reference stay on
@@ -87,5 +96,5 @@ For each row, verify:
   payload for uncertain-result retries. Product IDs still come only from service results.
 - Confirmations never mutate grocery entries; known lines can succeed while other
   lines await approval or clarification, without a whole-request atomicity claim.
-- Explicit package conversion for stock sets is permitted; uncertain conversion is held.
+- Preserve supplied package measurements; never normalize identities or convert units on the agent side.
 - Replayed receipts describe the original action and do not overwrite newer stock.

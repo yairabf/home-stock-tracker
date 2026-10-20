@@ -1,3 +1,4 @@
+import type { AssistedActionService } from '../assisted-action/assisted-action.service';
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import { ExpirationBatchService } from '../inventory/expiration-batch.service';
 import { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
@@ -149,6 +150,7 @@ describe('McpServerFactory grocery tools', () => {
       stockConfirmation as StockProductConfirmationService,
       { record: jest.fn() } as unknown as ExpirationBatchService,
       expirationRecommendationService as ExpirationRecommendationService,
+      {} as AssistedActionService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -204,6 +206,7 @@ describe('McpServerFactory grocery tools', () => {
     const result = await client.listTools();
 
     expect(result.tools.map(({ name }) => name)).toEqual([
+      'apply_household_items',
       'grocery_add',
       'grocery_confirm_new_product',
       'grocery_confirm_product_alias',

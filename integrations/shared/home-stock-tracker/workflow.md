@@ -7,6 +7,71 @@ configuration.
 The connected `home-stock-tracker` MCP server owns household state and business
 rules. Select and sequence its tools; do not recreate its logic in conversation.
 
+## Routine named-item actions
+
+Use `apply_household_items` for ordinary grocery additions, positive absolute
+stock sets, and completed purchases with user-supplied quantities. Send one
+homogeneous batch in user order, including a one-item array for a single item.
+Do not call get_product, search_products, or catalog-confirmation tools first.
+The server uses AI to choose a generic catalog identity and classify missing
+metadata. Pass the original product phrase unchanged; do not strip brands,
+percentages or packaging or guess a canonical name yourself. For example,
+`3% milk by Nestle` is sent verbatim; the server may return `milk` and retain
+the original phrase as an alias. Meaningful distinctions remain AI decisions.
+
+1. Generate a fresh UUID `requestId` for this action and retain the exact payload.
+   Select `operation: "grocery_add"`, `"stock_set"`, or `"purchase"` from explicit
+   user intent. Different operations use separate requests.
+2. Each item has exactly one original `productName` or trusted `productId`.
+   Metadata is optional; send only user-supplied facts, including explicit false.
+   Do not request category, type, perishability or typical unit merely to fill
+   catalog fields. The server can leave optional metadata unknown.
+3. Grocery quantity is optional for a new line. Stock/purchase quantity must be
+   positive and explicitly supplied; ask one focused question if it is missing.
+   Preserve each item's unit and purchase time only when supplied. Never convert
+   units, infer package sizes, invent counts or choose a purchase timestamp.
+4. Call `apply_household_items` once. Routine success requires no follow-up
+   catalog confirmation. Never split an unresolved batch into partial writes.
+5. On `outcome: applied`, summarize only ordered receipts. Report
+   `returned_existing` as already pending, with its unchanged quantity; do not
+   say the requested quantity was added. Use `ifPendingExists: create_separate`
+   only for an explicitly requested separate line. For an explicit adjustment
+   to an existing line, use the grocery quantity/update flow with a fresh read.
+6. On `needs_input`, the entire request wrote nothing. Ask one consolidated
+   question covering indexed issues and returned candidates. Do not ask about
+   optional null metadata. Corrected content uses a new requestId; do not retry
+   the old payload to bypass an alias, metadata or duplicate-product conflict.
+7. On `unavailable`, report no committed action. If retryable, retry only the
+   unchanged payload with the same requestId. After a lost transport response,
+   retry that identical request at most once in this conversation. If still
+   uncertain, retain it for a later retry and report uncertainty, never success.
+   Never generate a new ID just to retry. A replay receipt describes the original
+   action, not a fresh inventory reading. A requestId conflict requires a new
+   user decision, not an automatic replacement ID.
+
+Stock sets and purchases do not change grocery entries. Shopping-list completion
+still uses `complete_grocery_purchase`; decrement and mark-out still use exact-ID
+`update_inventory`. A qualitative low-stock report is not a grocery addition.
+Explicit RESTOCKED events can use the existing `record_purchase` tool when that
+specific event type is required; assisted purchase records PURCHASED.
+
+```json
+{
+  "tool": "apply_household_items",
+  "arguments": {
+    "requestId": "<fresh request UUID>",
+    "operation": "grocery_add",
+    "items": [{ "productName": "3% milk by Nestle" }]
+  }
+}
+```
+
+Replace the UUID placeholder with a newly generated UUID for each action. Catalog inference
+is server-owned, so do not manufacture metadata or ask the user to approve
+routine AI classification. The legacy sections below apply only when a user
+explicitly chooses those tools or resumes an existing confirmation decision.
+Their confirmation requirements do not apply to assisted actions.
+
 ## Responsibility boundary
 
 - Use only facts the user supplied and structured values returned by tools.
@@ -19,14 +84,15 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
   result concisely.
 - One clear request may require several ordered tool calls. Finish prerequisite
   reads before mutations, preserve the user's item boundaries, and stop after an
-  uncertain ordinary mutation result instead of continuing or retrying. The
-  `inventory_confirm_new_product` replay exception below uses its original operation ID.
+  uncertain ordinary mutation result instead of continuing or retrying. The assisted replay rule above and the legacy
+  `inventory_confirm_new_product` replay exception retain their original IDs.
 
 ## Tool selection
 
 | Tool                             | Use when                                                                                                                                                                                                               | Do not use when                                                                                                                                                                       |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `grocery_add`                    | The user explicitly asks to add one named product. Begin uncertain names in proposal mode with `productName` and nested `groceryItem`; branch on `created`, `confirmation_required`, or `product_resolution_required`. | The user only reports low stock, asks what is needed, gives an invalid quantity, or has not supplied every product fact required for deterministic creation.                          |
+| `apply_household_items` | Routine named grocery additions, absolute stock sets and measured purchases, singly or in a batch. | Decrement, mark-out, shopping-list completion, or missing required quantities. |
+| `grocery_add` | Explicit legacy proposal/creation workflow or an existing catalog decision. | Routine named additions; use apply_household_items. |
 | `grocery_confirm_new_product`    | The user explicitly approves complete final product facts from a resolution conversation. Send those facts and the original `groceryItem`; no proposal ID or source.                                                   | Any product fact is guessed, the user chose an existing product, cancelled, or has not approved the final payload.                                                                    |
 | `grocery_confirm_product_alias`  | The user explicitly confirms that the original phrase is an alias for one exact returned product ID. Send the approved alias and original `groceryItem`.                                                               | The target is ambiguous, the relationship was not explicitly approved, or generic catalog maintenance is requested outside a grocery addition.                                        |
 | `grocery_set_quantity`           | The user selects an absolute final quantity for one exact pending line. Send its `itemId`, final quantity, and exact current quantity as `expectedRequestedQuantity`.                                                  | Unit or note also changes, the line is ambiguous, the final total is unclear, or the user chose no change.                                                                            |
@@ -42,10 +108,10 @@ rules. Select and sequence its tools; do not recreate its logic in conversation.
 | `get_expiration_recommendations` | The user asks for the grocery list or household inventory view. Read it after those primary reads to append eligible product-level expiry advice.                                                                      | The user only asks for raw recorded batch history, a physical count, or a mutation.                                                                                                   |
 | `list_expiration_status`         | The user asks what might expire soon or wants expiry status for recorded purchase and restock batches. Report batch evidence and its source without inferring remaining quantities.                                    | The user asks what is currently on hand, needs a physical count, or wants to change stock, grocery items, or expiry records.                                                          |
 | `list_inventory_events`          | The user asks what was recorded, when a purchase or signal happened, or wants evidence before deciding on a correction. Resolve a named product first.                                                                 | The user asks for estimated current stock, or the request itself is an unambiguous mutation.                                                                                          |
-| `record_purchase`                | The user clearly reports purchasing or restocking one resolved product. Use `PURCHASED` for a purchase and `RESTOCKED` for an explicit restock.                                                                        | The user only plans to buy something, reports current stock, or asks to complete a compound grocery-list purchase.                                                                    |
-| `record_purchases`               | The user reports a recently purchased list that is not a grocery-list completion. Resolve every product first, preserve item order and boundaries, and send one atomic batch.                                          | Any identity is unresolved, a product appears twice, the report is future intent, or the user refers to pending grocery rows.                                                         |
+| `record_purchase` | Explicit legacy exact-ID purchase or specific RESTOCKED event. | Routine named purchases or shopping-list completion. |
+| `record_purchases` | Explicit legacy exact-ID batch purchase workflow. | Routine named purchases; use apply_household_items. |
 | `update_inventory`               | The user supplies an explicit absolute quantity, decrement amount, or says one exact product is out. Use `set`, `decrement`, or `mark_out` respectively.                                                               | Availability is vague, a required quantity is missing, the unit conversion is uncertain, or the target is unresolved.                                                                 |
-| `inventory_confirm_new_product`  | Explicitly approved complete product facts and a positive absolute stock quantity/unit for an unknown product.                                                                                                         | Purchase completion, decrement, mark-out, zero stock, ambiguity, unapproved facts, or staging grocery entries.                                                                        |
+| `inventory_confirm_new_product` | Resume an explicitly approved legacy catalog/stock decision. | Routine unknown named stock sets; use apply_household_items. |
 | `record_stock_signal`            | The user directly reports a qualitative low state or corrects recorded history without referring to a prediction and without an explicit stock quantity.                                                               | The statement supplies an exact quantity, says the product is out, confirms availability without a quantity, or refers to one specific prediction.                                    |
 | `record_prediction_feedback`     | The user unambiguously accepts, rejects, or corrects one prediction whose non-null ID came from the active interaction or a fresh prediction read.                                                                     | The prediction reference is ambiguous, conversationally stale, unrelated, or has a null ID; or the user reports stock without referring to a prediction.                              |
 | `complete_grocery_purchase`      | The user reports buying all or selected items from the current grocery list. Resolve current pending item IDs first and prefer `items`, adding actual measurements only from explicit user facts.                      | Any named item has zero or multiple exact pending matches, no selected items remain, duplicate-product measurements are incomplete or conflict, or the user only plans to shop later. |
@@ -67,7 +133,9 @@ turn the read into any mutation.
 Treat `Household is not configured` as incomplete setup. State this and stop.
 MCP does not create or update household configuration.
 
-## Resolve identifiers first
+## Resolve identifiers for exact-ID tools
+
+This lookup flow is not a prerequisite for apply_household_items.
 
 Spoken product names are not IDs. Before `get_inventory`,
 `list_inventory_events`, `product_add_alias`, `record_purchase`,
@@ -145,7 +213,11 @@ Do not choose another product or retry automatically. After an uncertain
 transport result, stop and report uncertainty; verify product state through a
 fresh read before asking the user about any new write.
 
-## Grocery conversation workflows
+## Legacy grocery conversation workflows
+
+These legacy tools use nested `groceryItem`.
+Use this section only for an explicitly selected legacy flow or a pending
+confirmation from those tools. Ordinary additions use the assisted flow above.
 
 ### Construct typed grocery arguments
 
@@ -368,7 +440,7 @@ does not mean nothing is expiring, and it never authorizes a fallback mutation.
 
 The combined list presentation does not merge the three backend contracts. Never
 present a suggestion as already committed. If the user explicitly confirms one
-suggestion, run the normal `grocery_add` workflow for its returned product name;
+suggestion, run the normal assisted grocery workflow for its returned product name;
 do not mutate from the recommendation read alone or assume confirmation for
 other suggestions.
 
@@ -424,7 +496,7 @@ recorded.
 
 <!-- PLATFORM_WORKFLOW -->
 
-### Record a recently purchased product list
+### Legacy exact-ID purchased product list
 
 Use `record_purchases` when the user reports a completed purchase containing
 several products without referring to pending grocery rows:
@@ -449,9 +521,11 @@ The batch is all-or-nothing. A validation or domain error means no item was
 recorded. After an uncertain transport result, stop, report that the entire
 batch outcome is uncertain, and do not retry automatically.
 
-### Update explicit stock
+### Exact-ID stock mutations
 
-Resolve the exact product first, then map only explicit measurements:
+For decrement, mark-out, or an explicitly chosen exact-ID set, resolve the product
+first, then map only explicit measurements. Routine named positive sets use
+apply_household_items with operation stock_set:
 
 - "We have 3 cartons of milk" uses `update_inventory` with `operation: "set"`,
   `quantity: 3`, and `unit: "cartons"`.
@@ -466,33 +540,24 @@ quantity-free `STOCK_CONFIRMED` signal into a known balance, invent a count, or
 fall back to `record_stock_signal` to avoid the clarification.
 
 If `set` would establish a different canonical unit, repeat the exact quantity
-and unit and obtain explicit confirmation before the call. For absolute sets only,
-convert explicit package measurements as described below; never infer a conversion.
+and unit and obtain explicit confirmation before the call. Preserve the user-supplied units. Never convert units.
 Treat an untracked or quantity-unknown decrement as final for that attempt and
 ask for an absolute current quantity before a new decision. After an uncertain
 mutation result, do not retry or claim the balance changed.
 
-### Unknown products during absolute stock sets
+### Legacy confirmed product and stock creation
 
-A request to set stock does not authorize creating catalog products. Stock updates
-never add, complete, remove, or change grocery-list entries. Do not use `grocery_add`
-or `grocery_confirm_new_product` to stage a stock update.
+Routine named stock sets use apply_household_items and authorize its atomic
+catalog/stock action. This section only resumes explicitly chosen legacy creation.
+Stock updates never change grocery-list entries. Do not use grocery tools to
+stage stock creation.
 
-1. Simplify the supplied description into a generic household product, keeping brand
-   details on the agent side. Use one `3% milk` product tracked in liters across
-   brands/package sizes; keep meaningful variants such as lactose-free milk separate.
-   Convert only explicit package measurements: two one-liter cartons become quantity
-   `2`, unit `liter`. Use the catalog's exact unit spelling. Ask if identity, package
-   size, or conversion is uncertain. This does not change purchase-completion rules.
-2. Use `get_product`, then `search_products` when no exact product is found. Search
-   is read-only and does not provide creation authority. Apply known exact stock sets
-   immediately. Hold ambiguous lines for the user's choice; never select a candidate
-   from confidence alone. Decrement and mark-out still require existing products.
-3. For unknown products, gather the complete final creation facts: `canonicalName`,
-   `aliases`, `category`, `typicalUnit` (or null), `productType`, and `isPerishable`.
-   Ask for missing facts; do not use grocery addition to obtain proposals. Bundle
-   proposed products and their positive absolute quantities/units into one explicit
-   confirmation question. Declining causes no catalog or stock mutation for that line.
+1. Retain the exact user-approved canonical name, aliases and metadata. Never
+   simplify brand names or infer classification facts on the agent side.
+2. For this legacy path only, use read-only lookup to verify the approved identity.
+   Decrement and mark-out still require existing products.
+3. Require complete user-approved creation facts and a positive absolute quantity
+   with explicit unit. Never manufacture missing facts or convert packages.
 4. After approval, generate and retain one UUID `operationId` per product/stock
    decision, together with its exact approved payload. Call
    `inventory_confirm_new_product({ operationId, product, stock: { quantity, unit } })`.
@@ -599,21 +664,17 @@ If no mapping is clear, ask rather than choosing the closest enum.
   errors, follow the tool-specific final-result rules or ask for a fresh decision.
 - After a mutation transport failure with an uncertain outcome, do not retry
   automatically. Report that the result is uncertain so duplicate writes are
-  avoided. The sole exception is an identical `inventory_confirm_new_product`
-  retry with the original operation ID and approved payload, as described above.
+  avoided. Exceptions are identical apply_household_items retries with the retained
+  requestId and legacy inventory_confirm_new_product retries with the retained
+  operation ID, under their bounded rules above.
 
 ## Examples
 
 **"Add two liters of milk."**
 
-Call `grocery_add` with `productName: "milk"` and nested
-`groceryItem: { requestedQuantity: 2, unit: "liters" }`. Omit
-`unknownProductPolicy` to use proposal mode. On `created`, summarize
-`createdItem`. On `product_resolution_required`, present the choices and wait
-without mutating. On
-`confirmation_required`, explain the current quantity and ask what final total
-the user wants. Calculate that total from the answer before calling
-`grocery_set_quantity` for a quantity-only change.
+Call apply_household_items with a fresh requestId, operation grocery_add, and
+items [{ productName: "milk", quantity: 2, unit: "liters" }]. Summarize applied
+receipts, including an unchanged returned_existing line. No catalog confirmation.
 
 **"Remove milk from the list."**
 
@@ -678,17 +739,14 @@ Call `get_product` with `productName: "cereal"`, then
 
 **"I bought three cartons of milk."**
 
-Call `get_product` with `productName: "milk"`, then `record_purchase` with the
-`productId` set to the returned `id`, `eventType: "PURCHASED"`, `quantity: 3`,
-and `unit: "cartons"`.
+Call apply_household_items once with a fresh requestId, operation purchase,
+and items [{ productName: "milk", quantity: 3, unit: "cartons" }].
 
 **"I bought milk and two cartons of eggs yesterday."**
 
-Resolve both products, then call `record_purchases` once with the returned IDs
-in user order. Omit milk's quantity and unit, attach `quantity: 2` and
-`unit: "cartons"` only to eggs, and include yesterday's exact timestamp only if
-the user or surrounding trusted context establishes it. Do not partially record
-the list if either identity is unresolved.
+Ask how much milk was purchased before sending the batch. Do not invent a
+quantity or timestamp. Then send the original item names and supplied measurements
+in one assisted purchase request; do not partially record the list.
 
 **"What do we need?"**
 
@@ -710,12 +768,12 @@ The user asks to set stock from supplied grocery information: two one-liter cart
 of branded 3% milk, one kilogram of rice, and an unclear yogurt description. This
 is a stock update, not an instruction to complete purchases or remove groceries.
 
-Normalize milk to generic `3% milk`, quantity `2`, unit `liter`, keeping the brand on
-the agent side. Set known rice to one kilogram immediately. Hold unknown milk and
-propose its complete product facts plus the two-liter set for explicit approval,
-bundled with any other new products. Ask which yogurt was meant without changing it.
-After approval, confirm milk with a retained operation UUID. If the response is lost,
-retry that exact confirmation. Report rice/milk successes and unresolved yogurt.
-All grocery entries remain unchanged, even matching pending products.
+Pass each original phrase and supplied quantity/unit in one assisted stock_set
+request. Do not normalize names or convert cartons into liters. Let server AI
+resolve identities and metadata. If yogurt produces needs_input, none of the
+batch is written; ask the indexed question and submit the corrected batch under
+a new requestId. On applied, summarize all receipts without catalog confirmation.
+A lost response is retried with the unchanged payload and original requestId.
+All grocery entries remain unchanged.
 
 Product and prediction outputs may return `isPerishable: null` for unknown metadata. Do not interpret null as false. Explicit confirmed creation still requires an approved boolean.

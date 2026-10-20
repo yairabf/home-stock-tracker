@@ -30,6 +30,7 @@ const RESULT_CLASSES = [
   'silent',
 ];
 const PREREQUISITES = [
+  'retained-assisted-request',
   'explicit-tool-not-invoked',
   'approved-grocery-intent',
   'complete-product-facts',
@@ -50,6 +51,10 @@ const PREREQUISITES = [
   'user-selected-product',
 ];
 const INVARIANTS = [
+  'server-owned-classification',
+  'original-product-phrases',
+  'stable-assisted-request',
+  'no-routine-catalog-confirmation',
   'bounded-noninvoked-correction',
   'preserve-prior-successes',
   'atomic-catalog-and-stock-write',
@@ -149,7 +154,10 @@ function schemaAtPath(schema, path) {
   for (const segment of path.split('.')) {
     const arrayItem = segment.endsWith('[]');
     const property = arrayItem ? segment.slice(0, -2) : segment;
-    current = current?.properties?.[property];
+    const propertySchema = (node) =>
+      node?.properties?.[property] ??
+      (node?.anyOf ?? node?.oneOf ?? []).map(propertySchema).find(Boolean);
+    current = propertySchema(current);
     if (arrayItem) current = current?.items;
     if (!current) return undefined;
   }
@@ -198,6 +206,46 @@ function validateCallOrder(scenario, path) {
     calls.includes(read) && calls.indexOf(read) < calls.indexOf(write);
   const hasPrerequisite = (prerequisite) =>
     scenario.prerequisites.includes(prerequisite);
+
+  if (calls.includes('apply_household_items')) {
+    for (const invariant of [
+      'all-or-nothing-batch',
+      'no-fact-invention',
+      'server-owned-classification',
+      'original-product-phrases',
+      'stable-assisted-request',
+      'no-routine-catalog-confirmation',
+    ]) {
+      if (!scenario.safetyInvariants.includes(invariant))
+        throw new Error(`${path} assisted action requires ${invariant}`);
+    }
+    if (
+      calls.some((tool) => tool !== 'apply_household_items') ||
+      calls.length > 2
+    )
+      throw new Error(
+        `${path} assisted action forbids follow-up tools and unbounded retries`,
+      );
+    if (calls.length > 1 && !hasPrerequisite('retained-assisted-request'))
+      throw new Error(
+        `${path} assisted replay requires retained-assisted-request`,
+      );
+    for (const call of scenario.calls) {
+      if (
+        !['requestId', 'operation', 'items'].every((key) =>
+          call.argumentKeys.includes(key),
+        )
+      )
+        throw new Error(
+          `${path} assisted action requires requestId, operation and items`,
+        );
+    }
+    if (
+      scenario.resultClass !== 'success' &&
+      !scenario.safetyInvariants.includes('no-success-claim-on-error')
+    )
+      throw new Error(`${path} assisted failure forbids success claims`);
+  }
 
   if (calls.includes('get_expiration_recommendations')) {
     const expected = calls.includes('grocery_list')
@@ -433,7 +481,13 @@ export function validateScenarioContract(contract, toolsFixture) {
     titles.add(scenario.row[0]);
     if (
       scenario.resultClass === 'transport-uncertain' &&
-      !isSafeStockConfirmationReplay(scenario)
+      !isSafeStockConfirmationReplay(scenario) &&
+      !(
+        scenario.calls.length > 0 &&
+        scenario.calls.every(({ tool }) => tool === 'apply_household_items') &&
+        scenario.prerequisites.includes('retained-assisted-request') &&
+        scenario.safetyInvariants.includes('stable-assisted-request')
+      )
     ) {
       if (
         !scenario.safetyInvariants.includes('no-automatic-retry') ||

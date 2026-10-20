@@ -4,6 +4,47 @@ This document is the reusable interface reference for Home Stock Tracker. For
 installation, start with the [root README](../README.md). For client-specific
 setup, see [Agent Integrations](agent-integrations.md).
 
+## Assisted household actions
+
+`POST /api/v1/inventory/assisted-actions` and MCP `apply_household_items` use
+service bearer authentication and the same request. Source is assigned by the
+server; client-supplied source is rejected.
+
+```json
+{
+  "requestId": "c3042999-3915-4fa8-8fdd-f7e847994d0f",
+  "operation": "grocery_add",
+  "items": [{ "productName": "3% milk by Nestle" }]
+}
+```
+
+Generate a fresh UUID for each action. Operations are grocery_add, stock_set,
+and purchase, with 1-100 ordered items and exactly one productName or productId
+per item. Pass original phrases; server AI selects a generic identity, retains
+aliases, and fills missing metadata. Optional metadata uses category, typicalUnit,
+productType and isPerishable. Explicit and stored facts take precedence.
+Grocery quantity is optional; stock and purchase require positive finite quantity.
+Unit is optional when a usable stored or accepted inferred unit exists. Purchase
+purchasedAt is optional and cannot be future-dated. Grocery note and
+ifPendingExists (return_existing by default, or explicit create_separate) are
+operation-specific. No counts or package conversions are inferred.
+
+HTTP 200 carries applied with ordered receipts, needs_input with indexed issues,
+or unavailable with retryable and code. Only applied commits catalog and domain
+writes. Unknown optional metadata is listed in unresolvedMetadata without a
+routine confirmation. Duplicate resolved products, missing required units and
+conflicting metadata/aliases leave the entire batch unchanged. HTTP 400 rejects
+invalid input; HTTP 401 rejects authentication; HTTP 409 rejects changed content
+under an existing requestId. MCP uses its normal tool errors for these failures.
+
+Retry identical content with the same requestId, even across REST and MCP, to
+retrieve the original persisted receipt without repeating writes. Corrected
+content uses a new ID. A returned_existing grocery receipt preserves its old
+quantity. Stock and purchase actions leave grocery entries unchanged. Purchases
+use existing ledger reset semantics and preserve newer recorded stock when
+backdated. This is the routine named-item path; legacy tools below remain available
+for explicitly selected flows and pending confirmation decisions.
+
 ## Authentication and base URLs
 
 All business REST routes use this base URL:
@@ -488,6 +529,7 @@ Use an MCP SDK or native client, not ordinary REST calls.
 
 | Tool                            | Kind  | Purpose                                                                                        |
 | ------------------------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| `apply_household_items` | Write | Atomically classify named items and apply grocery, stock-set or purchase intent with durable replay. |
 | `grocery_add`                   | Write | Add through proposal or deterministic creation policy, or return a successful decision branch. |
 | `grocery_confirm_new_product`   | Write | Apply approved final product facts and complete the original grocery addition without LLM use. |
 | `grocery_confirm_product_alias` | Write | Apply an approved alias to an exact product ID and complete the original grocery addition.     |
@@ -538,7 +580,7 @@ purchase or restock batch. Report the returned status and expiry source, but do
 not treat a batch as evidence that its quantity remains on hand or mutate stock
 from this read.
 
-Agents must resolve every product before one `record_purchases` call, preserve
+For the explicitly selected legacy exact-ID path, resolve every product before one `record_purchases` call, preserve
 input order and per-item measurements, and stop without a partial batch when an
 identity is unresolved. `update_inventory` uses `set` for an explicit current
 quantity, `decrement` for an explicit consumed amount, and `mark_out` for an
@@ -643,7 +685,7 @@ signal. Any repeated or concurrent submission returns
 `Prediction feedback was already recorded`; do not retry after an uncertain
 transport result.
 
-`grocery_add` defaults to `propose_if_missing`. Begin an uncertain spoken name
+In explicitly selected legacy flows, `grocery_add` defaults to `propose_if_missing`. Begin an uncertain spoken name
 with `{ productName, groceryItem }`; if resolution is required, present the
 deterministic candidates, optional non-authoritative proposal, and
 `allowedActions`, then wait for the user's decision without mutating. Do not

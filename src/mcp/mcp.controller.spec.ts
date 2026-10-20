@@ -1,3 +1,4 @@
+import { AssistedActionService } from '../assisted-action/assisted-action.service';
 import { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import {
   Controller,
@@ -79,6 +80,7 @@ describe('McpController', () => {
           useValue: { confirm: jest.fn() },
         },
         McpServerFactory,
+        { provide: AssistedActionService, useValue: { apply: jest.fn() } },
         {
           provide: APP_GUARD,
           useExisting: ServiceAuthGuard,
@@ -153,6 +155,7 @@ describe('McpController', () => {
       expect(client.getServerVersion()).toMatchObject(MCP_SERVER_INFO);
       const tools = await client.listTools();
       expect(tools.tools.map(({ name }) => name)).toEqual([
+        'apply_household_items',
         'grocery_add',
         'grocery_confirm_new_product',
         'grocery_confirm_product_alias',

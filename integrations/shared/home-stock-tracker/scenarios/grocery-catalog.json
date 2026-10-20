@@ -20,7 +20,7 @@
       "safetyInvariants": ["no-fact-invention"],
       "row": [
         "Add grocery item",
-        "\"Add two liters of milk,\" and the name resolves exactly.",
+        "Explicit legacy tool flow or pending legacy decision: \"Add two liters of milk,\" and the name resolves exactly.",
         "`grocery_add({ productName: \"milk\", groceryItem: { requestedQuantity: 2, unit: \"liters\" } })` in default proposal mode.",
         "Summarize `createdItem` with its positive persisted quantity."
       ]
@@ -40,7 +40,7 @@
       "safetyInvariants": ["no-fact-invention"],
       "row": [
         "Omitted new-line quantity",
-        "\"Add milk,\" no pending line exists for an exactly resolved product.",
+        "Explicit legacy tool flow or pending legacy decision: \"Add milk,\" no pending line exists for an exactly resolved product.",
         "`grocery_add({ productName: \"milk\", groceryItem: {} })` in default proposal mode.",
         "The created line has persisted `requestedQuantity: 1`."
       ]
@@ -63,7 +63,7 @@
       ],
       "row": [
         "Unknown product proposal",
-        "\"Add za'atar yogurt,\" and the phrase has no exact match.",
+        "Explicit legacy tool flow or pending legacy decision: \"Add za'atar yogurt,\" and the phrase has no exact match.",
         "`grocery_add({ productName: \"za'atar yogurt\", groceryItem: {} })`; present `product_resolution_required` candidates, optional advice, and allowed actions.",
         "No catalog or grocery mutation occurs before a new user decision."
       ]
@@ -235,7 +235,7 @@
       ],
       "row": [
         "Confirmed product creation",
-        "The user approves complete final facts for a proposed new product.",
+        "Explicit legacy tool flow or pending legacy decision: The user approves complete final facts for a proposed new product.",
         "`grocery_confirm_new_product({ product: <approved final facts>, groceryItem: <original grocery item> })`; send no proposal ID or source and make no second LLM request.",
         "Product and first grocery line commit atomically, or a stable conflict is returned."
       ]
@@ -262,7 +262,7 @@
       ],
       "row": [
         "Confirmed product alias",
-        "The user confirms that \"three percent milk\" is an alias for one exact returned candidate.",
+        "Explicit legacy tool flow or pending legacy decision: The user confirms that \"three percent milk\" is an alias for one exact returned candidate.",
         "`grocery_confirm_product_alias({ targetProductId: <chosen product id>, alias: \"three percent milk\", groceryItem: <original grocery item> })`.",
         "The alias and new grocery line commit through one shared use case."
       ]
@@ -290,7 +290,7 @@
       ],
       "row": [
         "Confirmed alias with quantity ambiguity",
-        "Alias confirmation finds an existing pending line with quantity 2.",
+        "Explicit legacy tool flow or pending legacy decision: Alias confirmation finds an existing pending line with quantity 2.",
         "Keep the successful alias, explain `confirmation_required`, and ask for the final grocery quantity. Do not repeat the alias confirmation.",
         "Catalog identity is saved while the existing grocery quantity remains 2."
       ]
@@ -391,7 +391,7 @@
       ],
       "row": [
         "Deterministic direct creation",
-        "A direct client deliberately has every required product fact.",
+        "Explicit legacy tool flow or pending legacy decision: A direct client deliberately has every required product fact.",
         "Use explicit `create_if_missing` with complete `product` and nested `groceryItem`; do not invoke proposal mode.",
         "Product and first grocery line commit atomically, or neither does."
       ]
@@ -558,7 +558,7 @@
       "safetyInvariants": ["explicit-separate-line-only"],
       "row": [
         "Explicit separate line",
-        "\"Add milk as a separate line.\"",
+        "Explicit legacy tool flow or pending legacy decision: \"Add milk as a separate line.\"",
         "`grocery_add({ productName: \"milk\", groceryItem: { ifPendingExists: \"create_separate\" } })`",
         "One intentional additional pending row is created, defaulting quantity to 1 if omitted."
       ]
@@ -625,7 +625,7 @@
       "safetyInvariants": ["preserve-item-boundaries"],
       "row": [
         "Add several grocery items",
-        "\"Add milk and eggs.\"",
+        "Explicit legacy tool flow or pending legacy decision: \"Add milk and eggs.\"",
         "Call `grocery_add({ productName: \"milk\", groceryItem: {} })`, then `grocery_add({ productName: \"eggs\", groceryItem: {} })`.",
         "Summarize both confirmed additions in the user's order."
       ]
@@ -654,7 +654,7 @@
       "safetyInvariants": ["no-fact-invention", "preserve-item-boundaries"],
       "row": [
         "Item-specific measurements",
-        "\"Add two liters of milk and eggs.\"",
+        "Explicit legacy tool flow or pending legacy decision: \"Add two liters of milk and eggs.\"",
         "Call `grocery_add({ productName: \"milk\", groceryItem: { requestedQuantity: 2, unit: \"liters\" } })`, then `grocery_add({ productName: \"eggs\", groceryItem: {} })`.",
         "Do not copy milk's quantity or unit to eggs."
       ]
@@ -683,7 +683,7 @@
       ],
       "row": [
         "Multi-add uncertain failure",
-        "The milk addition is confirmed, but the eggs mutation has an uncertain transport result.",
+        "Explicit legacy tool flow or pending legacy decision: The milk addition is confirmed, but the eggs mutation has an uncertain transport result.",
         "Stop after the eggs result. Do not retry or attempt later additions.",
         "Report milk as confirmed and eggs as uncertain."
       ]
@@ -1233,7 +1233,7 @@
       ],
       "row": [
         "Purchase",
-        "\"I bought three cartons of milk.\"",
+        "Explicit legacy tool flow or pending legacy decision: \"I bought three cartons of milk.\"",
         "`get_product({ productName: \"milk\" })`, then `record_purchase({ productId: <resolved product id>, eventType: \"PURCHASED\", quantity: 3, unit: \"cartons\" })`.",
         "Summarize the recorded purchase."
       ]
@@ -1267,7 +1267,7 @@
       ],
       "row": [
         "Explicit restock",
-        "\"I restocked rice.\"",
+        "Explicit legacy tool flow or pending legacy decision: \"I restocked rice.\"",
         "`get_product({ productName: \"rice\" })`, then `record_purchase({ productId: <resolved product id>, eventType: \"RESTOCKED\" })`.",
         "Summarize the recorded restock without adding a quantity."
       ]
@@ -2443,7 +2443,7 @@
       ],
       "row": [
         "Confirmed suggestion addition",
-        "After seeing suggestions, the user explicitly asks to add one named suggestion.",
+        "Explicit legacy tool flow or pending legacy decision: After seeing suggestions, the user explicitly asks to add one named suggestion.",
         "Use the returned product name in the normal `grocery_add` proposal workflow only after confirmation.",
         "Only the confirmed suggestion enters the grocery workflow; other suggestions remain read-only."
       ]
@@ -2474,7 +2474,7 @@
       ],
       "row": [
         "Recently purchased product list",
-        "The user reports several resolved products purchased yesterday with measurements attached to specific items.",
+        "Explicit legacy tool flow or pending legacy decision: The user reports several resolved products purchased yesterday with measurements attached to specific items.",
         "Call `record_purchases` once with unique trusted product IDs, preserving item order, measurements, and the explicit timestamp.",
         "All ordered purchase receipts are returned, or none of the batch is recorded."
       ]
@@ -2516,7 +2516,7 @@
       ],
       "row": [
         "Batch purchase transport uncertainty",
-        "The atomic `record_purchases` call ends without a reliable result.",
+        "Explicit legacy tool flow or pending legacy decision: The atomic `record_purchases` call ends without a reliable result.",
         "Stop and report that the whole batch outcome is uncertain; do not retry or continue with individual writes.",
         "No success claim is made and duplicate purchases are avoided."
       ]
@@ -2675,7 +2675,7 @@
       ],
       "row": [
         "Approved product and absolute stock",
-        "The user approves complete generic product facts and two liters of milk.",
+        "Explicit legacy tool flow or pending legacy decision: The user approves complete generic product facts and two liters of milk.",
         "Generate and retain one operation UUID and call `inventory_confirm_new_product` with the exact approved product and stock.",
         "Product creation and the two-liter stock set commit atomically; grocery entries are unchanged."
       ]
@@ -2733,16 +2733,12 @@
       "prerequisites": [],
       "calls": [],
       "resultClass": "confirmation-required",
-      "safetyInvariants": [
-        "explicit-package-conversion",
-        "no-fact-invention",
-        "no-grocery-mutation"
-      ],
+      "safetyInvariants": ["no-unit-conversion", "no-fact-invention"],
       "row": [
-        "Explicit stock package conversion",
+        "Preserve stock package measurements",
         "Two branded one-liter cartons of 3% milk are supplied in an absolute stock request.",
-        "Keep brands on the agent side; normalize to generic 3% milk, quantity 2, unit liter. Hold unknown product for approval.",
-        "Keep lactose-free variants separate; ask if package size or conversion is uncertain."
+        "Pass the original branded phrase and explicit quantity/unit to the assisted flow; do not normalize the name or convert packages.",
+        "Server AI chooses catalog identity. Ask only if the required quantity or unit cannot be resolved."
       ]
     },
     {
@@ -2775,7 +2771,7 @@
       ],
       "row": [
         "Safe stock confirmation replay",
-        "The approved confirmation response was lost, possibly followed by a newer stock change.",
+        "Explicit legacy tool flow or pending legacy decision: The approved confirmation response was lost, possibly followed by a newer stock change.",
         "Retry only `inventory_confirm_new_product` with the identical retained operation UUID and approved payload.",
         "Original response is returned without an event, timestamp refresh or stock overwrite."
       ]
@@ -2811,7 +2807,7 @@
       ],
       "row": [
         "Changed confirmation payload",
-        "The same operation UUID is supplied with a changed quantity.",
+        "Explicit legacy tool flow or pending legacy decision: The same operation UUID is supplied with a changed quantity.",
         "Surface `STOCK_CONFIRMATION_ID_CONFLICT`; ask for clarification and do not change IDs to bypass it.",
         "No second stock write occurs."
       ]
@@ -2846,7 +2842,7 @@
       ],
       "row": [
         "Incompatible product appeared",
-        "The proposed name was created with incompatible facts or units before approval.",
+        "Explicit legacy tool flow or pending legacy decision: The proposed name was created with incompatible facts or units before approval.",
         "Surface `STOCK_CONFIRMATION_PRODUCT_CONFLICT` and clarify; no silent metadata or unit replacement.",
         "No duplicate product, stock update or grocery mutation."
       ]
@@ -2906,7 +2902,7 @@
       ],
       "row": [
         "Correct a non-invoked confirmation",
-        "User-approved confirmation is rejected by the tool layer with explicit non-invocation; quantity/boolean were strings and aliases an object.",
+        "Explicit legacy tool flow or pending legacy decision: User-approved confirmation is rejected by the tool layer with explicit non-invocation; quantity/boolean were strings and aliases an object.",
         "Rebuild all fields from approved facts with JSON number, boolean, and aliases array; make one corrected confirmation in the same conversation.",
         "Preserve approval and prior successful work; do not claim a service outage or repeat the original addition."
       ]
@@ -2934,7 +2930,7 @@
       ],
       "row": [
         "Correct a non-invoked grocery quantity",
-        "An approved fabric-softener addition is explicitly not invoked because quantity was a string.",
+        "Explicit legacy tool flow or pending legacy decision: An approved fabric-softener addition is explicitly not invoked because quantity was a string.",
         "Send the same requested quantity as a number in one corrected grocery_add call in the current conversation.",
         "Do not repeat earlier successful items or ask for the same approval again."
       ]
@@ -3002,7 +2998,7 @@
       ],
       "row": [
         "Preserve earlier success during correction",
-        "An earlier grocery addition succeeded; a separate approved confirmation was explicitly not invoked.",
+        "Explicit legacy tool flow or pending legacy decision: An earlier grocery addition succeeded; a separate approved confirmation was explicitly not invoked.",
         "Correct only the rejected confirmation once, preserving its approved facts.",
         "Do not replay the successful addition or restart the multi-item request."
       ]
@@ -3023,6 +3019,470 @@
         "A name-only create_if_missing request returns Product input must match unknownProductPolicy without explicit non-invocation proof.",
         "Explain that complete product facts are missing; clarify approval and execution state before any fresh proposal or confirmation.",
         "Do not invent product facts, presume non-invocation, or automatically retry the mutation."
+      ]
+    },
+    {
+      "id": "assisted-grocery-brand",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "grocery_add"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Add branded milk",
+        "Add 3% milk by Nestle.",
+        "Send original productName, no guessed metadata.",
+        "Summarize applied milk receipt and original alias; no confirmation tool."
+      ]
+    },
+    {
+      "id": "assisted-grocery-existing",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "grocery_add"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Already pending grocery",
+        "Milk is already on the list.",
+        "Send the original addition once with default pending policy.",
+        "Report returned_existing and unchanged quantity, not an increment."
+      ]
+    },
+    {
+      "id": "assisted-stock-batch",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "stock_set"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Named stock batch",
+        "We have two cartons of branded milk and one bag of rice.",
+        "Send one batch with original names and explicit quantities/units.",
+        "Summarize ordered committed receipts without classification approval."
+      ]
+    },
+    {
+      "id": "assisted-purchase-batch",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "purchase"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Named purchase batch",
+        "I bought three cartons of milk and two bags of rice.",
+        "Send one purchase batch with original names and supplied measurements.",
+        "Summarize applied events; do not complete grocery entries."
+      ]
+    },
+    {
+      "id": "assisted-optional-metadata",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "grocery_add"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Unknown optional metadata",
+        "Add an unfamiliar product; category remains unknown.",
+        "Omit unknown metadata and send original name.",
+        "Summarize receipt; do not ask for optional null fields."
+      ]
+    },
+    {
+      "id": "assisted-needs-input",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "stock_set"
+            }
+          ]
+        }
+      ],
+      "resultClass": "resolution-required",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted identity uncertainty",
+        "One batch item cannot be resolved.",
+        "Send the batch once; receive indexed needs_input.",
+        "Report no writes; ask one consolidated question; corrected content gets a new requestId."
+      ]
+    },
+    {
+      "id": "assisted-missing-unit",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "purchase"
+            }
+          ]
+        }
+      ],
+      "resultClass": "resolution-required",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted unit uncertainty",
+        "Purchase quantities are supplied but a required unit cannot be resolved.",
+        "Send original items without inventing a unit.",
+        "On needs_input ask indexed unit question; claim no purchase success."
+      ]
+    },
+    {
+      "id": "assisted-unavailable",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "grocery_add"
+            }
+          ]
+        }
+      ],
+      "resultClass": "blocked",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted provider unavailable",
+        "Provider returns unavailable and retryable false.",
+        "Send the request once.",
+        "Report no committed action; do not retry or claim success."
+      ]
+    },
+    {
+      "id": "assisted-lost-response",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["retained-assisted-request"],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "purchase"
+            }
+          ]
+        }
+      ],
+      "resultClass": "transport-uncertain",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted lost response",
+        "A prior assisted purchase response was lost.",
+        "Retry once with the identical retained requestId and payload.",
+        "If still uncertain report uncertainty; never generate another ID or duplicate the purchase."
+      ]
+    },
+    {
+      "id": "assisted-retryable",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": ["retained-assisted-request"],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "stock_set"
+            }
+          ]
+        }
+      ],
+      "resultClass": "success",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation"
+      ],
+      "row": [
+        "Assisted retryable failure",
+        "An unchanged request previously returned retryable unavailable.",
+        "Retry once with the retained requestId and exact payload.",
+        "Summarize only the applied receipt; no new identity decisions by the agent."
+      ]
+    },
+    {
+      "id": "assisted-duplicate",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName",
+            "items[].quantity",
+            "items[].unit"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "stock_set"
+            }
+          ]
+        }
+      ],
+      "resultClass": "resolution-required",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted duplicate identity",
+        "Two phrases resolve to one catalog product.",
+        "Send original phrases and quantities unchanged.",
+        "On duplicate_product report no writes and ask for one consolidated measurement; never sum automatically."
+      ]
+    },
+    {
+      "id": "assisted-alias-conflict",
+      "platforms": ["hermes", "openclaw"],
+      "prerequisites": [],
+      "calls": [
+        {
+          "tool": "apply_household_items",
+          "argumentKeys": [
+            "requestId",
+            "operation",
+            "items",
+            "items[].productName"
+          ],
+          "enumValues": [
+            {
+              "path": "operation",
+              "value": "grocery_add"
+            }
+          ]
+        }
+      ],
+      "resultClass": "domain-error",
+      "safetyInvariants": [
+        "all-or-nothing-batch",
+        "no-fact-invention",
+        "server-owned-classification",
+        "original-product-phrases",
+        "stable-assisted-request",
+        "no-routine-catalog-confirmation",
+        "no-success-claim-on-error"
+      ],
+      "row": [
+        "Assisted alias conflict",
+        "A supplied phrase conflicts with catalog ownership.",
+        "Send original phrase once.",
+        "Report indexed conflict with no success; never change requestId to bypass it."
       ]
     }
   ]

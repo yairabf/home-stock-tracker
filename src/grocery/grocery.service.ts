@@ -258,6 +258,31 @@ export class GroceryService {
     }
   }
 
+  async addAssistedWithinTransaction(
+    tx: Prisma.TransactionClient,
+    product: ProductWithNames,
+    input: GroceryAdditionItemInput,
+    source: GroceryItemSource,
+  ): Promise<{
+    itemAction: 'created' | 'returned_existing';
+    groceryItem: GroceryItemResponseDto;
+  }> {
+    this.validateRequestedQuantity(input.requestedQuantity);
+    const result = await this.addForProductWithinTransaction(
+      tx,
+      this.groceryProduct(product),
+      input,
+      source,
+      this.policyAwareRequestEcho(getCanonicalProductName(product), input),
+    );
+    const groceryItem = result.createdItem ?? result.existingItems[0];
+    if (!groceryItem) throw new Error('Grocery addition returned no item');
+    return {
+      itemAction: result.createdItem ? 'created' : 'returned_existing',
+      groceryItem,
+    };
+  }
+
   private async addForProductWithinTransaction(
     tx: Prisma.TransactionClient,
     product: { id: string; canonicalName: string; category: string | null },

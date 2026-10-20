@@ -7,13 +7,13 @@
   },
   "skill": {
     "name": "home-stock-tracker",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "mcp": {
     "serverName": "home-stock-tracker",
-    "contractVersion": "2.0.0",
-    "compatibleRange": ">=2.0.0 <3.0.0",
-    "toolsFixture": "contracts/2.0.0/tools-list.json",
+    "contractVersion": "2.1.0",
+    "compatibleRange": ">=2.1.0 <3.0.0",
+    "toolsFixture": "contracts/2.1.0/tools-list.json",
     "versionPolicy": {
       "breaking": "major",
       "additive": "minor",
@@ -45,7 +45,8 @@
     "purchase-recording",
     "stock-mutations",
     "stock-signals",
-    "stock-product-confirmation"
+    "stock-product-confirmation",
+    "assisted-household-items"
   ],
   "requiredTools": [
     "grocery_add",
@@ -72,7 +73,8 @@
     "get_expiration_recommendations",
     "inventory_confirm_new_product",
     "complete_grocery_purchase",
-    "get_low_stock_predictions"
+    "get_low_stock_predictions",
+    "apply_household_items"
   ],
   "prerequisites": {
     "authentication": {

@@ -77,3 +77,5 @@
   - [x] 38e. **Evaluation tooling and perishability repair** - private bounded evaluation, actual workflow replay, versioned perishability question and controlled diagnostic results ✓ 2026-10-06
   - [ ] 38f. **Qualifying JEV evidence** - independently review and freeze representative held-out and historical datasets, collect bounded live evidence and assess each existing launch gate
   - [ ] 38g. **Validated dual-provider rollout** - enable only qualifying task routes on an approved runtime, verify representative flows and independent rollback while retaining OpenAI generation
+
+- [x] 39. **AI-driven catalog normalization and enrichment** - use AI to choose generic canonical names, resolve existing products, preserve supplied names as aliases, infer missing metadata, and complete grocery additions and bulk stock updates without routine confirmations.

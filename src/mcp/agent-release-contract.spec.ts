@@ -242,8 +242,8 @@ describe('agent release contract', () => {
   });
 
   it('publishes additive expiration recommendations with existing list features', () => {
-    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('2.0.0');
-    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('2.0.0');
+    expect(AGENT_RELEASE_CONTRACT.mcp.contractVersion).toBe('2.1.0');
+    expect(AGENT_RELEASE_CONTRACT.skill.version).toBe('2.1.0');
     expect(AGENT_RELEASE_CONTRACT.features).toEqual(
       expect.arrayContaining([
         'household-inventory-view',

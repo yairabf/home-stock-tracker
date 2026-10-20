@@ -1,3 +1,6 @@
+import { AssistedCatalogWriter } from '../assisted-action/assisted-catalog-writer.service';
+import { AssistedCatalogPreparation } from '../assisted-action/assisted-catalog-preparation.service';
+import { AssistedIdentityNormalizer } from '../assisted-action/assisted-identity-normalizer.service';
 import { EmptyEnrichmentBodyPipe } from './empty-enrichment-body.pipe';
 import { ProductEnrichmentService } from './product-enrichment.service';
 import { ProductUnderstandingCaptureService } from './product-understanding-capture.service';
@@ -23,6 +26,9 @@ import { ProductResolutionLogService } from './product-resolution-log.service';
   imports: [LlmModule],
   controllers: [ProductController],
   providers: [
+    AssistedCatalogWriter,
+    AssistedCatalogPreparation,
+    AssistedIdentityNormalizer,
     EmptyEnrichmentBodyPipe,
     ProductEnrichmentService,
     ProductUnderstandingRunner,
@@ -64,6 +70,8 @@ import { ProductResolutionLogService } from './product-resolution-log.service';
     ProductResolutionService,
   ],
   exports: [
+    AssistedCatalogWriter,
+    AssistedCatalogPreparation,
     ProductEnrichmentService,
     PRODUCT_UNDERSTANDING,
     ProductService,

@@ -1,3 +1,4 @@
+import type { AssistedActionService } from '../assisted-action/assisted-action.service';
 import type { StockProductConfirmationService } from '../inventory/stock-product-confirmation.service';
 import type { ExpirationBatchService } from '../inventory/expiration-batch.service';
 import type { ExpirationRecommendationService } from '../inventory/expiration-recommendation.service';
@@ -48,6 +49,7 @@ describe('MCP contract fixture', () => {
       {} as StockProductConfirmationService,
       {} as ExpirationBatchService,
       {} as ExpirationRecommendationService,
+      {} as AssistedActionService,
     );
     const server = factory.create();
     const [clientTransport, serverTransport] =
@@ -112,8 +114,26 @@ describe('MCP contract fixture', () => {
         ]),
       );
     }
-    expect(widen(previous.tools, snapshot.tools)).toEqual(snapshot.tools);
+    const existingTools = snapshot.tools.filter(
+      ({ name }) => name !== 'apply_household_items',
+    );
+    expect(widen(previous.tools, existingTools)).toEqual(existingTools);
     expect(widened.length).toBeGreaterThan(0);
+  });
+
+  it('adds assisted actions without changing any 2.0.0 tool schema', () => {
+    const previous = readMcpContractSnapshot(
+      join(
+        projectRoot,
+        'integrations/shared/home-stock-tracker/contracts/2.0.0/tools-list.json',
+      ),
+    );
+    expect(
+      snapshot.tools.filter(({ name }) => name !== 'apply_household_items'),
+    ).toEqual(previous.tools);
+    expect(
+      snapshot.tools.find(({ name }) => name === 'apply_household_items'),
+    ).toBeDefined();
   });
 
   it('normalizes tool ordering before comparison', () => {

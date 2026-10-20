@@ -86,32 +86,26 @@ call `list_expiration_status` once and report its returned batch status and expi
 source without claiming that a batch is still on hand or changing stock.
 
 For a stock-update smoke check, report one exact absolute quantity, one explicit
-decrement, and one out state. Hermes should resolve each product and use
-`update_inventory` with `set`, `decrement`, and `mark_out` respectively, without
+decrement, and one out state. Use apply_household_items for named positive sets; resolve existing products for
+`update_inventory` decrement and mark_out, without
 unit conversion or automatic retry. A quantity-free "we still have milk" report
 must produce a clarification question before any write.
 
-For a batch-purchase smoke check, report two recently purchased products outside
-the grocery-list completion flow. Hermes should resolve both identities before
-calling `record_purchases` once, preserve order and per-item measurements, and
-stop without a partial write when either identity is unresolved or the result is
-uncertain.
+For an assisted-action smoke check, ask to add an unfamiliar branded product,
+then report a measured purchase or positive absolute stock batch. The agent should
+call `apply_household_items` once with original names, a fresh requestId, and the
+explicit operation and quantities. The server chooses generic identities and
+classifies missing metadata. An applied result needs no catalog confirmation;
+returned_existing means a pending line stayed unchanged. needs_input and unavailable
+mean no batch writes. A lost response is retried only with the same payload and ID.
+Do not guess metadata, strip brands, convert units, or claim success after failure.
+Shopping-list completion remains a separate workflow.
 
-For an unknown-name add smoke check, ask Hermes to add a deliberately unfamiliar
-product phrase. It should call `grocery_add` in proposal mode with `productName`
-and nested `groceryItem`, receive `product_resolution_required` without catalog
-or grocery mutation, present candidates and optional advice as non-authoritative,
-and wait for the user's decision. It must not guess product facts to force
-`create_if_missing`. Deterministic creation is reserved for a direct client that
-deliberately supplies the complete `product` object.
-
-Continue the smoke check by explicitly approving either complete final product
-facts or one exact alias relationship. Hermes should call
-`grocery_confirm_new_product` or `grocery_confirm_product_alias` with the
-original grocery item and no proposal ID or source. It must not invoke the LLM
-again. A cancellation makes no call. If confirmation returns
-`confirmation_required`, the catalog decision stays applied while Hermes asks a
-separate quantity question and does not repeat the catalog confirmation.
+Legacy confirmation smoke checks apply only to explicitly selected old tools or
+pending decisions: `grocery_add` with nested `groceryItem` may return
+`product_resolution_required`; its proposal is non-authoritative. Approved facts
+are required before `grocery_confirm_new_product` or `grocery_confirm_product_alias`.
+Those compatibility branches do not apply to ordinary assisted additions.
 
 To review the compound flow without mutating, ask Hermes what it would do for
 "I bought everything except toilet paper." It should first read the pending
@@ -121,7 +115,7 @@ only the remaining items. It must omit actual fields unless the user explicitly
 states what was purchased, never copy requested values, and ask before sending
 incomplete or conflicting measurements for duplicate-product rows.
 
-To review duplicate confirmation, first create a numeric pending test item, then
+To review explicitly selected legacy duplicate confirmation, first create a numeric pending test item, then
 ask Hermes to add the same product. It should call `grocery_add` once, explain the
 current quantity after `confirmation_required`, and ask for the desired final
 total. An omitted new-line quantity would persist as `1`, but omitted duplicate

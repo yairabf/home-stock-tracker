@@ -288,3 +288,11 @@ model StockAdviceAttempt {
   @@unique([productId, fingerprint])
   @@index([productId, createdAt])
 }
+
+model AssistedActionReceipt {
+  requestId   String   @id @db.Uuid
+  requestHash String   @db.Char(64)
+  operation   String
+  response    Json
+  createdAt   DateTime @default(now())
+}
