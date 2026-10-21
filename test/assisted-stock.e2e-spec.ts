@@ -1,3 +1,8 @@
+import { JevDecisionClient } from '../src/llm/typesafe/jev-decision.client';
+import type {
+  JevChoiceRequest,
+  JevDecisionResult,
+} from '../src/llm/typesafe/jev-decision.types';
 import { ScheduleModule } from '@nestjs/schedule';
 import { randomUUID } from 'node:crypto';
 import { Test, type TestingModule } from '@nestjs/testing';
@@ -62,16 +67,22 @@ describe('Assisted stock action (isolated PostgreSQL)', () => {
     Promise<unknown>,
     [StructuredGenerationRequest<unknown>]
   >();
+  const choose = jest.fn<Promise<JevDecisionResult>, [JevChoiceRequest]>();
   beforeAll(async () => {
     await prisma.$connect();
     module = await Test.createTestingModule({
       imports: [
         ScheduleModule.forRoot(),
-        ModelConfigModule.register(TEST_MODEL_CONFIG),
+        ModelConfigModule.register({
+          ...TEST_MODEL_CONFIG,
+          productUnderstandingProvider: 'typesafe',
+        }),
         PrismaModule,
         AssistedActionModule,
       ],
     })
+      .overrideProvider(JevDecisionClient)
+      .useValue({ choose, model: 'test-jev' })
       .overrideProvider(PrismaService)
       .useValue(prisma)
       .overrideProvider(LLM_PROVIDER)
@@ -82,6 +93,7 @@ describe('Assisted stock action (isolated PostgreSQL)', () => {
     statistics = module.get(StatisticsService);
   });
   beforeEach(() => {
+    choose.mockReset();
     generate.mockReset();
     generate.mockImplementation((input) => {
       const canonicalName = choices.get(input.input.rawName as string);
@@ -119,6 +131,64 @@ describe('Assisted stock action (isolated PostgreSQL)', () => {
     });
     await module.close();
     await prisma.$disconnect();
+  });
+
+  it('uses OpenAI identity then configured JEV metadata for a name-only catalog input', async () => {
+    choose.mockImplementation(async (request) => {
+      const choice =
+        request.questionKey === 'category'
+          ? Object.keys(request.criteria).find((key) =>
+              JSON.stringify(request.criteria[key]).includes('dairy'),
+            )!
+          : request.questionKey === 'productType'
+            ? 'fast_consumable'
+            : request.questionKey === 'isPerishable'
+              ? 'perishable'
+              : Object.keys(request.criteria).find((key) =>
+                  JSON.stringify(request.criteria[key]).includes('liter'),
+                )!;
+      return {
+        status: 'success',
+        provider: 'typesafe',
+        model: 'test-jev',
+        task: request.task,
+        taskVersion: request.taskVersion,
+        choice,
+        confidence: 0.99,
+        probabilities: { [choice]: 0.99 },
+        usage: { input_tokens: 1, output_tokens: 1 },
+      };
+    });
+    const original = newItem();
+    const input = request(
+      [{ productName: original.productName, quantity: 2 }],
+      'purchase',
+    );
+    const result = applied(await service.apply(input, 'mcp'));
+    const product = await prisma.product.findUniqueOrThrow({
+      where: { id: result.receipts[0].productId },
+      include: { names: true },
+    });
+    expect(product).toMatchObject({
+      typicalUnit: 'liter',
+      productType: 'fast_consumable',
+      isPerishable: true,
+    });
+    expect(product.category).not.toBeNull();
+    expect(product.names.map((name) => name.displayName)).toEqual(
+      expect.arrayContaining([
+        original.productName,
+        choices.get(original.productName),
+      ]),
+    );
+    expect(result.receipts[0].inventory.stock.unit).toBe('liter');
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(choose).toHaveBeenCalledTimes(4);
+    expect(generate.mock.invocationCallOrder[0]).toBeLessThan(
+      choose.mock.invocationCallOrder[0],
+    );
+    expect(await service.apply(input, 'mcp')).toEqual(result);
+    expect(choose).toHaveBeenCalledTimes(4);
   });
 
   it('sets mixed existing/new stock in input order with inferred canonical units', async () => {
@@ -227,34 +297,73 @@ describe('Assisted stock action (isolated PostgreSQL)', () => {
     ).toBe(2);
   });
 
-  it('consolidates missing units and rolls back catalog creation', async () => {
+  it.each(['stock_set', 'purchase'] as const)(
+    'defaults unresolved units for %s and persists policy provenance once',
+    async (operation) => {
+      jest
+        .spyOn(module.get(ProductUnderstandingRunner), 'understand')
+        .mockResolvedValue(
+          initialUnderstanding({ ...metadata, typicalUnit: null }),
+        );
+      const items = [newItem(), newItem()].map((item) => ({
+        ...item,
+        metadata: { ...metadata, typicalUnit: null },
+      }));
+      const input = request(items, operation);
+      const first = applied(await service.apply(input, 'api'));
+      for (const receipt of first.receipts) {
+        expect(receipt.inventory.stock.unit).toBe('item');
+        expect(receipt.inventory.stock.recordedQuantity).toBe(2);
+        expect(
+          await prisma.product.findUniqueOrThrow({
+            where: { id: receipt.productId },
+          }),
+        ).toMatchObject({ typicalUnit: 'item' });
+      }
+      expect(await service.apply(input, 'mcp')).toEqual(first);
+      for (const receipt of first.receipts) {
+        const logs = await prisma.llmInferenceLog.findMany({
+          where: {
+            structuredResponse: {
+              path: ['productId'],
+              equals: receipt.productId,
+            },
+          },
+        });
+        expect(logs).toHaveLength(1);
+        expect(logs[0]).toMatchObject({
+          modelProvider: 'policy',
+          confidence: null,
+          structuredResponse: { source: 'default', value: 'item' },
+        });
+        expect(
+          await prisma.inventoryEvent.count({
+            where: { productId: receipt.productId },
+          }),
+        ).toBe(1);
+      }
+    },
+  );
+
+  it('preserves an established stock unit when catalog metadata defaults to item', async () => {
+    const known = applied(await service.apply(request([newItem()]), 'api'))
+      .receipts[0];
+    await prisma.product.update({
+      where: { id: known.productId },
+      data: { typicalUnit: null },
+    });
     jest
       .spyOn(module.get(ProductUnderstandingRunner), 'understand')
       .mockResolvedValue(
         initialUnderstanding({ ...metadata, typicalUnit: null }),
       );
-    const items = [newItem(), newItem()].map((item) => ({
-      ...item,
-      metadata: { ...metadata, typicalUnit: null },
-    }));
-    const input = request(items);
-    expect(await service.apply(input, 'api')).toMatchObject({
-      outcome: 'needs_input',
-      issues: [
-        { inputIndex: 0, code: 'missing_unit' },
-        { inputIndex: 1, code: 'missing_unit' },
-      ],
-    });
-    expect(
-      await prisma.productName.count({
-        where: { displayName: { in: items.map((i) => i.productName) } },
-      }),
-    ).toBe(0);
-    expect(
-      await prisma.assistedActionReceipt.findUnique({
-        where: { requestId: input.requestId },
-      }),
-    ).toBeNull();
+    const result = applied(
+      await service.apply(
+        request([{ productId: known.productId, quantity: 3 }], 'purchase'),
+        'api',
+      ),
+    );
+    expect(result.receipts[0].inventory.stock.unit).toBe('liter');
   });
 
   it('rejects duplicate resolved products without stock writes', async () => {

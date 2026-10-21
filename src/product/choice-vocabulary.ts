@@ -68,9 +68,14 @@ export function buildChoiceVocabulary(
   if (!parsed.success) return unsupported('invalid_input');
   const { kind } = parsed.data;
   const manifest = CHOICE_VOCABULARY_MANIFESTS[kind];
-  const labels = [
-    ...new Set(parsed.data.labels.length ? parsed.data.labels : manifest.seeds),
-  ];
+  const labels =
+    kind === 'unit'
+      ? mergeUnitLabels(parsed.data.labels, manifest.seeds)
+      : [
+          ...new Set(
+            parsed.data.labels.length ? parsed.data.labels : manifest.seeds,
+          ),
+        ];
   if (labels.length > VOCABULARY_MAX_DOMAIN_OPTIONS)
     return unsupported('too_many_options');
   const normalized = labels.map(normalizeProductName);
@@ -78,6 +83,19 @@ export function buildChoiceVocabulary(
     return unsupported('ambiguous_labels');
   labels.sort();
   return prepareVocabulary(kind, labels, parsed.data.context);
+}
+
+function mergeUnitLabels(
+  stored: readonly string[],
+  seeds: readonly string[],
+): string[] {
+  const labels = new Map<string, string>();
+  // Stable catalog spelling wins over seeds and normalized duplicate labels.
+  for (const label of [...stored].sort().concat([...seeds])) {
+    const key = normalizeProductName(label);
+    if (!labels.has(key)) labels.set(key, label);
+  }
+  return [...labels.values()];
 }
 
 function prepareVocabulary(

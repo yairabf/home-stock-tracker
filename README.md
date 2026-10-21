@@ -166,3 +166,12 @@ remain operator responsibilities; follow the [deployment guide](docs/deployment.
 This project uses the AI Blueprint development workflow. See [AGENTS.md](AGENTS.md)
 for repository conventions and [`blueprint/`](blueprint/) for the roadmap and
 implementation history.
+
+### Automatic catalog metadata
+
+For ordinary grocery additions, send original names through `apply_household_items`
+without supplying category, type, perishability or unit. The service resolves
+generic names and aliases, classifies missing metadata, and defaults unresolved
+measurement units to `item`. Purchases and stock sets still require explicit
+numeric quantities. See the [agent workflow](docs/agent-integrations.md#ai-assisted-named-grocery-and-stock-actions)
+and [API contract](docs/api-reference.md#assisted-household-actions).

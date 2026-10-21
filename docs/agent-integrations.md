@@ -353,3 +353,22 @@ Legacy catalog confirmation tools remain available for explicitly selected flows
 or pending approvals, with their existing confirmation and replay rules. They
 are not prerequisites for assisted actions. Grocery-list completion, decrement,
 mark-out, and prediction feedback keep their dedicated tools.
+
+### Measurement units and classifier fallback
+
+For routine `apply_household_items` calls, omit unknown category, product type,
+perishability and measurement unit. OpenAI resolves the generic name and the
+original phrase becomes an alias. The configured metadata classifier selects
+missing fields; `PRODUCT_UNDERSTANDING_PROVIDER=typesafe` uses JEV.
+
+Standard units remain available alongside catalog units. When no unit is
+accepted, the service stores `item` as a generic count with separate policy
+provenance. Other metadata may remain null. Do not infer package sizes or convert
+item counts into liters or kilograms. Existing stock units take precedence over
+the catalog default. Purchases and stock sets still require explicit positive
+numeric quantities; new grocery lines keep their default quantity of one.
+
+After an image update, replace each installed agent bundle with the complete
+bundle from the same source revision, following the installation instructions
+above, and run its manifest's probe. Watchtower updates the service container;
+it does not update skills installed separately in Hermes or OpenClaw.

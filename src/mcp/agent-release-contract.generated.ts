@@ -17,7 +17,7 @@ export const AGENT_RELEASE_CONTRACT = {
   skill: {
     name: 'home-stock-tracker',
     description: 'Use the household grocery and inventory MCP tools',
-    version: '2.1.0',
+    version: '2.1.1',
     compatibleMcpRange: '>=2.1.0 <3.0.0',
     author: 'Home Stock Tracker',
     tags: ['household', 'grocery', 'inventory', 'mcp'],

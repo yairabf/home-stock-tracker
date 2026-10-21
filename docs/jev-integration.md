@@ -482,14 +482,25 @@ integrated adapters must bound those HTTP attempts and the overall deadline.
 `buildChoiceVocabulary` accepts category/unit labels and a finite JSON context.
 It returns a complete vocabulary or an explicit unsupported reason, never a
 truncated subset. Existing labels retain their exact display spelling. Exact
-duplicates collapse; distinct labels with the same NFKC/lowercase/whitespace
+duplicates collapse; distinct category labels with the same NFKC/lowercase/whitespace
 normalization return `ambiguous_labels` for review. Ordering is locale-independent.
 
-Empty inputs use `product-category-v1` (12 household category seeds) or
-`product-unit-v1` (`item`, `pack`, `kg`, `g`, `liter`, `ml`). Nonempty inputs use
-only the supplied labels. These manifests are choice options, not database
-enums, category migrations or restrictions on explicit legacy units. Changing
-the seed definitions requires a vocabulary version change and fresh evaluation.
+Empty category input uses `product-category-v1` (12 household category seeds);
+nonempty category input uses only supplied labels. Unit vocabulary
+`product-unit-v2` always merges `item`, `pack`, `kg`, `g`, `liter`, and `ml` with
+catalog labels. Normalized unit duplicates collapse deterministically, retaining
+the first sorted catalog spelling ahead of a seed. Bounds apply after merging.
+These are choice options, not database enums or restrictions on legacy units.
+Vocabulary changes require fresh evaluation before rollout.
+
+Assisted catalog creation keeps OpenAI identity normalization and uses the
+configured metadata adapter (`PRODUCT_UNDERSTANDING_PROVIDER=typesafe` selects
+JEV). An unresolved unit defaults to `item` after classification; optional
+category, type and perishability may remain null. The fallback is a policy,
+not a model decision: its transaction stores `assisted-unit-default-v1` provenance
+with provider `policy` and no confidence. It implies no weight, volume or package
+size. Existing stock units still take precedence. Numeric purchase and stock
+quantities remain explicit. Provider defaults and rollout gates are unchanged.
 
 Domain labels map to opaque `choice_N` tokens. The separate `unknown` token maps
 to null; a real stored label such as `unknown` or `__proto__` still gets its own

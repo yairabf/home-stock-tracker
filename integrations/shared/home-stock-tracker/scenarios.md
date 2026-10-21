@@ -16,6 +16,17 @@ payload. No follow-up catalog confirmation is allowed on applied. needs_input
 and unavailable mean no writes; never invent success. New corrected intent uses
 a fresh ID; an unchanged retry keeps its ID. Optional null metadata needs no question.
 
+- Name-only grocery: send `Tnuva 3% milk` unchanged without catalog metadata.
+  The service chooses the generic name and alias, classifies metadata, and adds
+  the grocery line without asking for a unit.
+- Unknown measurement unit: the service stores `item` as its generic default.
+  Summarize returned values without treating item as a package size or volume.
+- Purchase or stock update with an explicit count and omitted unit: let the
+  service use the established stock unit, classified unit, or generic item.
+  An explicit numeric quantity is still required; never invent one.
+- JEV unavailable: a resolved identity may still be created with unit item and
+  other metadata unknown. An unavailable action result still means no success.
+
 ## Review record
 
 For each row, verify:

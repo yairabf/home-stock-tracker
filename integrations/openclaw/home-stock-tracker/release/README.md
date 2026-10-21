@@ -6,7 +6,7 @@ fixture from the same generated release.
 
 ## Compatibility
 
-- Skill version: `2.1.0`
+- Skill version: `2.1.1`
 - MCP server: `home-stock-tracker`
 - MCP contract: `2.1.0`
 - Compatible MCP range: `>=2.1.0 <3.0.0`

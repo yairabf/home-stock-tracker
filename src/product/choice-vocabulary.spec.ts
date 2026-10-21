@@ -31,7 +31,9 @@ describe('choice vocabulary', () => {
       );
       expect(labels.length).toBe(kind === 'category' ? 12 : 6);
       expect(labels).toContain(kind === 'category' ? 'dairy and eggs' : 'item');
-      expect(vocabulary.version).toBe(`product-${kind}-v1`);
+      expect(vocabulary.version).toBe(
+        kind === 'unit' ? 'product-unit-v2' : 'product-category-v1',
+      );
       expect(resolveVocabularyChoice(vocabulary, 'unknown')).toEqual({
         status: 'unknown',
       });
@@ -57,12 +59,67 @@ describe('choice vocabulary', () => {
     expect(vocabulary.criteria.choice_2).toEqual({ label: 'מוצרי חלב' });
   });
 
-  it('keeps custom explicit unit vocabulary instead of restricting it to seed units', () => {
+  it('keeps custom units alongside standard units', () => {
     expect(
       Object.values(
         complete({ kind: 'unit', labels: ['carton', 'קופסה'] }).values,
       ),
-    ).toEqual([null, 'carton', 'קופסה']);
+    ).toEqual([
+      null,
+      'carton',
+      'g',
+      'item',
+      'kg',
+      'liter',
+      'ml',
+      'pack',
+      'קופסה',
+    ]);
+  });
+
+  it('offers liters in a catalog containing only item', () => {
+    expect(
+      Object.values(complete({ kind: 'unit', labels: ['item'] }).values),
+    ).toContain('liter');
+  });
+
+  it('deduplicates normalized units while preserving stable catalog spelling', () => {
+    const first = complete({
+      kind: 'unit',
+      labels: ['KG', 'ＫＧ', ' liter ', 'KG'],
+    });
+    const second = complete({
+      kind: 'unit',
+      labels: [' liter ', 'ＫＧ', 'KG'],
+    });
+    expect(first).toEqual(second);
+    expect(Object.values(first.values)).toEqual([
+      null,
+      ' liter ',
+      'KG',
+      'g',
+      'item',
+      'ml',
+      'pack',
+    ]);
+  });
+
+  it('enforces the option bound after merging standard units', () => {
+    expect(
+      buildChoiceVocabulary({
+        kind: 'unit',
+        labels: Array.from({ length: 249 }, (_, i) => `custom-${i}`),
+        context: {},
+      }),
+    ).toEqual({ status: 'unsupported', reason: 'too_many_options' });
+    expect(
+      Object.keys(
+        complete({
+          kind: 'unit',
+          labels: Array.from({ length: 248 }, (_, i) => `custom-${i}`),
+        }).values,
+      ),
+    ).toHaveLength(255);
   });
 
   it('deduplicates exact labels and orders choices independently of input order', () => {

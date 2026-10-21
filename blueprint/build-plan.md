@@ -79,3 +79,4 @@
   - [ ] 38g. **Validated dual-provider rollout** - enable only qualifying task routes on an approved runtime, verify representative flows and independent rollback while retaining OpenAI generation
 
 - [x] 39. **AI-driven catalog normalization and enrichment** - use AI to choose generic canonical names, resolve existing products, preserve supplied names as aliases, infer missing metadata, and complete grocery additions and bulk stock updates without routine confirmations.
+- [x] 40. **Automatic catalog metadata and unit defaults** - complete OpenAI name normalization with JEV classification and measurement-unit selection, default unresolved units to item, and avoid routine catalog-metadata questions.

@@ -24,7 +24,13 @@ per item. Pass original phrases; server AI selects a generic identity, retains
 aliases, and fills missing metadata. Optional metadata uses category, typicalUnit,
 productType and isPerishable. Explicit and stored facts take precedence.
 Grocery quantity is optional; stock and purchase require positive finite quantity.
-Unit is optional when a usable stored or accepted inferred unit exists. Purchase
+Unit is optional: assisted catalog preparation defaults unresolved typicalUnit to
+`item`. Existing stock units retain precedence over that default; supplied units
+retain their existing validation and conflict checks. `item` implies no weight,
+volume, or package size. Category, type and perishability may remain unknown.
+OpenAI resolves generic names; the configured classifier (JEV when enabled)
+selects missing metadata. Generic unit defaults are recorded separately as policy
+provenance, never as accepted model classifications. Purchase
 purchasedAt is optional and cannot be future-dated. Grocery note and
 ifPendingExists (return_existing by default, or explicit create_separate) are
 operation-specific. No counts or package conversions are inferred.
@@ -32,7 +38,7 @@ operation-specific. No counts or package conversions are inferred.
 HTTP 200 carries applied with ordered receipts, needs_input with indexed issues,
 or unavailable with retryable and code. Only applied commits catalog and domain
 writes. Unknown optional metadata is listed in unresolvedMetadata without a
-routine confirmation. Duplicate resolved products, missing required units and
+routine confirmation. Duplicate resolved products and
 conflicting metadata/aliases leave the entire batch unchanged. HTTP 400 rejects
 invalid input; HTTP 401 rejects authentication; HTTP 409 rejects changed content
 under an existing requestId. MCP uses its normal tool errors for these failures.

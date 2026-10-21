@@ -1,7 +1,7 @@
 ---
 name: home-stock-tracker
 description: Use the household grocery and inventory MCP tools
-version: 2.1.0
+version: 2.1.1
 author: Home Stock Tracker
 ---
 
@@ -32,7 +32,12 @@ the original phrase as an alias. Meaningful distinctions remain AI decisions.
 2. Each item has exactly one original `productName` or trusted `productId`.
    Metadata is optional; send only user-supplied facts, including explicit false.
    Do not request category, type, perishability or typical unit merely to fill
-   catalog fields. The server can leave optional metadata unknown.
+   catalog fields. OpenAI resolves the generic name; the configured classifier
+   (JEV when enabled) selects category, type, perishability and measurement unit.
+   The server defaults an unresolved catalog unit to `item`; other optional
+   metadata may remain unknown. `item` is a generic count, never an implied
+   package size, weight or volume. Do not ask a routine measurement-unit question
+   before calling the tool; preserve an explicit user unit when supplied.
 3. Grocery quantity is optional for a new line. Stock/purchase quantity must be
    positive and explicitly supplied; ask one focused question if it is missing.
    Preserve each item's unit and purchase time only when supplied. Never convert

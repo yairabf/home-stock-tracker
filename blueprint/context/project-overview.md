@@ -1,6 +1,6 @@
 # Home Stock Tracker - Project Overview
 
-<!-- blueprint:source-hash 1a2a31ddb532c85b8a16898d7d7273c196f7590ce59a910210010ebc1afd6eb3 -->
+<!-- blueprint:source-hash c2b48de4c02dfcec16d77dcce1f33dc55e58e71b08f4b34ed156d2ce50f5ed71 -->
 
 > A NestJS household grocery and inventory service used by Hermes through WhatsApp.
 
@@ -82,6 +82,8 @@ Build-plan order and progress; unchecked means planned. Feature 37 and sub-featu
   - [ ] **38g. Validated dual-provider rollout**
 
 - [x] **39. AI-driven catalog normalization and enrichment** - AI chooses generic names, resolves existing products, retains input aliases and fills metadata within grocery and bulk stock actions.
+
+- [x] 40. **Automatic catalog metadata and unit defaults** - complete OpenAI name normalization with JEV classification and measurement-unit selection, default unresolved units to item, and avoid routine catalog-metadata questions.
 
 **MVP exclusions:** dedicated UI/mobile app, exact real-time counts, OCR/barcodes, computer vision, built-in retailer integration, automatic purchasing, multi-tenancy, advanced ML/Python services, Redis without need, automatic grocery mutations from predictions. Post-MVP expiration and external adapter work are tracked separately.
 

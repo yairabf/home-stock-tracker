@@ -12,7 +12,10 @@ Preserve the existing service token, database, ports, MCP access, scheduler and
 confirmation rules. Preserve existing metadata; do not reclassify the catalog.
 The unchanged acceptance gate requires both confidence and selected probability
 of at least 0.9. Uncertainty/failure abstains, without automatic OpenAI fallback
-for understanding. Keep OpenAI credentials because other tasks still use them.
+for understanding. Assisted named-item actions now default an unresolved catalog
+measurement unit to `item`; this is a policy fallback, not a JEV acceptance.
+Other optional metadata stays unknown. Numeric quantities are not inferred.
+Keep OpenAI credentials because name understanding and other tasks still use them.
 
 This is a limited trial supported by synthetic diagnostics, not proof that the
 formal real-world launch gates passed. The repaired adapter accepted correct

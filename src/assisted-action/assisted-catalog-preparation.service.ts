@@ -143,6 +143,12 @@ export class AssistedCatalogPreparation {
         )
       : null;
     remainingPreparationMs(expiresAt);
+    const enriched = {
+      ...metadata,
+      ...(understanding ? acceptedMetadata(metadata, understanding) : {}),
+    };
+    const unitDefaulted = enriched.typicalUnit === null;
+    if (unitDefaulted) enriched.typicalUnit = 'item';
     const suppliedName = item.productName ?? null;
     const knownNames = existing
       ? [existing.canonicalName, ...existing.aliases]
@@ -162,10 +168,8 @@ export class AssistedCatalogPreparation {
         canonicalName,
         aliasToAdd,
         existing,
-        metadata: {
-          ...metadata,
-          ...(understanding ? acceptedMetadata(metadata, understanding) : {}),
-        },
+        metadata: enriched,
+        unitDefaulted,
         identityEvidence: evidence,
         understanding,
       },

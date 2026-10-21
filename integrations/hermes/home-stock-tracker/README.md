@@ -95,7 +95,12 @@ For an assisted-action smoke check, ask to add an unfamiliar branded product,
 then report a measured purchase or positive absolute stock batch. The agent should
 call `apply_household_items` once with original names, a fresh requestId, and the
 explicit operation and quantities. The server chooses generic identities and
-classifies missing metadata. An applied result needs no catalog confirmation;
+classifies missing metadata. Do not ask for category, type, perishability or
+measurement unit before calling the tool. OpenAI resolves names; JEV selects
+metadata when enabled. If classification cannot resolve the catalog unit, the
+server uses `item`, a generic count with no implied package size or volume.
+Existing stock units still take precedence; numeric stock/purchase quantities
+must still come from the user. An applied result needs no catalog confirmation;
 returned_existing means a pending line stayed unchanged. needs_input and unavailable
 mean no batch writes. A lost response is retried only with the same payload and ID.
 Do not guess metadata, strip brands, convert units, or claim success after failure.

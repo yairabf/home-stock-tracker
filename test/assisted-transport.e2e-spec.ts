@@ -276,22 +276,24 @@ describe('Authenticated assisted REST and MCP (isolated PostgreSQL)', () => {
           isPerishable: null,
         }),
       );
-    const result = await mcp(input('grocery_add', [{ productName }]));
+    const body = input('grocery_add', [{ productName }]);
+    const result = await mcp(body);
     expect(result).toMatchObject({
       outcome: 'applied',
       receipts: [
         {
           suppliedName: productName,
-          unresolvedMetadata: [
-            'category',
-            'productType',
-            'typicalUnit',
-            'isPerishable',
-          ],
+          unresolvedMetadata: ['category', 'productType', 'isPerishable'],
           groceryItem: { requestedQuantity: 1 },
         },
       ],
     });
+    const product = await prisma.productName.findUniqueOrThrow({
+      where: { normalizedName: productName.toLowerCase() },
+      include: { product: true },
+    });
+    expect(product.product.typicalUnit).toBe('item');
+    expect(await mcp(body)).toEqual(result);
   });
 
   it.each(['stock_set', 'purchase'])(
@@ -347,7 +349,7 @@ describe('Authenticated assisted REST and MCP (isolated PostgreSQL)', () => {
     }
   });
 
-  it('reports missing units once for a batch and saves no catalog rows', async () => {
+  it('defaults units for a named stock batch through MCP and replays through REST', async () => {
     jest
       .spyOn(app.get(ProductUnderstandingRunner), 'understand')
       .mockResolvedValue(
@@ -358,17 +360,15 @@ describe('Authenticated assisted REST and MCP (isolated PostgreSQL)', () => {
       metadata: { ...metadata, typicalUnit: null },
     }));
     const body = input('stock_set', items);
-    expect(await mcp(body)).toMatchObject({
-      outcome: 'needs_input',
-      issues: [
-        { inputIndex: 0, code: 'missing_unit' },
-        { inputIndex: 1, code: 'missing_unit' },
+    const result = await mcp(body);
+    expect(result).toMatchObject({
+      outcome: 'applied',
+      receipts: [
+        { inventory: { stock: { unit: 'item', recordedQuantity: 2 } } },
+        { inventory: { stock: { unit: 'item', recordedQuantity: 2 } } },
       ],
     });
-    await assertNoWrite(
-      body.requestId,
-      items.map((i) => i.productName),
-    );
+    expect(await (await rest(body)).json()).toEqual(result);
   });
 
   it.each([

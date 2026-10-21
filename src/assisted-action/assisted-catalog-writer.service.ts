@@ -56,6 +56,8 @@ export class AssistedCatalogWriter {
     );
     if (Object.keys(update).length)
       await tx.product.update({ where: { id: current.id }, data: update });
+    if (prepared.unitDefaulted && update.typicalUnit === 'item')
+      await this.recordUnitDefault(tx, current.id);
     const addAlias = alias !== null && aliasOwner === null;
     if (addAlias)
       await tx.productName.create({
@@ -71,6 +73,26 @@ export class AssistedCatalogWriter {
       ...PRODUCT_WITH_NAMES_ARGS,
     });
     return { product, catalogAction: addAlias ? 'alias_added' : 'existing' };
+  }
+
+  private async recordUnitDefault(
+    tx: Prisma.TransactionClient,
+    productId: string,
+  ): Promise<void> {
+    await tx.llmInferenceLog.create({
+      data: {
+        modelProvider: 'policy',
+        modelVersion: 'assisted-unit-default-v1',
+        structuredResponse: {
+          task: 'assisted_catalog_unit_default',
+          productId,
+          field: 'typicalUnit',
+          value: 'item',
+          source: 'default',
+          reason: 'unit_unresolved',
+        },
+      },
+    });
   }
 
   private async resolveCurrent(
@@ -120,6 +142,7 @@ export class AssistedCatalogWriter {
       data: { ...prepared.metadata, names: { create: names } },
       ...PRODUCT_WITH_NAMES_ARGS,
     });
+    if (prepared.unitDefaulted) await this.recordUnitDefault(tx, product.id);
     return { product, catalogAction: 'created' };
   }
 }

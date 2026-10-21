@@ -105,6 +105,29 @@ describe('Assisted catalog writer (isolated PostgreSQL)', () => {
     await prisma.$disconnect();
   });
 
+  it('rolls back generic-unit provenance with its catalog transaction', async () => {
+    const value = prepared();
+    value.metadata.typicalUnit = 'item';
+    value.unitDefaulted = true;
+    let productId = '';
+    await expect(
+      prisma.$transaction(async (tx) => {
+        productId = (await writer.applyWithinTransaction(tx, value)).product.id;
+        throw new Error('later action failed');
+      }),
+    ).rejects.toThrow('later action failed');
+    expect(
+      await prisma.product.findUnique({ where: { id: productId } }),
+    ).toBeNull();
+    expect(
+      await prisma.llmInferenceLog.count({
+        where: {
+          structuredResponse: { path: ['productId'], equals: productId },
+        },
+      }),
+    ).toBe(0);
+  });
+
   it('creates one canonical name and preserves the submitted alias', async () => {
     const value = prepared();
     value.suppliedName = `${value.canonicalName}  Brand 3%`;

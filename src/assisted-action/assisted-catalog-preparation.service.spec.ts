@@ -257,7 +257,7 @@ describe('AssistedCatalogPreparation', () => {
     expect(understand).toHaveBeenCalledTimes(1);
   });
 
-  it('does not fabricate optional fields when metadata inference abstains', async () => {
+  it('defaults the unit without fabricating other optional fields when inference abstains', async () => {
     understand.mockImplementation((_name, supplied) =>
       Promise.resolve(initialUnderstanding(supplied)),
     );
@@ -266,12 +266,82 @@ describe('AssistedCatalogPreparation', () => {
       product: {
         metadata: {
           category: null,
-          typicalUnit: null,
+          typicalUnit: 'item',
           productType: null,
           isPerishable: null,
         },
       },
     });
+  });
+
+  it.each(['unknown', 'low_confidence', 'schema_rejected'] as const)(
+    'defaults a rejected unit (%s) without claiming model acceptance',
+    async (reason) => {
+      const result = initialUnderstanding({
+        category: null,
+        typicalUnit: null,
+        productType: null,
+        isPerishable: null,
+      });
+      result.fields.typicalUnit = { status: 'uncertain', reason };
+      understand.mockResolvedValue(result);
+      expect(await prepare()).toMatchObject({
+        product: {
+          metadata: { typicalUnit: 'item' },
+          unitDefaulted: true,
+          understanding: {
+            fields: { typicalUnit: { status: 'uncertain', reason } },
+          },
+        },
+      });
+    },
+  );
+
+  it('preserves a unit accepted from JEV', async () => {
+    const result = initialUnderstanding({
+      category: null,
+      typicalUnit: null,
+      productType: null,
+      isPerishable: null,
+    });
+    result.fields.typicalUnit = {
+      status: 'resolved',
+      source: 'jev',
+      value: 'liter',
+      confidence: 0.95,
+    };
+    understand.mockResolvedValue(result);
+    expect(await prepare()).toMatchObject({
+      product: { metadata: { typicalUnit: 'liter' }, unitDefaulted: false },
+    });
+  });
+
+  it('preserves supplied units when the classifier is unavailable', async () => {
+    understand.mockImplementation((_name, supplied) =>
+      Promise.resolve(initialUnderstanding(supplied)),
+    );
+    expect(
+      await prepare({
+        ...item(),
+        metadata: { typicalUnit: 'bottle' },
+      } as never),
+    ).toMatchObject({
+      product: { metadata: { typicalUnit: 'bottle' }, unitDefaulted: false },
+    });
+  });
+
+  it('fills an existing missing unit without renaming the product', async () => {
+    findName.mockResolvedValue({
+      product: entity('milk', { ...metadata, typicalUnit: null }),
+    });
+    expect(await prepare()).toMatchObject({
+      product: {
+        existing: { id },
+        metadata: { typicalUnit: 'item' },
+        unitDefaulted: true,
+      },
+    });
+    expect(generate).not.toHaveBeenCalled();
   });
 
   it('does not save an alias identical under namespace normalization', async () => {

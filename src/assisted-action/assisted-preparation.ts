@@ -19,6 +19,7 @@ export interface PreparedCatalogProduct {
   metadata: ProductMetadataSnapshot;
   identityEvidence: IdentityEvidence | null;
   understanding: ProductUnderstandingResult | null;
+  unitDefaulted?: boolean;
 }
 export type PreparationFailure =
   | {

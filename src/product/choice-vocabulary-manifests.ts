@@ -24,7 +24,7 @@ export const CHOICE_VOCABULARY_MANIFESTS = {
     ],
   },
   unit: {
-    version: 'product-unit-v1',
+    version: 'product-unit-v2',
     seeds: ['item', 'pack', 'kg', 'g', 'liter', 'ml'],
   },
 } as const satisfies Record<VocabularyKind, ChoiceVocabularyManifest>;

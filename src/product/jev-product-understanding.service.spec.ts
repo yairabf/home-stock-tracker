@@ -64,6 +64,18 @@ describe('JEV product understanding', () => {
   });
   afterEach(() => jest.useRealTimers());
 
+  it('selects liters even when existing products only use item', async () => {
+    const result = await adapter.understand({ ...input, units: ['item'] });
+    expect(result.fields.typicalUnit).toMatchObject({
+      status: 'resolved',
+      source: 'jev',
+      value: 'liter',
+    });
+    expect(
+      result.attempts.find((attempt) => attempt.fields.includes('typicalUnit')),
+    ).toMatchObject({ vocabularyVersion: 'product-unit-v2' });
+  });
+
   it.each(['Milk', 'חלב', 'חלב Milk'])(
     'maps %s through the exact allowed values with per-field provenance',
     async (rawName) => {
@@ -109,7 +121,7 @@ describe('JEV product understanding', () => {
         evidence: { rawName: input.rawName, metadata: input.metadata },
       });
       expect(understandingChoices(field, input)).toMatchObject({
-        version: 'product-unit-v1',
+        version: 'product-unit-v2',
       });
     }
   });
